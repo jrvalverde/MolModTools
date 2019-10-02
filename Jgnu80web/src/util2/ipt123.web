@@ -1,0 +1,30 @@
+@* ipt123.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] I                                                         
+\item[UNUSED:] LX                                                        
+\item[UNUSED:] LY                                                        
+\item[UNUSED:] LZ                                                        
+\item[UNUSED:] INDAO                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GAOIND                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ipt123(I,LX,LY,LZ,INDAO)
+      implicit none
+      integer I , LX , LY , LZ
+      integer INDAO(*)
+C   dummy to replace assembler version
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,62 @@
+@* rotate.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] NATOMS                                                    
+\item[OUTPUT:] T                                                         
+\item[INPUT:] IXYZ                                                      
+\item[PASSED:] THETA                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GCOS    GSIN    TFORM                                  
+\item[Called by]   C2AXES  CNAXIS  FINDC2  FINDCN  FINDV   FWGRP   OCTA   
+             ORAXIS  ORC2V   ORCN    ORD2H   ORDN    ORPLAN  ORYZ   
+             PTGRP   SIGHCN  SNAXIS  SPHERE  TETRA   TSTC3   TSTC4  
+             TSTC5   VERT                                           
+                                                                    
+\end{description}
+@a
+      subroutine rotate(MAXAP3,A,B,NATOMS,T,IXYZ,THETA)
+      implicit none
+      double precision A , B , c , gcos , gsin , one , s , T , THETA , 
+     &                 zero
+      integer i1 , i2 , i3 , IXYZ , MAXAP3 , NATOMS
+      dimension T(3,3) , A(*) , B(*)
+      data zero , one/0.0D0 , 1.0D0/
+C
+C
+C     the coordinates of the natoms in a are rotated counterclockwise
+C     by an angle theta around the cartesian axis ixyz using the
+C     transformation matrix t.  the rotated coordinates are returned
+C     in b.
+C
+C
+C
+C
+      i1 = IXYZ
+      i2 = 1 + mod(i1,3)
+      i3 = 1 + mod(i2,3)
+      s = gsin(THETA)
+      c = gcos(THETA)
+      T(i1,i1) = one
+      T(i1,i2) = zero
+      T(i1,i3) = zero
+      T(i2,i1) = zero
+      T(i2,i2) = c
+      T(i2,i3) = s
+      T(i3,i1) = zero
+      T(i3,i2) = -s
+      T(i3,i3) = c
+      call tform(MAXAP3,T,A,B,NATOMS)
+      return
+C
+      end
+@* INDEX.

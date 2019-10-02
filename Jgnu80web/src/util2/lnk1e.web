@@ -1,0 +1,72 @@
+@* lnk1e.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LL      NCHAIN                                         
+\item[Uses]  NCHAIN                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  G80END  TWRITE                                 
+\item[Called by]   ALTGES  APPLAB  BASPRT  BERROR  BESSRT  BINRD   CHAIN  
+             CHGMLT  CIDS1   CIPRM   CROUTE  D1E     D2ESP   D2ESPD 
+             D95V    DCLOSE  DIMENS  DIRTRN  DLPINT  DOPEN   DS4    
+             DS4N5   DS4N6   EQRT2D  EROUTE  ESTM    EXPSYM  FFERR  
+             FILEIO  FIRST   FOFCLO  FOFOPN  FOFPHF  FORMBG  FORMF  
+             FPERR   FRMV    GBASIS  GEOM    GESERR  GESOPT  GINPUT 
+             GLPINT  GRDOPT  INCRD   IND401  INITBS  INITFC  INITFP 
+             INITMS  INTEGI  INV     ISUBST  JQINT   L0CMND  LINK1  
+             LNK1    LOSBAS  LOSPOT  LSUBST  MATCA1  MATCA2  MATCAB 
+             MATTRN  MSOPT   NEWLNK  NONDF   NTRAN   PHFCHK  PSEUD1 
+             PUTFP   PUTICR  PUTSMT  RCOORD  RDCHG   RHFCLO  RHFOPN 
+             RSTART  RTEDEF  S4SPD   S5SP    SCFDM   SD5DS5  SET2E  
+             SFOPTI  SS3     STO     STVINT  SUBVAR  SZPRNT  TIOC   
+             TRANFF  TRCL80  TRCLOS  TROP80  TROPEN  TSTCOR  TWLDRV 
+             UHFOPN  UMP4Q   UMP4T   WIA4A   WIA4B   WINDOW  WTILDA 
+             WTILDB  WTWIJ   ZGET    ZMATCH  ZPOLYR  ZQUADR  ZSYMB  
+                                                                    
+\end{description}
+@a
+      subroutine lnk1e
+      implicit none
+      integer i , irwovg , Ll , Nchain
+      real w
+      integer error , fclose
+      common /tmpnch/ Nchain , Ll
+      data error/999/ , irwovg/999/ , fclose/10/
+C
+C***********************************************************************
+C     error termination routine for gnu80.
+C     this routine will attempt to install an error code in the
+C     nchain portion of the overlaying information and then terminate
+C     the subprocess.
+C***********************************************************************
+C
+      write (6,99001)
+C
+99001 format (' **** ERROR TERMINATION IN LNK1E.')
+C
+C
+C     try to write out blank common  with an error code in nchain.
+C
+      if ( Nchain.ne.error ) then
+         if ( Nchain.eq.fclose ) goto 100
+         Nchain = error
+         Ll = 0
+C
+         call twrite(irwovg,Nchain,1,1,1,1,0)
+      endif
+C
+C     close the files.
+      Nchain = fclose
+      call fileio(fclose,i,i,i,i)
+ 100  w = -1.0D00
+C      w = sqrt(w)
+C the above sillyness was to generate a traceback!!
+      write (6,99002)
+      call g80end
+      stop 13
+C
+99002 format (' ','LNK1E ***** gnu80 STOPS EXECUTING DUE TO ERROR')
+C
+      end
+@* INDEX.

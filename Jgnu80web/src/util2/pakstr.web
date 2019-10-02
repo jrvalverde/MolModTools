@@ -1,0 +1,62 @@
+@* pakstr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] INSTR                                                     
+\item[INPUT:] LEN                                                       
+\item[PASSED:] OUTSTR                                                    
+\item[PASSED:] OUTCUR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  PUTICR                                         
+\item[Called by]   CROUTE  PRTSYM  PUTFP   RDROUT  RDTITL                 
+                                                                    
+\end{description}
+@a
+      subroutine pakstr(INSTR,LEN,OUTSTR,OUTCUR)
+      implicit none
+      integer blank , chr , getchr , i , ibln , INSTR , l , LEN , 
+     &        OUTCUR , OUTSTR , putone
+      dimension INSTR(*) , OUTSTR(*)
+      data blank/'    '/
+C          this routine discards unnecessary blanks from the input
+C     string and appends the remaining characters to the output
+C     string.  the rules for discarding blanks are:
+C          - discard all leading blanks.
+C          - discard all trailing blanks.
+C          - discard any blanks which follow a blank.
+C     the input string in "instr" of length "len".  the output string
+C     is put into "outstr", and othe output string cursor, "outcur"
+C     is updated.  "instr" and "outstr" may be the same, if desired.
+C2
+C     r. a. whiteside - october 1979
+C ----------------------------------------------------------------------
+C
+      l = 0
+      putone = 0
+      ibln = 0
+C
+      do 100 i = 1 , LEN
+         chr = getchr(INSTR,l)
+         if ( chr.eq.blank ) then
+C
+            ibln = 1
+         else
+            if ( putone.ne.0 ) then
+               if ( ibln.eq.1 ) call puticr(blank,OUTSTR,OUTCUR)
+            endif
+            ibln = 0
+            putone = 1
+            call puticr(chr,OUTSTR,OUTCUR)
+         endif
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

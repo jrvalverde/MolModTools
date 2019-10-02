@@ -1,0 +1,47 @@
+@* intchr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] CHR                                                       
+\item[INPUT:] BASE                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ILORD   LORD                                           
+\item[Called by]   QPAINT  QPANY1  QPDP    QPSKEY  QPWORD                 
+                                                                    
+\end{description}
+@a
+      integer function intchr(CHR,BASE)
+      implicit none
+      integer BASE , CHR , ilord , lord , t , val
+C          this integer function returns the numeric value
+C     of the digit which is the 'first' character in the word
+C     chr.  if this character is not a digit in base base, then
+C     a value of -1 is returned.
+C2
+C ----------------------------------------------------------------------
+      val = -1
+C
+C                  get the ordinal number :
+      t = ilord(CHR)
+C            is character larger that ascii '9'
+      if ( t.gt.lord('9') ) then
+C
+         if ( t.ge.lord('A') ) then
+            if ( t.le.lord('Z') ) val = t - lord('A') + 10
+         endif
+C            is it smaller than ascii '0'
+      elseif ( t.ge.lord('0') ) then
+         val = t - lord('0')
+      endif
+      if ( val.ge.BASE ) val = -1
+      intchr = val
+      return
+C
+      end
+@* INDEX.

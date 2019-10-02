@@ -1,0 +1,26 @@
+@* pack2.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    JA                                                     
+\item[Transmits as argument]  J                                                      
+\item[Uses]  I       J       JA                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SHIFT                                                  
+\item[Called by]   OUT2E                                                  
+                                                                    
+\end{description}
+@a
+      subroutine pack2
+      implicit none
+      integer I , J , K , L , Ja
+      double precision Valint
+      integer shift , ieor
+      common /packed/ I , J , K , L , Valint , Ja
+      Ja = 0
+      Ja = ieor(Ja,I)
+      Ja = ieor(Ja,shift(J,16))
+      return
+      end
+@* INDEX.

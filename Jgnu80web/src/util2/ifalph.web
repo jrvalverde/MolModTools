@@ -1,0 +1,47 @@
+@* ifalph.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] CHR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CROP    IORD                                           
+\item[Called by]   QPAINT  QPANY1  QPDP    QPSKEY  QPWORD                 
+                                                                    
+\end{description}
+@a
+      logical function ifalph(CHR)
+      implicit none
+      integer iord
+      logical val
+      integer t , CHR , crop
+C     logical function ifalph(chr)
+C          this logical function returns true if the 'first'
+C     character in the word chr is an alphabetic character, and
+C     false otherwise.
+C     ebcdic a-z is not contiguous routine modified jtc 21/1/89
+C2
+C ----------------------------------------------------------------------
+      t = crop(CHR)
+      val = .false.
+C      accept '$' or '?' as alphabetic.
+      if ( t.eq.iord('$') .or. t.eq.iord('?') ) then
+C
+         val = .true.
+C           check to see if this is ebcdic a-z
+C      if((t.ge.iord('a').and.t.lt.iord(' ')).or.
+C     &   (t.ge.iord('j').and.t.lt.iord('\')).or.
+C     &   (t.ge.iord('s').and.t.lt.iord('z'))) goto 50
+      elseif ( t.ge.iord('A') .and. t.le.iord('Z') ) then
+         val = .true.
+      endif
+      ifalph = val
+      return
+C
+      end
+@* INDEX.

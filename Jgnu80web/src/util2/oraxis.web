@@ -1,0 +1,96 @@
+@* oraxis.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] IXYZ                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GATAN   MOVE    OR3MOM  ROTATE                 
+\item[Called by]   ORC2V   ORCN    ORDN    ORPLAN  PTGRP                  
+                                                                    
+\end{description}
+@a
+      subroutine oraxis(MAXAP3,A,B,NATOMS,ATMCHG,IXYZ)
+      implicit none
+      double precision A , ATMCHG , B , four , gabs , gatan , one , 
+     &                 or3mom , pi , t , test , Tol2 , Toler , zero
+      integer i2 , iat , IXYZ , MAXAP3 , NATOMS , numatm
+      dimension A(MAXAP3,3) , B(*) , ATMCHG(*)
+      dimension t(3,3)
+      common /tol   / Toler , Tol2
+      data zero , one , four/0.0D0 , 1.0D0 , 4.0D0/
+C
+C
+C     an axis of rotation or a principal axis may be aligned with a
+C     cartesian axis in one of two ways.  this routine decides which
+C     way by successivly applying the following three tests:
+C     1-- the third moment of charge should be positive,
+C     2-- the sum of the projections of the atomic coordinates on
+C         the axis should be positive, and
+C     3-- the first atom with a non-zero projection on the axis
+C         should have a positive projection on the axis.
+C     if rotation is neccessary in order to meet one of these criteria
+C     it shall be a 180 degree rotation about the axis defined below:
+C           reference      axis of
+C             axis         rotation
+C              x              y
+C              y              z
+C              z              x
+C
+C
+C
+C
+C
+      pi = four*gatan(one)
+C
+C     test the third moment.
+C
+      test = or3mom(MAXAP3,A,ATMCHG,NATOMS,IXYZ)
+      if ( gabs(test).lt.Toler ) then
+C
+C     test the sum of the projections of the atomic coordinates on
+C     the ixyz axis.
+C
+         test = zero
+         do 50 iat = 1 , NATOMS
+            test = test + A(iat,IXYZ)
+ 50      continue
+         if ( gabs(test).lt.Toler ) then
+C
+C     find the first atom with a non-zero projection on the axis.
+C
+            do 60 iat = 1 , NATOMS
+               test = A(iat,IXYZ)
+               if ( gabs(test).gt.Toler ) goto 100
+ 60         continue
+            return
+         else
+            if ( test.gt.zero ) return
+            goto 200
+         endif
+C
+ 100     if ( test.gt.zero ) return
+      elseif ( test.gt.zero ) then
+         return
+      endif
+C
+C     carry out the neccessary rotation.
+C
+ 200  i2 = 1 + mod(IXYZ,3)
+      numatm = NATOMS + 3
+      call rotate(MAXAP3,A,B,numatm,t,i2,pi)
+      call move(MAXAP3,B,A,numatm)
+      return
+C
+      end
+@* INDEX.

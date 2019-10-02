@@ -1,0 +1,57 @@
+@* locstr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] SUBSTR                                                    
+\item[INPUT:] LENSUB                                                    
+\item[PASSED:] STRING                                                    
+\item[INPUT:] LENSTR                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR                                                 
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine locstr(SUBSTR,LENSUB,STRING,LENSTR,CURSOR)
+      implicit none
+      integer chrstr , chrsub , CURSOR , i , iend , ij , j , jj , 
+     &        LENSTR , LENSUB , STRING , SUBSTR
+      integer getchr
+C          this routine searched through "string" for the "substr".
+C     the search starts at the current location of the "cursor" in
+C     string.  "lensub" is the length of the substring, and "lenstr"
+C     is the length of the string to be searched.  the value of
+C     "cursor" is updated so that a "getchr" will return the first
+C     character of the substring.  if no match is found, "cursor"
+C     is returned -1.
+C ----------------------------------------------------------------------
+      iend = LENSTR - LENSUB + 1
+      if ( CURSOR.le.iend ) then
+         if ( CURSOR.le.0 ) CURSOR = 1
+         do 50 i = CURSOR , iend
+            jj = 0
+            ij = i - 2
+            do 20 j = 1 , LENSUB
+C            chrsub=substr(j)
+C            chrstr=string(i+j-1)
+               chrsub = getchr(SUBSTR,jj)
+               chrstr = getchr(STRING,ij)
+               if ( chrsub.ne.chrstr ) goto 50
+ 20         continue
+            goto 100
+C
+ 50      continue
+      endif
+      i = 0
+ 100  CURSOR = i - 1
+      return
+C
+      end
+@* INDEX.

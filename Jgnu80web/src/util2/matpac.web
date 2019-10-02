@@ -1,0 +1,83 @@
+@* matpac.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] C                                                         
+\item[INPUT:] MAX                                                       
+\item[INPUT:] NX                                                        
+\item[INPUT:] IQ                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   C2AXES  CYCOPN  OCTA    PHFCHK  SIGHCN  SNAXIS  TETRA  
+             VERT                                                   
+                                                                    
+\end{description}
+@a
+      subroutine matpac(A,B,C,MAX,NX,IQ)
+      implicit none
+      double precision A , B , C , zero
+      integer i , IQ , j , m , MAX , NX
+      dimension A(MAX,MAX) , B(MAX,MAX) , C(MAX,MAX)
+      data zero/0.0D0/
+C
+C
+C     matrix multiplication package
+C     square matrices only
+C     iq=
+C     1  c=a*b
+C     2  c=a(transpose)*b
+C     3  c=a*b(transpose)
+C
+C
+C
+C     branch to various multiplication modes
+      if ( IQ.eq.2 ) then
+C
+C     c=a(transpose)*b
+C
+         do 50 i = 1 , NX
+            do 20 j = 1 , NX
+               C(i,j) = zero
+               do 10 m = 1 , NX
+                  C(i,j) = C(i,j) + A(m,i)*B(m,j)
+ 10            continue
+ 20         continue
+ 50      continue
+         return
+      elseif ( IQ.ne.3 ) then
+C
+C     c=a*b
+C
+         do 100 i = 1 , NX
+            do 80 j = 1 , NX
+               C(i,j) = zero
+               do 60 m = 1 , NX
+                  C(i,j) = C(i,j) + A(i,m)*B(m,j)
+ 60            continue
+ 80         continue
+ 100     continue
+         return
+      endif
+C
+C     c=a*b(transpose)
+C
+      do 200 i = 1 , NX
+         do 150 j = 1 , NX
+            C(i,j) = zero
+            do 120 m = 1 , NX
+               C(i,j) = C(i,j) + A(i,m)*B(j,m)
+ 120        continue
+ 150     continue
+ 200  continue
+      return
+C
+      end
+@* INDEX.

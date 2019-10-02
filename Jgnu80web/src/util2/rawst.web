@@ -1,0 +1,54 @@
+@* rawst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] S                                                         
+\item[OUTPUT:] T                                                         
+\item[INPUT:] LAX                                                       
+\item[INPUT:] LAY                                                       
+\item[INPUT:] LAZ                                                       
+\item[INPUT:] LBX                                                       
+\item[INPUT:] LBY                                                       
+\item[INPUT:] LBZ                                                       
+\item[INPUT:] AS                                                        
+\item[INPUT:] TWOASQ                                                    
+\item[INPUT:] SX                                                        
+\item[INPUT:] SY                                                        
+\item[INPUT:] SZ                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT                                                 
+\item[Called by]   DSTVNT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rawst(S,T,LAX,LAY,LAZ,LBX,LBY,LBZ,AS,TWOASQ,SX,SY,SZ)
+      implicit none
+      double precision AS , cnst , gfloat , S , SX , sxy , sxz , SY , 
+     &                 syz , SZ , T , TWOASQ
+      integer ijx , ijy , ijz , LAX , LAY , LAZ , LBX , LBY , LBZ
+      dimension SX(2) , SY(2) , SZ(2) , cnst(6)
+      data cnst/0.D0 , 0.D0 , 1.D0 , 3.D0 , 6.D0 , 10.D0/
+C
+C
+      ijx = 4*(LAX-1) + LBX
+      ijy = 4*(LAY-1) + LBY
+      ijz = 4*(LAZ-1) + LBZ
+      sxy = SX(ijx)*SY(ijy)
+      sxz = SX(ijx)*SZ(ijz)
+      syz = SY(ijy)*SZ(ijz)
+      S = sxy*SZ(ijz)
+      T = gfloat(2*(LAX+LAY+LAZ)-3)
+     &    *AS*S - TWOASQ*(SX(ijx+8)*syz+SY(ijy+8)*sxz+SZ(ijz+8)*sxy)
+      if ( LAX.gt.2 ) T = T - cnst(LAX)*SX(ijx-8)*syz
+      if ( LAY.gt.2 ) T = T - cnst(LAY)*SY(ijy-8)*sxz
+      if ( LAZ.gt.2 ) T = T - cnst(LAZ)*SZ(ijz-8)*sxy
+      return
+C
+      end
+@* INDEX.

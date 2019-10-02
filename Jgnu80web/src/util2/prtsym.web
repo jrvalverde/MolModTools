@@ -1,0 +1,80 @@
+@* prtsym.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] ORBSYM                                                    
+\item[INPUT:] NE                                                        
+\item[INPUT:] NB                                                        
+\item[PASSED:] IOUT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETB    PAD     PAKSTR  PUTB    PUTBC   PUTICR  STROUT 
+\item[Called by]   SYMASG                                                 
+                                                                    
+\end{description}
+@a
+      subroutine prtsym(ORBSYM,NE,NB,IOUT)
+C ----------------------------------------------------------------------
+      implicit none
+      integer blank , i , IOUT , lcur , len , low , lprin , n , NB , 
+     &        NE , rprin , tcur , top
+      integer ORBSYM(NB)
+      integer buf(80) , tmp(8)
+C for f2c:
+      integer bracks
+      data rprin/')'/ , lprin/'('/ , blank/1H /
+      data bracks/') ('/
+C            routine to print orbital symmetries.  pretty dumb right
+C      now.
+C ----------------------------------------------------------------------
+C
+C
+C                        first build buffer with occupied.
+      lcur = 0
+      low = 1
+      top = NE
+      n = 0
+C                  clear out buf.
+      tcur = 0
+      call pad(buf,tcur,80,blank)
+      call putbc('      OCCUPIED: ',16,buf,n)
+      call puticr(lprin,buf,n)
+C
+ 100  do 200 i = low , top
+         call getb(2,tmp,len,ORBSYM,lcur)
+         call putb(tmp,len,buf,n)
+         if ( n.lt.60 ) then
+C
+            if ( i.ne.top ) call pakstr(bracks,3,buf,n)
+         else
+C                  flush buffer.
+            call puticr(rprin,buf,n)
+            call strout(IOUT,buf,n,1)
+            tcur = 0
+            call pad(buf,tcur,80,blank)
+            n = 16
+            call puticr(lprin,buf,n)
+         endif
+ 200  continue
+C
+      call puticr(rprin,buf,n)
+      if ( n.gt.18 ) call strout(IOUT,buf,n,1)
+C
+C                        now, virtual orbitals.
+      if ( top.eq.NB ) return
+      low = NE + 1
+      top = NB
+      n = 0
+      tcur = 0
+      call pad(buf,tcur,80,blank)
+      call putbc('      VIRTUAL:  ',16,buf,n)
+      call puticr(lprin,buf,n)
+      goto 100
+C
+      end
+@* INDEX.

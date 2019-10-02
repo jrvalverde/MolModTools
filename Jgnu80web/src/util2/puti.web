@@ -1,0 +1,40 @@
+@* puti.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] I                                                         
+\item[PASSED:] BB                                                        
+\item[PASSED:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DECCHR  PUTDEL                                         
+\item[Called by]   ALTGES  PRMOUT                                         
+                                                                    
+\end{description}
+@a
+      subroutine puti(I,BB,NBB)
+      implicit none
+      integer I , NBB
+C ----------------------------------------------------------------------
+C2puti
+      integer BB(*)
+C     puti(i,bb,nbb)
+C
+C          this routine puts the characters representing the
+C     decimal integer "i" at the end of the string "bb".  the
+C     cursor, "nbb" is updated.  also, a comma is appended to
+C     the string.
+C2
+C     r. a. whiteside - fall 1978
+C ----------------------------------------------------------------------
+      call decchr(I,BB,NBB)
+      call putdel(1,BB,NBB)
+      return
+C
+      end
+@* INDEX.

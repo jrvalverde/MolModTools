@@ -1,0 +1,273 @@
+@* ilsw.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOPER                                                     
+\item[INPUT:] WHERE                                                     
+\item[OUTPUT:] WHAT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ILSW1                                                  
+\item[Transmits as argument]  CONST                                                  
+\item[Uses]  CONST   ILSW1   IOP     IOUT                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SHIFT   TWRITE                                         
+\item[Called by]   ARCSET  ASGSYM  BASPRT  BASSYM  BESSRT  CHAIN   CIDS1  
+             CIDS2   CIDS3   CIDS4   CIDS5   CONTST  CONTT   CONUSO 
+             CYCCLO  CYCOPN  CYCPHF  D1E     D2ESP   D2ESPD  DIABLO 
+             DIMENS  DIPOLE  DLPINT  DOUBAR  ECNFIG  ENTER   EROUTE 
+             ESTM    FILLRT  FIRST   FRCOUT  FRMW    GBASIS  GENL2E 
+             GEOM    GESOPT  GINPUT  GLPINT  GRDOPT  LINK1   MSOPT  
+             NEXTOV  OMEGA   OPTMZ   OVLP    PHOENI  PTGRP   PUTLBL 
+             RDGEOM  RGDVO   RHFCLO  RHFOPN  SCFDM   SET2E   SFOPTI 
+             SPINDM  STAR    STVINT  SYMASG  SYMM    TIOC    TRCL80 
+             TRCLOS  TRNFRM  TROP80  TROPEN  UHFOPN  UHFTST  WINDOW 
+             ZSYMB                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ilsw(IOPER,WHERE,WHAT)
+      implicit none
+      integer Basis , Bnread , Const , Conver , D5d6 , F7f10 , Guess , 
+     &        i0 , Ifarch , Ifau , Ifdon1 , Ifdon2 , Iffon1 , Iffon2 , 
+     &        Iffon3 , Iffp , Iffpol , Ifgrd , Ifponh , Ifrc
+      integer Ilsw1 , In , ioc , ioilsw , Iop , IOPER , Iout , Ipunch , 
+     &        loc , loc1 , Nosym , oldsw , Opclo , Polar , Prtoff , 
+     &        Psave , shift , Stabil , Symm , WHAT
+      integer whats , WHERE
+      integer not , or , and
+      common /ilsw1 / Ilsw1(2)
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+      common /il    / Const(2) , D5d6(2) , Basis(2) , Polar(2) , 
+     &                Conver(2) , Stabil(2) , Symm(2) , Guess(2) , 
+     &                Bnread(2) , Ifponh(2) , Ifdon1(2) , Ifdon2(2) , 
+     &                Iffon1(2) , Iffon2(2) , Iffon3(2) , F7f10(2) , 
+     &                Iffpol(2) , Ifau(2) , Iffp(2) , Prtoff(2) , 
+     &                Psave(2) , Opclo(2) , Ifgrd(2) , Ifrc(2) , 
+     &                Ifarch(2) , Nosym(2)
+      data ioilsw/998/
+C
+C    *******************************************************************
+C
+C1ilsw
+C
+C          the inter-link status word is a word on read/write file 998
+C     which is used as a storage place for information
+C     required by several overlays.  the information is packed into
+C     the word bit-wise, and this subroutine is designed to facilitate
+C     the reading and updating of this information.  the use of each
+C     bit is described below.
+C
+C          the subroutine is called with three arguments:  ioper,
+C     where, and what.
+C
+C          ioper = 1 ... update the bits indicated by where with the
+C                        value of what.
+C                = 2 ... determine the status of the bits indicated by
+C                        where and store the result in what.
+C
+C          where     ... the sequence number (in common/cwd/) of the
+C                        information which is to be read or updated.
+C
+C          what      ... this argument is used to update the indicated
+C                        bits if ioper=1, or is returned with the
+C                        status of these bits if ioper=2.
+C
+C
+C    *******************************************************************
+C2
+C
+C
+C      where    name    bits         description
+C      -----   ------   ----   -----------------------------------
+C
+C21
+C        1     const    0-1    scf constraints.
+C                              0 ... real rhf.
+C                              1 ... real uhf.
+C                              2 ... complex rhf.
+C                              3 ... complex uhf.
+C
+C22
+C        2     ipurd    2      number of d functions.
+C                              0 ... five d.
+C                              1 ... six d.
+C
+C23
+C        3     basis    3-5    type of basis set.
+C                              0 ... minimal.
+C                              1 ... extended.
+C                              2 ... general.
+C
+C24
+C        4     polar    6-8    polarization functions (p, d).
+C                              bit 6=0 ... no p functions on hydrogen.
+C                                   =1 ... p functions on hydrogen.
+C                              bit 7=0 ... no d functions on first row.
+C                                   =1 ... d on first row.
+C                              bit 8=0 ... no d on second row.
+C                                   =1 ... d on second row.
+C
+C                              note that these bits can be addressed
+C                              individually (see below).
+C
+C25
+C        5     conver   9      scf convergence.
+C                              0 ... the scf has not gone max cycles.
+C                              1 ... the scf has gone max cycles.
+C
+C26
+C        6     stabil   10     2nd order stability of wave function.
+C                              0 ... not tested or not stable.
+C                              1 ... tested and found stable.
+C
+C27
+C        7     sym      11     symmetry of univariate search in second.
+C                              0 ... search is symmetric for tau pos/neg
+C                              1 ... search is not symmetric.
+C
+C28
+C        8     guess    12     type of guess for tau (see scfdm).
+C                              0 ... tau not available.
+C                              1 ... tau available.
+C
+C29
+C        9     bnread   14     whether binrd has tried and failed to
+C                              read a deck of cards.
+C                              0 ... no.
+C                              1 ... yes.
+C
+C210
+C        10    ifponh   6      polarization on hydrogen (see above).
+C
+C211
+C        11    ifdon1   7      polarization on first row (see above).
+C
+C212
+C        12    ifdon2   8      polarization on second row (see above).
+C
+C213
+C        13    iffon1   15     f functions on first row.
+C                              0 ... no.
+C                              1 ... yes.
+C
+C214
+C        14    iffon2   16     f functions on second row.
+C                              0 ... no.
+C                              1 ... yes.
+C
+C215
+C        15    iffon3   17     f functions on third row.
+C                              0 ... no.
+C                              1 ... yes.
+C
+C216
+C        16    f7f10    18     number of f functions.
+C                              0 ... seven f.
+C                              1 ... ten f.
+C
+C217
+C        17    ifpol    15-17  used to address these bits collectively.
+C                              (see description above.)
+C
+C218
+C        18    ifau     13     if coordinates in blank common are in
+C                              atomic units.
+C                              0 ... no, angstroms instead.
+C                              1 ... yes.
+C
+C219
+C        19    iffp     19     if this is a fletcher-powell
+C                              optimization run.
+C                              0 ... no.
+C                              1 ... yes.
+C
+C220
+C        20    prtoff   20     control print in nextov and chain
+C                              0 ... print turned on
+C                              1 ... print turned off
+C
+C221
+C         21    psave   21     paper save master switch.
+C                              0 ... (off) paper used as normal.
+C                              1 ... (on) paper usage drastically
+C                                    reduced.
+C
+C222
+C         22    opclo   22     closed/open selector.
+C                              0 ... closed shell.
+C                              1 ... open shell.
+C                              note: this bit is used for rhf open
+C                              shell.
+C
+C
+C223
+C         23    ifgrd   23    if this is a gradient
+C                             optimization run
+C                             0 ... no.
+C                             1 ... yes.
+C
+C224
+C         24    ifrc    24    if energy derivatives are to be
+C                             calculated
+C                             0 ... yes.
+C                             1 ... no.
+C
+C
+C225
+C         25    ifarch  25   if a summary of the job is to be placed
+C                             into the archive file.
+C                             0 ... no.
+C                             1 ... yes.
+C
+C
+C226
+C         26    nosym   26-27 should the point group symmetry of the
+C                             molecule be used to eliminate
+C                             redundant computation
+C                             0 ... yes.
+C                             1 ... no, the point group will be
+C                                   computed and printed only.
+C                             2 ... no, a change in the point group
+C                                   has been detected during an
+C                                  optimization.
+C
+C2ilsw
+C
+C
+C    *******************************************************************
+C
+C
+C
+C
+C
+99001 format (1H0,'ILSW--  BEFORE: ',i12,' AFTER: ',i12,' IOPER: ',i4,
+     &        ' WHERE: ',i4,' WHAT ',i4)
+C
+C
+      loc1 = 2*WHERE
+      loc = loc1 - 1
+      i0 = Ilsw1(1)
+      oldsw = Ilsw1(1)
+      if ( IOPER.eq.2 ) then
+C
+         whats = iand(i0,Const(loc))
+         WHAT = shift(whats,-Const(loc1))
+      else
+C
+         ioc = not(Const(loc))
+         ioc = iand(i0,ioc)
+         whats = shift(WHAT,Const(loc1))
+         i0 = ior(whats,ioc)
+         Ilsw1(1) = i0
+      endif
+      if ( Iop(34).ne.0 ) write (Iout,99001) oldsw , Ilsw1(1) , IOPER , 
+     &                           WHERE , WHAT
+      if ( IOPER.eq.1 ) call twrite(ioilsw,Ilsw1,1,1,1,1,0)
+      return
+C
+      end
+@* INDEX.

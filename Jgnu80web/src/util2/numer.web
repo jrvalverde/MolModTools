@@ -1,0 +1,46 @@
+@* numer.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NGRP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FWGRP   INIREP  NUMDOF  OPER    PRSFWG  SYMNUM         
+                                                                    
+\end{description}
+@a
+      integer function numer(NGRP)
+      implicit none
+      integer i , idigit , jdigit , n , n1 , n2 , NGRP
+      dimension NGRP(3)
+      dimension n(10)
+      data n/1H0 , 1H1 , 1H2 , 1H3 , 1H4 , 1H5 , 1H6 , 1H7 , 1H8 , 1H9/
+C
+C
+C     form a number from the hollereith digits in ngrp.
+C
+C
+C
+      idigit = NGRP(2)
+      jdigit = NGRP(3)
+      numer = 0
+      n1 = -1
+      n2 = -1
+      do 100 i = 1 , 10
+         if ( idigit.eq.n(i) ) n1 = i - 1
+         if ( jdigit.eq.n(i) ) n2 = i - 1
+ 100  continue
+      numer = n1
+      if ( n2.ne.-1 ) numer = 10*n1 + n2
+      if ( numer.lt.0 ) numer = 0
+C
+      return
+C
+      end
+@* INDEX.

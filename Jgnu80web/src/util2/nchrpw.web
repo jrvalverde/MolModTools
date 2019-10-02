@@ -1,0 +1,27 @@
+@* nchrpw.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] ID                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPCPV                                                  
+                                                                    
+\end{description}
+@a
+      integer function nchrpw(ID)
+      implicit none
+      integer ID
+C          this integer function returns the number of characters
+C     which can be stored in a single precision word.
+      nchrpw = 4
+      return
+C
+      end
+@* INDEX.

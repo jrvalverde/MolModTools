@@ -1,0 +1,25 @@
+@* lnk1.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   SCFDM                                                  
+                                                                    
+\end{description}
+@a
+      subroutine lnk1
+      implicit none
+C     temporary lnk1
+      write (6,99001)
+C
+99001 format (' SORRY, LNK1 NOT YET IMPLEMENTED')
+C
+      call lnk1e
+      stop
+C
+      end
+@* INDEX.

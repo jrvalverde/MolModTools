@@ -1,0 +1,74 @@
+@* putfp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] X                                                         
+\item[INPUT:] N                                                         
+\item[PASSED:] BB                                                        
+\item[PASSED:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  ICBUF                                                  
+\item[Uses]  CBUF    ICBUF                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ENCODE  IORD    LNK1E   PAKSTR  PUTDEL                 
+\item[Called by]   PRMOUT  PRMTBL  SZPRNT                                 
+                                                                    
+\end{description}
+@a
+      subroutine putfp(X,N,BB,NBB)
+      implicit none
+      integer ieow , iord , m , N , NBB
+C ----------------------------------------------------------------------
+C2putfp
+      double precision X
+      integer BB(*)
+      integer Icbuf(34)
+      character*1 Cbuf , cbuf1
+      character*1 char1
+      integer zero
+      common /cbuf  / Cbuf(136)
+      equivalence (Icbuf,Cbuf)
+      equivalence (cbuf1,char1)
+      data zero/'0'/
+      data ieow/1/
+C     subroutine putfp(x,n,bb,nbb)
+C
+C          this routine puts the characters representing the double
+C     precision value "x" into the buffer "bb", updating the cursor
+C     "nbb" as it does.  also, a comma is placed in "bb" after the
+C     number.  the argument "n" is the number of desired figures
+C     after the decimal point (maximum 12).
+C2
+C     r. a. whiteside - fall 1978
+C ----------------------------------------------------------------------
+C
+      call encode(30,N,Icbuf,X)
+C
+      if ( N.le.12 ) then
+         m = 30
+C  80 if(iord(cbuf(m)).ne.zero) go to 90
+ 50      cbuf1 = Cbuf(m)
+         if ( iord(char1).ne.zero ) then
+C
+            call pakstr(Icbuf,m,BB,NBB)
+            call putdel(ieow,BB,NBB)
+            return
+         else
+            m = m - 1
+            goto 50
+         endif
+      endif
+C
+      write (6,99001)
+      call lnk1e
+C
+99001 format ('  MORE THAN 12 FIGURES REQUESTED IN PUTFP.')
+C
+      return
+C
+      end
+@* INDEX.

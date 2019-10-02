@@ -1,0 +1,63 @@
+@* iord.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ICHR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ALTGES  BPRINT  CRAM    DELTYP  DOLLAR  FFERR   FFGET  
+             FWGRP   GETCHR  IFALPH  INCRD   INIREP  LEEAO   LEEVAO 
+             LINK1   NOSIGN  NUMDOF  OCTA    OMEGA   OPER    PRSFWG 
+             PTGRP   PUTFP   QPAINT  QPDEST  QPDP    QPSKBL  RDCHG  
+             SYMM    SYMNUM  TETRA   ZCENTR  ZGET    ZPARM   ZSYMB  
+                                                                    
+\end{description}
+@a
+      integer function iord(ICHR)
+      implicit none
+      integer i , ia , ia1 , ib , icode , ilen , ires
+      character*(*) ICHR
+      character*1 bytes(4) , byte(4)
+      equivalence (icode,byte(1)) , (ires,bytes(1))
+C if (letter.eq.'a'.or.word.eq.'abcd')     becomes:
+C if (letter.eq.iord('a').or.word.eq.iord('abcd'))
+C letter is integer (default 4 byte) with 'a1' form
+C word is also integer with read 'a4' form
+C   one hopes that the preparation of these two cases
+C   is the same via either 'data' or 'reading'
+C
+C
+C      data ia1/4/
+C  silly "portable" way of discovering if storage is a1 or r1
+      data ia/'A'/ , ib/'B'/
+C
+      ia1 = 1
+      if ( (ib-ia).gt.1 ) ia1 = 4
+C get length of passed char string
+      ilen = len(ICHR)
+      if ( ilen.gt.4 ) ilen = 4
+C
+C fill up ires with correct char codes (byte by byte)
+C
+      do 100 i = 1 , ilen
+         icode = ichar(ICHR(i:i))
+         bytes(i) = byte(ia1)
+ 100  continue
+C
+C fill up remaining room in ires with  spaces
+C
+      do 200 i = ilen + 1 , 4
+         icode = ichar(' ')
+         bytes(i) = byte(ia1)
+ 200  continue
+      iord = ires
+      return
+C
+      end
+@* INDEX.

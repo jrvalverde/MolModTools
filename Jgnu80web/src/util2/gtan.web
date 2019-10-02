@@ -1,0 +1,30 @@
+@* gtan.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CIDS5                                                  
+                                                                    
+\end{description}
+@a
+      double precision function gtan(ARG)
+      implicit none
+      double precision dtan , ARG
+C
+C
+C
+C     tangent
+C
+      gtan = dtan(ARG)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,29 @@
+@* lfld.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] STB                                                       
+\item[UNUSED:] NBITS                                                     
+\item[OUTPUT:] TO                                                        
+\item[INPUT:] FROM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LABINT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine lfld(STB,NBITS,TO,FROM)
+      implicit none
+      integer FROM , NBITS , STB , TO
+C
+      TO = TO + FROM*2**STB
+      return
+C
+      end
+@* INDEX.

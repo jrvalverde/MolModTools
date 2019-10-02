@@ -1,0 +1,46 @@
+@* or3mom.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] ATMCHG                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IXYZ                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ORAXIS                                                 
+                                                                    
+\end{description}
+@a
+      double precision function or3mom(MAXAP3,A,ATMCHG,NATOMS,IXYZ)
+      implicit none
+      double precision A , ATMCHG , zero
+      integer iat , IXYZ , MAXAP3 , NATOMS
+      dimension A(MAXAP3,3) , ATMCHG(*)
+      data zero/0.0D0/
+C
+C
+C     this function returns the value of the third moment of charge
+C     along the ixyz cartesian axis.  note that the distance used in
+C     computing the moment is not as usually defined.  rather than
+C     being the perpindicular distance from the axis to the point it
+C     is the projection of the point onto the reference axis.
+C
+C
+C
+C
+      or3mom = zero
+      do 100 iat = 1 , NATOMS
+         or3mom = or3mom + ATMCHG(iat)*A(iat,IXYZ)**3
+ 100  continue
+      return
+C
+      end
+@* INDEX.

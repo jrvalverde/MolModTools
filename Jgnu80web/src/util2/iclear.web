@@ -1,0 +1,35 @@
+@* iclear.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[OUTPUT:] IA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   D95V    DLPINT  ESTM    GLPINT  INICOM  LOSBAS         
+                                                                    
+\end{description}
+@a
+      subroutine iclear(N,IA)
+      implicit none
+      integer i , IA , N
+      dimension IA(*)
+C
+C
+C***********************************************************************
+C     routine to clear n locations in array ia.
+C***********************************************************************
+C
+      do 100 i = 1 , N
+         IA(i) = 0
+ 100  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,85 @@
+@* putdel.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IEO                                                       
+\item[PASSED:] BB                                                        
+\item[OUTPUT:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  PUTICR                                         
+\item[Called by]   ALTGES  APPLAB  GETREP  GRDOPT  INITBS  INITFP  INITMS 
+             LABREP  MULPOP  PUTFP   PUTI    SYMLBL  ZGET    ZPARM  
+             ZSYMB                                                  
+                                                                    
+\end{description}
+@a
+      subroutine putdel(IEO,BB,NBB)
+C ----------------------------------------------------------------------
+      implicit none
+      integer BB , c , eor , eost , eow , getchr , IEO , NBB
+      dimension BB(*)
+      data eow/','/ , eost/'/'/ , eor/10/
+C
+C     subroutine putdel(ieo,bb,nbb)
+C
+C          this routine puts a delimiter character into the archive
+C     buffer "bb" and updates the cursor "nbb".  the delimiter type
+C     is specified by the argument "ieo":
+C          1 ... end-of-word.
+C          2 ... end-of-statement.
+C          3 ... end-of-section.
+C          4 ... end-of-record.
+C     since an end-of-section is just two adjacent end-of-statement
+C     marks, this routine will not put two successive end-of-statement
+C     marks if ieo=2.  if you try to put an end-of-statement mark and
+C     the previons character in the buffer is another of these marks,
+C     then the request is ignored and the routine does nothing.
+C2
+C     r. a. whiteside - fall 1978
+C ----------------------------------------------------------------------
+C
+      if ( IEO.eq.2 ) then
+C
+C                              put <eost>.
+         if ( NBB.ne.0 ) then
+            NBB = NBB - 1
+            c = getchr(BB,NBB)
+            if ( c.eq.eost ) return
+            if ( c.eq.eow ) NBB = NBB - 1
+         endif
+         call puticr(eost,BB,NBB)
+         return
+      elseif ( IEO.eq.3 ) then
+C
+C                              put <eos>.
+         if ( NBB.ne.0 ) then
+C
+ 20         NBB = NBB - 1
+            c = getchr(BB,NBB)
+            if ( c.eq.eow ) NBB = NBB - 1
+            if ( c.eq.eow ) goto 20
+         else
+            c = 0
+         endif
+         if ( c.ne.eost ) call puticr(eost,BB,NBB)
+         call puticr(eost,BB,NBB)
+         return
+      elseif ( IEO.ne.4 ) then
+C
+C                              put <eow>.
+         call puticr(eow,BB,NBB)
+         return
+      endif
+C
+C                              put <eor>.
+      call puticr(eor,BB,NBB)
+      return
+C
+      end
+@* INDEX.

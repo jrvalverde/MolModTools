@@ -1,0 +1,46 @@
+@* nrep.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITEM                                                      
+\item[INPUT:] LIST                                                      
+\item[INPUT:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ESTM    PRMTBL                                         
+                                                                    
+\end{description}
+@a
+      integer function nrep(ITEM,LIST,LENGTH)
+      implicit none
+      integer i , ITEM , LENGTH , LIST , ltest
+      dimension LIST(*)
+C
+C
+C     ****************************************************************
+C     return as the value of the function, nrep, the number of times
+C     that item appears in the array list.  the first length elements
+C     of list are to be searched.  note that for a match only the
+C     absolute value of item need be equal to the absolute value of
+C     an element of the list.
+C     ****************************************************************
+C
+C
+C
+      ltest = iabs(ITEM)
+      nrep = 0
+      if ( LENGTH.le.0 ) return
+      do 100 i = 1 , LENGTH
+         if ( ltest.eq.iabs(LIST(i)) ) nrep = nrep + 1
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

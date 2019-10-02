@@ -1,0 +1,25 @@
+@* killer.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   NEWLNK  RCOORD  TYPCON  ZPOLYR  ZQUADR                 
+                                                                    
+\end{description}
+@a
+      subroutine killer
+      implicit none
+      real w
+C subroutine to stop the program and produce a traceback.
+C use only for debugging. normaly lnk1e should be used when an error is
+C detected.
+      w = -1.
+      w = sqrt(w)
+      stop 13
+C
+      end
+@* INDEX.

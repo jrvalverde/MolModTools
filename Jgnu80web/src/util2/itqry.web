@@ -1,0 +1,38 @@
+@* itqry.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IFILE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO                                                 
+\item[Called by]   RHFCLO                                                 
+                                                                    
+\end{description}
+@a
+      integer function itqry(IFILE)
+      implicit none
+      integer idum , IFILE , jdum , len
+C
+C
+C1itqry
+C
+C     function itqry(ifile)
+C
+C          this function returns the length (in double words) of the
+C     file number 'ifile'.  this number may correspond to either
+C     a read-write file or a bucket.
+C
+C                                                                      0
+C
+      call fileio(11,IFILE,len,idum,jdum)
+      itqry = len
+      return
+C
+      end
+@* INDEX.

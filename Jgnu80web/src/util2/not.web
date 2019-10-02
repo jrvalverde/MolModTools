@@ -1,0 +1,29 @@
+@* not.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITEM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      integer function not(ITEM)
+      implicit none
+      integer ITEM , mask
+C      integer xor
+      data mask/ - 1/
+C
+C      not = xor(item,mask)
+      not = ieor(ITEM,mask)
+      return
+C
+      end
+@* INDEX.

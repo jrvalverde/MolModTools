@@ -1,0 +1,47 @@
+@* pad.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] STRING                                                    
+\item[INPUT:] OLDLEN                                                    
+\item[INPUT:] NEWLEN                                                    
+\item[PASSED:] PADCHR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       PUTICR                                                 
+\item[Called by]   APPLAB  ENCODE  MULPOP  PRMOUT  PRMTBL  PRTSYM  PUTLBL 
+             ZSYMB                                                  
+                                                                    
+\end{description}
+@a
+      subroutine pad(STRING,OLDLEN,NEWLEN,PADCHR)
+      implicit none
+      integer i , istart , NEWLEN , OLDLEN , PADCHR , STRING
+      dimension STRING(*)
+C     ******************************************************************
+C2pad
+C     subroutine pad(string,oldlen,newlen,padchr)
+C     given a (packed) string of length oldlen, pad it out to a length
+C     of newlen using padchr as the added character.  oldlen is updated.
+C     if newlen <= oldlen then do nothing.
+C2
+C     ******************************************************************
+C
+C
+C
+      if ( OLDLEN.ge.NEWLEN ) return
+      istart = OLDLEN + 1
+      do 100 i = istart , NEWLEN
+         call puticr(PADCHR,STRING,OLDLEN)
+ 100  continue
+C
+      return
+C
+C
+      end
+@* INDEX.

@@ -1,0 +1,134 @@
+@* newlnk.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] LNK                                                       
+\item[OUTPUT:] NLINK                                                     
+\item[INPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       KILLER  LNK1E                                          
+\item[Called by]   NEXTOV                                                 
+                                                                    
+\end{description}
+@a
+      subroutine newlnk(LNK,NLINK,JUMP)
+C ----------------------------------------------------------------------
+      implicit none
+      integer i , icard , In , inc , Iout , Ipunch , jcard , jmpcrd , 
+     &        JUMP , LNK , NLINK
+      dimension LNK(200)
+      common /io    / In , Iout , Ipunch
+C          this routine uses the data in "lnk" and the argument
+C     "jump" to determine the new value for "nlink".  "nlink" points
+C     to the next program in "lnk" to be executed.  basically, the
+C     routine just increments "nlink" and that's that.  however,
+C     several confusing situations can arise:
+C          1. "jump" may specify a value to be added to "nlink"
+C             instead of its being incremented.  this feature is
+C             used primarily in the post-scf, and is documented
+C             in routine "nextov".
+C          2. the next value in "lnk" may specify a jump.  this kind
+C             of jump specifies a number of "cards" to be skipped.
+C          3. in spite of possibility (2) above, the value of
+C             "jump" may indicate that the jump is to be ignored.
+C     this routine provides all of the logic for dealing with such
+C     things.
+C     r. a. whiteside - november 1979
+C ----------------------------------------------------------------------
+C
+C                  a value for "jump" larger than 100 indicates that
+C                  mod(jump,100) is to be added to "nlink".
+      if ( iabs(JUMP).lt.100 ) then
+C
+C                  increment nlink and see if lnk(nlink) specifies
+C                  a jump.
+ 50      NLINK = NLINK + 1
+         if ( NLINK.gt.200 ) then
+C
+C                  errors.
+            write (Iout,99002)
+         else
+            if ( LNK(NLINK).gt.10000 ) return
+C
+C                  lnk(nlink) indicates a jump.  if the argument
+C                  "jump" is one, then ignore the jump.
+            if ( JUMP.eq.1 ) goto 50
+C
+C                  well, when both "lnk" and "jump" say "frog", then
+C                  i jump!
+C
+C                  there is some possibly confusing logic below
+C                  to deal with both forward and backward jumps.
+C                  just note that for forward jumps, we want the
+C                  first overlay with the appropriate card number,
+C                  and for backward jumps, we want the last (in terms
+C                  of distance from current value of "nlink").  in
+C                  each case, of course, we want the lowest value
+C                  of "nlink" for the "card".
+            jmpcrd = iabs(LNK(NLINK)) + 1
+            if ( jmpcrd.eq.0 ) then
+               write (Iout,99002)
+            else
+C                  skip forward or backward                            0
+               inc = +1
+               if ( LNK(NLINK).lt.0 ) inc = -1
+C
+C                  deal with backward jumps (see discussion above).
+               if ( inc.eq.-1 ) jmpcrd = jmpcrd + 1
+               icard = -99
+C
+C                  top of loop for looking at "lnk".
+ 60            NLINK = NLINK + inc
+               if ( NLINK.gt.200 ) then
+                  write (Iout,99002)
+               else
+C                  have we backed past the first link                  0
+                  if ( NLINK.ne.0 ) then
+C
+C                  don't pay any attention to "jump" specifications.
+                     if ( LNK(NLINK).lt.10000 ) goto 60
+                     jcard = mod(LNK(NLINK),1000000)/10000
+                  else
+                     jcard = 0
+                     if ( icard.eq.0 ) then
+C
+                        write (Iout,99003)
+                        goto 100
+                     endif
+                  endif
+                  if ( icard.ne.jcard ) jmpcrd = jmpcrd - 1
+                  if ( jmpcrd.eq.0 ) then
+C
+ 62                  if ( inc.eq.-1 ) NLINK = NLINK + 1
+                     if ( LNK(NLINK).lt.10000 ) goto 62
+                     return
+                  else
+                     icard = jcard
+                     goto 60
+                  endif
+               endif
+            endif
+         endif
+ 100     write (Iout,99001) (LNK(i),i=1,200)
+C
+99001    format (200(' LNK: ',7I10,/))
+C
+         call lnk1e
+         call killer
+         stop
+C
+99002    format ('  THE LIST OF LINKS IS WEDGED.')
+99003    format ('  A BOGUS JUMP IS IN THE ROUTE.')
+      else
+         NLINK = NLINK + mod(JUMP,100)
+         return
+      endif
+C
+      end
+@* INDEX.

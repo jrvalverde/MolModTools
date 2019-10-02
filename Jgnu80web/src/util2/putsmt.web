@@ -1,0 +1,60 @@
+@* putsmt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IRWF                                                      
+\item[INPUT:] ISUB                                                      
+\item[PASSED:] A                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  INDSMT  IOUT    IRWSMT  NINSMT                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LNK1E                                          
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine putsmt(IRWF,ISUB,A)
+      implicit none
+      double precision A
+      integer i , In , Indsmt , Iout , ipos , Ipunch , IRWF , Irwsmt , 
+     &        isave , ISUB , len , Maxsmt , Ninsmt
+      dimension A(*)
+      common /smt   / Indsmt , Maxsmt , Ninsmt(10) , Irwsmt(10)
+      common /io    / In , Iout , Ipunch
+C
+C***********************************************************************
+C     routine to write the array a to the n-th sub-matrix position
+C     in rwfile irwf.
+C***********************************************************************
+C
+C
+C
+99001 format (' PUTMST:  UNABLE TO MAP IRWF=',i5/'   ISUB=',
+     &        i6/'   NINSMT, IRWSMT:'/(1x,i2,2I6))
+C
+C     map irwf onto the local file number.
+      do 100 i = 1 , Indsmt
+         isave = i
+         if ( IRWF.eq.Irwsmt(i) ) goto 200
+ 100  continue
+      write (Iout,99001) IRWF , ISUB , Indsmt , 
+     &                   (i,Ninsmt(i),Irwsmt(i),i=1,Indsmt)
+      call lnk1e
+C
+C     the file has been mapped.  this specifies the length
+C     of the matrix.
+ 200  len = Ninsmt(isave)
+C
+C     write the sub-matrix out to the rw-files.
+      ipos = (ISUB-1)*len
+      call fileio(+1,-IRWF,len,A(1),ipos)
+C
+C     all done, return to caller.
+      return
+C
+      end
+@* INDEX.
