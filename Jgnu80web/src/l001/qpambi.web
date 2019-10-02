@@ -1,0 +1,150 @@
+@* qpambi.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] FOUND                                                     
+\item[PASSED:] LENF                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  MAXKEY  QPABRV  QPAMBG  QPERR   QPFAIL  QPOK    TCURSR 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPCPV   QPCSTR  QPDCOD  QPSKIP  QPTVAL                 
+\item[Called by]   QPSKEY                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpambi(TABLE,FOUND,LENF)
+C2qpambi
+C ----------------------------------------------------------------------
+      implicit none
+      integer Chrctr , cursor , Digit , FOUND , i , Inte , jjjj , 
+     &        Lastyp , Lcursr , len , LENF , Lenstr , Maxdep , Maxkey , 
+     &        nvals , oneamb , Qpabrv , Qpambg , Qpblnk , Qpcaps
+      integer qpcpv , qpcstr , qpdcod , Qpdpth , Qpend , Qperr , 
+     &        Qpexit , Qpfail , Qpnoab , Qpok , Qprecr , Qpret , 
+     &        qptval , scr , Stack , State , Status , String , TABLE , 
+     &        Tcursr
+      integer tmp , Tran , val
+      dimension scr(16) , TABLE(*) , FOUND(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C ======================================================================
+C          this function searches the remainder of the current state
+C     to be sure that the string in 'found' is an unambiguous
+C     abbreviation of the keyword in table.  it is assumed that
+C     'tcursr' is positioned just past the keyword for which 'found'
+C     is an abbreviation.  'lenf' is the length of the string 'found'.
+C     there are four possible returned values for this function:
+C          - qpok ..... the string 'found' is unambiguous.
+C          - qpambg ... the string 'found' is ambiguous.
+C          - qpfail ... the string 'found' matches exactly a
+C                       subsequent keyword in the state.
+C          - qperr .... illegal token in table, or a keyword in table is
+C                       too long.
+C     this function doesn't modify any global data.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+C
+      cursor = Tcursr
+      oneamb = 0
+C
+C                        starting from the present location, scan
+C                  the rest of this state looking for "keywords" or
+C                  "specific character(s)".  compare each of these
+C                  with the string in "found".  we should find (a)
+C                  that "found" is an unambiguous abbreviation of
+C                  the keyword, (b) that "found" is ambiguous, or
+C                  (c) that "found" matches exactly a subsequent
+C                  keyowrd in the state.
+C
+C            skip the destination stuff.
+ 100  call qpskip(cursor)
+      len = qptval(TABLE,cursor)
+C
+C                  decode the table entry.
+      tmp = qpdcod(len)
+C
+C            is it a keyword or specific character?
+      if ( tmp.ne.1 ) then
+         if ( tmp.ne.2 ) then
+C
+C            is it the end of the state?
+            if ( tmp.eq.16 .or. tmp.eq.15 ) then
+C
+C                        end-of-state, we're finished with scan.
+               val = Qpok
+               if ( oneamb.eq.1 ) val = Qpambg
+               goto 200
+C
+C            are there user-supplied delimiters to skip?
+            elseif ( tmp.eq.14 ) then
+C
+C                        user supplied terminators must be
+C                        skipped.
+               len = qptval(TABLE,cursor)
+               if ( len.gt.64 .or. len.le.0 ) then
+C
+                  val = Qperr
+                  goto 200
+               else
+                  nvals = (len-1)/qpcpv(jjjj) + 1
+                  do 105 i = 1 , nvals
+                     tmp = qptval(TABLE,cursor)
+ 105              continue
+                  goto 100
+               endif
+            else
+C
+C            is there a table error?
+               if ( tmp.ne.0 ) goto 100
+               val = Qperr
+               goto 200
+            endif
+         endif
+      endif
+C
+C                  a keyword was found in the table.  get it out,
+C                  and see how it compares with "found".
+      if ( iabs(len).gt.Maxkey ) then
+         val = Qperr
+      else
+         nvals = (iabs(len)-1)/qpcpv(jjjj) + 1
+         do 150 i = 1 , nvals
+            scr(i) = qptval(TABLE,cursor)
+ 150     continue
+         if ( len.lt.0 ) goto 100
+C
+C            compare.
+         val = qpcstr(scr,len,FOUND,LENF)
+C                        how did the strings compare?
+C                  - if they didn't match, just go back to top.
+         if ( val.eq.Qpfail ) goto 100
+C                  - if "found" is an abbreviation of the table keyword,
+C                    then "found" is ambiguous.  the only thing
+C                    that can save it now, is to find an exact
+C                    match with some other subsequent keyword.  in
+C                    this case, of course, "found" is not ambiguous.
+         if ( val.eq.Qpabrv ) oneamb = 1
+         if ( val.eq.Qpabrv ) goto 100
+C
+C                  - the keyword in the table matched "found" exactly.
+C                    set the appropriate status and return.
+         val = Qpfail
+      endif
+ 200  qpambi = val
+      return
+C
+      end
+@* INDEX.

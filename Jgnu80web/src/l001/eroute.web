@@ -1,0 +1,842 @@
+@* eroute.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[OUTPUT:] NONSTD                                                    
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    IGES    IPSEUD  IRAFF   ISCFDM                         
+\item[Transmits as argument]  CNOE    DIRECT  IALT    IBAS1   IBAS2   IBAS3   IBAS4  
+             ICARD   IRTCRD  LABL    OPTCYC  SCFCYC  STBINT  STBRXT 
+             STCCXT  UNITS   VSHIFT                                 
+\item[Uses]  CNOE    COORD   DIRECT  GRDSYM  IALT    IBAS1   IBAS2  
+             IBAS3   IBAS4   ICARD   ICMPLX  ID2E    IGES    INTSYM 
+             IOPTYP  IOUT    IPRC1   IPRC2   IPRC3   IPRC4   IPSEUD 
+             IRAFF   IRTCRD  ISCFDM  ITEST   ITS     ITYPE   LABL   
+             NDCHG   NOEXTR  NONDEF  NOPOP   NOSTD   NOSYM   OPTCYC 
+             PRTGES  RPAC    SAVBAS  SAVFC   SAVMO   SCFCYC  STBINT 
+             STBOUT  STBRXT  STBSYM  STCCXT  STRONL  UNITS   VSHIFT 
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       ARCSET  FILLRT  GPARSE  ILSW    LNK1E   NONDF   RDROUT 
+             RTEDEF  TWRITE                                         
+\item[Called by]   LINK1                                                  
+                                                                    
+\end{description}
+
+\begin{verbatim}
+this routine reads the gnu80 symbolic route (command) card,
+and builds the internal data structure which specifies the
+sequence of overlays and options for an execution of gnu80.  it
+expects that the first card has been read and stored into
+/ertcrd/ in a1 format.
+it returns two values to the caller.  "ncards" indicates
+the number of overlay cards produced, and "nonstd" is returned
+non-zero if a non-standard route is being specified.  in this
+case, another routine "croute" should be called to generate
+the internal route.
+
+
+     Tthe flags in /ertgen/ have the following meanings:
+
+     itype ... type of run.
+         1 ... single point.
+         2 ... optimization.
+         3 ... guess only.
+         4 ... scan.
+         5 ... force.
+         6 ... frequency.
+         7 ... stability.
+
+     iprc1 ... general energy procedure.
+         0/1/2/3/4/5/6 ===> default(hf)/hf/mp2/mp3/mp4/ci/cc
+
+     iprc2 ... restricted or unrestricted?
+         0/1/2/3/4 ==> default/r/u/r,u/rohf
+
+     iprc3 ... subset of possible excitations to consider (post-scf).
+        0/1/2/3/4/5 ===> default/s/d/sd/sdq/dq
+
+     iprc4 ... frozen core?
+        0/1/2 ==> default(fc)/fc/full
+
+     ibas1 ... iop(5) in overlay 3.
+
+     ibas2 ... iop(6) in overlay 3.
+
+     ibas3 ... iop(7) in overlay 3.
+
+     ibas4 ... iop(8) in overlay 3.
+
+     iges ... iop(5) in overlay 4.
+
+     savfc ... whether to save the force constant matrix on the
+        '.ges' file:     0/1 ---> no/yes
+
+     savbas ... whether to save the basis set on the ".ges" file:
+        0/1 ---> no/yes
+
+     savmo ... whether to save the mo coefs on the ".ges" file:
+        0/1 ---> no/yes.
+
+     ialt ... iop(8) in overlay 4.
+
+     iscfdm ... use steepest descents procedure?
+        0/1 ===> no/yes
+
+     its ... find transition state?
+       0/1 ==> no/yes
+
+     ipseud ... what kind of pseudopotential to use?
+         0/1/2 ===> none/standard/read
+
+     noextr ... if this is non-zero, supress extrapolation
+                    in the scf.
+
+     iraff ... whether to use raffenetti format for integrals.
+       0/1/2 ==> default(use when possible)/use/don't use
+
+     nopop ... supression of population analysis.
+       0/1/2 ===> do analysis/suppress/minimal analysis
+
+     itest ... if this is nonzero the basis set is printed and the
+               job is cancelled after link 301.
+
+     synch ... a non-zero value here causes all io operations to be
+               performed synchronously. (not implemented).
+
+     nosym ... a non-zero value here suppresses any use of symmetry.
+
+     scfcyc ... the number of scf cycles.  zero gives 32 cycles.
+
+     nostd ... a non-zero value means that 'nonstd' was found on
+               the card.  use other route input scheme in this case.
+
+     stbsym ... whether symmetry should be preserved in a stability
+                calculation.
+                0/1/2 ===> default(no)/yes/no
+
+     stbopt ... whether a new wave function should be produced in a
+                stability calculation.
+               0/1/2 ===> default(no)/yes/no
+
+     stbout ... restrictions on the type of output wave function if
+                "stbopt" is 1:
+                0 ... default:  c uhf
+                1 ... r rhf
+                2 ... r uhf
+                3 ... c rhf
+                4 ... c uhf
+                5 ... r ghf (not yet implemented.)
+                6 ... c ghf (not yet implemented)
+
+     stbint ... some stability option.  iop(10)=stbint in ov9.
+
+     stbrxt ... some stability option.  iop(11)=stbrxt in ov9
+
+     stbcxt ... some stability option.  iop(12)=stbcxt in ov9.
+
+     prtges ... whether to print guess.  (0/1 = no/yes)
+
+     icmplx ... whether wave function is allowed to become complex.
+          0/1 ===> no/yes
+
+     ioptyp ... type of optimization.
+          0/1/2/3/4 ===> default(best possible)/grad/fp/vgeom2/ms
+
+     id2e ... how to get second derivatives in optimizations.
+        0 ... estimate.
+        1 ... calculate analytically hf 2-nd derivatives.
+        2 ... read from ".ges" file.
+
+     intsym ... whether to use symmetry to avoid evaluation of some
+            two-electron integrals.
+            0/1/2 --->  default (use when possible)/yes/no.
+
+     grdsym ... whether to use symmetry to speed up gradient
+            evaluation.
+            0/1/2 ---> default (use when possible)/yes/no
+
+     ifau ... units for input bond lengths:
+            0/1/2 --- default(angstroms)/au/ang
+
+     ifrad ... units for input angles:
+            0/1/2 --- default(degrees)/radians/degrees
+
+     optcyc ... number of optimization cycles.
+
+     coord ... whether geometry is given in x, y, z coords: 0/1 no/yes
+
+     stronl ... if this is non-zero, the "opt" should only do a star.
+
+     nondef ... if this is nonzero non-default options are read in.
+
+     ndchg  ... if this is nonzero non-default charges are read in.
+     cnoe   ... non-zero for a "complete neglect of everything" job
+     rpac  ... if this is nonzero, scf results for rpac are written
+               to file 11.
+     vshift    non-zero means virtual orbital level shifting will
+               be used: shifter = vshift/1000
+               default scf cycles is also increased.
+     direct    if direct is non-zero, a (closed-shell) scf is
+               done by the "direct" method; computing the repulsion
+               integrals on demand.
+\end{verbatim}
+
+@a
+C
+C
+      subroutine eroute(NONSTD)
+      implicit none
+      integer*4 Cnoe , Coord , dash , Direct , Dummy , gparse , Grdsym , 
+     &          i , Ialt , Ibas1 , Ibas2 , Ibas3 , Ibas4 , Icard , 
+     &          Icmplx , Id2e , Ifau , Ifrad , Iges , imax
+      integer*4 In , incov , Intsym , iolbl , Ioptyp , Iout , iovdat , 
+     &          iover , iovr , Iprc1 , Iprc2 , Iprc3 , Iprc4 , Ipseud , 
+     &          Ipunch , Iraff , Irtcrd , Iscfdm , Itest , Ititle
+      integer*4 Its , itst , Itype , jmp , jmpdat , jmploc , jtype , 
+     &          Labl , last , lim , n1 , n10 , n2 , n3 , n5 , n7 , nc , 
+     &          ncards , ncover , ncovr
+      integer*4 Ndchg , ndsh , Noextr , Nondef , NONSTD , nop , Nopop , 
+     &          Nostd , Nosym , nover , nrtcrd , number , Optcyc , 
+     &          Prtges , Rpac , Savbas , Savfc , Savmo , Scfcyc , Stbint
+      integer*4 Stbopt , Stbout , Stbrxt , Stbsym , Stccxt , Stronl , 
+     &          Synch , Units , Vshift
+C
+C                  the first card of the command section should be here.
+      common /ertcrd/ Icard(80)
+C
+C                  the command section is stored in irtcrd and written
+C                  into an rwf so the archiver can find it at the
+C                  end of the job.
+      common /label / Labl(1000) , Ititle(100) , Irtcrd(100)
+C
+C                  the results of the parse are stored into /ertgen/.
+C                  each variable is described below.
+C-rpac : modified to add 'rpac' keyword
+      common /ertgen/ Itype , Ibas1 , Ibas2 , Ibas3 , Ibas4 , Iprc1 , 
+     &                Iprc2 , Iprc3 , Iprc4 , Iges , Savfc , Savbas , 
+     &                Savmo , Ialt , Iscfdm , Its , Ipseud , Noextr , 
+     &                Iraff , Nopop , Itest , Synch , Nosym , Scfcyc , 
+     &                Nostd , Stbsym , Stbopt , Stbout , Stbint , 
+     &                Stbrxt , Stccxt , Prtges , Icmplx , Ioptyp , 
+     &                Id2e , Intsym , Grdsym , Ifau , Ifrad , Units , 
+     &                Optcyc , Coord , Stronl , Nondef , Ndchg , Cnoe , 
+     &                Rpac , Vshift , Direct , Dummy(51)
+      dimension nover(26) , jmploc(26) , jmpdat(26)
+      dimension iovdat(25,26)
+      dimension number(50) , incov(50)
+      common /io    / In , Iout , Ipunch
+C
+      data ncovr/0/
+      data iolbl/502/
+      data dash/'-'/
+C
+C                  the number of overlay cards in each "jtype".
+C                  "jtype" is calculated below by "rtedef".
+      data nover/6 , 0 , 8 , 0 , 0 , 16 , 0 , 19 , 0 , 21 , 0 , 21 , 
+     &     15 , 19 , 0 , 13 , 0 , 13 , 0 , 4 , 0 , 7 , 0 , 11 , 8 , 10/
+C
+C                  the size of the "jump" for each jtype.
+      data jmpdat/0 , 0 , 0 , 0 , 0 , -4 , 0 , -4 , 0 , -7 , 0 , -7 , 
+     &     -3 , -5 , 0 , -2 , 0 , -3 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0/
+C
+C                  on which card should the "jump" be executed?
+      data jmploc/0 , 0 , 0 , 0 , 0 , 13 , 0 , 16 , 0 , 18 , 0 , 18 , 
+     &     11 , 15 , 0 , 10 , 0 , 11 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0/
+C
+C                  sequence of overlays for each "jtype".
+C                                       sp hf
+C                                       sp post-scf
+C                                       opt grad, hf, no d2e.
+C                                       opt grad, hf, d2e
+C                                       opt grad, post-scf, no d2e.
+C                                       opt grad, post-scf, d2e.
+C                                       opt fp, hf
+C                                       opt fp, post-scf.
+C                                       opt vgeom2.
+C                                       scan
+C                                       guess only.
+C                                       forces.
+C                                       frequency calculation.
+C                                       stability no-opt
+C                                       stability opt
+      data iovdat/1 , 2 , 3 , 4 , 5 , 6 , 19*0 , 25*0 , 1 , 2 , 3 , 4 , 
+     &     5 , 6 , 8 , 9 , 17*0 , 25*0 , 25*0 , 1 , 2 , 3 , 4 , 5 , 6 , 
+     &     7 , 1 , 2 , 3 , 5 , 7 , 1 , 3 , 5 , 6 , 9*0 , 25*0 , 1 , 2 , 
+     &     3 , 4 , 5 , 6 , 8 , 9 , 10 , 7 , 1 , 2 , 3 , 5 , 7 , 1 , 3 , 
+     &     5 , 6 , 6*0 , 25*0 , 1 , 2 , 3 , 4 , 5 , 8 , 9 , 10 , 7 , 1 , 
+     &     2 , 3 , 5 , 8 , 9 , 10 , 7 , 1 , 3 , 5 , 6 , 4*0 , 25*0 , 1 , 
+     &     2 , 3 , 4 , 5 , 8 , 9 , 10 , 7 , 1 , 2 , 3 , 5 , 8 , 9 , 10 , 
+     &     7 , 1 , 3 , 5 , 6 , 4*0 , 1 , 2 , 3 , 4 , 5 , 6 , 1 , 2 , 3 , 
+     &     5 , 1 , 2 , 3 , 5 , 6 , 10*0 , 1 , 2 , 3 , 4 , 5 , 6 , 8 , 
+     &     9 , 1 , 2 , 3 , 5 , 8 , 9 , 1 , 2 , 3 , 5 , 6 , 6*0 , 25*0 , 
+     &     1 , 2 , 3 , 4 , 5 , 6 , 2 , 3 , 5 , 2 , 3 , 5 , 6 , 12*0 , 
+     &     25*0 , 1 , 2 , 3 , 4 , 5 , 6 , 2 , 3 , 5 , 6 , 2 , 14*0 , 
+     &     25*0 , 1 , 2 , 3 , 4 , 21*0 , 25*0 , 1 , 2 , 3 , 4 , 5 , 7 , 
+     &     6 , 18*0 , 25*0 , 1 , 2 , 3 , 4 , 5 , 8 , 9 , 10 , 7 , 1 , 
+     &     6 , 14*0 , 1 , 2 , 3 , 4 , 5 , 8 , 9 , 6 , 17*0 , 1 , 2 , 3 , 
+     &     4 , 5 , 8 , 9 , 6 , 5 , 6 , 15*0/
+C
+C
+C                        read the route specification.
+      nrtcrd = 100
+      call rdrout(Icard,Irtcrd,nrtcrd)
+      if ( nrtcrd.gt.400 ) write (Iout,99002)
+      if ( nrtcrd.gt.400 ) call lnk1e
+C
+C                       print out the route card.
+      ndsh = min0(nrtcrd,76)
+      write (Iout,99003) (dash,i=1,ndsh)
+      imax = nrtcrd/4 + 1
+      write (Iout,99001) (Irtcrd(i),i=1,imax)
+      write (Iout,99003) (dash,i=1,ndsh)
+C
+C                              save the common block with route spec.
+      call twrite(iolbl,Labl,600,1,600,1,0)
+C
+C                        the routine "gparse" parses the input
+C                        command line and puts the results into
+C                        the common block.
+C 160 call captlz(irtcrd,irtcrd,nrtcrd)
+      call ilsw(1,25,0)
+      i = gparse(Irtcrd,nrtcrd)
+      if ( i.eq.0 ) then
+C
+C     check for non-standard route.
+         NONSTD = 0
+         if ( Nostd.ne.0 ) NONSTD = 1
+         if ( Nostd.ne.0 ) return
+C
+C                              set defaults and check for errors.
+         call rtedef(jtype)
+         if ( jtype.le.0 ) write (Iout,99005)
+C
+         ncover = 0
+         lim = nover(jtype)
+         jmp = jmpdat(jtype)
+         itst = jmploc(jtype)
+C
+C
+C                  build overlay sequence into number.
+C
+         if ( lim.gt.0 ) then
+            do 20 i = 1 , lim
+               iover = iovdat(i,jtype)
+C
+C     skip population analysis if requested.
+               if ( Nopop.ne.1 .or. iover.ne.6 ) then
+C
+                  ncovr = ncovr + 1
+                  number(ncovr) = iover
+                  incov(ncovr) = 0
+                  if ( i.eq.itst ) incov(ncovr) = jmp
+               endif
+ 20         continue
+            ncovr = ncovr + 1
+            number(ncovr) = 0
+            ncards = ncovr
+C
+C                                       now, get options and segments.
+            nc = 0
+            nop = 0
+            n5 = 0
+            n1 = 0
+            n2 = 0
+            n3 = 0
+            n10 = 0
+            n7 = 0
+C                  init fillrt
+            call fillrt(0,0,0)
+C
+C
+C                  Top of loop for getting options and segments.
+C
+ 40         nc = nc + 1
+            iovr = number(nc)
+            if ( iovr.eq.0 ) then
+C
+               if ( Nondef.ne.0 ) call nondf
+               call fillrt(6,Cnoe,0)
+               call arcset
+               if ( Cnoe.ne.0 ) write (Iout,99004)
+               return
+            else
+C
+               if ( iovr.eq.2 ) then
+C
+C     -----------------------------> overlay 2.
+C
+                  call fillrt(2,2,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n2 = n2 + 1
+                  call fillrt(4,2,nop)
+                  if ( n2.gt.1 .and. jtype.eq.16 ) call fillrt(3,1,5)
+                  if ( n2.gt.1 .and. jtype.eq.18 ) call fillrt(3,2,5)
+C
+C                  turn off symmetry if requested.
+                  if ( Nosym.ne.0 ) call fillrt(3,1,15)
+C
+C                        maybe geometry is in coordinates.
+                  if ( Coord.ne.0 ) call fillrt(3,1,29)
+               elseif ( iovr.eq.3 ) then
+C
+C     ----------------------------> overlay 3.
+C
+                  call fillrt(2,3,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n3 = n3 + 1
+C                  always need l301, and iop's 5,6,7, and 8.
+                  call fillrt(4,1,nop)
+                  call fillrt(3,Ibas1,5)
+                  call fillrt(3,Ibas2,6)
+                  call fillrt(3,Ibas3,7)
+                  call fillrt(3,Ibas4,8)
+C  is this a direct scf?
+                  if ( Direct.ne.0 ) call fillrt(3,Direct,45)
+                  if ( Direct.ne.0 ) Iraff = 0
+C iraff is put into the route near rpac
+C     if this is a test job abort it at the end of l301
+                  if ( Itest.ne.0 .and. n3.eq.1 ) call fillrt(3,1,26)
+C
+C     set iop(6) to 1 on cards after the first for general basis
+C     optimizations.  this causes the basis to be re-used, so that
+C     it needn't be read for each point.
+                  if ( n3.gt.1 .and. Ibas1.eq.7 ) call fillrt(3,1,6)
+C
+C                  unless this is the last entry in an optimization
+C                  (which is only for dipole integrals), get l302.
+                  if ( n3.ne.3 ) call fillrt(4,2,nop)
+C
+C                  get dipole moment integrals, if necessary.
+                  if ( n3.ne.2 .and. jtype.ne.20 .and. Nopop.eq.0 )
+     &                 call fillrt(4,3,nop)
+C
+C                  set raffenetti type.
+C-rpac
+                  if ( Rpac.eq.1 ) Iraff = 0
+C-rpac
+                  call fillrt(3,Iraff,11)
+C
+C                  model potential stuff........
+C  ensure that lanl1mb uses pseudopotentials
+                  if ( Ibas1.eq.6 ) Ipseud = 1
+                  if ( Ibas1.eq.6 ) call fillrt(3,3,17)
+C
+                  if ( Ipseud.ne.0 ) then
+C ensure that l305 and l306 are called
+                     if ( n3.ne.3 ) call fillrt(4,5,nop)
+                     if ( n3.ne.3 ) call fillrt(4,6,nop)
+C  standard (1) or input (2) potentials
+                     if ( Ipseud.eq.1 ) call fillrt(3,1,16)
+                     if ( Ipseud.eq.2 ) call fillrt(3,2,16)
+                  endif
+C
+C                  two-electron s-, p-integrals.
+                  if ( n3.ne.3 .and. jtype.ne.20 ) call fillrt(4,11,nop)
+C
+C                  two-electron d-integrals.
+                  call fillrt(4,14,nop)
+C
+C                  set iop(25) to the last two-electron integral link
+C      last=11
+C      if (ibas1.eq.7.or.ibas3.ne.0) last=14
+                  last = 14
+                  call fillrt(3,last,25)
+C
+C                  deal with symmetry options.
+                  if ( Intsym.eq.1 ) call fillrt(3,1,30)
+                  if ( Grdsym.eq.2 ) call fillrt(3,1,31)
+C
+C                  some additional overlays for frequency calculations.
+                  if ( jtype.eq.24 ) call fillrt(4,7,nop)
+                  if ( jtype.eq.24 ) call fillrt(4,16,nop)
+C
+C                  for post-scf grad opts and for d2e points,
+C                  get some extra overlays.
+                  if ( Id2e.eq.1 .and. n3.eq.1 ) call fillrt(4,7,nop)
+                  if ( Id2e.eq.1 .and. n3.eq.1 ) call fillrt(4,16,nop)
+                  if ( Ioptyp.eq.1 .and. (Iprc1.eq.5 .or. Iprc1.eq.2)
+     &                 .and. n3.ne.3 ) call fillrt(4,7,nop)
+                  if ( Ioptyp.eq.1 .and. (Iprc1.eq.5 .or. Iprc1.eq.2)
+     &                 .and. n3.ne.3 ) call fillrt(4,16,nop)
+C
+C                  deal with "punching".  this is only for the last
+C                  point, in optimizations.
+                  if ( Ioptyp.eq.0 .or. n3.eq.3 ) then
+C
+                     if ( Savbas.ne.0 ) call fillrt(3,1,32)
+                  endif
+               elseif ( iovr.eq.4 ) then
+C
+C     ---------------------------------> overlay 4.
+C
+                  call fillrt(2,4,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  call fillrt(4,1,nop)
+C                  print guess?
+                  if ( Prtges.eq.1 ) call fillrt(3,1,33)
+C                  core guess for pseudo-potnetial calculations.
+                  if ( Ipseud.ne.0 .and. Iges.ne.1 ) Iges = 2
+C                  set type of guess.
+                  call fillrt(3,Iges,5)
+C                  print for guess-only types.
+                  if ( jtype.eq.20 ) call fillrt(3,1,33)
+C                  set "alter" option.
+                  if ( Ialt.ne.0 ) call fillrt(3,Ialt,8)
+C                  set r/u, complex, if explicitly specified.
+                  if ( Iprc2.eq.2 .and. Icmplx.eq.0 ) call fillrt(3,2,7)
+                  if ( Iprc2.eq.2 .and. Icmplx.ne.0 ) call fillrt(3,4,7)
+                  if ( Iprc2.eq.1 .and. Icmplx.eq.0 ) call fillrt(3,1,7)
+                  if ( Iprc2.eq.1 .and. Icmplx.ne.0 ) call fillrt(3,3,7)
+                  if ( Iprc2.eq.3 .and. Icmplx.ne.0 ) call fillrt(3,5,7)
+                  if ( Iprc2.eq.4 ) call fillrt(3,2,7)
+C
+C                  avoid completing coefs, if possible.
+                  if ( Icmplx.eq.0 .and. Iscfdm.eq.0 )
+     &                 call fillrt(3,1,16)
+               elseif ( iovr.eq.5 ) then
+C
+C     ----------------------------------> overlay 5.
+C
+                  call fillrt(2,5,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n5 = n5 + 1
+C
+C                  second part of stability calculation must use l503.
+                  if ( (jtype.eq.25 .or. jtype.eq.26) .and. n5.eq.2 )
+     &                 Iscfdm = 1
+C
+C                  third entry to ov5 is for punch only.
+                  if ( n5.eq.3 ) call fillrt(3,1,12)
+C
+C     set the level-shifter (in thousandths) in iopt(9) of overlay 5
+C     for the first call of overlay 5 t get a set of converged vectors
+C     for subsequent calls of overlay 5
+C
+                  if ( nc.le.5 .and. Vshift.ne.0 )
+     &                 call fillrt(3,Vshift,9)
+C  for the transition metal complexes, it has proved
+C   necessary to have level shifters permanently on; here is the
+C   code to do it, if you must
+C      if ( vshift .ne. 0) call fillrt(3,vshift,9)
+C
+C     for post-scf jobs, optimizations, and gradient calculations,
+C     the convergence is tightened down.
+C
+                  if ( jtype.ne.1 .and. Iprc2.ne.4 ) call fillrt(3,7,6)
+                  if ( Iprc2.eq.4 .and. jtype.ne.1 ) call fillrt(3,6,6)
+C
+C                  set some random option for l506 in optimizations.
+                  if ( Iprc2.eq.4 .and. n5.gt.1 ) call fillrt(3,1,18)
+C
+C          suppress extrapolation if requested.  give more
+C          cycles in this case.
+                  if ( Noextr.eq.1 ) call fillrt(3,2,11)
+C
+C     fill in the link numbers.
+                  if ( Iscfdm.ne.0 .or. Icmplx.eq.1 ) then
+C
+                     call fillrt(3,2,21)
+                     call fillrt(4,3,nop)
+                     if ( Icmplx.eq.1 .and. Iscfdm.eq.0 )
+     &                    call fillrt(3,2,8)
+C
+C     give 64 cycles by default for scfdm.
+                     if ( Scfcyc.eq.0 ) call fillrt(3,64,7)
+                  else
+                     if ( Iprc2.eq.1 .or. Iprc2.eq.3 )
+     &                    call fillrt(4,1,nop)
+                     if ( Iprc2.eq.2 .or. Iprc2.eq.3 )
+     &                    call fillrt(4,2,nop)
+                     if ( Iprc2.eq.4 ) call fillrt(4,5,nop)
+                  endif
+C
+C     set number of cycles if specified.
+                  if ( Scfcyc.ne.0 ) call fillrt(3,Scfcyc,7)
+C
+                  if ( Ioptyp.eq.0 .or. n5.eq.3 .or. jtype.eq.22 ) then
+                     if ( Savmo.ne.0 ) call fillrt(3,1,32)
+                  endif
+               elseif ( iovr.eq.6 ) then
+C
+C     ----------------------------------------> overlay 6.
+C
+                  call fillrt(2,6,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  call fillrt(4,1,nop)
+                  if ( Nopop.eq.2 ) call fillrt(3,2,7)
+C-rpac
+                  if ( Nopop.eq.2 .or. Rpac.ne.0 ) call fillrt(3,2,8)
+                  if ( Nopop.eq.2 .or. Rpac.ne.0 ) call fillrt(3,2,9)
+C-rpac
+                  if ( Nopop.eq.2 ) call fillrt(3,2,10)
+C-rpac
+                  if ( Rpac.ne.0 ) then
+                     call fillrt(4,2,nop)
+                     call fillrt(3,1,13)
+                  endif
+               elseif ( iovr.eq.7 ) then
+C-rpac
+C
+C     ------------------------------------------> overlay 7.
+C
+                  call fillrt(2,7,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n7 = n7 + 1
+C
+C                  deal with symmetry options.
+                  if ( Grdsym.eq.2 ) call fillrt(3,1,30)
+C
+                  if ( jtype.ne.24 ) then
+                     if ( Id2e.ne.1 .or. n7.ne.1 ) then
+C
+C do the one electron derivatives with l701
+                        if ( Iprc1.ne.2 .and. Iprc1.ne.5 )
+     &                       call fillrt(4,1,nop)
+C  make sure that the derivatives from l701 are picked up by l702
+                        if ( Iprc1.ne.2 .and. Iprc1.ne.5 )
+     &                       call fillrt(3,1,27)
+C  do the sp derivatives with l702
+                        if ( Iprc1.ne.2 .and. Iprc1.ne.5 )
+     &                       call fillrt(4,2,nop)
+C  do the spd derivatives with l703
+                        if ( Iprc1.ne.2 .and. Iprc1.ne.5 )
+     &                       call fillrt(4,3,nop)
+C  set iop(29) = 5 in l716
+                        if ( Iprc1.eq.2 .or. Iprc1.eq.5 )
+     &                       call fillrt(3,5,29)
+C  use l705 to do the pseudopotential derivatives if needed
+                        if ( Ipseud.ne.0 ) call fillrt(4,5,nop)
+C  use l716 to collect the lot and transform to z-matrix
+                        call fillrt(4,16,nop)
+                        goto 40
+                     endif
+                  endif
+C
+C                  d2e and frequency stuff.
+                  call fillrt(4,7,nop)
+                  call fillrt(4,8,nop)
+                  call fillrt(4,9,nop)
+                  call fillrt(4,16,nop)
+                  if ( jtype.eq.24 ) call fillrt(3,1,8)
+                  call fillrt(3,1,25)
+                  call fillrt(3,5,29)
+               elseif ( iovr.eq.8 ) then
+C
+C     ----------------------------------------> overlay 8.
+C
+                  call fillrt(2,8,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+C                  always need l801, l802, and l803.
+                  call fillrt(4,1,nop)
+                  call fillrt(4,2,nop)
+                  call fillrt(4,3,nop)
+C                  set frozen core, if requested.
+                  if ( Iprc4.eq.1 ) call fillrt(3,1,10)
+C                  set option to specify mp3.
+                  if ( Iprc1.eq.3 ) call fillrt(3,2,6)
+C                  mp4dq
+                  if ( Iprc1.eq.4 .and. Iprc3.eq.5 ) call fillrt(3,2,6)
+C            mp4sdq
+                  if ( Iprc1.eq.4 .and. Iprc3.eq.4 ) call fillrt(3,3,6)
+C            mp4sdtq
+                  if ( Iprc1.eq.4 .and. Iprc3.eq.6 ) call fillrt(3,4,6)
+C                  ccd.
+                  if ( Iprc1.eq.6 ) call fillrt(3,2,6)
+C            cid, no gradients.
+                  if ( Iprc1.eq.5 .and. Iprc3.eq.2 .and. 
+     &                 jtype.ne.10 .and. jtype.ne.12 )
+     &                 call fillrt(3,2,6)
+C           cid, gradients.
+                  if ( Iprc1.eq.5 .and. Iprc3.eq.2 .and. 
+     &                 (jtype.eq.10 .or. jtype.eq.12) )
+     &                 call fillrt(3,4,6)
+C            cisd.
+                  if ( Iprc1.eq.5 .and. Iprc3.eq.3 ) call fillrt(3,3,6)
+C                  stability procedure.
+                  if ( jtype.eq.25 .or. jtype.eq.26 ) call fillrt(3,1,6)
+C
+C                  extra option for mp2 gradient.
+                  if ( jtype.eq.10 .or. jtype.eq.12 .or. jtype.eq.23 )
+     &                 call fillrt(3,4,6)
+C
+C                  d2e, scf.
+                  if ( jtype.eq.8 .or. jtype.eq.24 ) call fillrt(3,3,6)
+               elseif ( iovr.eq.9 ) then
+C
+C     ------------------------------------->  overlay 9.
+C
+                  call fillrt(2,9,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+C                  always need l901.
+                  call fillrt(4,1,nop)
+C                  for freq calculations, that's all.
+                  if ( jtype.ne.24 ) then
+C                  for everything but mp2 and stability calculations,
+C                  need overlays 9 thru 13.
+                     if ( jtype.eq.25 .or. jtype.eq.26 ) then
+C
+C                  stability stuff.
+                        call fillrt(4,2,nop)
+                        if ( jtype.eq.26 ) call fillrt(4,18,nop)
+C                  set "ignore symmetry" if requested.
+                        if ( Stbsym.eq.2 ) call fillrt(3,1,13)
+C                  "noopt" options.
+                        if ( jtype.eq.25 ) call fillrt(3,4,6)
+                        if ( jtype.eq.25 ) call fillrt(3,2,9)
+                        if ( jtype.ne.25 ) then
+C
+C                  "opt" options.
+                           call fillrt(3,Stbout-1,6)
+                           call fillrt(3,2,9)
+                           call fillrt(3,Stbint,10)
+                           call fillrt(3,Stbrxt,11)
+                           call fillrt(3,Stccxt,12)
+                        endif
+                     else
+                        if ( Iprc1.gt.2 ) then
+                           do 42 i = 9 , 13
+                              call fillrt(4,i,nop)
+ 42                        continue
+                        endif
+C
+C
+C mp3.
+                        if ( Iprc1.eq.3 ) call fillrt(3,2,5)
+C
+C mp4sdq.
+                        if ( Iprc1.eq.4 .and. Iprc3.ne.5 .and. 
+     &                       Iprc3.ne.6 ) call fillrt(3,4,5)
+                        if ( Iprc1.eq.4 .and. Iprc3.eq.6 )
+     &                       call fillrt(3,5,5)
+C
+C                  set "doubles only" if requested.
+                        if ( Iprc3.eq.2 ) call fillrt(3,1,5)
+C
+C mp4dq.
+                        if ( Iprc1.eq.4 .and. Iprc3.eq.5 )
+     &                       call fillrt(3,3,5)
+C
+C cid gradients.
+                        if ( Iprc1.eq.5 .and. 
+     &                       (jtype.eq.10 .or. jtype.eq.12) )
+     &                       call fillrt(3,1,15)
+C
+C ccd.
+C
+                        if ( Iprc1.eq.6 .and. Iprc3.ne.3 )
+     &                       call fillrt(3,6,5)
+                     endif
+                  endif
+               elseif ( iovr.eq.10 ) then
+C
+C     ---------------------------->  overlay 10.
+C
+                  call fillrt(2,10,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n10 = n10 + 1
+                  if ( Itype.eq.2 .and. Iprc1.ge.2 )
+     &                 call fillrt(4,1,nop)
+                  call fillrt(4,2,nop)
+                  if ( n10.eq.1 .and. Id2e.eq.1 ) call fillrt(3,1,6)
+                  if ( Itype.eq.6 ) call fillrt(3,1,6)
+C                  mp2 gradient.
+                  if ( Iprc1.eq.2 .and. 
+     &                 (jtype.eq.10 .or. jtype.eq.12 .or. jtype.eq.23) )
+     &                 call fillrt(3,1,5)
+C                  cid gradient.
+                  if ( Iprc1.eq.5 .and. 
+     &                 (jtype.eq.10 .or. jtype.eq.12 .or. jtype.eq.23) )
+     &                 call fillrt(3,2,5)
+               else
+C
+C     ----------------------------> overlay 1.
+C
+                  call fillrt(2,1,0)
+                  if ( incov(nc).ne.0 ) call fillrt(5,incov(nc),0)
+                  n1 = n1 + 1
+                  if ( n1.eq.1 ) then
+C
+C                  always need l101 first time.
+                     call fillrt(4,1,nop)
+C
+C                  read force constants from file.
+                     if ( Id2e.eq.2 ) call fillrt(3,3,10)
+C
+C                  deal with units.
+                     if ( Units.ne.0 ) call fillrt(3,Units,20)
+C
+C                  read in charges?
+                     if ( Ndchg.ne.0 ) call fillrt(3,1,31)
+C
+C                  number of optimization cycles.
+                     if ( Optcyc.ne.0 .and. Ioptyp.eq.1 )
+     &                    call fillrt(3,Optcyc,6)
+                     if ( Optcyc.ne.0 .and. Ioptyp.eq.4 )
+     &                    call fillrt(3,Optcyc,6)
+C
+C                  some special options for frequency calculations.
+                     if ( jtype.eq.24 ) call fillrt(3,4,10)
+                     if ( jtype.eq.24 ) call fillrt(3,7,15)
+C
+C                  option for d2e on first point.
+                     if ( Id2e.eq.1 ) call fillrt(3,4,10)
+                  endif
+C
+C                  need l103 for freq, forces, and grad opts.
+                  if ( jtype.ge.6 .and. jtype.le.12 .and. Ioptyp.ne.4 )
+     &                 call fillrt(4,3,nop)
+                  if ( jtype.ge.6 .and. jtype.le.12 .and. Ioptyp.eq.4 )
+     &                 call fillrt(4,5,nop)
+                  if ( jtype.eq.22 .or. jtype.eq.24 )
+     &                 call fillrt(4,3,nop)
+C
+C                  don't update geometry on last l103 for freq calcs.
+                  if ( jtype.eq.24 .and. n1.eq.2 ) call fillrt(3,1,30)
+C
+C                        maybe "star only" in grad opt.
+                  if ( Ioptyp.eq.1 .and. Stronl.ne.0 )
+     &                 call fillrt(3,1,18)
+C
+C                        maybe geometry is in coordinates.
+                  if ( Coord.ne.0 ) call fillrt(3,1,29)
+C
+C
+C                  set "one negative eigenvalue" for transition state
+C                  calculations.
+                  if ( Its.eq.1 ) call fillrt(3,1,5)
+C
+C                  l102 for fp optimizations.
+                  if ( Ioptyp.eq.2 ) call fillrt(4,2,nop)
+C
+C                  saving force constants.
+                  if ( n1.eq.2 .and. jtype.eq.24 .and. Savfc.ne.0 )
+     &                 call fillrt(3,1,32)
+                  if ( n1.eq.3 .and. Ioptyp.eq.1 .and. Savfc.ne.0 )
+     &                 call fillrt(3,1,32)
+                  if ( n1.eq.3 .and. Ioptyp.eq.4 .and. Savfc.ne.0 )
+     &                 call fillrt(3,1,32)
+               endif
+               goto 40
+            endif
+         endif
+      endif
+      write (Iout,99006)
+      call lnk1e
+      stop 13
+99001 format (2x,19A4)
+99002 format (' ROUTE SPECIFICATION TOO LONG.')
+99003 format (2x,128A1)
+99004 format (' C.N.O.E.... COMPLETE NEGLECT OF EVERYTHING.',
+     &        /' TASK SUCCESFULLY PERFORMED.')
+99005 format (' ','  JTYPE ZERO.')
+99006 format ('  SYNTAX ERROR IN ROUTE SPECIFICATION.')
+      end
+@* INDEX.

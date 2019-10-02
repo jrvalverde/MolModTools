@@ -1,0 +1,277 @@
+@* link1.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IDUMP   IREST                                          
+\item[Transmits as argument]  INFO    IOP     IUNIT   NATOMS  PHYCON                 
+\item[Uses]  INFO    IOP     IREST   IUNIT   NATOMS  PHYCON         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  CROUTE  DOLLAR  EROUTE  FILEIO  GAMGEN  ILSW   
+             INICOM  IORD    LNK1E   PHYFIL  TWRITE                 
+\item[Called by]   L001                                                   
+                                                                    
+\end{description}
+
+\begin{verbatim}
+
+
+      common /info/ info(10)
+
+      an area for the communication of miscellaneous information
+      between links.
+
+      info(1)  ... not used at present
+      info(2)  ... not used at present
+      info(3)  ... not used at present
+      info(4)  ... summary word for the calculation (see subroutine
+                   arcset in link 1)
+      info(5)  ... not used at present
+      info(6)  ... not used at present
+      info(7)  ... not used at present
+      info(8)  ... not used at present
+      info(9)  ... not used at present
+      info(10) ... not used at present
+
+phycon
+
+      common /phycon/ phycon(30)
+
+      this common block holds the values of the physical constants
+      which are used in the program.  it is initialized by subroutine
+      phyfil in link1 which also documents the sources for the numbers.
+
+      phycon( 1) ... toang,  angstroms per bohr
+      phycon( 2) ... tokg,   kilograms per amu
+      phycon( 3) ... toe,    esu per electron charge
+      phycon( 4) ... plank,  plank constant
+      phycon( 5) ... avog,   avogadro number
+      phycon( 6) ... jpcal,  joules per calorie
+      phycon( 7) ... tomet,  metres per bohr
+      phycon( 8) ... hartre, joules per hartre
+      phycon( 9) ... slight, speed of light
+      phycon(10) ... boltz,  boltzman constant
+      phycon(11) ... not used at present
+      phycon(12) ... not used at present
+      phycon(13) ... not used at present
+      phycon(14) ... not used at present
+      phycon(15) ... not used at present
+      phycon(16) ... not used at present
+      phycon(17) ... not used at present
+      phycon(18) ... not used at present
+      phycon(19) ... not used at present
+      phycon(20) ... not used at present
+      phycon(21) ... not used at present
+      phycon(22) ... not used at present
+      phycon(23) ... not used at present
+      phycon(24) ... not used at present
+      phycon(25) ... not used at present
+      phycon(26) ... not used at present
+      phycon(27) ... not used at present
+      phycon(28) ... not used at present
+      phycon(29) ... not used at present
+      phycon(30) ... not used at present
+
+munit
+
+      common/munit/ iunit(20)
+
+      defines the unit numbers for all external data files needed
+      by gnu80.  iunit is initialized by subroutine defunt in
+      link 1.
+      the purpose of this common is to centralize the definitions
+      of the fortran logical units required in the gaussian system.
+      thus, if it is ever necessary to change to different logical
+      units on another machine, one should be able to merely
+      change the definitions in defunt.
+
+      **proposed** use of /munit/:
+      note that in the vax version of gaussian 80 that only
+      iunit=2, 3, and 4 are initialized by defunt.  the other units
+      are hard wired into either ntran or binwt/binrd.
+
+      =================================================================
+      iunit( )            use
+      =================================================================
+         1           not used.
+         2           primary input.
+         3           primary printed output.
+         4           primary punched output.
+         5           binwt unit.
+         6           binrd unit.
+         7           rw-files.
+         8           buckets.
+         12          integrals.
+         16          d2e unit.
+     ==================================================================
+
+
+
+iop
+
+      common/iop/ iop(50)
+
+      the progam options are stored in this common.  the definitions
+      of the 50 options differ from overlay to overlay.  this common
+      is updated in subroutine chain.
+
+mol
+
+      common/mol/ natoms,icharg,multip,nae,nbe,ne,nbasis,
+                  ian(101),atmchg(100),c(300)
+
+      the basic information concerning the molecule to which the
+      current computation pertains.
+
+      natoms      ... the number of atoms in the molecule.
+      icharg      ... the total electric charge on the molecule,
+                      0 for neutral, 1 for cations, etc.
+      multip      ... the molecule's spin multiplicity (1 for
+                       singlets, 2 for doublets, etc.)
+      nae         ... the number of electrons of alpha spin.
+      nbe         ... the number of electrons of beta  spin.
+      ne          ... the number of electrons (= nae + nbe).
+      nbasis      ... the number of basis functions.
+      ian(i)      ... the atomic number of atom i.  this array is
+                      dimensioned to 101 so that the number
+                      of double-words in the common block is even.
+      atmchg(i)   ... the nuclear charge of atom i.
+      c(i)        ... the x, y, and z, coordinates of the atoms in
+                      atomic units.  the coordinates are stored in
+                      the order x1, y1, z1, x2, y2, z2, x3, etc.
+
+ilsw
+
+     common/ilsw1/ ilsw1(2)
+
+     the inter-link status word.  see subroutine ilsw.
+
+
+
+gen
+
+      common /gen/ is an area where many resluts of the
+      calculation are stored.  it consists of 47 double
+      precision words, and the use of each word is detailed
+      below:
+
+      real*8 dgen
+      common/gen/dgen(47)
+
+      value      use
+      -----      ----------------------
+      1       electronic configuration of scf wave-function.
+      2-20      not used.
+      21      root-mean-squared force of optimized parameters.
+      22      dipole moment.
+      23      rms error in density matrix.
+      24-30      not used.
+      31      'tau' from scfdm.
+      32      scf energy.
+      33      ump2 energy.
+      34      ump3 energy.
+      35      ump4(sdtq) energy.
+      36      cid energy, or e(var1).
+      37      cisd energy.
+      38      mp4dq energy.
+      39      mp4sdq energy.
+      40      ccd energy.
+      41      nuclear repulsion energy.
+      42      t (length of correction of reference determinant).
+      43      updated energy for fletcher-powell optimizations.
+      44      <s**2> of scf wave function.
+      45      <s**2> corrected to first order (after doubar).
+      46      <s**2> corrected for doubles (not implemented).
+      47      a0.
+
+
+zmat
+zsubst
+     the documentation for common/zmat/ and common/zsubst/ can
+     be obtained by "ghelp l101".
+
+
+\end{verbatim}
+
+@a
+C     program link1
+      subroutine link1
+      implicit none
+      real*8 Atmchg , C , gen , Phycon
+      integer Ian , Icharg , Idump , In , Info , Iop , iord , Iout , 
+     &        ips , Ipunch , Irest , irwgen , irwinf , irwiop , irwmol , 
+     &        irwunt , Iunit , l , lrwgen , Multip
+      integer Nae , Natoms , Nbasis , Nbe , Ne , nonstd , ntimes
+C2link1
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /munit / Iunit(20)
+      common /phycon/ Phycon(30)
+      common /info  / Info(10)
+      common /fidump/ Idump
+C
+      integer finit
+      common /io    / In , Iout , Ipunch
+      common /restar/ Irest
+C
+      dimension gen(47)
+      data irwgen/501/ , lrwgen/47/ , finit/12/
+      data irwiop/996/ , irwmol/997/ , irwunt/995/ , irwinf/993/
+C
+C
+C     'dollar' reads the first 'job-type' (route) card and stores
+C     this into /rtcrd/.  if one is not found, then 'ntimes' is
+C     returned as 0.  on restarts with a new route, 'irest' is set to 1.
+C     on restarts using old route, 'dollar' will not return.
+      Irest = 0
+      call dollar(ntimes,ips)
+      if ( ntimes.ne.0 ) then
+         if ( Irest.ne.1 ) then
+            if ( ips.eq.iord('F') ) Idump = 2
+C initialise fileio:
+            call fileio(finit,l,l,l,l)
+C
+C     set the bits which control printing.
+C     these calls must be after the fileio finit call because
+C     ilsw does twrites.
+            if ( ips.eq.iord('P') ) then
+               call ilsw(1,20,0)
+               call ilsw(1,21,0)
+            elseif ( ips.eq.iord('F') ) then
+               call ilsw(1,20,0)
+               call ilsw(1,21,0)
+            else
+               call ilsw(1,20,1)
+               if ( ips.ne.iord('N') ) then
+                  call ilsw(1,21,0)
+               else
+                  call ilsw(1,21,1)
+               endif
+            endif
+C initialise system commons:
+            call inicom
+C     init phycon.
+            call phyfil(Phycon)
+C     define the file for blank common.
+            call twrite(irwiop,Iop,25,1,25,1,0)
+            call twrite(irwmol,Natoms,454,1,454,1,0)
+            call twrite(irwunt,Iunit,10,1,10,1,0)
+            call twrite(irwinf,Info,10,1,10,1,0)
+C
+C     define scratch common /gen/ on the drum
+            call aclear(lrwgen,gen)
+            call twrite(irwgen,gen,lrwgen,1,lrwgen,1,0)
+         endif
+C
+C                        new route parser
+         call eroute(nonstd)
+         if ( nonstd.eq.1 ) call croute
+C     generate table of error functions ... needed for integral routines
+         call gamgen
+         return
+      endif
+      call lnk1e
+      stop
+      end
+@* INDEX.

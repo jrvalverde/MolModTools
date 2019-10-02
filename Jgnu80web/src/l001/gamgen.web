@@ -1,0 +1,80 @@
+@* gamgen.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    C                                                      
+\item[Uses]  C                                                      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FMTGEN  FMTSET  TWRITE                                 
+\item[Called by]   LINK1                                                  
+                                                                    
+\end{description}
+@a
+      subroutine gamgen
+      implicit none
+      double precision C , f , four , pt05 , pt15 , pt184 , six , t , 
+     &                 temp1 , temp2 , y
+      integer i , ick , iogam , j , k
+      dimension y(410) , f(9)
+      common /table / C(1200,6)
+      data pt15/0.15D0/ , pt05/0.05D0/
+      data pt184/0.184D0/
+      data six/6.0D0/ , four/4.0D0/
+      data iogam/3/
+C
+C     initialize the f(m,t) routine.
+      call fmtset(0,0,0)
+C
+C     generate the desired f(m,t) for the complete range.
+C     we will compute f(0,t) through f(4,t) in this section.
+      t = -pt15
+      do 100 i = 1 , 404
+         t = t + pt05
+         call fmtgen(f,t,6,ick)
+C     copy the returned values into places where they can be
+C     reached later.
+         C(i,2) = f(1)
+         C(i,3) = f(2)
+         C(i,4) = f(3)
+         C(i,5) = f(4)
+         C(i,6) = f(5)
+         y(i) = f(6)
+ 100  continue
+C
+C     compute the interpolation table with the values available.
+C     this is somewhat complicated by the fact that some of the
+C     integrals are in y rather than in c.
+      do 200 k = 1 , 6
+         do 150 i = 1 , 400
+            j = i + 2
+C     k indexes the value of m in f(m,t).
+C     i indexes the interpolation table (c).
+C     j indexes the stored values of f(m,t).
+C     if k .eq. 5, we must use alternate code because the integrals
+C     are stored in y.
+            if ( k.ne.6 ) then
+C     integrals in c, proceed as normal.
+               temp1 = C(j+1,k+1) + C(j-1,k+1) - (C(j,k+1)+C(j,k+1))
+               temp2 = six*C(j,k+1) - four*(C(j+1,k+1)+C(j-1,k+1))
+     &                 + C(j-2,k+1) + C(j+2,k+1)
+               C(i,k) = C(j,k+1)
+               C(i+400,k) = C(j+1,k+1) - C(j,k+1)
+               C(i+800,k) = (temp1-pt184*temp2)/six
+            else
+C     alternate code using y.
+               temp1 = y(j+1) + y(j-1) - (y(j)+y(j))
+               temp2 = six*y(j) - four*(y(j+1)+y(j-1)) + y(j-2) + y(j+2)
+               C(i,k) = y(j)
+               C(i+400,k) = y(j+1) - y(j)
+               C(i+800,k) = (temp1-pt184*temp2)/six
+            endif
+ 150     continue
+ 200  continue
+C
+C     write the interpolation table out onto the rw-files.
+      call twrite(iogam,C,7200,1,7200,1,0)
+      return
+C
+      end
+@* INDEX.

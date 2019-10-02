@@ -1,0 +1,25 @@
+@* l001.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LINK1   NEXTOV                                         
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l001(NCHAIN)
+      implicit none
+      integer NCHAIN , nextov
+      call link1
+      NCHAIN = nextov(0)
+      return
+      end
+@* INDEX.

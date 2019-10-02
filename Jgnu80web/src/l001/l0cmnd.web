@@ -1,0 +1,180 @@
+@* l0cmnd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ICARD                                                     
+\item[INPUT:] IOUT                                                      
+\item[OUTPUT:] INTYN                                                     
+\item[OUTPUT:] RWFYN                                                     
+\item[OUTPUT:] GUESYN                                                    
+\item[OUTPUT:] SAVEYN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETLCU  LNK1E                                          
+\item[Called by]   DOLLAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine l0cmnd(ICARD,IOUT,INTYN,RWFYN,GUESYN,SAVEYN)
+      implicit none
+      integer i , ii , itop , jtop , l , lenrec , lfname , m
+C process a "link 0" command - one having "%" in the 1st col.
+C at the moment, only %int= ,  %rwf= , %guess=, and %save=
+C commands are processed
+C==============================================================
+C    icard is the "% record"
+C    iout is an output channel for errors
+C    intyn is .true. if %int= is found
+C    rwfyn is .true. if %rwf= is found
+C    saveyn is .true. if %save= is found
+C    guesyn is .true. if %guess= is found
+C==============================================================
+      integer ICARD(*) , IOUT
+      logical INTYN , RWFYN , SAVEYN , GUESYN
+      integer jcard(80) , intrec(3) , rwfrec(3) , equals , blank
+      integer savrec(4) , gesrec(5)
+      integer intlc(3) , rwflc(3) , savelc(4) , gueslc(5)
+      integer maxrec
+      character getlcu
+      character*1 fname1(20)
+      character*20 fname
+      equivalence (fname1,fname)
+      data lenrec , lfname , maxrec/3 , 20 , 80/
+C  length of recognised commands, length of filename, length of
+C          input record
+      data intrec/'I' , 'N' , 'T'/
+      data intlc/'i' , 'n' , 't'/
+      data rwfrec/'R' , 'W' , 'F'/
+      data rwflc/'r' , 'w' , 'f'/
+      data savrec/'S' , 'A' , 'V' , 'E'/
+      data savelc/'s' , 'a' , 'v' , 'e'/
+      data gesrec/'G' , 'U' , 'E' , 'S' , 'S'/
+      data gueslc/'g' , 'u' , 'e' , 's' , 's'/
+      data equals/'='/
+      data blank/' '/
+C initialisation
+C      intyn = .false.
+C      rwfyn = .false.
+      do 100 i = 1 , lfname
+         fname1(i) = ' '
+ 100  continue
+C "remove" trailing blanks
+      itop = maxrec
+      do 200 ii = 1 , maxrec
+         jcard(ii) = blank
+         i = maxrec - ii + 1
+         if ( ICARD(i).ne.blank ) then
+            itop = i
+            goto 300
+         endif
+ 200  continue
+ 300  m = 0
+      do 400 i = 1 , itop
+         if ( ICARD(i).ne.blank ) then
+            m = m + 1
+            jcard(m) = ICARD(i)
+            jtop = m
+         endif
+ 400  continue
+C check that the record is long enough to have a filename;
+C    length of the command, plus 2 for % and = plus at least 1
+      if ( jtop.ge.(lenrec+3) ) then
+C  look for int=
+         do 450 i = 1 , lenrec
+            if ( (jcard(i+1).ne.intrec(i)) .and. 
+     &           (jcard(i+1).ne.intlc(i)) ) goto 550
+ 450     continue
+         if ( jcard(lenrec+2).ne.equals ) goto 1000
+C get the filename and open the file
+         m = 0
+         do 500 i = 6 , jtop
+C  this "4" is for a1 (not r1) format of characters in integer type
+            l = 4*m + (lenrec+2)*4
+            m = m + 1
+            fname1(m) = getlcu(jcard,l)
+ 500     continue
+C    this is the place to test if the filename recovered from the
+C    % record conforms to the naming conventions of
+C    your system
+         INTYN = .true.
+C  open "asynchronous unit" for repulsion integrals
+         open (unit=3,file=fname,status='UNKNOWN',form='UNFORMATTED')
+         rewind 3
+         return
+C look for rwf=
+ 550     do 600 i = 1 , lenrec
+            if ( (jcard(i+1).ne.rwfrec(i)) .and. 
+     &           (jcard(i+1).ne.rwflc(i)) ) goto 700
+ 600     continue
+         if ( jcard(5).ne.equals ) goto 1000
+C get the filename and open the file
+         m = 0
+         do 650 i = 6 , jtop
+            l = 4*m + (lenrec+2)*4
+            m = m + 1
+            fname1(m) = getlcu(jcard,l)
+ 650     continue
+C    this is the place to test if the filename recovered from the
+C    % record conforms to the naming conventions of
+C    your system
+         RWFYN = .true.
+         open (unit=18,file=fname,status='UNKNOWN',access='DIRECT',
+     &         recl=16380,form='UNFORMATTED')
+         return
+C  look for guess=
+ 700     do 750 i = 1 , 5
+            if ( (jcard(i+1).ne.gesrec(i)) .and. 
+     &           (jcard(i+1).ne.gueslc(i)) ) goto 850
+ 750     continue
+         if ( jcard(7).ne.equals ) goto 1000
+C get the filename and open the file
+         m = 0
+         do 800 i = 8 , jtop
+C  this "4" is for a1 (not r1) format of characters in integer type
+            l = 4*m + (7)*4
+            m = m + 1
+            fname1(m) = getlcu(jcard,l)
+ 800     continue
+C    this is the place to test if the filename recovered from the
+C    % record conforms to the naming conventions of
+C    your system
+         GUESYN = .true.
+C  open the "guess" file for input
+         open (unit=8,file=fname,status='UNKNOWN',form='FORMATTED')
+         rewind 8
+         return
+C  look for save=
+ 850     do 900 i = 1 , 4
+            if ( (jcard(i+1).ne.savrec(i)) .and. 
+     &           (jcard(i+1).ne.savelc(i)) ) goto 1000
+ 900     continue
+         if ( jcard(6).eq.equals ) then
+C get the filename and open the file
+            m = 0
+            do 920 i = 7 , jtop
+C  this "4" is for a1 (not r1) format of characters in integer type
+               l = 4*m + (6)*4
+               m = m + 1
+               fname1(m) = getlcu(jcard,l)
+ 920        continue
+C    this is the place to test if the filename recovered from the
+C    % record conforms to the naming conventions of
+C    your system
+            SAVEYN = .true.
+C  open the "save" file for input
+            open (unit=9,file=fname,status='UNKNOWN',form='FORMATTED')
+            rewind 9
+            return
+         endif
+      endif
+ 1000 write (IOUT,99001) (ICARD(i),i=1,20)
+99001 format (' Link 0 Control Record in ERROR:',/,20A1)
+      call lnk1e
+      return
+      end
+@* INDEX.

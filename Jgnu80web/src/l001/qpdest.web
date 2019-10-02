@@ -1,0 +1,111 @@
+@* qpdest.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TABLE                                                     
+\item[OUTPUT:] TCURSR                                                    
+\item[OUTPUT:] STATE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPERR   QPEXIT  QPFAIL  QPOK    QPRET                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CAPTLZ  IORD    QPCPV   QPDCOD  QPSKIP  QPTVAL         
+\item[Called by]   QPARSE  QPTRAN                                         
+                                                                    
+\end{description}
+@a
+      integer function qpdest(TABLE,TCURSR,STATE)
+C2qpdest
+C ----------------------------------------------------------------------
+      implicit none
+      integer dest , i , iord , jjjj , Maxdep , Maxkey , mycrsr , n , 
+     &        Qpabrv , Qpambg , qpcpv , qpdcod , Qpdpth , Qpend , 
+     &        Qperr , Qpexit , Qpfail , Qpok , Qprecr , Qpret
+      integer qptval , Stack , STATE , TCURSR , tmp , tran , type , val
+      integer TABLE(*)
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C            this routine moves all the pointers to the new state
+C      in the transition.  if the destination is one of the special
+C      names, 'fail' or 'ret', then tcursr is only advanced to the
+C      end of the current entry.  this is a rather convoluted routine,
+C      and should probably be re-written someday .....
+C
+C     the values returned by this routine are:
+C          - qpok if successful.
+C          - qperr if an error in the table is detected.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+      mycrsr = TCURSR
+      val = Qpok
+      dest = qptval(TABLE,mycrsr)
+      call captlz(dest,dest,4)
+      if ( dest.eq.iord('RET') ) val = Qpret
+      if ( dest.eq.iord('EXI') ) val = Qpexit
+      if ( dest.eq.iord('FAI') ) val = Qpfail
+      if ( val.eq.Qpok ) then
+C                        reset tcursr.
+         if ( dest.ne.0 ) TCURSR = 0
+         if ( dest.ne.0 ) goto 200
+         call qpskip(TCURSR)
+      else
+         call qpskip(TCURSR)
+         if ( val.ne.Qpret ) goto 300
+         dest = 0
+      endif
+C                        get next alphabet code.
+ 100  tmp = qptval(TABLE,TCURSR)
+      type = qpdcod(tmp)
+      if ( type.ne.15 ) then
+         if ( type.ne.16 ) then
+            if ( type.eq.14 ) then
+C                        skip past terminators.
+               tmp = qptval(TABLE,TCURSR)
+            elseif ( type.ne.1 ) then
+               if ( type.ne.2 ) then
+                  if ( type.eq.0 ) then
+C
+                     val = Qperr
+                     goto 300
+                  else
+                     call qpskip(TCURSR)
+                     goto 100
+                  endif
+               endif
+            endif
+C                        skip past keyword stuff.
+            if ( iabs(tmp).gt.64 ) then
+               val = Qperr
+               goto 300
+            else
+               n = (iabs(tmp)-1)/qpcpv(jjjj) + 1
+               if ( n.le.0 ) then
+                  val = Qperr
+                  goto 300
+               else
+                  do 105 i = 1 , n
+                     tmp = qptval(TABLE,TCURSR)
+ 105              continue
+                  call qpskip(TCURSR)
+                  goto 100
+               endif
+            endif
+         endif
+      endif
+C                        got a new state ... see if it's the right one.
+ 200  STATE = qptval(TABLE,TCURSR)
+      if ( dest.ne.0 ) then
+         if ( dest.ne.STATE ) goto 100
+         tran = 0
+         val = Qpok
+      endif
+ 300  qpdest = val
+      return
+C
+      end
+@* INDEX.

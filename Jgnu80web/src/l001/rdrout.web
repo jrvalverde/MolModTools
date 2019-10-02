@@ -1,0 +1,74 @@
+@* rdrout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] ICARD                                                     
+\item[OUTPUT:] OUT                                                       
+\item[OUTPUT:] LEN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IN                                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  PAKSTR  PUTICR                                 
+\item[Called by]   EROUTE  NONDF                                          
+                                                                    
+\end{description}
+@a
+      subroutine rdrout(ICARD,OUT,LEN)
+      implicit none
+      integer i , ibl , In , Iout , Ipunch , l , nold
+C ----------------------------------------------------------------------
+      integer OUT(*) , ICARD(*) , LEN
+      integer getchr
+      common /io    / In , Iout , Ipunch
+      data ibl/'    '/
+C          a routine to read the route specification.  it is assumed
+C     that the first card has been read already, and is in 'icard' in
+C     'a1' format.  this will be copied into 'out', and the remaining
+C     cards in the route specification will be read and packed into
+C     'out'.  'len' will be returned with the length of the data in
+C     'out'.  'icard' will be used for scratch.  when this routine
+C     is called, 'len' should contain the length of 'out'.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+99001 format (20A4)
+C
+C                              clear 'out'.
+      l = LEN
+      do 100 i = 1 , LEN
+         OUT(i) = ibl
+ 100  continue
+C
+C                              pack down the characters in 'icard'.
+      LEN = 0
+      do 200 i = 1 , 80
+         call puticr(ICARD(i),ICARD,LEN)
+ 200  continue
+C
+C                              now, get rid of extra spaces.
+      i = LEN
+      LEN = 0
+      call pakstr(ICARD,i,OUT,LEN)
+      call puticr(ibl,OUT,LEN)
+C
+C                              read cards until a blank is found.
+ 300  read (In,99001) (ICARD(i),i=1,20)
+      nold = LEN
+      call pakstr(ICARD,80,OUT,LEN)
+      LEN = LEN + 1
+      if ( LEN.gt.nold+1 ) goto 300
+C
+C                             sometimes there are two spaces at the end.
+      nold = LEN - 1
+      i = getchr(OUT,nold)
+      if ( i.eq.ibl ) LEN = LEN - 1
+      nold = LEN - 1
+      i = getchr(OUT,nold)
+      if ( i.eq.ibl ) LEN = LEN - 1
+      return
+C
+      end
+@* INDEX.

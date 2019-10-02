@@ -1,0 +1,56 @@
+@* gparse.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[PASSED:] LINE                                                      
+\item[PASSED:] LEN                                                       
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    RESULT                                                 
+\item[Transmits as argument]  IOUT    TABLE                                          
+\item[Uses]  IOUT    RESULT  TABLE                                  
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       QPARSE  QPERRO  QPINIT                                 
+\item[Called by]   EROUTE                                                 
+                                                                    
+\end{description}
+@a
+C
+      integer function gparse(LINE,LEN)
+      implicit none
+      integer i , In , Iout , Ipunch , LEN , LINE , qparse , Result , 
+     &        Table , xbas , xproc
+C ----------------------------------------------------------------------
+C ----------------------------------------------------------------------
+      dimension LINE(*)
+C-rpac
+      common /ertgen/ Result(100)
+      common /io    / In , Iout , Ipunch
+      common /prstlb/ Table(1329)
+      call qpinit(Table,0,1,0)
+      i = qparse(Result,Table,LINE,LEN)
+      if ( i.ne.0 ) call qperro(LINE,LEN,Iout)
+C
+      xbas = Result(2)
+      Result(2) = xbas/1000000
+      Result(3) = mod(xbas,1000000)/10000
+      Result(4) = mod(xbas,10000)/100
+      Result(5) = mod(xbas,100)
+C
+      xproc = Result(6)
+      Result(6) = xproc/1000000
+      Result(7) = mod(xproc,1000000)/10000
+      Result(8) = mod(xproc,10000)/100
+      Result(9) = mod(xproc,100)
+C
+      gparse = i
+      return
+      end
+@* INDEX.

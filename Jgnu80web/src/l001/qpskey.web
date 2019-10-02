@@ -1,0 +1,117 @@
+@* qpskey.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LCURSR  LENSTR  STRING                                 
+\item[Transmits as argument]  TCURSR                                                 
+\item[Uses]  LASTYP  LCURSR  MAXLEN  QPABRV  QPERR   QPFAIL  QPNOAB 
+             QPOK    TCURSR                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  IFALPH  INTCHR  PUTICR  QPAMBI  QPCPV   QPCSTR 
+             QPTVAL                                                 
+\item[Called by]   QPMATC                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpskey(TABLE,LINE,LENGTH)
+C2qpskey
+C ----------------------------------------------------------------------
+      implicit none
+      integer chr , Chrctr , cursor , Digit , getchr , i , intchr , 
+     &        Inte , jjjj , Lastyp , Lcursr , len , LENGTH , lenkey , 
+     &        Lenstr , LINE , Maxdep , Maxlen , nvals , Qpabrv
+      integer Qpambg , qpambi , Qpblnk , Qpcaps , qpcpv , qpcstr , 
+     &        Qpdpth , Qpend , Qperr , Qpexit , Qpfail , Qpnoab , Qpok , 
+     &        Qprecr , Qpret , qptval , scr , scr2 , Stack , State
+      integer Status , String , TABLE , Tcursr , Tran , val
+      dimension scr(16) , scr2(16) , LINE(*) , TABLE(*)
+      logical ifalph
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+C ======================================================================
+C          this function looks to see if the next alphanumeric
+C     string in line matches the keyword in the table.  tcursr should
+C     be positioned at the keyword in table (the character count
+C     having been read and placed in lastyp) when this routine is
+C     called.  there are four possible values returned by this
+C     function:
+C          - qpfail ... no match.
+C          - qpok ..... match, either exactly or unambiguously
+C                       abbreviated.
+C          - qpambg ... syntax error. the string in line is an ambiguous
+C                       abbreviation of a keyword.
+C          - qperr .... keyword in table is too long.
+C          if the returned value is qpok, then 'lcursr' will be
+C     advanced past the string accepted.  otherwise, it is unchanged.
+C     in any event, 'tcursr' is advanced past the string in table.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+C
+      val = Qpfail
+      lenkey = Lastyp
+      if ( lenkey.gt.Maxlen ) then
+C
+         val = Qperr
+      else
+C                        get the word from table.
+         nvals = (lenkey-1)/qpcpv(jjjj) + 1
+         do 50 i = 1 , nvals
+            scr2(i) = qptval(TABLE,Tcursr)
+ 50      continue
+C                        are we at the end of the line?
+         if ( Lcursr.lt.LENGTH ) then
+C                        character at a time, get a word from line.
+            cursor = Lcursr
+            len = 0
+ 60         chr = getchr(LINE,cursor)
+C            is the character alphanumeric?
+            if ( (ifalph(chr)) .or. (intchr(chr,10).ne.-1) ) then
+C            store this character and get another.
+               call puticr(chr,scr,len)
+               if ( cursor.lt.LENGTH ) goto 60
+            else
+               cursor = cursor - 1
+            endif
+            if ( len.gt.0 ) val = qpcstr(scr2,lenkey,scr,len)
+            if ( len.le.0 ) val = Qpfail
+C                        be sure any abbreviations are unambiguous.
+            if ( val.eq.Qpabrv ) then
+               if ( Qpnoab.eq.0 ) then
+C
+                  val = qpambi(TABLE,scr,len)
+               else
+                  val = Qpfail
+                  goto 100
+               endif
+            endif
+C                        advance lcursr if word was accepted.
+            if ( val.eq.Qpok ) then
+               Lcursr = cursor
+               Lenstr = len
+               len = (len-1)/qpcpv(jjjj) + 1
+               do 70 i = 1 , len
+                  String(i) = scr(i)
+ 70            continue
+            endif
+         endif
+      endif
+ 100  qpskey = val
+      return
+C
+      end
+@* INDEX.

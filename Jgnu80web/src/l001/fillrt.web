@@ -1,0 +1,149 @@
+@* fillrt.
+\begin{verbatim}
+This routine deals with building the internal representation
+of a route in the gnu80 system.  The arguments are:
+ifunc ... what part of the route is being specified by
+the call
+0 ... initialization.
+1 ... specify an alternate directory for executable.
+2 ... new overlay number (in val).
+3 ... set an option in the current overlay.  option
+"nop" is set to "val".
+4 ... set a link in the current overlay (val).
+5 ... specify a "jump" (val).
+6 ... terminate.  this must be performed, else the
+data will not be written out.
+val ... the number of the alternate directory,
+overlay, option, link, or jump, if these
+operations are being performed.
+nop ... used only for ifunc=3.  this is the number
+of the option being set.
+
+the routine builds two arrays: "jop" and "lnk".  "lnk" contains
+the sequence of links and jumps to be executed, and "jop"
+contains the options for each overlay.  "jop(n,icard)" contains
+the value of iop(n) on card number "icard".  the vector "lnk"
+contains the link specifications packed into the digits of
+an integer.  thus, the digits of the number:
+aaccvvll
+aa ... the number of the alternate directory specified.
+cc ... the sequential number of the card on which the link
+was specified.
+vv ... the overlay number of the link.
+ll ... the segment number within the overlay.
+
+thus, the number "vvll" is what we call the "link number".
+if a value of "lnk" is less than 10000, (no cc digits or
+aa digits), then the value is assumed to be a "jump"
+specification.  the next link to be executed in this case is the
+first link on the card which is "jump" cards from the present one.
+"jump" may be either positive or negative.  see "chainx" for
+details of the use of "lnk".
+\end{verbaim}
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[INPUT:] IFUNC                                                     
+\item[INPUT:] VAL                                                       
+\item[INPUT:] NOP                                                       
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    JOP     LNK     NCHAIN  NLINK                          
+\item[Transmits as argument]  IOUT                                                   
+\item[Uses]  IOUT    JOP     LNK     NCHAIN  NLINK                  
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       ILSW    PRTRTE  TWRITE                                 
+\item[Called by]   CROUTE  EROUTE                                         
+                                                                    
+\end{description}
+@a
+      subroutine fillrt(IFUNC,VAL,NOP)
+      implicit none
+      integer altdir , i , icard , IFUNC , In , Iout , ipr , Ipunch , 
+     &        irwlnk , j , Jop , jump , Ll , Lnk , lrwlnk , Nchain , 
+     &        Nlink , NOP , ovrlay , Pad
+      integer spec , VAL
+      save 
+      common /io    / In , Iout , Ipunch
+      common /tmprte/ Nchain , Ll , Nlink , Pad , Lnk(200) , Jop(50,50)
+      data irwlnk/999/ , lrwlnk/1352/
+C
+      if ( IFUNC.eq.0 ) then
+C
+C                                    initialization.
+         icard = 0
+         Nlink = 0
+         do 50 i = 1 , 200
+            Lnk(i) = 0
+ 50      continue
+         do 100 i = 1 , 50
+            do 60 j = 1 , 50
+               Jop(j,i) = 0
+ 60         continue
+ 100     continue
+         ovrlay = 0
+         altdir = 0
+         jump = 0
+         return
+C
+C                        branch on "ifunc".
+      elseif ( IFUNC.eq.2 ) then
+C
+C                                    new overlay.
+         altdir = 0
+         icard = icard + 1
+         ovrlay = VAL
+         if ( jump.eq.0 ) return
+         Nlink = Nlink + 1
+         Lnk(Nlink) = jump
+         jump = 0
+         return
+      elseif ( IFUNC.eq.3 ) then
+C
+C                                    set option.
+         Jop(NOP,icard) = VAL
+         return
+      elseif ( IFUNC.eq.4 ) then
+C
+C                                    new link.
+         spec = VAL + ovrlay*100 + icard*10000 + altdir*1000000
+         Nlink = Nlink + 1
+         Lnk(Nlink) = spec
+         return
+      elseif ( IFUNC.eq.5 ) then
+C
+C                                    jump.
+         jump = VAL
+         return
+      elseif ( IFUNC.eq.6 ) then
+C
+C                                    flush and print.
+         if ( jump.ne.0 ) then
+            Nlink = Nlink + 1
+            Lnk(Nlink) = jump
+         endif
+      else
+C
+C                                    alternate directory.
+         altdir = VAL
+         return
+      endif
+      Nlink = Nlink + 1
+      Lnk(Nlink) = 99*100 + (icard+1)*10000 + 99
+      Nlink = Nlink - 1
+      if ( VAL.eq.0 ) Nlink = 0
+      Nchain = 1
+      call twrite(irwlnk,Nchain,lrwlnk,1,lrwlnk,1,0)
+      call ilsw(2,21,ipr)
+      if ( ipr.eq.0 ) call prtrte(Iout,Lnk,Jop)
+      return
+C
+      end
+@* INDEX.

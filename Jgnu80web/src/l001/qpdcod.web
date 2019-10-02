@@ -1,0 +1,92 @@
+@* qpdcod.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] WHAT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPAMBI  QPDEST  QPMATC  QPUTIT                         
+                                                                    
+\end{description}
+
+\begin{verbatim}
+          this routine maps the external token codes into the
+     internal one.  the external codes may change from time to time,
+     as the alphabet is expanded, or just for user convenience.  this,
+     then, is the routine which must be modified to effect these
+     changes.  the standard internal codes are:
+
+
+               alphabet codes for qparse.
+               --------------------------
+
+  intern    extern            what it matches.
+  ---------------------------------------------------
+    1         > 0           keyword; code gives character count.
+    2         < 0           specific character.
+    4        "num"          any numeric character.
+    5        "alp"          any alphabetic character.
+    6        "aln"          any alphanumeric character.
+    7        "chr"          any character.
+    3        "d10"          any base 10 digit.
+   17        "d2"           any binary digit.
+   18        "d8"           any octal digit.
+   19        "d16"          any hexidecimal digit.
+    8        "i10"          any decimal integer.
+   20        "i2"           any binary integer.
+   21        "i8"           any octal integer.
+   22        "i16"          any hexidecimal integer.
+    9        "fp"           any real (base 10) number.
+   10        "dp"           any double precision (base 10) number.
+   11        "nul"          null (always matches).
+   12        "eol"          end of line.
+   13        "wrd"          one or more alphanumeric characters.
+   14        "str"          one or more characters (terminators
+                            supplied).
+   15        "eos"          <this is the end-of-state mark.>
+   16        "end"          <this is the end-of-table mark.>
+   23        "\@"            invokes recursion at specified state.
+\end{verbatim}
+
+@a
+      integer function qpdcod(WHAT)
+      implicit none
+      integer i
+      integer intern(21) , extern(21) , ncodes , WHAT , val
+      data ncodes/21/
+      data extern/'NUM' , 'ALP' , 'ALN' , 'CHR' , 'D10' , 'D2' , 'D8' , 
+     &     'D16' , 'I10' , 'I2' , 'I8' , 'I16' , 'FP' , 'DP' , 'NUL' , 
+     &     'EOL' , 'WRD' , 'STR' , 'EOS' , 'END' , '@@'/
+
+C Notice that, even in a literal, the "at" character must be doubled
+
+      data intern/4 , 5 , 6 , 7 , 3 , 17 , 18 , 19 , 8 , 20 , 21 , 22 , 
+     &     9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 , 23/
+C
+
+      val = 0
+      if ( iabs(WHAT).gt.64 ) then
+C
+         do 50 i = 1 , ncodes
+            if ( WHAT.eq.extern(i) ) then
+               val = intern(i)
+               goto 100
+            endif
+C
+ 50      continue
+         val = 0
+      else
+         if ( WHAT.lt.0 ) val = 2
+         if ( WHAT.gt.0 ) val = 1
+      endif
+ 100  qpdcod = val
+      return
+C
+      end
+@* INDEX.

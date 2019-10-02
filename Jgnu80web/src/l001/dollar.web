@@ -1,0 +1,97 @@
+@* dollar.
+Routine to search for the next system control card.
+A system control card is indicated by a ' \#' in column one.
+When such a card is encountered, the possible noprint option
+is interpreted and the various (up to nrt) standard route options
+are decoded into |common /iroute/|.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[OUTPUT:] NTIMES                                                    
+\item[OUTPUT:] IPRT                                                      
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    IREST                                                  
+\item[Transmits as argument]  ICARD   IOUT                                           
+\item[Uses]  ICARD   IN      IOUT                                   
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       CAPTLZ  IORD    L0CMND  RSTART                         
+\item[Called by]   LINK1                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dollar(NTIMES,IPRT)
+      implicit none
+      integer i , Icard , ij , In , iord , Iout , IPRT , Ipunch , 
+     &        Irest , irstrt , NTIMES
+      integer iicard(80)
+      logical intyn , rwfyn , guesyn , saveyn
+      dimension Icard(80) , irstrt(7)
+      common /ertcrd/ Icard
+      common /io    / In , Iout , Ipunch
+      common /restar/ Irest
+      data irstrt/'R' , 'E' , 'S' , 'T' , 'A' , 'R' , 'T'/
+C
+99001 format (80A1)
+C
+      Irest = 0
+      NTIMES = 0
+      intyn = .false.
+      rwfyn = .false.
+      guesyn = .false.
+      saveyn = .false.
+ 100  read (In,99001,end=300) (iicard(i),i=1,80)
+      call captlz(iicard,Icard,320)
+C======================================================
+C  look for, and process link 0 commands
+      if ( Icard(1).eq.iord('%') ) call l0cmnd(iicard,Iout,intyn,rwfyn,
+     &     guesyn,saveyn)
+C=========================================================
+      if ( Icard(1).eq.iord('#') ) then
+C
+C  open direct access file for rwf
+C  if there was no %rwf record
+         if ( .not.rwfyn ) open (unit=18,status='SCRATCH',access=
+     &                           'DIRECT',recl=16380,form='UNFORMATTED')
+C  open "asynchronous unit" for repulsion integrals
+C  if there was no %int record
+         if ( .not.intyn ) open (unit=3,status='SCRATCH',form=
+     &                           'UNFORMATTED')
+         rewind 3
+C open "save" file for output
+C      if ( .not. saveyn )
+C     & open(unit=9,status='unknown',file='save',form='formatted')
+C open "guess" file for guess input
+C      if ( .not. guesyn )
+C     & open(unit=8,status='unknown',file='guess',form='formatted')
+C     look for 'restart'.
+C
+         do 150 i = 1 , 7
+            ij = i + 1
+            if ( Icard(ij).ne.irstrt(i) ) goto 200
+ 150     continue
+         Irest = 1
+         call rstart
+C rstart will return only when using a new route:
+         NTIMES = -1
+      endif
+      goto 100
+C
+ 200  NTIMES = -1
+      IPRT = Icard(2)
+      return
+ 300  write (Iout,99002)
+99002 format (' End of Input Stream; no more Command Records')
+      write (Iout,99003)
+99003 format (' **** End of gnu80 JOB ****')
+      stop
+C
+      end
+@* INDEX.

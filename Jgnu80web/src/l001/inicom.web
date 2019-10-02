@@ -1,0 +1,62 @@
+@* inicom.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICHARG  IDUMP   MULTIP  NAE     NATOMS  NBASIS  NBE    
+             NE                                                     
+\item[Transmits as argument]  ATMCHG  C       IAN     INFO    IOP                    
+\item[Uses]  ATMCHG  C       IAN     INFO    IOP                    
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  ICLEAR                                         
+\item[Called by]   LINK1   RSTART                                         
+                                                                    
+\end{description}
+@a
+      subroutine inicom
+      implicit none
+      double precision Atmchg , C
+      integer Ian , Icharg , Idummy , Idump , Info , Iop , Iunit , 
+     &        Multip , Nae , Natoms , Nbasis , Nbe , Ne
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /munit / Iunit(20)
+      common /info  / Info(10)
+      common /dump  / Idump , Idummy
+C
+C***********************************************************************
+C     routine inicom ... initialize those commons associated with
+C     controlling the gaussian system.
+C***********************************************************************
+C
+      Idump = 0
+C
+C     clear iop.
+      call iclear(50,Iop)
+C
+C
+C     clear /mol/.
+      Natoms = 0
+      Icharg = 0
+      Multip = 0
+      Nae = 0
+      Nbe = 0
+      Ne = 0
+      Nbasis = 0
+      call iclear(101,Ian)
+      call aclear(100,Atmchg)
+      call aclear(300,C)
+C
+C
+C     clear info.
+      call iclear(10,Info)
+C
+C     clear il.
+C     call iclear(2,nchain)
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

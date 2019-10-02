@@ -1,0 +1,68 @@
+@* qpscan.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] LINE                                                      
+\item[PASSED:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    STATUS  TRAN                                           
+\item[Transmits as argument]  LCURSR  TCURSR                                         
+\item[Uses]  LCURSR  QPBLNK  QPEND   QPFAIL  QPOK    STATUS  TCURSR 
+             TRAN                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPMATC  QPSKBL  QPSKIP                                 
+\item[Called by]   QPARSE                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpscan(TABLE,LINE,LENGTH)
+C ----------------------------------------------------------------------
+C2qpscan
+      implicit none
+      integer Chrctr , Digit , Inte , Lastyp , Lcursr , LENGTH , 
+     &        Lenstr , LINE , Maxdep , Maxlen , Qpabrv , Qpambg , 
+     &        Qpblnk , Qpcaps , Qpdpth , Qpend , Qperr , Qpexit , 
+     &        Qpfail , qpmatc
+      integer Qpnoab , Qpok , Qprecr , Qpret , Stack , State , Status , 
+     &        String , TABLE , Tcursr , Tran
+      dimension LINE(*) , TABLE(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+C ======================================================================
+C          this routine scans the current state for a match in 'line'.
+C     if a match is found, the thing accepted is stored into the
+C     common block.  tcursr is left just past the thing accepted
+C     in the table entry (at the destination field).
+C     'status' is set here, and 'status' is returned as the value
+C     of this function.  if a match is found, 'lcursr' is advanced,
+C     and 'tran' is advanced in any case.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+C            advance tran.
+      if ( Qpblnk.eq.0 ) call qpskbl(LINE,Lcursr,LENGTH)
+ 100  Tran = Tran + 1
+C            qpmatc checks for a match, and returns the status.
+C            if matched, 'lcursr' is advanced.
+      Status = qpmatc(TABLE,LINE,LENGTH)
+C            if no match, then try again.
+      if ( Status.ne.Qpok ) call qpskip(Tcursr)
+      if ( Status.eq.Qpfail ) goto 100
+      if ( Status.eq.Qpend ) Status = Qpfail
+C            else, return status.
+      qpscan = Status
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,314 @@
+@* rtedef.
+\begin{verbatim}
+        a routine to look at what was explicitly requested in the
+   routine specification, and set default values for stuff.  also,
+   a lot of errors are checked for at this point.
+C
+        the routine also calculates "jtype", which indicates
+   the specific type of route to be used:
+        jtype        type of job
+
+          1          sp, hf
+          2          cnoe
+          3          sp, post-scf
+          6          opt, grad, hf, no-d2e
+          8          opt, grad, hf, d2e           not impl.
+         10          opt, grad, post-scf, no-d2e   "   "
+         12          opt, grad, post-scf, d2e      "   "
+         13          opt, fp, hf
+         14          opt, fp, post-scf
+         16          opt, vgeom2, hf
+         17          opt, vgeom2, post-scf
+         18          scan, hf
+         19          scan, post-scf
+         20          guess only
+         22          forces, hf
+         23          forces, mp2
+         24          frequency (hf)
+         25          stability
+         26          stability with optimization of w.f.
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JTYPE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    GRDSYM  IFAU    IFRAD   INTSYM  IOPTYP  IPRC1   IPRC2  
+             IPRC3   IPRC4   IPSEUD  IRAFF   ISCFDM  ITYPE   NOSYM  
+             STBOPT  STBOUT  STBSYM  UNITS                          
+\item[Uses]  COORD   GRDSYM  IBAS1   ICMPLX  ID2E    IFAU    IFRAD  
+             INTSYM  IOPTYP  IOUT    IPRC1   IPRC2   IPRC3   IPRC4  
+             IRAFF   ITS     ITYPE   NDCHG   NOSYM   RPAC    STBOPT 
+             STBOUT  STBSYM                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   EROUTE                                                 
+                                                                    
+\end{description}
+@a
+C
+      subroutine rtedef(JTYPE)
+      implicit none
+      integer Cnoe , Coord , Direct , Dummy , Grdsym , Ialt , Ibas1 , 
+     &        Ibas2 , Ibas3 , Ibas4 , Icmplx , Id2e , Ifau , ifpost , 
+     &        Ifrad , Iges , In , Intsym , Ioptyp , Iout
+      integer Iprc1 , Iprc2 , Iprc3 , Iprc4 , Ipseud , Ipunch , iraf , 
+     &        Iraff , Iscfdm , Itest , Its , Itype , JTYPE , Ndchg , 
+     &        Noextr , Nondef , Nopop , Nostd , Nosym , Optcyc
+      integer Prtges , Rpac , Savbas , Savfc , Savmo , Scfcyc , Stbint , 
+     &        Stbopt , Stbout , Stbrxt , Stbsym , Stccxt , Stronl , 
+     &        Synch , Units , Vshift
+      common /io    / In , Iout , Ipunch
+C                  the results of the parse are stored into /ertgen/.
+C-rpac
+      common /ertgen/ Itype , Ibas1 , Ibas2 , Ibas3 , Ibas4 , Iprc1 , 
+     &                Iprc2 , Iprc3 , Iprc4 , Iges , Savfc , Savbas , 
+     &                Savmo , Ialt , Iscfdm , Its , Ipseud , Noextr , 
+     &                Iraff , Nopop , Itest , Synch , Nosym , Scfcyc , 
+     &                Nostd , Stbsym , Stbopt , Stbout , Stbint , 
+     &                Stbrxt , Stccxt , Prtges , Icmplx , Ioptyp , 
+     &                Id2e , Intsym , Grdsym , Ifau , Ifrad , Units , 
+     &                Optcyc , Coord , Stronl , Nondef , Ndchg , Cnoe , 
+     &                Rpac , Vshift , Direct , Dummy(51)
+C-rpac
+C                  default procedure.
+      if ( Iprc1.eq.0 ) Iprc1 = 1
+C
+C                  transition state.
+      if ( Its.ne.0 .and. Itype.eq.0 ) Itype = 2
+      if ( Its.ne.0 .and. Ioptyp.eq.0 ) Ioptyp = 1
+      if ( Its.ne.0 .and. Ioptyp.ne.1 ) then
+C
+         write (Iout,99002)
+      else
+C
+C                  process default optimization.
+         if ( Itype.eq.2 .and. Ioptyp.eq.0 .and. Iprc1.le.1 ) Ioptyp = 1
+         if ( Itype.eq.2 .and. Ioptyp.eq.0 .and. Iprc1.gt.1 ) Ioptyp = 2
+C
+C                  check for some opt errors.
+         if ( Ioptyp.eq.1 .and. Iprc1.gt.1 ) then
+C
+C
+            write (Iout,99001)
+C     if(ioptyp.eq.1.and.iprc1.eq.5.and.iprc3.ne.2) go to 900
+C     if(ioptyp.eq.1.and.iprc1.eq.2.and.iprc4.ne.2) go to 909
+C     if(ioptyp.eq.1.and.iprc1.eq.5.and.iprc4.ne.2) go to 909
+C     if(ioptyp.eq.1.and.iprc1.eq.2.and.iprc2.ne.1) go to 910
+C     if(ioptyp.eq.1.and.iprc1.eq.5.and.iprc2.ne.1) go to 910
+         elseif ( Id2e.eq.1 ) then
+            write (Iout,99010)
+         elseif ( Iprc1.eq.4 ) then
+C
+            write (Iout,99005)
+C
+C     check for z matrix input when reading charges:
+         elseif ( Coord.ne.0 .and. Ndchg.ne.0 ) then
+            write (Iout,99014)
+         else
+C
+C)))default to local potential for "lp-31g" basis.
+            if ( Ibas1.eq.3 ) Ipseud = 1
+C
+            if ( Iprc1.eq.4 ) then
+C
+               write (Iout,99003)
+            else
+               if ( Iprc1.eq.4 .and. Iprc3.eq.0 ) Iprc3 = 4
+C
+               if ( Iprc1.eq.5 .and. Iprc3.eq.0 ) Iprc3 = 2
+C                        can only do cid, now
+               if ( Iprc1.eq.5 .and. Iprc3.ne.2 ) then
+                  write (Iout,99011)
+C                        can not do ccd, now.
+               elseif ( Iprc1.eq.6. ) then
+                  write (Iout,99005)
+               else
+C
+C                  r/u default.
+                  if ( Iprc2.eq.0 ) Iprc2 = 3
+C
+C                  frozen core defaults.
+                  if ( Iprc4.eq.1 .and. Itype.eq.6 ) then
+                     write (Iout,99007)
+                  else
+                     if ( Itype.eq.7 .and. Iprc4.eq.0 ) Iprc4 = 2
+                     if ( Iprc4.eq.0 .and. Id2e.eq.1 ) Iprc4 = 2
+                     if ( Iprc4.eq.0 ) Iprc4 = 1
+                     if ( Itype.eq.6 ) Iprc4 = 2
+C
+C                  compute 'units' from ifau and ifrad
+                     if ( Ifau.eq.0 ) Ifau = 2
+                     if ( Ifrad.eq.0 ) Ifrad = 2
+                     if ( Ifau.eq.2 .and. Ifrad.eq.2 ) Units = 0
+                     if ( Ifau.eq.2 .and. Ifrad.eq.1 ) Units = 2
+                     if ( Ifau.eq.1 .and. Ifrad.eq.2 ) Units = 1
+                     if ( Ifau.eq.1 .and. Ifrad.eq.1 ) Units = 3
+C
+C                  type default.
+                     if ( Itype.eq.0 ) Itype = 1
+C
+C                  stability defaults.
+                     if ( Stbsym.eq.0 ) Stbsym = 2
+                     if ( Stbopt.eq.0 ) Stbopt = 2
+                     if ( Stbout.eq.0 ) Stbout = 4
+                     if ( Itype.eq.7 .and. Stbsym.eq.1 ) Iscfdm = 1
+C
+C                  compute "ifpost" ... whether post-scf is involved.
+                     ifpost = 0
+                     if ( Iprc1.gt.1 .or. Itype.eq.6 .or. 
+     &                    Itype.eq.7 .or. Id2e.eq.1 ) ifpost = 1
+C
+C                  deal with raffenetti defaults and errors.
+                     iraf = 0
+C-rpac
+                     if ( Rpac.ne.1 ) then
+C-rpac
+                        if ( Iraff.ne.2 ) then
+C                  errors:  no raff for complex or post-scf.
+                           if ( Iraff.ne.1 ) then
+C                  defaults:  use raffenetti whenever possible.
+                              if ( Icmplx.eq.1 ) goto 2
+                              if ( ifpost.eq.1 ) goto 2
+                           elseif ( Icmplx.eq.1 ) then
+C
+                              write (Iout,99006)
+                              goto 100
+                           elseif ( ifpost.eq.1 ) then
+C
+                              write (Iout,99004)
+                              goto 100
+                           endif
+C                  set raff-type depending upon r/u.
+                           if ( Iprc2.eq.2 .or. Iprc2.eq.4 ) iraf = 2
+                           if ( Iprc2.eq.3 ) iraf = 9
+                           if ( Iprc2.eq.1 ) iraf = 1
+                        endif
+                     endif
+ 2                   Iraff = iraf
+C
+C                  deal with symmetry defaults and errors.
+C            no intsym for complex, post-scf, or scfdm
+C-rpac
+                     if ( Intsym.eq.1 .and. 
+     &                    (Icmplx.ne.0 .or. ifpost.eq.1 .or. Rpac.eq.1)
+     &                    ) then
+C 909 write(iout,9100)
+C     go to 999
+C 910 write(iout,9110)
+C     go to 999
+                        write (Iout,99008)
+                     else
+C            set default.
+                        if ( Intsym.eq.0 .and. Icmplx.eq.0 .and. 
+     &                       ifpost.eq.0 ) Intsym = 1
+                        if ( Intsym.eq.0 ) Intsym = 2
+                        if ( Nosym.ne.0 ) Intsym = 2
+C-rpac
+                        if ( Rpac.eq.1 ) Intsym = 2
+                        if ( Rpac.eq.1 .and. Coord.ne.0 ) Nosym = 1
+C
+C            gradient symmetry.
+                        if ( Grdsym.eq.0 ) Grdsym = 1
+                        if ( Nosym.ne.0 ) Grdsym = 2
+C
+C
+C                  compute jtype.
+C                  --------------
+                        if ( Itype.eq.1 .and. Iprc1.le.1 ) JTYPE = 1
+                        if ( Itype.eq.1 .and. Iprc1.gt.1 ) JTYPE = 3
+                        if ( Itype.eq.2 ) then
+C
+C                  optimizations.
+                           if ( Ioptyp.eq.1 .and. Iprc1.le.1 .and. 
+     &                          Id2e.ne.1 ) JTYPE = 6
+                           if ( Ioptyp.eq.1 .and. Iprc1.le.1 .and. 
+     &                          Id2e.eq.1 ) JTYPE = 8
+                           if ( Ioptyp.eq.1 .and. Iprc1.gt.1 .and. 
+     &                          Id2e.ne.1 ) JTYPE = 10
+                           if ( Ioptyp.eq.1 .and. Iprc1.gt.1 .and. 
+     &                          Id2e.eq.1 ) JTYPE = 12
+                           if ( Ioptyp.eq.4 .and. Iprc1.le.1 .and. 
+     &                          Id2e.ne.1 ) JTYPE = 6
+                           if ( Ioptyp.eq.4 .and. Iprc1.le.1 .and. 
+     &                          Id2e.eq.1 ) JTYPE = 8
+                           if ( Ioptyp.eq.4 .and. Iprc1.gt.1 .and. 
+     &                          Id2e.ne.1 ) JTYPE = 10
+                           if ( Ioptyp.eq.4 .and. Iprc1.gt.1 .and. 
+     &                          Id2e.eq.1 ) JTYPE = 12
+                           if ( Ioptyp.eq.2 .and. Iprc1.le.1 )
+     &                          JTYPE = 13
+                           if ( Ioptyp.eq.2 .and. Iprc1.gt.1 )
+     &                          JTYPE = 14
+                           if ( Ioptyp.eq.3 .and. Iprc1.le.1 )
+     &                          JTYPE = 16
+                           if ( Ioptyp.eq.3 .and. Iprc1.gt.1 )
+     &                          JTYPE = 17
+                        endif
+C
+C                  other types.
+                        if ( Itype.eq.4 ) JTYPE = 18
+                        if ( Itype.eq.4 .and. Iprc1.gt.1 ) JTYPE = 19
+                        if ( Itype.eq.3 ) JTYPE = 20
+                        if ( Itype.eq.5 .and. Iprc1.eq.1 ) JTYPE = 22
+                        if ( Itype.eq.5 .and. Iprc1.gt.1 ) JTYPE = 23
+                        if ( Itype.eq.6 ) JTYPE = 24
+                        if ( Itype.eq.7 .and. Stbopt.eq.2 ) JTYPE = 25
+                        if ( Itype.eq.7 .and. Stbopt.eq.1 ) JTYPE = 26
+C no frequency yet:
+                        if ( JTYPE.eq.24 ) then
+                           write (Iout,99009)
+C no stability yet:
+                        elseif ( Itype.eq.7 ) then
+                           write (Iout,99012)
+C no post-scf forces yet:
+                        elseif ( Itype.eq.23 ) then
+                           write (Iout,99013)
+                        else
+C-rpac       deal with rpac errors
+                           if ( Rpac.eq.0 ) return
+                           if ( Icmplx.eq.1 ) then
+                              write (Iout,99015)
+                           elseif ( Iprc2.gt.1 ) then
+                              write (Iout,99016)
+                           else
+C-rpac
+                              return
+                           endif
+                        endif
+                     endif
+                  endif
+               endif
+            endif
+         endif
+      endif
+C
+ 100  call lnk1e
+      stop
+C
+C9100 format('  post-scf gradients only for "full".')
+C9110 format('  post-scf gradients only for spin-restricted calcs.')
+C
+99001 format ('  NO POST-SCF GRAD OPT')
+99002 format ('  MUST DO GRADIENT OPTIMIZATION FOR TRANSITION STATE.')
+99003 format ('  NO MP4 YET.')
+99004 format ('  NO RAFFENETTI WITH POST-SCF YET.')
+99005 format ('  NO CC YET.')
+99006 format ('  NO RAFFENETTI WITH COMPLEX.')
+99007 format ('  NO FROZEN CORE WITH FREQUENCY CALCULATIONS.')
+99008 format ('  NO INTEGRAL SYMMETRY FOR POST-SCF, COMPLEX, OR SCFDM.')
+99009 format ('  NO FREQUENCY CALCULATIONS YET.')
+99010 format ('  NO ANALYTICAL SECOND DERIVATIVES YET.')
+99011 format ('  CAN ONLY DO CID.')
+99012 format ('  NO STABLITY YET.')
+99013 format ('  NO FORCES WITH POST-SCF YET.')
+99014 format ('  NO CHARGES READ IN WITH DIRECT COORDINATE INPUT')
+C-rpac
+99015 format ('  NO RPAC WITH COMPLEX.')
+99016 format ('  NO RPAC WITH UHF OR OPEN-SHELL YET.')
+C-rpac
+      end
+@* INDEX.

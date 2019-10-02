@@ -1,0 +1,52 @@
+@* qppop.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LASTYP  LCURSR  QPDPTH  STATE   STATUS  TCURSR  TRAN   
+\item[Uses]  QPDPTH  STACK   TCURSR                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPARSE                                                 
+                                                                    
+\end{description}
+@a
+      subroutine qppop
+C2qppop
+C ----------------------------------------------------------------------
+      implicit none
+      integer Chrctr , Digit , Inte , Lastyp , Lcursr , Lenstr , 
+     &        Maxdep , Maxkey , Qpabrv , Qpambg , Qpblnk , Qpcaps , 
+     &        Qpdpth , Qpend , Qperr , Qpexit , Qpfail , Qpnoab , Qpok , 
+     &        Qprecr
+      integer Qpret , Stack , State , Status , String , Tcursr , Tran
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C ======================================================================
+C          this routine pops the last parse status from the stack.
+C     it also increments tcursr after it is poped, to deal with the
+C     extra state name in the transition definition.
+C     r. a. whiteside - october 1979
+C ----------------------------------------------------------------------
+C
+C
+C
+      Lastyp = Stack(1,Qpdpth)
+      Status = Stack(2,Qpdpth)
+      Tcursr = Stack(3,Qpdpth)
+      Lcursr = Stack(4,Qpdpth)
+      State = Stack(5,Qpdpth)
+      Tran = Stack(6,Qpdpth)
+C
+      Tcursr = Tcursr + 1
+      Qpdpth = Qpdpth - 1
+      return
+C
+      end
+@* INDEX.

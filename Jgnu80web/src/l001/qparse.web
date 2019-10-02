@@ -1,0 +1,105 @@
+@* qparse.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] RESULT                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] LINE                                                      
+\item[PASSED:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    STATUS                                                 
+\item[Transmits as argument]  STATE   TCURSR                                         
+\item[Uses]  QPDPTH  QPEXIT  QPOK    QPRECR  STATE   STATUS  TCURSR 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPDEST  QPPOP   QPPUSH  QPSCAN  QPSKIP  QPTRAN         
+\item[Called by]   CROUTE  GPARSE  NONDF                                  
+                                                                    
+\end{description}
+
+\begin{verbatim}
+          This is the main entry point for the parser.  The integer
+     function returns the parse status as its value.  The possible
+     values are:
+
+          0 ... "ok". successful parse made transition to "exi".
+          1 ... user requested return. (transition to "ret")
+         -1 ... parse failure.  transition to "fai".
+         -2 ... an ambiguous keyword was specified.
+         -3 ... an error was detected in the parse table.
+
+     the main function of the code in this routine is to implement
+     the recursion feature.
+
+\end{verbatim}
+
+@a
+      integer function qparse(RESULT,TABLE,LINE,LENGTH)
+
+      implicit none
+      integer Chrctr , Digit , Inte , Lastyp , Lcursr , LENGTH , 
+     &        Lenstr , LINE , Maxdep , Maxlen , Qpabrv , Qpambg , 
+     &        Qpblnk , Qpcaps , qpdest , Qpdpth , Qpend , Qperr , 
+     &        Qpexit , Qpfail
+      integer Qpnoab , Qpok , qppush , Qprecr , Qpret , qpscan , 
+     &        qptran , RESULT , Stack , State , Status , String , 
+     &        TABLE , Tcursr , Tran
+      dimension RESULT(*) , TABLE(*) , LINE(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+
+
+C                              scan state for match.
+ 100  if ( qpscan(TABLE,LINE,LENGTH).eq.Qpok ) then
+
+C                              transition.
+ 150     if ( qptran(RESULT,TABLE).eq.Qpok ) goto 100
+         if ( Status.eq.Qpexit ) then
+
+C                              exit.
+            if ( Qpdpth.gt.0 ) then
+C                  pop last state.
+               call qppop
+               goto 150
+            endif
+C     if(status.eq.qpret) return
+         endif
+
+C                  if not ok, then either recursion has been
+C                  requested, or the scan failed.
+
+      elseif ( Status.ne.Qprecr ) then
+
+C                              failure to match.
+
+         if ( Qpdpth.gt.0 ) then
+
+C                  pop last state and skip to next transition def.
+
+            call qppop
+            call qpskip(Tcursr)
+            goto 100
+         endif
+C                  push the current state.
+      elseif ( qppush(0).eq.Qpok ) then
+C                  set to new requested state for the recursion.
+C      call qpdest(table,tcursr,state)
+         Status = qpdest(TABLE,Tcursr,State)
+         goto 100
+      endif
+C
+C                              finished with parse.
+      if ( Status.eq.Qpexit ) Status = Qpok
+      qparse = Status
+      return
+C
+      end
+@* INDEX.

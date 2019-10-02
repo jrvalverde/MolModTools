@@ -1,0 +1,107 @@
+@* qperro.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+\item[INPUT:] IOUT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  LCURSR  QPAMBG  QPERR   QPFAIL  QPOK    STATE   STATUS 
+             TCURSR                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPCPV   STROUT                                         
+\item[Called by]   CROUTE  GPARSE  NONDF                                  
+                                                                    
+\end{description}
+@a
+      subroutine qperro(LINE,LENGTH,IOUT)
+C ----------------------------------------------------------------------
+      implicit none
+      integer blank , Chrctr , Digit , i , Inte , IOUT , jjjj , Lastyp , 
+     &        Lcursr , LENGTH , Lenstr , LINE , loc , max , Maxdep , 
+     &        Maxkey , n , Qpabrv , Qpambg , Qpblnk
+      integer Qpcaps , qpcpv , Qpdpth , Qpend , Qperr , Qpexit , 
+     &        Qpfail , Qpnoab , Qpok , Qprecr , Qpret , quest , Stack , 
+     &        State , Status , String , Tcursr , Tran , wordn
+      dimension LINE(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C ======================================================================
+      data blank/'    '/ , quest/'?'/
+C          a routine to decide what error has occurred in the parser,
+C     and to print some kind of descriptive error message.
+C     r. a. whiteside - november 1979.
+C ----------------------------------------------------------------------
+C2qperro
+C
+C
+C
+C                        maybe everything is ok.
+      if ( Status.eq.Qpok ) then
+         write (IOUT,99001)
+C
+99001    format ('  QPERR --- EVERYTHING SEEMS OK IN THE PARSER.')
+C
+         return
+C
+C                        ambiguous keyword?
+      elseif ( Status.eq.Qpambg ) then
+         write (IOUT,99002)
+C
+C
+99002    format ('  QPERR --- AN AMBIGUOUS KEYWORD WAS DETECTED.')
+C
+C                        end-of-state?
+      elseif ( Status.eq.Qpfail ) then
+         write (IOUT,99003)
+C
+C
+99003    format ('  QPERR --- A SYNTAX ERROR WAS DETECTED IN THE INPUT '
+     &           ,'LINE.')
+C
+C                        table error.
+      elseif ( Status.ne.Qperr ) then
+C
+C                        unknown status.
+         write (IOUT,99004) Status
+C
+C
+99004    format ('  QPERR --- UNKNOWN CONDITION. STATUS =',i10)
+      else
+         write (IOUT,99005)
+C
+C
+99005    format ('  QPERR --- AN ERROR IN THE PARSE TABLE WAS DETECTED.'
+     &           )
+      endif
+C
+C                        general purpose dump.
+      wordn = Lcursr/qpcpv(jjjj) - 4
+      if ( wordn.le.0 ) wordn = 1
+      n = 40
+      max = LENGTH - (wordn-1)*4
+      if ( n.gt.max ) n = max
+      call strout(IOUT,LINE(wordn),n,1)
+      loc = Lcursr - (wordn-1)*4 + 1
+      write (IOUT,99006) (blank,i=1,loc) , quest
+C
+99006 format (132A1)
+C
+      write (IOUT,99007) State , Tcursr , Lcursr
+C
+99007 format ('  LAST STATE: ',a4,', TCURSR:',i4,', LCURSR:',i3)
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,173 @@
+@* rstart.
+\section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IDUMP   NLINK                                          
+\item[Transmits as argument]  ICARD   ILSW1   INFO    IOP     IOUT    ISMODE  IUX    
+             JOP     LABL    LNK     NATOMS  NCHAIN  PHYCON  WAIT   
+\item[Uses]  ICARD   ILSW1   INFO    IOP     IOUT    ISMODE  ISTAT  
+             IUX     JOP     LABL    LNK     NATOMS  NCHAIN  NLINK  
+             PHYCON  WAIT                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CHAIN   FILEIO  IDEF    INICOM  JQINT   LNK1E   PRTRTE 
+             TQUERY  TREAD   TWRITE                                 
+\item[Called by]   DOLLAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rstart
+      implicit none
+      integer fclose , fopen , i , Ian , Ibfdum , ibl , ic , Icard , 
+     &        Icharg , Idum , Idump , Ilsw1 , In , Info , Io , ioccur , 
+     &        ioilsw , Iop , Iout , Ipunch
+      integer Irtcrd , irwibf , irwinf , irwiop , irwlbl , irwlnk , 
+     &        irwmol , irwntr , irwphy , Ismode , Istat , Ititle , Iux , 
+     &        Jop , jqint , l , Labl , Last , len , linkno
+      integer Ll , Lnk , lprin , lrwiop , lrwjop , lrwlnk , max , 
+     &        Maxpos , Mode , Multip , n , Nae , Natoms , Nbasis , Nbe , 
+     &        nch , Nchain , Ne , newcrd , Nlink
+      integer Ntx , Nunits , offset , Pad , Units , Wait
+      double precision C , Phycon , Atmchg
+      logical Print , Syncs
+C here to be restored
+      common /label / Labl(1000) , Ititle(100) , Irtcrd(100)
+      common /ertcrd/ Icard(80)
+      common /io    / In , Iout , Ipunch
+      common /iop   / Iop(50)
+      common /tmprte/ Nchain , Ll , Nlink , Pad , Lnk(200) , Jop(50,50)
+      common /phycon/ Phycon(30)
+      common /ilsw1 / Ilsw1(2)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /info  / Info(10)
+      common /fidump/ Idump
+      common /ntr   / Wait(3,4) , Io(3,4) , Units(4) , Nunits , 
+     &                Maxpos(4) , Print(4) , Syncs(4) , Idum
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Ibfdum(20)
+      data irwlnk/999/ , lrwlnk/102/ , lrwjop/1352/
+      data irwibf/508/
+      data irwntr/992/
+      data irwinf/993/
+      data irwphy/994/
+      data irwiop/996/ , lrwiop/25/
+      data irwmol/997/
+C for /label/ restore
+      data irwlbl/502/
+      data ioilsw/998/
+      data fclose/10/ , fopen/9/
+      data max/80/
+      data ibl/' '/ , l/'L'/ , lprin/'('/
+C     subroutine called to reopen old units and to prepare for a
+C     restart
+C
+C
+C     open fileio:
+      call fileio(fopen,l,l,l,l)
+C restore blank common:
+      call inicom
+      call tread(irwphy,Phycon,30,1,30,1,0)
+      call tread(ioilsw,Ilsw1,1,1,1,1,0)
+C restore /label/ to keep basis labels intact
+      call tquery(irwlbl,len)
+C      write(6,780) len
+C  780 format ('  length of restored /label/ is: ',i5)
+      if ( len.ne.0 ) call tread(irwlbl,Labl,len,1,len,1,0)
+C end of /label/restore
+      call tquery(irwmol,len)
+      if ( len.ne.0 ) call tread(irwmol,Natoms,len,1,len,1,0)
+      call tquery(irwinf,len)
+      if ( len.ne.0 ) call tread(irwinf,Info,len,1,len,1,0)
+      call tquery(irwntr,len)
+      if ( len.ne.0 ) call tread(irwntr,Wait(1,1),len,1,len,1,0)
+      ic = 8
+C   restore the file unit numbers
+      call tquery(irwibf,len)
+      if ( len.ne.0 ) call tread(irwibf,Ismode,len,1,len,1,0)
+      if ( len.ne.0 ) then
+         if ( Istat.gt.1 ) then
+ 20         ic = ic + 1
+            if ( ic.le.max ) then
+               if ( Icard(ic).eq.ibl ) goto 20
+               if ( Icard(ic).eq.l ) goto 20
+C
+C
+C     get link number to restart.
+               linkno = 0
+ 30            linkno = 10*linkno + jqint(Icard(ic))
+               ic = ic + 1
+               if ( ic.gt.max ) call lnk1e
+               if ( Icard(ic).eq.ibl ) then
+C
+C     n defaults to 1
+                  n = 1
+               else
+                  if ( Icard(ic).ne.lprin ) goto 30
+C
+C     get n which indicates the n-th occurrence to be executed.
+                  ic = ic + 1
+                  n = jqint(Icard(ic))
+               endif
+               if ( linkno.ne.1 ) then
+C
+C     find in array lnk, the n-th occurrence of linkno.
+                  call tread(irwlnk,Nchain,lrwlnk,1,lrwlnk,1,0)
+                  ioccur = 0
+                  do 35 i = 1 , 150
+                     if ( mod(Lnk(i),10000).eq.linkno ) then
+                        ioccur = ioccur + 1
+                        if ( ioccur.eq.n ) then
+                           Nlink = i
+                           call twrite(irwlnk,Nchain,101,1,101,1,0)
+                           goto 40
+                        endif
+                     endif
+C
+ 35               continue
+               else
+C
+C    this is a fix since the repulsion-integral file number
+C     should be available as a variable; it is in /munit/iunit(12)
+                  write (Iout,99003) Iux(2)
+                  call idef(Iux(2),Iop(36))
+C                  now close fileio:
+C         call fileio(fclose,l,l,l,l)
+C set fileio debug switch:
+C      idump = iop(35)
+                  return
+               endif
+            endif
+C     call lnk1e
+C
+ 40         call tread(irwlnk,Nchain,lrwjop,1,lrwjop,1,0)
+            call prtrte(Iout,Lnk,Jop)
+            nch = Lnk(Nlink)
+            nch = mod(nch,10000)
+            newcrd = mod(Lnk(Nlink),1000000)/10000
+            write (Iout,99001) nch
+            if ( n.gt.1 ) write (Iout,99002) n
+C
+99001       format (' RESTARTING AT LINK L',i3)
+99002       format ('+                       (',i2,')')
+C get the options
+            offset = lrwlnk + lrwiop*(newcrd-1)
+            call fileio(2,-irwlnk,lrwiop,Iop,offset)
+            call twrite(irwiop,Iop,lrwiop,1,lrwiop,1,0)
+C open two electron file:
+            write (Iout,99003) Iux(2)
+C
+99003       format (' REOPENING INTEGRAL FILE ON UNIT NR ',i2)
+C
+            call idef(Iux(2),Iop(36))
+         endif
+      endif
+C                  now close fileio:
+      call fileio(fclose,l,l,l,l)
+C set fileio debug switch:
+      Idump = Iop(35)
+      call chain(nch)
+      stop 11
+C
+      end
+@* INDEX.

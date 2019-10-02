@@ -1,0 +1,94 @@
+@* qpany1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] TYPE                                                      
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+\item[OUTPUT:] LCURSR                                                    
+\item[OUTPUT:] CHRCTR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPFAIL  QPOK                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  IFALPH  INTCHR                                 
+\item[Called by]   QPMATC                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpany1(TYPE,LINE,LENGTH,LCURSR,CHRCTR)
+C2qpany1
+C ----------------------------------------------------------------------
+      implicit none
+      integer chr , CHRCTR , getchr , intchr , LCURSR , LENGTH , LINE , 
+     &        Maxdep , Maxkey , mycrsr , Qpabrv , Qpambg , Qpdpth , 
+     &        Qpend , Qperr , Qpexit , Qpfail , Qpok , Qprecr , Qpret
+      integer Stack , t , TYPE , val
+      dimension LINE(*)
+      logical ifalph
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C          this function accepts single characters from line.
+C     the argument, type, indicates what kind of character is to be
+C     accepted:
+C          type > 0 ... a base "type" digit.
+C          type = -1 .. a numeric character.
+C          type = -2 .. an alphabetic character.
+C          type = -3 .. an alphanumeric character.
+C          type = -4 .. any character.
+C     the returned value of the function is either "qpok", if
+C     something was accepted, or "qpfail" otherwise.  if a character
+C     is accepted, it is placed in chrctr, and lcursr is
+C     advanced.  if a digit was accepted, the value of the digit is
+C     stored in chrctr.  no global data is modified.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C                  assume failure.
+      val = Qpfail
+C
+C                  make sure there are characters left in the line,
+C                  then get a local cursor.
+      if ( LCURSR.lt.LENGTH ) then
+         mycrsr = LCURSR
+C
+C                  get a character, then see what kind we're supposed
+C                  to match.
+         chr = getchr(LINE,mycrsr)
+         if ( TYPE.le.0 ) then
+C                  some other kind of character.  branch on "type".
+            t = -TYPE
+            if ( t.eq.2 ) then
+C            alphabetic character.
+               if ( .not.ifalph(chr) ) goto 100
+            elseif ( t.eq.3 ) then
+C            alphanumeric character.
+               if ( .not.ifalph(chr) .and. (intchr(chr,10).eq.-1) )
+     &              goto 100
+            elseif ( t.ne.4 ) then
+C            base 10 digit.
+               if ( intchr(chr,10).eq.-1 ) goto 100
+            endif
+C               success.  advance cursor, put character into "chrctr".
+            val = Qpok
+            LCURSR = mycrsr
+            CHRCTR = chr
+         else
+C                  look for a base "type" digit.
+            t = intchr(chr,TYPE)
+            if ( t.ne.-1 ) then
+               CHRCTR = t
+               val = Qpok
+               LCURSR = mycrsr
+            endif
+         endif
+      endif
+ 100  qpany1 = val
+      return
+C
+      end
+@* INDEX.

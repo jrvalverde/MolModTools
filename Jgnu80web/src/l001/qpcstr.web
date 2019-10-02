@@ -1,0 +1,67 @@
+@* qpcstr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] REFRNC                                                    
+\item[INPUT:] LENR                                                      
+\item[PASSED:] FOUND                                                     
+\item[INPUT:] LENF                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPABRV  QPCAPS  QPFAIL  QPOK                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       STREQ   STREQC                                         
+\item[Called by]   QPAMBI  QPSKEY                                         
+                                                                    
+\end{description}
+@a
+      integer function qpcstr(REFRNC,LENR,FOUND,LENF)
+C2qpcstr
+C ----------------------------------------------------------------------
+      implicit none
+      integer Chrctr , Digit , FOUND , Inte , Lastyp , Lcursr , LENF , 
+     &        LENR , Lenstr , Maxdep , Maxlen , Qpabrv , Qpambg , 
+     &        Qpblnk , Qpcaps , Qpdpth , Qpend , Qperr , Qpexit , Qpfail
+      integer Qpnoab , Qpok , Qprecr , Qpret , REFRNC , Stack , State , 
+     &        Status , String , Tcursr , Tran , val
+      logical streq , streqc , ifeq
+      dimension REFRNC(*) , FOUND(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+C ======================================================================
+C          this function compares two strings.  the reference
+C     string is in 'refrnc', and has 'lenr' characters.  the other
+C     string is in 'found', and has 'lenf' characters.  there are
+C     three possible return values of this function:
+C          - qpfail ... the strings do not match.
+C          - qpok ..... the two strings match exactly.
+C          - qpabrv ... the string 'found' is an abbreviation of the
+C                       reference string.
+C     this function doesn't fool with any global data.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+      val = Qpfail
+      if ( LENF.le.LENR ) then
+         if ( Qpcaps.eq.0 ) ifeq = streqc(REFRNC,FOUND,LENF)
+         if ( Qpcaps.ne.0 ) ifeq = streq(REFRNC,FOUND,LENF)
+         if ( ifeq ) then
+            val = Qpabrv
+            if ( LENF.eq.LENR ) val = Qpok
+         endif
+      endif
+      qpcstr = val
+      return
+C
+      end
+@* INDEX.

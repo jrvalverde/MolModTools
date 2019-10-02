@@ -1,0 +1,180 @@
+@* nextov.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IDUMP   NCHAIN  NTRSTA  TWAIT                          
+\item[Transmits as argument]  INFO    IOP     LNK     NATOMS  NLINK                  
+\item[Uses]  ILSW1   INFO    IOP     IOUT    IUNITS  LNK     MAXPOS 
+             NATOMS  NCHAIN  NLINK   NTRSTA  NUTITS  TWAIT          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  ILSW    NEWLNK  TREAD   TWRITE                 
+\item[Called by]   GINPUT  L001    L101    L102    L103    L105    L202   
+             L301    L302    L303    L305    L306    L310    L311   
+             L314    L401    L501    L502    L503    L505    L601   
+             L602    L701    L702    L703    L705    L716    L801   
+             L802    L803    L901    L909    L910    L911    L912   
+             L913                                                   
+                                                                    
+\end{description}
+@a
+      integer function nextov(JUMP)
+      implicit none
+      integer a , fclose , fdelnk , fdelov , i , Ian , Icharg , Idum , 
+     &        Idump , Ilsw1 , In , Info , Iop , Iout , iprint , iprt , 
+     &        Ipunch , irwinf , irwiop , irwlnk
+      integer irwmol , irwntr , Iunits , j , Jop , JUMP , l , Ll , Lnk , 
+     &        lrwinf , lrwiop , lrwlnk , lrwmol , lrwntr , Maxpos , 
+     &        Multip , Nae , Natoms , Nbasis , Nbe
+      integer Nchain , Ne , newch , newcrd , newov , Nlink , Ntrsta , 
+     &        Nutits , offset , oldcrd , oldov , Pad
+      double precision Atmchg , C
+      real Twait
+      logical Print , Syncs
+      real Tstart , Tstop , Elapsd , cputim
+      dimension a(8)
+      common /iop   / Iop(50)
+      common /ilsw1 / Ilsw1(2)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /info  / Info(10)
+      common /tmprte/ Nchain , Ll , Nlink , Pad , Lnk(200) , Jop(50,50)
+      common /io    / In , Iout , Ipunch
+      common /fidump/ Idump
+      common /ntr   / Twait(3,4) , Ntrsta(3,4) , Iunits(4) , Nutits , 
+     &                Maxpos(4) , Print(4) , Syncs(4) , Idum
+      common /clcks / Tstart , Tstop , Elapsd
+      data irwntr/992/ , lrwntr/21/
+      data irwiop/996/ , lrwiop/25/
+      data irwmol/997/ , lrwmol/454/
+      data irwinf/993/ , lrwinf/5/
+      data irwlnk/999/ , lrwlnk/102/
+      data fdelov/8/ , fdelnk/7/
+      data fclose/10/
+      data oldov , oldcrd/0 , 0/
+C
+C
+C
+C          this routine is called at the end of each program in
+C     gnu80.  its purpose is to determine which program is
+C     to run next, and return the number of this program (301, for
+C     instance).  the sequence of programs to run is stored in the
+C     vector 'lnk', which is documented in detail in 'link1'.  'nextov'
+C     is called with on calling argument, 'jump', which allows the
+C     exiting program some control over which program runs next.  the
+C     allowed values of 'jump' and their effects are as follows:
+C
+C     jump = 0 ... no modification of sequence stored in 'lnk'.
+C
+C     jump = 1 ... the route stored in 'lnk' may have some
+C              loops or skips encoded in it in the form of
+C              forward or backward jumps, causing control
+C              to skip to some program other than the one
+C              sequentially next in 'lnk'.  specifying a value
+C              of one for 'jump' causes any of these to be
+C              ignored.  this is used primarily to skip out
+C              of a loop at the end of an optimization.
+C
+C     iabs(jump) > 100 ... this allows the exiting program to
+C               explicitly specify a forward or backward jump.
+C               in this case, control skips forward or backward
+C               'mod(jump,100)' programs, depending on the sign
+C               of jump.  this capability is used primarily is
+C               the post-scf (overlay 9) to deal with iterative
+C               procedures which span several links.
+C
+C     *************************************************************
+C
+C
+C
+      iprint = Iop(33)
+C
+C      tstop=cputim(iq)
+C      elapsd=tstop-tstart
+C      tstart=tstop
+      call ilsw(2,20,iprt)
+C
+C     print out of machine dependent statistics.
+      if ( iprt.eq.0 ) then
+         do 50 i = 1 , Nutits
+            if ( Ntrsta(2,i).ne.0 ) write (Iout,99001) Iunits(i) , 
+     &           (Ntrsta(j,i),j=2,3) , Maxpos(i)
+ 50      continue
+C
+99001    format (' UNIT=',i2,' HAD ',i7,' QIO CALLS,',i12,
+     &           ' 4-B WORDS TRANSF., ',i6,' RECS USED ')
+      endif
+C
+      do 200 i = 1 , Nutits
+         do 100 j = 1 , 3
+            Twait(j,i) = 0
+            Ntrsta(j,i) = 0
+ 100     continue
+ 200  continue
+C
+C
+C                  read in 'lnk', which contains the route.  from
+C                  this, calculate the current link number, overlay
+C                  number, and record number.
+      call tread(irwlnk,Nchain,lrwlnk,1,lrwlnk,1,0)
+      Nchain = 1
+      if ( Nlink.ne.0 ) then
+         Nchain = mod(Lnk(Nlink),10000)
+         oldov = mod(Lnk(Nlink),10000)/100
+         oldcrd = mod(Lnk(Nlink),1000000)/10000
+      endif
+C
+C                  print out some stuff, if necessary.
+      if ( iprt.eq.0 .or. iprint.ge.2 ) write (Iout,99002) Nchain , 
+     &     Ilsw1(1)
+C
+99002 format (' <<<< LEAVE LINK ',i4,', STATUS = ',i12,' >>>>')
+C
+C                  "newlnk" sets the value of "nlink" to the next
+C                  value.  the logic for dealing with "jump" is in
+C                  this routine.
+      call newlnk(Lnk,Nlink,JUMP)
+C
+C                  get the new record, overlay, and link numbers
+      newch = mod(Lnk(Nlink),10000)
+      newov = mod(Lnk(Nlink),10000)/100
+      newcrd = mod(Lnk(Nlink),1000000)/10000
+C
+C                  write out the new status of "nlink" and "lnk".
+      call twrite(irwlnk,Nchain,lrwlnk,1,lrwlnk,1,0)
+C
+C                  delete the link-volatile files, and the
+C                  overlay-volatile files, if we are changing overlays.
+      call fileio(fdelnk,0,0,0,0)
+      if ( newov.ne.oldov ) call fileio(fdelov,0,0,0,0)
+C
+C                  if this is a new record, then get the new options.
+C     this is where the current 50 options are read in for
+C     transmission (via /iop/ to the next overlay and its links.
+      if ( oldcrd.ne.newcrd ) then
+         offset = lrwlnk + lrwiop*(newcrd-1)
+         call fileio(2,-irwlnk,lrwiop,Iop,offset)
+         call twrite(irwiop,Iop,lrwiop,1,lrwiop,1,0)
+C set fileio debug switch:
+         Idump = Iop(35)
+      endif
+C
+C                  save standard common blocks.
+      call twrite(irwmol,Natoms,lrwmol,1,lrwmol,1,0)
+      call twrite(irwinf,Info,lrwinf,1,lrwinf,1,0)
+      call twrite(irwiop,Iop,lrwiop,1,lrwiop,1,0)
+      call twrite(irwntr,Twait(1,1),lrwntr,1,lrwntr,1,0)
+C                  now close fileio:
+      call fileio(fclose,l,l,l,l)
+C
+C                  compute the alternate directory spec.,
+C     altdir=lnk(nlink)/1000000
+      nextov = newch
+      return
+C
+      end
+@* INDEX.

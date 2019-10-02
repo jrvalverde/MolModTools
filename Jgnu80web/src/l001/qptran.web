@@ -1,0 +1,83 @@
+@* qptran.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] RESULT                                                    
+\item[PASSED:] TABLE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    STATUS                                                 
+\item[Transmits as argument]  STATE   TCURSR                                         
+\item[Uses]  QPERR   STATE   TCURSR                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPDEST  QPTVAL  QPUTIT                                 
+\item[Called by]   QPARSE                                                 
+                                                                    
+\end{description}
+@a
+      integer function qptran(RESULT,TABLE)
+C ----------------------------------------------------------------------
+      implicit none
+      integer Chrctr , Digit , index , Inte , Lastyp , Lcursr , Lenstr , 
+     &        Maxdep , Maxlen , mycrsr , Qpabrv , Qpambg , Qpblnk , 
+     &        Qpcaps , qpdest , Qpdpth , Qpend , Qperr , Qpexit , Qpfail
+      integer Qpnoab , Qpok , Qprecr , Qpret , qptval , RESULT , Stack , 
+     &        State , Status , String , TABLE , Tcursr , Tran , val , 
+     &        value
+      real Fp
+      double precision Dp
+      dimension RESULT(*) , TABLE(*)
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+C          this routine determines the destination of the transition,
+C     positions to it if it is a new state, and does whatever the
+C     table indicates should be done in the transition.  the tcursr
+C     should be positioned at the destination field of the table
+C     entry when the routine is called, and it is advanced to the
+C     end of the entry by this routine.  the returned value of the
+C     function is either qpok, meaning that the parse should continue,
+C     or qpexit, meaning that it should stop, or qperr for some
+C     error.
+C     r. a. whiteside - march 1979
+C2qptran
+C ----------------------------------------------------------------------
+C
+C
+C
+C ======================================================================
+C            save the current cursor position.
+      mycrsr = Tcursr
+C            set pointers to new state.
+      val = qpdest(TABLE,Tcursr,State)
+      if ( val.ne.Qperr ) then
+C            get index, value fields (from the old cursor position).
+         index = qptval(TABLE,mycrsr)
+         index = qptval(TABLE,mycrsr)
+         value = qptval(TABLE,mycrsr)
+C            if the index field is zero, then no values are to be
+C            stored in the transition.
+         if ( index.ne.0 ) then
+C            if the value field is zero, then the thing accepted is
+C            to be put into 'result'.
+            if ( value.eq.0 ) then
+C            'qputit' puts the last thing accepted into 'result'.
+               call qputit(RESULT(index))
+            else
+C            add the mask into 'result'.
+               RESULT(index) = RESULT(index) + value
+            endif
+         endif
+      endif
+C            return the value of "val" set by the routine qpdest.
+      Status = val
+      qptran = val
+      return
+C
+      end
+@* INDEX.

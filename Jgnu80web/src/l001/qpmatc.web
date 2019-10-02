@@ -1,0 +1,171 @@
+@* qpmatc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LASTYP                                                 
+\item[Transmits as argument]  CHRCTR  DIGIT   DP      FP      INTE    LCURSR  LENSTR 
+             STRING  TCURSR                                         
+\item[Uses]  CHRCTR  DIGIT   DP      FP      INTE    LASTYP  LCURSR 
+             LENSTR  QPEND   QPERR   QPFAIL  QPOK    QPRECR  STRING 
+             TCURSR                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPAINT  QPANY1  QPDCOD  QPDP    QPREAL  QPSCHR  QPSKEY 
+             QPTVAL  QPWORD                                         
+\item[Called by]   QPSCAN                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpmatc(TABLE,LINE,LENGTH)
+C2qpmatc
+C ----------------------------------------------------------------------
+      implicit none
+      integer branch , Chrctr , Digit , Inte , Lastyp , Lcursr , 
+     &        LENGTH , Lenstr , LINE , Maxdep , Maxlen , Qpabrv , 
+     &        qpaint , Qpambg , qpany1 , Qpblnk , Qpcaps , qpdcod , 
+     &        qpdp , Qpdpth
+      integer Qpend , Qperr , Qpexit , Qpfail , Qpnoab , Qpok , qpreal , 
+     &        Qprecr , Qpret , qpschr , qpskey , qptval , qpword , 
+     &        Stack , State , Status , String , TABLE , Tcursr , Tran
+      integer val
+      dimension TABLE(*) , LINE(*)
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+C ======================================================================
+C           this routine looks to see if the thing pointed to by
+C     tcursr in the table matches the next thing in line.  length
+C     is the length of the line.  there are four possible returned
+C     for this function:
+C          - qpok ..... thing in line is accepted.
+C          - qpfail ... thing in line is not accepted.
+C          - qpambg ... string in line ambiguously abbreviates
+C                       keyword.
+C          - qpend .... an end-of-state or an end-of-table was
+C                       encountered in the table.
+C     if a match is found, then  lcursr is advanced past the thing
+C     accepted.  tcursr is always advanced only past the alphabet code.
+C     if no match is found, then lcursr is unchanged.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+C           the routine qpdcod converts from external alphabet
+C           codes into a standard internal one.
+C
+      Lastyp = qptval(TABLE,Tcursr)
+      branch = qpdcod(Lastyp)
+      if ( branch.le.0 .or. branch.ge.24 ) then
+         val = Qperr
+C
+      elseif ( branch.eq.2 ) then
+C
+C           specific character(s).
+         val = qpschr(TABLE,LINE,LENGTH)
+      elseif ( branch.eq.3 ) then
+C
+C           any base 10 digit.
+         val = qpany1(10,LINE,LENGTH,Lcursr,Digit)
+      elseif ( branch.eq.4 ) then
+C
+C           any numeric character.
+         val = qpany1(-1,LINE,LENGTH,Lcursr,Chrctr)
+      elseif ( branch.eq.5 ) then
+C
+C           any alphabetic character.
+         val = qpany1(-2,LINE,LENGTH,Lcursr,Chrctr)
+      elseif ( branch.eq.6 ) then
+C
+C           any alphanumeric character.
+         val = qpany1(-3,LINE,LENGTH,Lcursr,Chrctr)
+      elseif ( branch.eq.7 ) then
+C
+C           any character.
+         val = qpany1(-4,LINE,LENGTH,Lcursr,Chrctr)
+      elseif ( branch.eq.8 ) then
+C
+C           any base 10 integer.
+         val = qpaint(10,LINE,LENGTH,Lcursr,Inte,0)
+      elseif ( branch.eq.9 ) then
+C
+C           real number.
+         val = qpreal(LINE,LENGTH,Lcursr,Fp)
+      elseif ( branch.eq.10 ) then
+C
+C           double precision.
+         val = qpdp(LINE,LENGTH,Lcursr,Dp)
+      elseif ( branch.eq.11 ) then
+C
+C           null.
+         val = Qpok
+      elseif ( branch.eq.12 ) then
+C
+C           end of line.
+         val = Qpfail
+         if ( Lcursr.ge.LENGTH ) val = Qpok
+      elseif ( branch.eq.13 ) then
+C
+C           any word (terminated by non-alphanumeric).
+         val = qpword(0,0,0,LINE,LENGTH,Lcursr,String,Lenstr)
+      elseif ( branch.eq.14 ) then
+C
+C           any user-defined-thing (he supplies the terminators).
+         val = qpword(1,TABLE,Tcursr,LINE,LENGTH,Lcursr,String,Lenstr)
+      elseif ( branch.eq.15 ) then
+C
+C           end of state mark.
+         val = Qpend
+      elseif ( branch.eq.16 ) then
+C
+C           end of table.
+         val = Qpend
+      elseif ( branch.eq.17 ) then
+C
+C            any binary digit.
+         val = qpany1(2,LINE,LENGTH,Lcursr,Digit)
+      elseif ( branch.eq.18 ) then
+C
+C            any octal digit.
+         val = qpany1(8,LINE,LENGTH,Lcursr,Digit)
+      elseif ( branch.eq.19 ) then
+C
+C            any hexadecimal digit.
+         val = qpany1(16,LINE,LENGTH,Lcursr,Digit)
+      elseif ( branch.eq.20 ) then
+C
+C            any binary number (integer).
+         val = qpaint(2,LINE,LENGTH,Lcursr,Inte,0)
+      elseif ( branch.eq.21 ) then
+C
+C            any octal number (integer).
+         val = qpaint(8,LINE,LENGTH,Lcursr,Inte,0)
+      elseif ( branch.eq.22 ) then
+C
+C            any hexadecimal number (integer).
+         val = qpaint(16,LINE,LENGTH,Lcursr,Inte,0)
+      elseif ( branch.eq.23 ) then
+C
+C            recursion.
+         val = Qprecr
+      else
+C
+C           specific keyword.
+         val = qpskey(TABLE,LINE,LENGTH)
+      endif
+C
+      qpmatc = val
+      return
+C
+      end
+@* INDEX.

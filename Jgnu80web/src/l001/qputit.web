@@ -1,0 +1,95 @@
+@* qputit.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] WHERE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    STRING                                                 
+\item[Transmits as argument]  LASTYP                                                 
+\item[Uses]  CHRCTR  DIGIT   DPL     FPL     INTE    LASTYP  LENSTR 
+             STRING                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  GSQRT   PUTICR  QPCPV   QPDCOD                 
+\item[Called by]   QPTRAN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine qputit(WHERE)
+      implicit none
+      real gsqrt , Qpblnk , Qpcaps , Qpnoab , x , y
+      integer i , jjjj
+C2qputit
+C ----------------------------------------------------------------------
+      integer branch , cur1 , cur2 , WHERE(2) , chr , Dpl(2) , qpdcod , 
+     &        Fpl , getchr
+      integer blank
+      integer Lastyp , Status , Chrctr , Digit , Inte , String , 
+     &        Tcursr , Lcursr , State , Tran , Lenstr
+      real Fp
+      double precision Dp
+      integer qpcpv
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      equivalence (Dpl(1),Dp) , (Fpl,Fp)
+      data blank/'    '/
+C          this routine puts the last thing accepted into where.
+C     for strings, the first word in where will get the character
+C     count, and subsequent words get the characters (four to a word).
+C     for double precision numbers, two words in where are used.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C
+C
+C ======================================================================
+C
+      branch = qpdcod(Lastyp)
+      if ( branch.eq.3 .or. branch.eq.17 .or. branch.eq.18 .or. 
+     &     branch.eq.19 ) then
+C                                    digit.
+         WHERE(1) = Digit
+         return
+      elseif ( branch.eq.4 .or. branch.eq.5 .or. branch.eq.6 .or. 
+     &         branch.eq.7 ) then
+C                                    single character.
+         WHERE(1) = Chrctr
+         return
+      elseif ( branch.eq.8 .or. branch.eq.20 .or. branch.eq.21 .or. 
+     &         branch.eq.22 ) then
+C                                    integer
+         WHERE(1) = Inte
+         return
+      elseif ( branch.eq.9 ) then
+C                                    real.
+         WHERE(1) = Fpl
+         return
+      elseif ( branch.eq.10 ) then
+C                                    double precision.
+         WHERE(1) = Dpl(1)
+         WHERE(2) = Dpl(2)
+         return
+      elseif ( branch.eq.11 .or. branch.eq.12 .or. branch.eq.15 .or. 
+     &         branch.eq.16 ) then
+C                                    error.
+         y = -1
+         x = gsqrt(y)
+      elseif ( branch.ne.23 ) then
+C                                    keyword.
+         cur1 = 0
+         cur2 = 0
+         WHERE(1) = Lenstr
+         do 50 i = 1 , Lenstr
+            chr = getchr(String,cur1)
+            if ( mod(i,qpcpv(jjjj)).eq.0 ) String(i/qpcpv(jjjj)) = blank
+            call puticr(chr,WHERE(2),cur2)
+ 50      continue
+         return
+      endif
+      return
+C
+      end
+@* INDEX.

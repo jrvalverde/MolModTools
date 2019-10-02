@@ -1,0 +1,55 @@
+@* jqint.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] J                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   RSTART                                                 
+                                                                    
+\end{description}
+@a
+      integer function jqint(J)
+      implicit none
+      integer i , ibl , ij , In , ints , Iout , Ipunch , is , J
+      dimension ints(10)
+      common /io    / In , Iout , Ipunch
+      data ints/1H0 , 1H1 , 1H2 , 1H3 , 1H4 , 1H5 , 1H6 , 1H7 , 1H8 , 
+     &     1H9/
+      data ibl/1H /
+C
+C
+C***********************************************************************
+C     routine to decode j from a1 format to an integer number.
+C     call with j= some character (blank or decimal number) and this
+C     routine will return zero for a blank or the value of the number
+C     if a legal digit is encountered.  the routine will terminate via
+C     lnk1e if a non-blank or non-numeric character is encountered.
+C***********************************************************************
+C
+C
+99001 format (37H  STRANGE CHARACTER ON DOLLAR CARD.  ,a1)
+C
+      if ( J.ne.ibl ) then
+C
+         do 50 i = 1 , 10
+            is = i
+            if ( ints(i).eq.J ) goto 100
+ 50      continue
+         write (Iout,99001) J
+         call lnk1e
+ 100     ij = is - 1
+      else
+         ij = 0
+      endif
+      jqint = ij
+      return
+C
+      end
+@* INDEX.

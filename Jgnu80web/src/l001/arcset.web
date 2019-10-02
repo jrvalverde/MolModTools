@@ -1,0 +1,76 @@
+@* arcset.
+This routine decides whether the job can be archived.  if it
+can be, the appropriate bit in 'ilsw' ( \#25) is set, and a
+summary word is stored into info(4).
+
+The summary word is a 7-digit number,each digit having a
+particular meaning.  The meaning of each digit should be
+clear from the code below which calculates the number.
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    INFO                                                   
+\item[Uses]  COORD   IALT    IBAS1   IBAS2   IBAS3   IOPTYP  IPRC1  
+             ITEST   ITS     ITYPE   NOPOP                          
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       ILSW                                                   
+\item[Called by]   EROUTE                                                 
+                                                                    
+\end{description}
+@a
+      subroutine arcset
+      implicit none
+      integer Cnoe , Coord , Direct , Dummy , Grdsym , Ialt , Ian , 
+     &        Ibas1 , Ibas2 , Ibas3 , Ibas4 , Icharg , Icmplx , Id2e , 
+     &        Ifau , Ifrad , Iges , Info , Intsym , Iop
+      integer Ioptyp , Iprc1 , Iprc2 , Iprc3 , Iprc4 , Ipseud , Iraff , 
+     &        Iscfdm , isum , Itest , itmp , Its , Itype , Iunit , 
+     &        Multip , Nae , Natoms , Nbasis , Nbe , Ndchg
+      integer Ne , Noextr , Nondef , Nopop , Nostd , Nosym , npop , 
+     &        Optcyc , Prtges , Rpac , Savbas , Savfc , Savmo , Scfcyc , 
+     &        Stbint , Stbopt , Stbout , Stbrxt , Stbsym , Stccxt
+      integer Stronl , Synch , Units , Vshift
+      double precision C , Atmchg , Phycon
+      integer arctyp(7)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /munit / Iunit(20)
+      common /phycon/ Phycon(30)
+      common /info  / Info(10)
+      common /ertgen/ Itype , Ibas1 , Ibas2 , Ibas3 , Ibas4 , Iprc1 , 
+     &                Iprc2 , Iprc3 , Iprc4 , Iges , Savfc , Savbas , 
+     &                Savmo , Ialt , Iscfdm , Its , Ipseud , Noextr , 
+     &                Iraff , Nopop , Itest , Synch , Nosym , Scfcyc , 
+     &                Nostd , Stbsym , Stbopt , Stbout , Stbint , 
+     &                Stbrxt , Stccxt , Prtges , Icmplx , Ioptyp , 
+     &                Id2e , Intsym , Grdsym , Ifau , Ifrad , Units , 
+     &                Optcyc , Coord , Stronl , Nondef , Ndchg , Cnoe , 
+     &                Rpac , Vshift , Direct , Dummy(51)
+      data arctyp/1 , 2 , 0 , 0 , 7 , 8 , 0/
+C
+      call ilsw(1,25,0)
+      if ( Itype.eq.3 .or. Itype.eq.7 .or. Itype.eq.4 ) return
+      if ( Coord.ne.0 ) return
+      if ( Ioptyp.eq.3 ) return
+      if ( Ibas1.eq.7 ) return
+      call ilsw(1,25,1)
+C                  deal with minpop
+      npop = Nopop
+      if ( Nopop.eq.2 ) npop = 1
+C
+C-----for fp opt, still put '2' into summary word.
+      itmp = arctyp(Itype)
+      if ( Its.ne.0 ) itmp = 4
+      isum = Ibas3 + 10*Ibas2 + 100*Ibas1 + 1000*Iprc1 + 10000*itmp + 
+     &       100000*npop + 200000*Ialt + 400000*Itest
+C
+      Info(4) = isum
+      return
+C
+      end
+@* INDEX.

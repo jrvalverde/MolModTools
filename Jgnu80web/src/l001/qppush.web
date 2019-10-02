@@ -1,0 +1,65 @@
+@* qppush.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] I                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    QPDPTH  STACK                                          
+\item[Uses]  LASTYP  LCURSR  MAXDEP  QPDPTH  QPERR   QPOK    STATE  
+             STATUS  TCURSR  TRAN                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPARSE                                                 
+                                                                    
+\end{description}
+@a
+      integer function qppush(I)
+C2qppush
+C ----------------------------------------------------------------------
+      implicit none
+      integer Chrctr , Digit , I , Inte , Lastyp , Lcursr , Lenstr , 
+     &        Maxdep , Maxkey , Qpabrv , Qpambg , Qpblnk , Qpcaps , 
+     &        Qpdpth , Qpend , Qperr , Qpexit , Qpfail , Qpnoab , Qpok
+      integer Qprecr , Qpret , Stack , State , Status , String , 
+     &        Tcursr , Tran
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C ======================================================================
+C          this routine pushes the current status of the parse onto
+C     the stack.  the calling argument is a dummy.  the returned values
+C     of the function are:
+C          qpok ... all ok
+C          qperr ... stack overflow.
+C     the maximum depth (defined by the size of /qpstck/) is 10.
+C     r. a. whiteside - october 1979
+C ----------------------------------------------------------------------
+C
+C
+C
+      Qpdpth = Qpdpth + 1
+      if ( Qpdpth.le.Maxdep ) then
+C
+         Stack(1,Qpdpth) = Lastyp
+         Stack(2,Qpdpth) = Status
+         Stack(3,Qpdpth) = Tcursr
+         Stack(4,Qpdpth) = Lcursr
+         Stack(5,Qpdpth) = State
+         Stack(6,Qpdpth) = Tran
+         qppush = Qpok
+         return
+      endif
+C
+      qppush = Qperr
+      return
+C
+      end
+@* INDEX.

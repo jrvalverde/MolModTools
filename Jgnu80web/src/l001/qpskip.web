@@ -1,0 +1,33 @@
+@* qpskip.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPAMBI  QPARSE  QPDEST  QPSCAN                         
+                                                                    
+\end{description}
+@a
+      subroutine qpskip(CURSOR)
+      implicit none
+C ----------------------------------------------------------------------
+      integer CURSOR
+C          this routine just advances the cursor past the destination
+C     and result stuff, assuming that the alphabet token has been read.
+C     it may seem silly to have a subroutine that just adds three to a
+C     value, but i didn't want that kind of knowledge of the table
+C     structure scattered through the program.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+      CURSOR = CURSOR + 3
+      return
+C
+      end
+@* INDEX.

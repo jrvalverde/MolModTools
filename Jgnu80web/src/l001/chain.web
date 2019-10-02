@@ -1,0 +1,173 @@
+@* chain.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[INPUT:] NCHAIN                                                    
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       FILEIO  ILSW    L001    L101    L102    L103    L105   
+             L202    L301    L302    L303    L305    L306    L310   
+             L311    L314    L401    L501    L502    L503    L505   
+             L601    L602    L701    L702    L703    L705    L716   
+             L801    L802    L803    L901    L909    L910    L911   
+             L912    L913    L9999   LNK1E                          
+\item[Called by]   GNU80   RSTART                                         
+                                                                    
+\end{description}
+
+\begin{verbatim}
+The changes in subroutine chain are to add a 'hook' to link 602,
+which writes the transfer file for program rpac.
+Subroutines eroute and rtedef, with associated block data
+routines, are used to add the keyword 'rpac' to the input list.
+This keyword sets up the route to do a single-point rhf
+calculation, suppressing raffenetti formatting of the integrals,
+subroutine savscf constructs the interface file, and subroutines
+utiti and utida provide time and date stamps for the file.
+\end{verbatim}
+
+
+@a
+      subroutine chain(NCHAIN)
+C2chain
+      implicit none
+      integer In , Iop , Iout , iov , Ipunch , j , l , NCHAIN , nn
+C
+C
+C     routine to call the next segment.
+C
+      common /io    / In , Iout , Ipunch
+      common /iop   / Iop(50)
+C-rpac following statements modified to add overlay 602
+      dimension iov(36)
+      data nn/36/
+      data iov/1 , 101 , 102 , 103 , 105 , 202 , 301 , 302 , 303 , 305 , 
+     &     306 , 310 , 311 , 314 , 401 , 501 , 502 , 503 , 505 , 601 , 
+     &     602 , 701 , 702 , 703 , 705 , 716 , 801 , 802 , 803 , 901 , 
+     &     909 , 910 , 911 , 912 , 913 , 9999/
+C
+C     Check NCHAIN value is a valid listed (in iov) one
+ 100  do 200 j = 1 , nn
+         if ( iov(j).eq.NCHAIN ) goto 300
+ 200  continue
+C     if NCHAIN is not a valid module ID to jump to, output
+C     a reason, an error (lnk1e) and end the program.
+      write (Iout,99001) NCHAIN
+99001 format ('1  NCHAIN = ',i9,',  NOT RECOGNIZABLE.')
+      call lnk1e
+      stop
+      
+C if this is a call for link1 skip this, fileio is not initialised yet:
+ 300  if ( iov(j).ne.1 ) then
+C     open fileio:
+         call fileio(9,l,l,l,l)
+C     check for no print, then write starting link number
+         call ilsw(2,20,l)
+         if ( l.eq.0 ) write (Iout,99002) iov(j)
+99002    format ('+',120x,'(ENTER ',i4,')')
+      endif
+C-rpac link 602 added to goto statement for rpac
+      if ( j.eq.1 ) then
+         call l001(NCHAIN)
+      elseif ( j.eq.2 ) then
+         call l101(NCHAIN)
+      elseif ( j.eq.3 ) then
+         call l102(NCHAIN)
+      elseif ( j.eq.4 ) then
+         call l103(NCHAIN)
+      elseif ( j.eq.5 ) then
+         call l105(NCHAIN)
+      elseif ( j.eq.6 ) then
+         call l202(NCHAIN)
+      elseif ( j.eq.7 ) then
+         call l301(NCHAIN)
+      elseif ( j.eq.8 ) then
+         call l302(NCHAIN)
+      elseif ( j.eq.9 ) then
+         call l303(NCHAIN)
+      elseif ( j.eq.10 ) then
+         call l305(NCHAIN)
+      elseif ( j.eq.11 ) then
+         call l306(NCHAIN)
+      elseif ( j.eq.12 ) then
+         call l310(NCHAIN)
+      elseif ( j.eq.13 ) then
+         call l311(NCHAIN)
+      elseif ( j.eq.14 ) then
+         call l314(NCHAIN)
+      elseif ( j.eq.15 ) then
+         call l401(NCHAIN)
+      elseif ( j.eq.16 ) then
+         call l501(NCHAIN)
+      elseif ( j.eq.17 ) then
+         call l502(NCHAIN)
+      elseif ( j.eq.18 ) then
+         call l503(NCHAIN)
+      elseif ( j.eq.19 ) then
+         call l505(NCHAIN)
+      elseif ( j.eq.20 ) then
+         call l601(NCHAIN)
+      elseif ( j.eq.21 ) then
+C-rpac interface routine for program rpac called here
+         call l602(NCHAIN)
+      elseif ( j.eq.22 ) then
+C-rpac
+         call l701(NCHAIN)
+      elseif ( j.eq.23 ) then
+         call l702(NCHAIN)
+      elseif ( j.eq.24 ) then
+         call l703(NCHAIN)
+      elseif ( j.eq.25 ) then
+         call l705(NCHAIN)
+      elseif ( j.eq.26 ) then
+         call l716(NCHAIN)
+      elseif ( j.eq.27 ) then
+         call l801(NCHAIN)
+      elseif ( j.eq.28 ) then
+         call l802(NCHAIN)
+      elseif ( j.eq.29 ) then
+         call l803(NCHAIN)
+      elseif ( j.eq.30 ) then
+         call l901(NCHAIN)
+      elseif ( j.eq.31 ) then
+         call l909(NCHAIN)
+      elseif ( j.eq.32 ) then
+         call l910(NCHAIN)
+      elseif ( j.eq.33 ) then
+         call l911(NCHAIN)
+      elseif ( j.eq.34 ) then
+         call l912(NCHAIN)
+      elseif ( j.eq.35 ) then
+         call l913(NCHAIN)
+      elseif ( j.eq.36 ) then
+         goto 400
+      else
+         write (Iout,99003) iov(j)
+99003    format ('   LINK ',i4,' NOT IMPLEMENTED')
+         goto 400
+      endif
+      goto 100
+ 400  call l9999(NCHAIN)
+C      go to 10
+C  this is work-around until the salford compiler deals with
+C    end= correctly.
+C  note that, instead of using:
+C     gnu80 <input >output
+C  one can say:
+C     gnu80 /read 5 input >output
+C  and this does recognise end= correctly.
+C
+      stop
+C      return
+      end
+@* INDEX.

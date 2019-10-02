@@ -1,0 +1,48 @@
+@* qpreal.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] LINE                                                      
+\item[PASSED:] LENGTH                                                    
+\item[PASSED:] LCURSR                                                    
+\item[OUTPUT:] R                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPOK                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QPDP                                                   
+\item[Called by]   QPMATC                                                 
+                                                                    
+\end{description}
+@a
+      integer function qpreal(LINE,LENGTH,LCURSR,R)
+C ----------------------------------------------------------------------
+      implicit none
+      integer LCURSR , LENGTH , Maxdep , Maxkey , Qpabrv , Qpambg , 
+     &        qpdp , Qpdpth , Qpend , Qperr , Qpexit , Qpfail , Qpok , 
+     &        Qprecr , Qpret , Stack , val
+      integer LINE(*)
+      real R
+      double precision x
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C          this routine  accepts a real number from line.  it really
+C     just calls the routine qpdp, which accepts double precision
+C     numbers, and converts the result to single precision.  the value
+C     of the function is either qpok if a number is accepted, or qpfail
+C     otherwise.  if a number is accepted, lcursr is advanced and
+C     the value accepted is returned in r.  no global data is modified.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+      val = qpdp(LINE,LENGTH,LCURSR,x)
+      if ( val.eq.Qpok ) R = x
+      qpreal = val
+      return
+C
+      end
+@* INDEX.

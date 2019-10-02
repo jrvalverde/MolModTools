@@ -1,0 +1,47 @@
+@* qpdump.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  CHRCTR  DIGIT   DP      FP      INTE    LASTYP  LCURSR 
+             LENSTR  STATE   STATUS  STRING  TCURSR  TRAN           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine qpdump
+      implicit none
+      integer i , lenwr
+      real Qpblnk , Qpcaps , Qpnoab
+C2qpdump
+      integer Lastyp , Status , Chrctr , Digit , Inte , String , 
+     &        Tcursr , Lcursr , State , Tran , Lenstr
+      real Fp
+      double precision Dp
+      common /qpstat/ Lastyp , Status , Chrctr , Digit , Inte , Fp , 
+     &                Dp , Tcursr , Lcursr , State , Tran , Lenstr , 
+     &                String(64) , Qpblnk , Qpnoab , Qpcaps
+C
+C     qparse common block and definitions.
+C
+C
+C
+C
+C
+99001 format ('  LASTYP=',i8,', LASTYP=',a4,', STATUS=',i3,
+     &        ',                 CHRCTR=',a4,', DIGIT=',a4,/,
+     &        '  INTEGER=',i4,', FP=',f10.3,', DP=',d14.4,/,'  TCURSR=',
+     &        i2,', LCURSR=',i5,', STATE=',a4,', TRAN=',i2,/,
+     &        '  LENSTR=',i2,', STRING: ',64A4)
+C
+      lenwr = (Lenstr-1)/4 + 1
+      write (6,99001) Lastyp , Lastyp , Status , Chrctr , Digit , Inte , 
+     &                Fp , Dp , Tcursr , Lcursr , State , Tran , 
+     &                Lenstr , (String(i),i=1,lenwr)
+      return
+C
+      end
+@* INDEX.
