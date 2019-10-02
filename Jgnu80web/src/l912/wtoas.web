@@ -1,0 +1,87 @@
+@* wtoas.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] EVA                                                       
+\item[INPUT:] NOA                                                       
+\item[INPUT:] NVA                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  DE1     MDV     Q1      V                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   GETA                                                   
+                                                                    
+\end{description}
+@a
+      subroutine wtoas(IBUC1,IBUC2,EVA,NOA,NVA)
+      implicit none
+      double precision A00 , A0s , Anorm , aprev , Cuts , De1 , Dehf , 
+     &                 Delmax , Den , eai , ei , Energy , EVA , F42 , 
+     &                 Four , Half , One , Onept5 , Q1 , Ten
+      double precision Three , Two , V , w , W0 , Zero
+      integer ia , IBUC1 , IBUC2 , Iflag , ii , ind , Ipcyc , Isd , 
+     &        leng , Maxit , Mdv , mdv2 , mdv21 , Niter , NOA , Norm , 
+     &        NVA
+      logical Davail , Savail
+C
+C
+C     forms a from w as follows:
+C     a(ia) = w(ia) / (de-ea+ei)
+C
+C     ibuc1 contains the w-bucket  (input)
+C     ibuc2 contains the a-bucket  (output)
+C     de = sum  v(0,t) * a(t)
+C          t>0
+C
+C     eva contains the one-electron energies
+C     extrapolation assuming geometrical series is performed
+C
+C
+      dimension EVA(*)
+C
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /wtoa  / De1 , Q1 , A0s
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+C
+      call track('WTOAS ')
+C
+      if ( NOA.le.0 .or. NVA.le.0 ) return
+C
+      mdv2 = Mdv/2
+      mdv21 = mdv2 + 1
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(2,-IBUC2,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+      leng = NOA*NVA
+      call fileio(2,IBUC1,leng,V,0)
+      call fileio(2,IBUC2,leng,V(mdv21),0)
+      ind = 0
+C
+      do 100 ii = 1 , NOA
+         ei = EVA(ii) + (De1)
+         do 50 ia = 1 , NVA
+            ind = ind + 1
+            w = V(ind)
+            aprev = V(ind+mdv2)
+            eai = (ei-EVA(ia+NOA))
+            V(ind) = Q1*(w/eai-aprev) + aprev
+ 50      continue
+ 100  continue
+C
+C     output
+      call fileio(1,IBUC2,leng,V,0)
+C
+      return
+C
+      end
+@* INDEX.

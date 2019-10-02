@@ -1,0 +1,141 @@
+@* wtoadb.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] IBUC3                                                     
+\item[INPUT:] EVA                                                       
+\item[INPUT:] EVB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Transmits as argument]  V0                                                     
+\item[Uses]  A0S     DE1     MDV     NOA     NOAOB   NOB     NOVAB  
+             NVA     NVAVB   NVB     Q1      V       V0             
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   GETA                                                   
+                                                                    
+\end{description}
+@a
+      subroutine wtoadb(IBUC1,IBUC2,IBUC3,EVA,EVB)
+      implicit none
+      double precision A00 , A0s , Anorm , aprev , Cuts , De1 , Dehf , 
+     &                 Delmax , Den , eabij , eaij , eij , Energy , 
+     &                 EVA , EVB , F42 , Four , Half , One , Onept5
+      double precision Q1 , Ten , Three , Two , V , V0 , w , W0 , Zero
+      integer ia , ib , IBUC1 , IBUC2 , IBUC3 , Ieval , Iflag , ii , 
+     &        ij , ind , Ioab , Ipcyc , Isd , Ispect , leng , lij , 
+     &        lmax , Loab , ls , Lspect
+      integer m , Maxbuc , Maxit , Mdv , mdv1 , mdv2 , mdv21 , mdvl , 
+     &        n1 , Niter , Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , 
+     &        Nob , Nob2 , Nob3 , Nobva
+      integer Nobvb , Norm , Novaa , Novab , Novbb , Nrorb , Nva , 
+     &        Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      logical Davail , Savail
+C
+C
+C     forms a from w as follows:
+C     a(s) = w(s) / (de-delta(s))
+C
+C     note: w'(s) (provided by matrix multiplier) does not contain v(s0)
+C     for generation of w we proceed as follows:
+C     w(s) = w'(s)*anorm + v(s,0)
+C
+C     de = sum  v(0,t) * a(t)
+C          t>0
+C
+C     eva and evb contain the one-electron energies (eigenvalues of hf)
+C     ibuc1 contains the w-bucket  (input)
+C     ibuc2 contains the a-bucket  (output)
+C     ibuc3 contains v0
+C     extrapolation assuming geometrical series is performed
+C
+C
+      dimension EVA(*) , EVB(*)
+      dimension V0(20000)
+C
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /wtoa  / De1 , Q1 , A0s
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+C
+      equivalence (V0(1),V(1))
+C
+      call track('WTOADB')
+C
+      lmax = Novab
+      if ( lmax.le.0 ) return
+C
+      mdvl = Mdv - 2*Noaob - Nvavb
+      n1 = mdvl + 1
+C
+      mdv2 = mdvl/2
+      mdv21 = mdv2 + 1
+      mdv1 = (mdv2/Nvavb)*Nvavb
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(2,-IBUC2,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+      call fileio(2,-IBUC3,0,0,0)
+      leng = min0(lmax,mdv1)
+      call fileio(2,IBUC1,leng,V,0)
+      call fileio(2,IBUC2,leng,V(mdv21),0)
+      lmax = lmax - leng
+      ind = 0
+      lij = mdvl + 1
+C
+      do 100 ii = 1 , Noa
+         do 50 ij = 1 , Nob
+C
+C     get v(s,0)
+            ls = leng
+            leng = Nvavb
+            call fileio(2,IBUC3,leng,V0(n1),0)
+            leng = ls
+C
+C     get w'
+            if ( ind+Nvavb.gt.leng ) then
+               call fileio(1,IBUC2,leng,V,0)
+               leng = min0(lmax,mdv1)
+               call fileio(2,IBUC1,leng,V,0)
+               call fileio(2,IBUC2,leng,V(mdv21),0)
+               lmax = lmax - leng
+               ind = 0
+            endif
+C
+C     evaluate de1 for the cepa procedures
+            eij = De1 + EVA(ii) + EVB(ij)
+C
+            m = n1
+            do 20 ia = 1 , Nva
+               eaij = eij - EVA(ia+Noa)
+               do 10 ib = 1 , Nvb
+                  ind = ind + 1
+                  w = V(ind) + V0(m)*A0s
+                  m = m + 1
+                  aprev = V(ind+mdv2)
+                  eabij = (eaij-EVB(ib+Nob))
+                  V(ind) = Q1*(w/eabij-aprev) + aprev
+ 10            continue
+ 20         continue
+            lij = lij + 1
+ 50      continue
+ 100  continue
+C
+      call fileio(1,IBUC2,leng,V,0)
+C
+      return
+C
+      end
+@* INDEX.

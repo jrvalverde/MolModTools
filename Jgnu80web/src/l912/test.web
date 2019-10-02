@@ -1,0 +1,85 @@
+@* test.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] I                                                         
+\item[PASSED:] IWD                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IAD                                                    
+\item[Uses]  IAD     IDUMP   IOUT    IPRINT  NOA     NOA3    NOB    
+             NOB3    NVA     NVA3    NVB     NVB3                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SCALP                                                  
+\item[Called by]   DD1SD4  DD3                                            
+                                                                    
+\end{description}
+@a
+      subroutine test(I,IWD)
+      implicit none
+      double precision de , scalp
+      integer I , Iad , Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , Idb1 , 
+     &        Idb10 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , Idb8 , 
+     &        Idb9 , Idmm , Idummy , Idump
+      integer Ieval , In , Ioab , Iout , Iprint , Ipunch , Iscr1 , 
+     &        Iscr2 , Iscr3 , Iscr4 , Iscr5 , Iscr6 , Iscrd , Ispect , 
+     &        IWD , Iwd1 , Iwd2 , Iwd3 , Iws1 , Iws2
+      integer ln , Loab , Lspect , Maxbuc , Noa , Noa2 , Noa3 , Noaob , 
+     &        Noava , Noavb , Nob , Nob2 , Nob3 , Nobva , Nobvb , 
+     &        Novaa , Novab , Novbb , Nrorb , Nva
+      integer Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      dimension Iad(3)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /bucknr/ Idb1 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , 
+     &                Idb8 , Idb9 , Idb10 , Idmm(11) , Iad1 , Iad2 , 
+     &                Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , Iwd3 , Iws1 , 
+     &                Iws2 , Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , 
+     &                Iscr6 , Iscrd(13)
+      common /io    / In , Iout , Ipunch
+      common /print / Iprint
+      common /dump  / Idump , Idummy
+      equivalence (Iad(1),Iad1)
+C
+C     ******************************************************************
+C1test
+C
+C     evaluates  de = w . a and prints it
+C
+C     sept 76/seeger
+C
+C     ******************************************************************
+C
+C
+C
+C
+99001 format (' ',i5,50x,d18.8)
+99002 format (1H )
+C
+      if ( Iprint.eq.0 ) return
+C
+      if ( I.eq.2 ) then
+C
+         ln = Noa*Nob*Nva*Nvb
+      elseif ( I.eq.3 ) then
+C
+         ln = Nob3*Nvb3
+      else
+C
+         ln = Noa3*Nva3
+      endif
+      de = scalp(Iad(I),IWD,ln)
+      if ( Idump.ne.0 ) write (Iout,99002)
+      if ( Iprint.ne.0 ) write (Iout,99002)
+      write (Iout,99001) I , de
+C
+      return
+C
+      end
+@* INDEX.
