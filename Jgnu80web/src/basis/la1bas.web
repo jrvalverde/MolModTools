@@ -1,0 +1,161 @@
+@* la1bas.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[PASSED:] MDIM                                                      
+\item[INPUT:] ITYPE                                                     
+\item[OUTPUT:] E                                                         
+\item[PASSED:] CS                                                        
+\item[PASSED:] CP                                                        
+\item[PASSED:] CD                                                        
+\item[INPUT:] IA                                                        
+\item[OUTPUT:] NCONT                                                     
+\item[OUTPUT:] NGAUSS                                                    
+\item[OUTPUT:] ISHT                                                      
+\item[PASSED:] ISHC                                                      
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  D95V    EZERO   LA2ND   LA3RD   LA4TH   LNK1E  
+             LPEONE  S1S     S2SP                                   
+\item[Called by]   LOSBAS                                                 
+                                                                    
+\end{description}
+@a
+      subroutine la1bas(MDIM,ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+      implicit none
+      real*8 CD , CP , CS , E , sc1s , sc2sp
+      integer i , IA , In , Iout , Ipunch , ISHC , ISHT , ITYPE , MDIM , 
+     &        NCONT , NGAUSS , ngsto
+C
+      dimension E(*) , CS(*) , CP(*) , CD(*) , NGAUSS(*) , ISHT(*) , 
+     &          ISHC(*)
+C
+C     load the basis sets which go with the los alamos 1 potentials.
+C     this routine also makes sure that an "ordinary basis"
+C     is loaded if the atom does not have an effective potential
+C     available (sto-3g for mb and dn95v for dz).
+C
+C     the routine provides the bases for the lp-31g functions
+C     when they are to be used in association with the use of
+C     the lp-31g ecps for first-row atoms.
+C     the choice is driven by ITYPE:
+C     ITYPE = 0    lanl1mb  (sto-3g for first row atoms)
+C     ITYPE = 1    lanl1dz  (dn95v for first row atoms)
+C     ITYPE = 2    sto-val
+C     ITYPE = 3    lanl1/lp-31g
+C
+      dimension sc1s(10) , sc2sp(10)
+      common /io    / In , Iout , Ipunch
+      save ngsto , sc1s , sc2sp
+      data ngsto/3/ , sc1s/1.24D0 , 1.69D0 , 2.69D0 , 3.68D0 , 4.68D0 , 
+     &     5.67D0 , 6.67D0 , 7.66D0 , 8.65D0 , 9.64D0/ , sc2sp/0.00D0 , 
+     &     0.00D0 , 0.80D0 , 1.15D0 , 1.50D0 , 1.72D0 , 1.95D0 , 
+     &     2.25D0 , 2.55D0 , 2.88D0/
+99001 format (' Atomic Number',i3,' not in LANL set.')
+C
+      call aclear(MDIM,E)
+      call aclear(MDIM,CS)
+      call aclear(MDIM,CP)
+      call aclear(MDIM,CD)
+C now check that the atom is not a lanthanide
+      if ( (IA.ge.58 .and. IA.le.71) .or. IA.gt.83 ) write (Iout,99001)
+     &     IA
+      if ( (IA.ge.58 .and. IA.le.71) .or. IA.gt.83 ) call lnk1e
+C
+C is this an sto-type basis or not?
+      if ( (ITYPE.eq.1) .or. (ITYPE.eq.3) .or. (IA.ge.11) ) then
+C
+         if ( IA.ge.11 ) then
+C
+C
+C    actual lanl basis sets are computed below
+C
+            if ( IA.le.18 ) then
+               call la2nd(ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+               return
+            elseif ( IA.le.36 ) then
+               call la3rd(ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+               return
+            elseif ( IA.le.54 ) then
+               call la4th(ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+               return
+            elseif ( IA.le.83 ) then
+               call la5th(ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+               return
+            endif
+         elseif ( ITYPE.eq.3 ) then
+C 2077 write(6,*) ' sorry, itype = 3 in la1bas not yet ready'
+C      call lnk1e
+            if ( IA.gt.2 ) then
+               call lpeone(E,CS,CP,IA)
+               NCONT = 2
+               NGAUSS(1) = 3
+               NGAUSS(2) = 1
+               ISHT(1) = 1
+               ISHT(2) = 1
+               return
+            else
+               call ezero(E,CS,NGAUSS,1,IA)
+               NCONT = 2
+               NGAUSS(1) = 3
+               NGAUSS(2) = 1
+               ISHT(1) = 0
+               ISHT(2) = 0
+               return
+            endif
+         else
+C  this is the full basis for the 1st.-row atom including 1s
+C   inner shell
+            call d95v(E,CS,CP,IA,NCONT,NGAUSS,ISHT,ISHC)
+            return
+         endif
+      elseif ( ITYPE.eq.2 ) then
+C this is the sto-3g valence only itype = 2
+         NCONT = 1
+         NGAUSS(1) = ngsto
+         ISHT(1) = 0
+         if ( IA.ge.3 ) ISHT(1) = 1
+C use an sto-3g for 1s for h and he but sto-3g for 2sp for li
+C  to ne
+         call s1s(E,CS,ngsto)
+         if ( IA.ge.3 ) call s2sp(E,CS,CP,ngsto)
+         do 50 i = 1 , ngsto
+            if ( IA.ge.3 ) then
+               E(i) = E(i)*sc2sp(IA)**2
+            else
+               E(i) = E(i)*sc1s(IA)**2
+            endif
+ 50      continue
+         return
+      else
+C this is a full sto-3g basis including 1s inner shell
+C   for the 1st.-row atom itype = 0
+         NCONT = 1
+         if ( IA.ge.3 ) NCONT = 2
+         NGAUSS(1) = ngsto
+         NGAUSS(2) = ngsto
+         ISHT(2) = 1
+         ISHT(1) = 0
+         call s1s(E,CS,ngsto)
+         if ( IA.ge.3 ) call s2sp(E(ngsto+1),CS(ngsto+1),CP(ngsto+1),
+     &                            ngsto)
+         do 100 i = 1 , ngsto
+            E(i) = E(i)*sc1s(IA)**2
+            if ( IA.gt.2 ) E(i+ngsto) = E(i+ngsto)*sc2sp(IA)**2
+ 100     continue
+         return
+      endif
+      write (Iout,*) 'Sorry, no basis for atoms heavier than Bismuth ' , 
+     &               IA
+      call lnk1e
+      return
+      end
+@* INDEX.

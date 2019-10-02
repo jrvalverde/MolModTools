@@ -1,0 +1,403 @@
+@* n21g.
+\begin{verbatim}
+Routine to supply common /b/ with the n-21g basis for first
+row atoms.  the value of "n" is supplied by iop(6) ngauss.
+This routine calls dn21g to obtain the required basis data.
+this routine is self-contained and does not rely on ginput
+or any other l301 routines for scale-factors, etc., with
+the single exception that ginput should fill shellc in
+common /b/.
+Code implementing polarization functions (both * and **) is
+present but not tested as the fate of n-21g polarization bases
+is currently uncertain.
+This routine can be readily extended to second row atoms when
+those bases are checked out.
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] C                                                         
+\item[OUTPUT:] NBASIS                                                    
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]    AON     AOS     C1      C2      C3      EXX     JAN    
+             NSHELL  SCALE   SHELLA  SHELLC  SHELLN  SHELLT  SHLADF 
+             X       Y       Z                                      
+\item[Uses]  IOUT    NSHELL                                         
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       BERROR  DN21G   PUTLBL                                 
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine n21g(IOP,NATOMS,IAN,C,NBASIS)
+      implicit none
+      double precision C , C1 , C2 , C3 , C4 , cp , cs , e , Exx , 
+     &                 hescal , hhscl1 , hhscl2 , hscal1 , hscal2 , 
+     &                 one , pol , Scale , X , xcoord , Y
+      double precision ycoord , Z , zcoord , zero
+      integer i , ia , IAN , iao , idx , ierr1 , In , IOP , Iout , 
+     &        ipold , ipolp , Ipunch , j , j1 , Jan , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp
+      integer mm , mmdf , NATOMS , NBASIS , nd , ngauss , ngin , 
+     &        Nshell , nstart , numd
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      double precision namp , namd
+      dimension IAN(*) , IOP(50) , C(*)
+      dimension e(15) , cs(15) , cp(9) , pol(10)
+      dimension iao(6) , nd(4) , namd(2)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /scale / Scale(MAXSHL)
+      common /io    / In , Iout , Ipunch
+      data zero/0.0D0/ , one/1.0D0/
+      data pol/2*1.1D0 , 8*0.8D0/
+      data iao/4H  1S , 4H2SPI , 4H2SPO , 4H 2SP , 4H3SPI , 4H3SPO/ , 
+     &     nd/5 , 5 , 6 , 6/
+      data namp/6H     P/ , namd/6H  D(5) , 6H  D(6)/
+      data hscal1/1.1D0/ , hscal2/1.1D0/ , hescal/1.0D0/
+      data ierr1/6/
+C
+C
+C     the following statements provides the linkage to berror.
+C
+99001 format (' ',53('*'),/,
+     &        ' POLARIZATION FUNCTIONS NOT GUARANTEED IN N-21G BASES'/,
+     &        53('*'),/)
+C
+C     initialization.
+C
+C     mm indexes into c1 and c2. mmdf indexes into c3 and c4.
+      mm = 1
+      mmdf = 1
+      Nshell = 0
+      nstart = 1
+      ngauss = IOP(6)
+C     apply default for ngauss if it is presently zero.
+      if ( ngauss.eq.0 ) ngauss = 3
+      ngin = 2
+      ipold = IOP(7)
+      ipolp = IOP(7)/2
+C     if the user has requested polarization bases, complain.
+      if ( ipolp+ipold.gt.0 ) write (Iout,99001)
+      numd = IOP(8) + 1
+      numd = nd(numd)
+      do 100 i = 1 , 240
+         Exx(i) = zero
+         C1(i) = zero
+         C2(i) = zero
+         C3(i) = zero
+ 100  continue
+      call putlbl(0,0,-1)
+C
+C     loop over all atoms, placing basis functions as we go.
+C
+      do 300 i = 1 , NATOMS
+C
+         ia = IAN(i)
+         idx = 3*(i-1)
+         xcoord = C(idx+1)
+         ycoord = C(idx+2)
+         zcoord = C(idx+3)
+         call putlbl(i,ia,0)
+         if ( ia.le.2 ) then
+C
+C     put basis on hydrogen or helium.
+C
+C     recover constants.
+            call dn21g(e,cs,cp,ia,ngauss,ierr1)
+C
+C     get correct scale-factor.  helium is one by default.
+            hhscl1 = hscal1
+            hhscl2 = hscal2
+            if ( ia.eq.2 ) hhscl1 = hescal
+            if ( ia.eq.2 ) hhscl2 = hescal
+C
+C     fill parameters for the 2g shell.
+            do 120 j = 1 , ngin
+               j1 = mm - 1 + j
+               Exx(j1) = e(j)*hhscl1**2
+               C1(j1) = cs(j)
+ 120        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngin
+            Shellt(Nshell) = 0
+            Scale(Nshell) = hscal1
+            Aon(Nshell) = iao(1)
+            Aos(Nshell) = nstart
+            call putlbl(1,0,2)
+            nstart = nstart + 1
+            mm = mm + ngin
+C
+C     fill the outer 1g shell.
+            Exx(mm) = e(ngin+1)*hhscl2**2
+            C1(mm) = one
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = 1
+            Shellt(Nshell) = 0
+            Scale(Nshell) = hscal2
+            Aon(Nshell) = iao(1)
+            Aos(Nshell) = nstart
+            call putlbl(1,0,4)
+            nstart = nstart + 1
+            mm = mm + 1
+C
+C     optionally put p-type polarization functions on hydrogen.
+            if ( ipolp.gt.0 ) then
+               Nshell = Nshell + 1
+               Shellc(Nshell) = 1
+               X(Nshell) = xcoord
+               Y(Nshell) = ycoord
+               Z(Nshell) = zcoord
+               Jan(Nshell) = ia
+               Shella(Nshell) = mm
+               Shladf(Nshell) = 0
+               Shelln(Nshell) = 1
+               Shellt(Nshell) = 1
+               Aon(Nshell) = namp
+               Scale(Nshell) = one
+               Exx(mm) = pol(ia)
+               C2(mm) = one
+               Aos(Nshell) = nstart - 1
+               call putlbl(0,1,1)
+               nstart = nstart + 3
+               mm = mm + 1
+            endif
+C
+         elseif ( ia.le.10 ) then
+C
+C     put basis functions on first row atom.
+C
+C     revover basis constants from dn21g.
+            call dn21g(e,cs,cp,ia,ngauss,ierr1)
+C
+C     fill the inner shell consisting of ngauss primitives.
+            do 140 j = 1 , ngauss
+               j1 = mm - 1 + j
+               Exx(j1) = e(j)
+               C1(j1) = cs(j)
+ 140        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngauss
+            Shellt(Nshell) = 0
+            Scale(Nshell) = one
+            Aos(Nshell) = nstart
+            Aon(Nshell) = iao(1)
+            call putlbl(1,0,1)
+            nstart = nstart + 1
+            mm = mm + ngauss
+C
+C     fill the 2sp-inner shell consisting of ngin functions.
+            do 160 j = 1 , ngin
+               j1 = mm - 1 + j
+               Exx(j1) = e(j+ngauss)
+               C1(j1) = cs(j+ngauss)
+               C2(j1) = cp(j)
+ 160        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngin
+            Shellt(Nshell) = 1
+            Scale(Nshell) = one
+            Aon(Nshell) = iao(2)
+            Aos(Nshell) = nstart
+            call putlbl(2,0,2)
+            call putlbl(2,1,2)
+            nstart = nstart + 4
+            mm = mm + ngin
+C
+C     fill the 2sp-outer shell consisting of ngout=1 functions.
+            Exx(mm) = e(ngauss+ngin+1)
+            C1(mm) = one
+            C2(mm) = one
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = 1
+            Shellt(Nshell) = 1
+            Scale(Nshell) = one
+            Aon(Nshell) = iao(3)
+            Aos(Nshell) = nstart
+            call putlbl(2,0,4)
+            call putlbl(2,1,4)
+            nstart = nstart + 4
+            mm = mm + 1
+C
+C     test for d-type polarization functions on first row atom.
+            if ( ipold.gt.0 ) then
+               Nshell = Nshell + 1
+               X(Nshell) = xcoord
+               Y(Nshell) = ycoord
+               Z(Nshell) = zcoord
+               Jan(Nshell) = ia
+               Shella(Nshell) = mm
+               Shladf(Nshell) = mmdf
+               Shelln(Nshell) = 1
+               Shellt(Nshell) = 2
+               Scale(Nshell) = one
+               Aon(Nshell) = namd(numd-4)
+               Exx(mm) = pol(ia)
+               C3(mmdf) = one
+               mm = mm + 1
+               mmdf = mmdf + 1
+               Aos(Nshell) = nstart - 4
+               call putlbl(0,2,1)
+               nstart = nstart + numd
+            endif
+         else
+C
+            if ( ia.gt.18 ) call berror(ierr1)
+C
+C
+C     put basis functions on second row atom.
+C
+C
+C     recover basis constants from dn21g.
+            call dn21g(e,cs,cp,ia,ngauss,ierr1)
+C
+C     fill the inner shell consisting of ngauss primitives.
+            do 180 j = 1 , ngauss
+               j1 = mm - 1 + j
+               Exx(j1) = e(j)
+               C1(j1) = cs(j)
+ 180        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngauss
+            Shellt(Nshell) = 0
+            Scale(Nshell) = one
+            Aos(Nshell) = nstart
+            Aon(Nshell) = iao(1)
+            call putlbl(1,0,1)
+            nstart = nstart + 1
+            mm = mm + ngauss
+C
+C     fill the (2s,2p) inner shell with ngauss functions
+            do 200 j = 1 , ngauss
+               j1 = mm - 1 + j
+               Exx(j1) = e(j+ngauss)
+               C1(j1) = cs(j+ngauss)
+               C2(j1) = cp(j)
+ 200        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngauss
+            Shellt(Nshell) = 1
+            Scale(Nshell) = one
+            Aon(Nshell) = iao(4)
+            Aos(Nshell) = nstart
+            call putlbl(2,0,1)
+            call putlbl(2,1,1)
+            nstart = nstart + 4
+            mm = mm + ngauss
+C
+C     fill the 3sp-inner shell consisting of ngin functions.
+            do 220 j = 1 , ngin
+               j1 = mm - 1 + j
+               Exx(j1) = e(j+ngauss+ngauss)
+               C1(j1) = cs(j+ngauss+ngauss)
+               C2(j1) = cp(j+ngauss)
+ 220        continue
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = ngin
+            Shellt(Nshell) = 1
+            Scale(Nshell) = one
+            Aon(Nshell) = iao(5)
+            Aos(Nshell) = nstart
+            call putlbl(3,0,2)
+            call putlbl(3,1,2)
+            nstart = nstart + 4
+            mm = mm + ngin
+C
+C     fill the 3sp-outer shell consisting of ngout=1 functions.
+            Exx(mm) = e(ngauss+ngauss+ngin+1)
+            C1(mm) = one
+            C2(mm) = one
+            Nshell = Nshell + 1
+            X(Nshell) = xcoord
+            Y(Nshell) = ycoord
+            Z(Nshell) = zcoord
+            Jan(Nshell) = ia
+            Shella(Nshell) = mm
+            Shladf(Nshell) = 0
+            Shelln(Nshell) = 1
+            Shellt(Nshell) = 1
+            Scale(Nshell) = one
+            Aon(Nshell) = iao(6)
+            Aos(Nshell) = nstart
+            call putlbl(3,0,4)
+            call putlbl(3,1,4)
+            nstart = nstart + 4
+            mm = mm + 1
+         endif
+C
+ 300  continue
+C
+      Aos(Nshell+1) = nstart
+      NBASIS = nstart - 1
+C
+      return
+C
+      end
+@* INDEX.

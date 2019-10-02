@@ -1,0 +1,50 @@
+@* minbas.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MBASIS                                                    
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] IAN                                                       
+\item[PASSED:] C                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       RENORM  STO                                            
+\item[Called by]   PRJHUK  RDGES                                          
+                                                                    
+\end{description}
+@a
+      subroutine minbas(MBASIS,NATOMS,IAN,C)
+C     sets up a minimal basis of slater type orbitals
+C     it does the same thing as sto and therefore calls sto
+      implicit none
+      double precision C , C1 , C2 , C3 , Exx , X , Y , Z
+      integer IAN , In , Iout , Ipunch , Jan , LENB , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , MBASIS , NATOMS , Nshell
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+C================================================================
+C     originally c(3,natoms) but sto uses single-subscripting to
+C     access the elements of c
+C================================================================
+      dimension IAN(*) , C(*)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /io    / In , Iout , Ipunch
+C
+C
+C
+      call sto(0,NATOMS,IAN,C,MBASIS,3,0)
+      call renorm
+      return
+C
+      end
+@* INDEX.

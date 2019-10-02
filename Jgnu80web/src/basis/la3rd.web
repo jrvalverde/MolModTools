@@ -1,0 +1,1040 @@
+@* la3rd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITYPE                                                     
+\item[OUTPUT:] E                                                         
+\item[OUTPUT:] CS                                                        
+\item[OUTPUT:] CP                                                        
+\item[OUTPUT:] CD                                                        
+\item[INPUT:] IA                                                        
+\item[OUTPUT:] NCONT                                                     
+\item[OUTPUT:] NGAUSS                                                    
+\item[OUTPUT:] ISHT                                                      
+\item[OUTPUT:] ISHC                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LA1BAS                                                 
+                                                                    
+\end{description}
+@a
+ 
+      subroutine la3rd(ITYPE,E,CS,CP,CD,IA,NCONT,NGAUSS,ISHT,ISHC)
+      implicit none
+      real*8 CD , CP , CS , E
+      integer IA , ia1 , ISHC , ISHT , ITYPE , NCONT , NGAUSS
+C
+      dimension E(*) , CS(*) , CP(*) , CD(*) , NGAUSS(*) , ISHT(*) , 
+     &          ISHC(*)
+C
+      ia1 = IA - 18
+      if ( ia1.eq.2 ) then
+C
+C     ca
+C
+         E(1) = 0.2342
+         E(2) = 0.1447
+         E(3) = 0.0350
+         E(4) = 0.4119
+         E(5) = 0.0705
+         E(6) = 0.0263
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.6975968
+            CS(2) = 0.6897188
+            CS(3) = 0.8833578
+            CP(4) = -0.0735430
+            CP(5) = 0.5797403
+            CP(6) = 0.5123463
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -3.4613442
+            CS(2) = 3.4222550
+            CS(3) = 1.0000000
+            CP(4) = -0.1330041
+            CP(5) = 1.0484721
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.3 ) then
+C
+C     sc
+C
+         E(1) = 0.3077
+         E(2) = 0.0761
+         E(3) = 0.0284
+         E(4) = 0.0470
+         E(5) = 0.0140
+         E(6) = 15.1300
+         E(7) = 4.2050
+         E(8) = 1.3030
+         E(9) = 0.3683
+         E(10) = 0.08122
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.3002444
+            CS(2) = 0.5832849
+            CS(3) = 0.6108632
+            CP(4) = 0.7575277
+            CP(5) = 0.3256854
+            CD(6) = 0.0314705
+            CD(7) = 0.1449296
+            CD(8) = 0.3554122
+            CD(9) = 0.5159288
+            CD(10) = 0.3716804
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.7057998
+            CS(2) = 1.3711575
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0379251
+            CD(7) = 0.1746549
+            CD(8) = 0.4283077
+            CD(9) = 0.6217465
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.4 ) then
+C
+C     ti
+C
+         E(1) = 0.3560
+         E(2) = 0.0872
+         E(3) = 0.0314
+         E(4) = 0.0530
+         E(5) = 0.0160
+         E(6) = 20.2100
+         E(7) = 5.4950
+         E(8) = 1.6990
+         E(9) = 0.4840
+         E(10) = 0.1157
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2919751
+            CS(2) = 0.5537924
+            CS(3) = 0.6353389
+            CP(4) = 0.7007589
+            CP(5) = 0.3894470
+            CD(6) = 0.0290178
+            CD(7) = 0.1456664
+            CD(8) = 0.3752920
+            CD(9) = 0.5150936
+            CD(10) = 0.3334562
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.7239276
+            CS(2) = 1.3730815
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0342651
+            CD(7) = 0.1720072
+            CD(8) = 0.4431560
+            CD(9) = 0.6082378
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.5 ) then
+C
+C     v
+C
+         E(1) = 0.4064
+         E(2) = 0.0975
+         E(3) = 0.0342
+         E(4) = 0.0590
+         E(5) = 0.0180
+         E(6) = 25.7000
+         E(7) = 6.5300
+         E(8) = 2.0780
+         E(9) = 0.6243
+         E(10) = 0.1542
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2849561
+            CS(2) = 0.5447320
+            CS(3) = 0.6403582
+            CP(4) = 0.6466282
+            CP(5) = 0.4475728
+            CD(6) = 0.0263649
+            CD(7) = 0.1485117
+            CD(8) = 0.3715161
+            CD(9) = 0.5033771
+            CD(10) = 0.3353727
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.7125749
+            CS(2) = 1.3621829
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0312848
+            CD(7) = 0.1762254
+            CD(8) = 0.4408447
+            CD(9) = 0.5973122
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.6 ) then
+C
+C     cr
+C
+         E(1) = 0.4596
+         E(2) = 0.1052
+         E(3) = 0.0364
+         E(4) = 0.0630
+         E(5) = 0.0190
+         E(6) = 28.9500
+         E(7) = 7.7080
+         E(8) = 2.4950
+         E(9) = 0.7655
+         E(10) = 0.1889
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2722899
+            CS(2) = 0.5367682
+            CS(3) = 0.6394025
+            CP(4) = 0.6025797
+            CP(5) = 0.4959298
+            CD(6) = 0.0271427
+            CD(7) = 0.1476532
+            CD(8) = 0.3722435
+            CD(9) = 0.5027451
+            CD(10) = 0.3297045
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.6777180
+            CS(2) = 1.3359932
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0320666
+            CD(7) = 0.1744385
+            CD(8) = 0.4397711
+            CD(9) = 0.5939466
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.7 ) then
+C
+C     mn
+C
+         E(1) = 0.5097
+         E(2) = 0.1115
+         E(3) = 0.0380
+         E(4) = 0.0690
+         E(5) = 0.0210
+         E(6) = 32.2700
+         E(7) = 8.8750
+         E(8) = 2.8900
+         E(9) = 0.8761
+         E(10) = 0.2120
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2600382
+            CS(2) = 0.5266443
+            CS(3) = 0.6412356
+            CP(4) = 0.5410664
+            CP(5) = 0.5571744
+            CD(6) = 0.0277861
+            CD(7) = 0.1473857
+            CD(8) = 0.3767350
+            CD(9) = 0.5038089
+            CD(10) = 0.3274470
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.6484729
+            CS(2) = 1.3133245
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0326829
+            CD(7) = 0.1733599
+            CD(8) = 0.4431280
+            CD(9) = 0.5925964
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.8 ) then
+C
+C     fe
+C
+         E(1) = 0.5736
+         E(2) = 0.1021
+         E(3) = 0.03626
+         E(4) = 0.0740
+         E(5) = 0.0220
+         E(6) = 37.0800
+         E(7) = 10.1000
+         E(8) = 3.2200
+         E(9) = 0.9628
+         E(10) = 0.2262
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2247884
+            CS(2) = 0.5927703
+            CS(3) = 0.5498673
+            CP(4) = 0.5171734
+            CP(5) = 0.5840788
+            CD(6) = 0.0272770
+            CD(7) = 0.1521108
+            CD(8) = 0.3904070
+            CD(9) = 0.5046913
+            CD(10) = 0.3137533
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.4585154
+            CS(2) = 1.2091119
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0316328
+            CD(7) = 0.1764010
+            CD(8) = 0.4527502
+            CD(9) = 0.5852844
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.9 ) then
+C
+C     co
+C
+         E(1) = 0.6252
+         E(2) = 0.1070
+         E(3) = 0.0375
+         E(4) = 0.0800
+         E(5) = 0.0230
+         E(6) = 39.2500
+         E(7) = 10.7800
+         E(8) = 3.4960
+         E(9) = 1.0660
+         E(10) = 0.2660
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2146440
+            CS(2) = 0.5714746
+            CS(3) = 0.5649293
+            CP(4) = 0.5051990
+            CP(5) = 0.6005087
+            CD(6) = 0.0301234
+            CD(7) = 0.1621897
+            CD(8) = 0.3941711
+            CD(9) = 0.4911045
+            CD(10) = 0.3075324
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.4505354
+            CS(2) = 1.1995189
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0348748
+            CD(7) = 0.1877720
+            CD(8) = 0.4563441
+            CD(9) = 0.5685669
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.10 ) then
+C
+C     ni
+C
+         E(1) = 0.6778
+         E(2) = 0.1116
+         E(3) = 0.0387
+         E(4) = 0.0840
+         E(5) = 0.0240
+         E(6) = 42.7200
+         E(7) = 11.7600
+         E(8) = 3.8170
+         E(9) = 1.1690
+         E(10) = 0.2836
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2067432
+            CS(2) = 0.5621607
+            CS(3) = 0.5695310
+            CP(4) = 0.4931106
+            CP(5) = 0.6129736
+            CD(6) = 0.0313362
+            CD(7) = 0.1685554
+            CD(8) = 0.3996197
+            CD(9) = 0.4868314
+            CD(10) = 0.3005152
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.4372528
+            CS(2) = 1.1889453
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0360414
+            CD(7) = 0.1938645
+            CD(8) = 0.4596238
+            CD(9) = 0.5599305
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.11 ) then
+C
+C     cu
+C
+         E(1) = 0.7307
+         E(2) = 0.1153
+         E(3) = 0.0396
+         E(4) = 0.0860
+         E(5) = 0.0240
+         E(6) = 41.3400
+         E(7) = 11.4200
+         E(8) = 3.8390
+         E(9) = 1.2300
+         E(10) = 0.3102
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.1979738
+            CS(2) = 0.5496303
+            CS(3) = 0.5768265
+            CP(4) = 0.4703623
+            CP(5) = 0.6377452
+            CD(6) = 0.0395247
+            CD(7) = 0.1943744
+            CD(8) = 0.4005019
+            CD(9) = 0.4638820
+            CD(10) = 0.2870209
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.4244167
+            CS(2) = 1.1782986
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0450969
+            CD(7) = 0.2217772
+            CD(8) = 0.4569644
+            CD(9) = 0.5292798
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.12 ) then
+C
+C     zn
+C
+         E(1) = 0.7997
+         E(2) = 0.1752
+         E(3) = 0.0556
+         E(4) = 0.1202
+         E(5) = 0.0351
+         E(6) = 68.8500
+         E(7) = 18.3200
+         E(8) = 5.9220
+         E(9) = 1.9270
+         E(10) = 0.5528
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 3
+            ISHT(2) = 1
+            ISHC(2) = 1
+            ISHT(3) = 2
+            ISHC(3) = 2
+            NGAUSS(1) = 3
+            NGAUSS(2) = 2
+            NGAUSS(3) = 5
+            CS(1) = -0.2517637
+            CS(2) = 0.5099734
+            CS(3) = 0.6581327
+            CP(4) = 0.6130140
+            CP(5) = 0.4898007
+            CD(6) = 0.0214335
+            CD(7) = 0.1368916
+            CD(8) = 0.3704352
+            CD(9) = 0.4834232
+            CD(10) = 0.3315150
+         else
+            NCONT = 6
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 1
+            NGAUSS(4) = 1
+            NGAUSS(5) = 4
+            NGAUSS(6) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            ISHT(5) = 2
+            ISHC(5) = 2
+            ISHT(6) = 2
+            ISHC(6) = 2
+            CS(1) = -0.6486112
+            CS(2) = 1.3138291
+            CS(3) = 1.0000000
+            CP(4) = 1.0000000
+            CP(5) = 1.0000000
+            CD(6) = 0.0258532
+            CD(7) = 0.1651195
+            CD(8) = 0.4468212
+            CD(9) = 0.5831080
+            CD(10) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.13 ) then
+C
+C     ga
+C
+         E(1) = 0.8306
+         E(2) = 0.3392
+         E(3) = 0.0918
+         E(4) = 1.6750
+         E(5) = 0.2030
+         E(6) = 0.0579
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.4137939
+            CS(2) = 0.4907699
+            CS(3) = 0.8122499
+            CP(4) = -0.0408020
+            CP(5) = 0.4874108
+            CP(6) = 0.6264438
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -1.6759436
+            CS(2) = 1.9877108
+            CS(3) = 1.0000000
+            CP(4) = -0.0856107
+            CP(5) = 1.0226850
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.14 ) then
+C
+C     ge
+C
+         E(1) = 0.8935
+         E(2) = 0.4424
+         E(3) = 0.1162
+         E(4) = 1.8770
+         E(5) = 0.2623
+         E(6) = 0.0798
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.5473100
+            CS(2) = 0.6161590
+            CS(3) = 0.8113429
+            CP(4) = -0.0518020
+            CP(5) = 0.5302898
+            CP(6) = 0.5800398
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -2.1756591
+            CS(2) = 2.4493467
+            CS(3) = 1.0000000
+            CP(4) = -0.1006779
+            CP(5) = 1.0306256
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.15 ) then
+C
+C     as
+C
+         E(1) = 0.9635
+         E(2) = 0.5427
+         E(3) = 0.1407
+         E(4) = 2.0840
+         E(5) = 0.3224
+         E(6) = 0.1020
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.6857832
+            CS(2) = 0.7545512
+            CS(3) = 0.8069852
+            CP(4) = -0.0613810
+            CP(5) = 0.5603297
+            CP(6) = 0.5488037
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -2.6709549
+            CS(2) = 2.9387892
+            CS(3) = 1.0000000
+            CP(4) = -0.1137100
+            CP(5) = 1.0380266
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.16 ) then
+C
+C     se
+C
+         E(1) = 1.0330
+         E(2) = 0.6521
+         E(3) = 0.1660
+         E(4) = 2.3660
+         E(5) = 0.3833
+         E(6) = 0.1186
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.9057412
+            CS(2) = 0.9815111
+            CS(3) = 0.7922743
+            CP(4) = -0.0655770
+            CP(5) = 0.5760669
+            CP(6) = 0.5382919
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -3.3224095
+            CS(2) = 3.6003462
+            CS(3) = 1.0000000
+            CP(4) = -0.1185522
+            CP(5) = 1.0414320
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.eq.17 ) then
+C
+C     br
+C
+         E(1) = 1.1590
+         E(2) = 0.7107
+         E(3) = 0.1905
+         E(4) = 2.6910
+         E(5) = 0.4446
+         E(6) = 0.1377
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.8690699
+            CS(2) = 0.9641899
+            CS(3) = 0.7737520
+            CP(4) = -0.0673380
+            CP(5) = 0.5899843
+            CP(6) = 0.5251153
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -3.0378769
+            CS(2) = 3.3703735
+            CS(3) = 1.0000000
+            CP(4) = -0.1189800
+            CP(5) = 1.0424471
+            CP(6) = 1.0000000
+         endif
+         return
+      elseif ( ia1.ne.18 ) then
+C
+C     k
+C
+         E(1) = 0.2099
+         E(2) = 0.0529
+         E(3) = 0.0209
+         E(4) = 0.2794
+         E(5) = 0.0376
+         E(6) = 0.0140
+         ISHT(1) = 0
+         ISHC(1) = 0
+         if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+            NCONT = 2
+            ISHT(2) = 1
+            ISHC(2) = 1
+            NGAUSS(1) = 3
+            NGAUSS(2) = 3
+            CS(1) = -0.2871128
+            CS(2) = 0.4206847
+            CS(3) = 0.7493584
+            CP(4) = -0.0508040
+            CP(5) = 0.5239690
+            CP(6) = 0.5575560
+         else
+            NCONT = 4
+            NGAUSS(1) = 2
+            NGAUSS(2) = 1
+            NGAUSS(3) = 2
+            NGAUSS(4) = 1
+            ISHT(2) = 0
+            ISHC(2) = 0
+            ISHT(3) = 1
+            ISHC(3) = 1
+            ISHT(4) = 1
+            ISHC(4) = 1
+            CS(1) = -0.9790253
+            CS(2) = 1.4344918
+            CS(3) = 1.0000000
+            CP(4) = -0.0997817
+            CP(5) = 1.0291027
+            CP(6) = 1.0000000
+         endif
+         return
+      endif
+C
+C     kr
+C
+      E(1) = 1.2270
+      E(2) = 0.8457
+      E(3) = 0.2167
+      E(4) = 2.9200
+      E(5) = 0.5169
+      E(6) = 0.1614
+      ISHT(1) = 0
+      ISHC(1) = 0
+      if ( (ITYPE.eq.0) .or. (ITYPE.eq.2) ) then
+         NCONT = 2
+         ISHT(2) = 1
+         ISHC(2) = 1
+         NGAUSS(1) = 3
+         NGAUSS(2) = 3
+         CS(1) = -1.1859395
+         CS(2) = 1.2811545
+         CS(3) = 0.7678797
+         CP(4) = -0.0759660
+         CP(5) = 0.5995830
+         CP(6) = 0.5182310
+      else
+         NCONT = 4
+         NGAUSS(1) = 2
+         NGAUSS(2) = 1
+         NGAUSS(3) = 2
+         NGAUSS(4) = 1
+         ISHT(2) = 0
+         ISHC(2) = 0
+         ISHT(3) = 1
+         ISHC(3) = 1
+         ISHT(4) = 1
+         ISHC(4) = 1
+         CS(1) = -4.0317198
+         CS(2) = 4.3554125
+         CS(3) = 1.0000000
+         CP(4) = -0.1330685
+         CP(5) = 1.0502807
+         CP(6) = 1.0000000
+      endif
+      return
+      end
+@* INDEX.

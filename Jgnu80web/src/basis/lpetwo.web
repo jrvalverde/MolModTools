@@ -1,0 +1,376 @@
+@* lpetwo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] E3                                                        
+\item[OUTPUT:] CS3                                                       
+\item[OUTPUT:] CP3                                                       
+\item[INPUT:] IA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  NGIC                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LEEVAO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine lpetwo(E3,CS3,CP3,IA)
+      implicit none
+      double precision CP3 , CS3 , E3
+      integer I2edsc , I2esf , I5d6d , IA , iaset , Ibasis , Ibmod , 
+     &        Ibpr , inner , Iosc , Ipt , Irot , itemp , Jpunch , 
+     &        Llink , ngauss , Ngic , nmix , nsplit
+      dimension E3(6) , CS3(6) , CP3(6) , inner(3,8)
+      common /ops301/ Ibasis , Ngic , Ipt , I5d6d , Iosc , Ibmod , 
+     &                Ibpr , Llink , I2edsc , Irot , Jpunch , I2esf
+      data inner/3 , 4 , 3 , 3 , 4 , 3 , 3 , 4 , 3 , 3 , 4 , 4 , 3 , 4 , 
+     &     4 , 3 , 4 , 4 , 3 , 4 , 4 , 3 , 4 , 4/
+C
+C
+C
+C
+C
+C
+      itemp = Ngic
+      if ( itemp.eq.8 ) itemp = 5
+      nmix = itemp - 2
+C
+C     nmix=3 allows using lp31 for na-al
+C                         lp41 for si-ar
+C
+      iaset = IA - 10
+      if ( iaset.eq.2 ) then
+C
+C     magnesium
+C    *********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 1.810526560D0
+            CS3(1) = -.057958543D0
+            CP3(1) = -.015935239D0
+            E3(2) = .609161733D0
+            CS3(2) = -.190713291D0
+            CP3(2) = -.002502212D0
+            E3(3) = .183783651D0
+            CS3(3) = .288876733D0
+            CP3(3) = .346020631D0
+            E3(4) = .076370900D0
+            CS3(4) = .847958708D0
+            CP3(4) = .707007250D0
+            E3(5) = .030638398D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 1.207248040D0
+            CS3(1) = -.189914460D0
+            CP3(1) = -.034337701D0
+            E3(2) = .308278080D0
+            CS3(2) = -.156606439D0
+            CP3(2) = .132708127D0
+            E3(3) = .113081183D0
+            CS3(3) = 1.180024780D0
+            CP3(3) = .907234634D0
+            E3(4) = .038962553D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.3 ) then
+C
+C     aluminum
+C     ********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 2.794154470D0
+            CS3(1) = -.046293768D0
+            CP3(1) = -.020838531D0
+            E3(2) = .953797347D0
+            CS3(2) = -.211139690D0
+            CP3(2) = .009056500D0
+            E3(3) = .289640938D0
+            CS3(3) = .257783447D0
+            CP3(3) = .340359557D0
+            E3(4) = .117840026D0
+            CS3(4) = .882075009D0
+            CP3(4) = .709962445D0
+            E3(5) = .043891410D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 1.766747690D0
+            CS3(1) = -.183779035D0
+            CP3(1) = -.045570359D0
+            E3(2) = .542527484D0
+            CS3(2) = -.161827853D0
+            CP3(2) = .153494307D0
+            E3(3) = .170558367D0
+            CS3(3) = 1.173403070D0
+            CP3(3) = .903870145D0
+            E3(4) = .055459650D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.4 ) then
+C
+C     silicon
+C     *******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 7.207094360D0
+            CS3(1) = -.010403410D0
+            CP3(1) = -.013911919D0
+            E3(2) = 1.693686890D0
+            CS3(2) = -.242182331D0
+            CP3(2) = -.016912097D0
+            E3(3) = .521507621D0
+            CS3(3) = .056491444D0
+            CP3(3) = .275688747D0
+            E3(4) = .200095111D0
+            CS3(4) = 1.051300360D0
+            CP3(4) = .782702420D0
+            E3(5) = .070671719D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 2.726637040D0
+            CS3(1) = -.151914656D0
+            CP3(1) = -.051565763D0
+            E3(2) = .888714958D0
+            CS3(2) = -.272775992D0
+            CP3(2) = .137184256D0
+            E3(3) = .259724013D0
+            CS3(3) = 1.227408980D0
+            CP3(3) = .921431445D0
+            E3(4) = .083653487D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.5 ) then
+C
+C     phophorus
+C     *********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 9.600022420D0
+            CS3(1) = -.006399466D0
+            CP3(1) = -.013684572D0
+            E3(2) = 2.210519470D0
+            CS3(2) = -.266151892D0
+            CP3(2) = -.024792744D0
+            E3(3) = .734300637D0
+            CS3(3) = .054070561D0
+            CP3(3) = .277257589D0
+            E3(4) = .270574725D0
+            CS3(4) = 1.064182160D0
+            CP3(4) = .788717724D0
+            E3(5) = .094846760D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 3.384086210D0
+            CS3(1) = -.160266321D0
+            CP3(1) = -.061512847D0
+            E3(2) = 1.229374380D0
+            CS3(2) = -.297354690D0
+            CP3(2) = .148529974D0
+            E3(3) = .352952764D0
+            CS3(3) = 1.243750810D0
+            CP3(3) = .918964205D0
+            E3(4) = .113720453D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.6 ) then
+C
+C     sulfur
+C     ******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 12.249655000D0
+            CS3(1) = -.006838468D0
+            CP3(1) = -.013614800D0
+            E3(2) = 2.597995470D0
+            CS3(2) = -.263918888D0
+            CP3(2) = -.026775351D0
+            E3(3) = .874154309D0
+            CS3(3) = .122542436D0
+            CP3(3) = .338032054D0
+            E3(4) = .312438075D0
+            CS3(4) = 1.011608510D0
+            CP3(4) = .739956152D0
+            E3(5) = .106139402D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 4.246662870D0
+            CS3(1) = -.152284286D0
+            CP3(1) = -.063256847D0
+            E3(2) = 1.449257600D0
+            CS3(2) = -.314264656D0
+            CP3(2) = .173882008D0
+            E3(3) = .445294092D0
+            CS3(3) = 1.261759630D0
+            CP3(3) = .896994356D0
+            E3(4) = .138257990D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.7 ) then
+C
+C     chlorine
+C     ********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 14.636332000D0
+            CS3(1) = -.007626616D0
+            CP3(1) = -.014795193D0
+            E3(2) = 3.068753270D0
+            CS3(2) = -.281744162D0
+            CP3(2) = -.032360465D0
+            E3(3) = 1.118671210D0
+            CS3(3) = .127051789D0
+            CP3(3) = .345685031D0
+            E3(4) = .395823944D0
+            CS3(4) = 1.021271060D0
+            CP3(4) = .737937763D0
+            E3(5) = .133897768D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 5.818437130D0
+            CS3(1) = -.122642032D0
+            CP3(1) = -.060999614D0
+            E3(2) = 1.866419940D0
+            CS3(2) = -.405916437D0
+            CP3(2) = .157966002D0
+            E3(3) = .580719308D0
+            CS3(3) = 1.309800230D0
+            CP3(3) = .906060569D0
+            E3(4) = .175755610D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.8 ) then
+C
+C     argon
+C     *****
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.ne.2 ) then
+C     lp-31g
+            E3(1) = 7.544004000D0
+            CS3(1) = -.106198977D0
+            CP3(1) = -.059955546D0
+            E3(2) = 2.328040800D0
+            CS3(2) = -.483640686D0
+            CP3(2) = .146880387D0
+            E3(3) = .727772854D0
+            CS3(3) = 1.350547560D0
+            CP3(3) = .912873509D0
+            E3(4) = .218080767D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      else
+C
+C     sodium
+C     ******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E3(1) = 1.250486900D0
+            CS3(1) = -.051326810D0
+            CP3(1) = -.013220002D0
+            E3(2) = .364812100D0
+            CS3(2) = -.171093706D0
+            CP3(2) = .001351945D0
+            E3(3) = .086375100D0
+            CS3(3) = .343667535D0
+            CP3(3) = .377268990D0
+            E3(4) = .040776900D0
+            CS3(4) = .769904333D0
+            CP3(4) = .662318074D0
+            E3(5) = .018632800D0
+            CS3(5) = 1.000000000D0
+            CP3(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E3(1) = 1.228406510D0
+            CS3(1) = -.099057527D0
+            CP3(1) = -.031727409D0
+            E3(2) = .371440374D0
+            CS3(2) = -.313367535D0
+            CP3(2) = .036505854D0
+            E3(3) = .071292135D0
+            CS3(3) = 1.174402320D0
+            CP3(3) = .987193001D0
+            E3(4) = .027451807D0
+            CS3(4) = 1.000000000D0
+            CP3(4) = 1.000000000D0
+            return
+         endif
+      endif
+C     lp-41g
+      E3(1) = 16.456988000D0
+      CS3(1) = -.005878808D0
+      CP3(1) = -.016561198D0
+      E3(2) = 3.751363730D0
+      CS3(2) = -.288668711D0
+      CP3(2) = -.031597571D0
+      E3(3) = 1.371519240D0
+      CS3(3) = .102588086D0
+      CP3(3) = .347036696D0
+      E3(4) = .488146656D0
+      CS3(4) = 1.042297410D0
+      CP3(4) = .736130442D0
+      E3(5) = .164769570D0
+      CS3(5) = 1.000000000D0
+      CP3(5) = 1.000000000D0
+      return
+C
+      end
+@* INDEX.

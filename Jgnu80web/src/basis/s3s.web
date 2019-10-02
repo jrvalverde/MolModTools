@@ -1,0 +1,100 @@
+@* s3s.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] EXX                                                       
+\item[OUTPUT:] CS                                                        
+\item[INPUT:] NGAUSS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GBASIS                                                 
+                                                                    
+\end{description}
+@a
+      subroutine s3s(EXX,CS,NGAUSS)
+      implicit none
+      double precision CS , EXX
+      integer NGAUSS
+      dimension EXX(6) , CS(6)
+C
+      if ( NGAUSS.eq.2 ) then
+C     *****************************************************************
+C*****************      sto(3s---2(1s))
+C*********           er1 7.6424e-04
+         EXX(1) = 6.694095822D-01
+         CS(1) = -1.529645716D-01
+         EXX(2) = 5.837135094D-02
+         CS(2) = 1.051370110D00
+         return
+      elseif ( NGAUSS.eq.3 ) then
+C     *****************************************************************
+C*****************      sto(3s---3(1s))
+C*********           er1 8.0718e-05
+         EXX(1) = 5.641487709D-01
+         CS(1) = -1.782577972D-01
+         EXX(2) = 6.924421391D-02
+         CS(2) = 8.612761663D-01
+         EXX(3) = 3.269529097D-02
+         CS(3) = 2.261841969D-01
+         return
+      elseif ( NGAUSS.eq.4 ) then
+C     ******************************************************************
+C*****************      sto(3s---4(1s))
+C*********           er1 1.7254e-06
+         EXX(1) = 1.513265591D00
+         CS(1) = -3.295496352D-02
+         EXX(2) = 4.262497508D-01
+         CS(2) = -1.724516959D-01
+         EXX(3) = 7.643320863D-02
+         CS(3) = 7.518511194D-01
+         EXX(4) = 3.760545063D-02
+         CS(4) = 3.589627317D-01
+         return
+      elseif ( NGAUSS.eq.5 ) then
+C     ******************************************************************
+C*****************      sto(3s---5(1s))
+C*********           er1 7.9816e-07
+         EXX(1) = 4.275877914D00
+         CS(1) = -3.920358850D-03
+         EXX(2) = 1.132409433D00
+         CS(2) = -4.168430506D-02
+         EXX(3) = 4.016256968D-01
+         CS(3) = -1.637440990D-01
+         EXX(4) = 7.732370620D-02
+         CS(4) = 7.419373723D-01
+         EXX(5) = 3.800708627D-02
+         CS(5) = 3.724364929D-01
+         return
+      elseif ( NGAUSS.ne.6 ) then
+C     *****************************************************************
+C*****************      sto(3s---1(1s))
+C*********           er1 1.6764e-02
+         EXX(1) = 5.296881757D-02
+         CS(1) = 1.000000000D00
+         return
+      endif
+C     ******************************************************************
+C*****************      sto(3s---6(1s))
+C*********           er1 4.0662e-08
+      EXX(1) = 3.273031938D00
+      CS(1) = -6.775596947D-03
+      EXX(2) = 9.200611311D-01
+      CS(2) = -5.639325779D-02
+      EXX(3) = 3.593349765D-01
+      CS(3) = -1.587856086D-01
+      EXX(4) = 8.636686991D-02
+      CS(4) = 5.534527651D-01
+      EXX(5) = 4.797373812D-02
+      CS(5) = 5.015351020D-01
+      EXX(6) = 2.724741144D-02
+      CS(6) = 7.223633674D-02
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,379 @@
+@* lpeone.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] E2                                                        
+\item[OUTPUT:] CS2                                                       
+\item[OUTPUT:] CP2                                                       
+\item[INPUT:] IA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  NGIC                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LEEVAO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine lpeone(E2,CS2,CP2,IA)
+      implicit none
+      double precision CP2 , CS2 , E2
+      integer I2edsc , I2esf , I5d6d , IA , iaset , Ibasis , Ibmod , 
+     &        Ibpr , inner , Iosc , Ipt , Irot , itemp , Jpunch , 
+     &        Llink , ngauss , Ngic , nmix , nsplit
+      dimension E2(6) , CS2(6) , CP2(6) , inner(3,8)
+      common /ops301/ Ibasis , Ngic , Ipt , I5d6d , Iosc , Ibmod , 
+     &                Ibpr , Llink , I2edsc , Irot , Jpunch , I2esf
+      data inner/3 , 4 , 3 , 3 , 4 , 3 , 3 , 4 , 3 , 3 , 4 , 4 , 3 , 4 , 
+     &     4 , 3 , 4 , 4 , 3 , 4 , 4 , 3 , 4 , 4/
+C
+C
+C
+C
+C
+C
+      itemp = Ngic
+      if ( itemp.eq.1 ) itemp = 3
+C  this is an error in the original
+      if ( itemp.eq.0 ) itemp = 3
+      if ( itemp.eq.8 ) itemp = 5
+      nmix = itemp - 2
+C
+C     nmix=3 allows using lp31 for li-b
+C                         lp41 for c-ne
+C
+      iaset = IA - 2
+      if ( iaset.eq.2 ) then
+C
+C     beryllium
+C     *********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 7.549625560D0
+            CS2(1) = -.023809716D0
+            CP2(1) = .014030919D0
+            E2(2) = 1.655383250D0
+            CS2(2) = -.159939996D0
+            CP2(2) = .084521179D0
+            E2(3) = .479342815D0
+            CS2(3) = -.008153419D0
+            CP2(3) = .308859288D0
+            E2(4) = .164172535D0
+            CS2(4) = 1.066060220D0
+            CP2(4) = .718047934D0
+            E2(5) = .056321335D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 3.989437640D0
+            CS2(1) = -.107879333D0
+            CP2(1) = .042759373D0
+            E2(2) = .826609295D0
+            CS2(2) = -.302702572D0
+            CP2(2) = .246130913D0
+            E2(3) = .222736600D0
+            CS2(3) = 1.215128520D0
+            CP2(3) = .820640676D0
+            E2(4) = .068524408D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.3 ) then
+C
+C     boron
+C     *****
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 15.973710200D0
+            CS2(1) = -.025124488D0
+            CP2(1) = .012934623D0
+            E2(2) = 2.598985090D0
+            CS2(2) = -.163147432D0
+            CP2(2) = .119901575D0
+            E2(3) = .733342640D0
+            CS2(3) = .109608278D0
+            CP2(3) = .364819363D0
+            E2(4) = .253317994D0
+            CS2(4) = .975920908D0
+            CP2(4) = .647863764D0
+            E2(5) = .083064946D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 12.357251200D0
+            CS2(1) = -.069338976D0
+            CP2(1) = .025250881D0
+            E2(2) = 1.890145290D0
+            CS2(2) = -.359724115D0
+            CP2(2) = .252854063D0
+            E2(3) = .431585579D0
+            CS2(3) = 1.214030860D0
+            CP2(3) = .837357301D0
+            E2(4) = .117210240D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.4 ) then
+C
+C     carbon
+C     ******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 34.754393100D0
+            CS2(1) = -.015927378D0
+            CP2(1) = .009600263D0
+            E2(2) = 4.922026930D0
+            CS2(2) = -.159805266D0
+            CP2(2) = .106858861D0
+            E2(3) = 1.343268140D0
+            CS2(3) = .032887636D0
+            CP2(3) = .358255361D0
+            E2(4) = .432098027D0
+            CS2(4) = 1.029722300D0
+            CP2(4) = .672091219D0
+            E2(5) = .133224593D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 16.750973600D0
+            CS2(1) = -.078128405D0
+            CP2(1) = .030889088D0
+            E2(2) = 2.888377460D0
+            CS2(2) = -.374110886D0
+            CP2(2) = .264572813D0
+            E2(3) = .690457504D0
+            CS2(3) = 1.229059640D0
+            CP2(3) = .822502492D0
+            E2(4) = .181397691D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.5 ) then
+C
+C     nitrogen
+C     ********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 28.332156700D0
+            CS2(1) = -.027431084D0
+            CP2(1) = .017182387D0
+            E2(2) = 5.691476680D0
+            CS2(2) = -.161285264D0
+            CP2(2) = .128232681D0
+            E2(3) = 1.630437090D0
+            CS2(3) = .147217357D0
+            CP2(3) = .392265082D0
+            E2(4) = .528281506D0
+            CS2(4) = .946818402D0
+            CP2(4) = .623415892D0
+            E2(5) = .165589060D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 16.667015400D0
+            CS2(1) = -.107566521D0
+            CP2(1) = .046496577D0
+            E2(2) = 3.418344170D0
+            CS2(2) = -.275926176D0
+            CP2(2) = .297328969D0
+            E2(3) = .888140577D0
+            CS2(3) = 1.195120180D0
+            CP2(3) = .782625273D0
+            E2(4) = .237748286D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.6 ) then
+C
+C     oxygen
+C     ******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 30.144056400D0
+            CS2(1) = -.034816912D0
+            CP2(1) = .022603105D0
+            E2(2) = 6.988434550D0
+            CS2(2) = -.155936272D0
+            CP2(2) = .141427726D0
+            E2(3) = 2.074407940D0
+            CS2(3) = .189687607D0
+            CP2(3) = .406823197D0
+            E2(4) = .669798277D0
+            CS2(4) = .914345484D0
+            CP2(4) = .598379008D0
+            E2(5) = .205661232D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 18.429363300D0
+            CS2(1) = -.121877559D0
+            CP2(1) = .059757966D0
+            E2(2) = 4.047420810D0
+            CS2(2) = -.196214238D0
+            CP2(2) = .326782593D0
+            E2(3) = 1.093836980D0
+            CS2(3) = 1.156987900D0
+            CP2(3) = .748405893D0
+            E2(4) = .290629023D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.7 ) then
+C
+C     flourine
+C     ********
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 40.744077700D0
+            CS2(1) = -.032560698D0
+            CP2(1) = .023381816D0
+            E2(2) = 9.235555890D0
+            CS2(2) = -.160245658D0
+            CP2(2) = .143159655D0
+            E2(3) = 2.756965100D0
+            CS2(3) = .185983141D0
+            CP2(3) = .408813673D0
+            E2(4) = .882535785D0
+            CS2(4) = .918969209D0
+            CP2(4) = .596159560D0
+            E2(5) = .266545083D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 23.693447100D0
+            CS2(1) = -.120875938D0
+            CP2(1) = .062292665D0
+            E2(2) = 5.190939210D0
+            CS2(2) = -.186938726D0
+            CP2(2) = .336213981D0
+            E2(3) = 1.405919590D0
+            CS2(3) = 1.151504620D0
+            CP2(3) = .739231061D0
+            E2(4) = .367712301D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      elseif ( iaset.eq.8 ) then
+C
+C     neon
+C     ****
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.ne.2 ) then
+C     lp-31g
+            E2(1) = 29.629921400D0
+            CS2(1) = -.120800985D0
+            CP2(1) = .063580458D0
+            E2(2) = 6.504173470D0
+            CS2(2) = -.179842285D0
+            CP2(2) = .342350741D0
+            E2(3) = 1.757306860D0
+            CS2(3) = 1.147032090D0
+            CP2(3) = .733749687D0
+            E2(4) = .455611545D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      else
+C
+C     lithium
+C     *******
+C
+         ngauss = inner(nmix,iaset)
+         nsplit = ngauss - 2
+         if ( nsplit.eq.2 ) then
+C     lp-41g
+            E2(1) = 3.929438200D0
+            CS2(1) = -.021892328D0
+            CP2(1) = .015496114D0
+            E2(2) = .945854597D0
+            CS2(2) = -.113575610D0
+            CP2(2) = .004752827D0
+            E2(3) = .410840999D0
+            CS2(3) = -.140585301D0
+            CP2(3) = .205253861D0
+            E2(4) = .078357700D0
+            CS2(4) = 1.110645560D0
+            CP2(4) = .885401438D0
+            E2(5) = .029146200D0
+            CS2(5) = 1.000000000D0
+            CP2(5) = 1.000000000D0
+            return
+         else
+C     lp-31g
+            E2(1) = 2.893790000D0
+            CS2(1) = .035544139D0
+            CP2(1) = .009353222D0
+            E2(2) = .618150000D0
+            CS2(2) = .197976631D0
+            CP2(2) = .136303801D0
+            E2(3) = .073850000D0
+            CS2(3) = -1.082373240D0
+            CP2(3) = .949484085D0
+            E2(4) = .028170000D0
+            CS2(4) = 1.000000000D0
+            CP2(4) = 1.000000000D0
+            return
+         endif
+      endif
+C     lp-41g
+      E2(1) = 53.444155600D0
+      CS2(1) = -.030945896D0
+      CP2(1) = .022487123D0
+      E2(2) = 12.189960200D0
+      CS2(2) = -.157433463D0
+      CP2(2) = .139274339D0
+      E2(3) = 3.649367290D0
+      CS2(3) = .154303636D0
+      CP2(3) = .404801328D0
+      E2(4) = 1.154864260D0
+      CS2(4) = .942808565D0
+      CP2(4) = .604191183D0
+      E2(5) = .340181948D0
+      CS2(5) = 1.000000000D0
+      CP2(5) = 1.000000000D0
+      return
+C
+      end
+@* INDEX.
