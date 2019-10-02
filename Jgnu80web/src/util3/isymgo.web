@@ -1,0 +1,93 @@
+@* isymgo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] I                                                         
+\item[INPUT:] J                                                         
+\item[INPUT:] K                                                         
+\item[INPUT:] L                                                         
+\item[INPUT:] NSYMOP                                                    
+\item[INPUT:] NEQSHL                                                    
+\item[INPUT:] ISYM2E                                                    
+\item[OUTPUT:] REJECT                                                    
+\item[OUTPUT:] SYMFAC                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       NPRIO                                                  
+\item[Called by]   PHOENI  SHELL                                          
+                                                                    
+\end{description}
+@a
+      subroutine isymgo(I,J,K,L,NSYMOP,NEQSHL,ISYM2E,REJECT,SYMFAC)
+      implicit none
+      integer I , iop , ip , iprio , ISYM2E , isymf , J , jp , K , kp , 
+     &        L , LENB , lp , MAXPRM , MAXS21 , MAXSH1 , MAXSHL , 
+     &        mprio , NEQSHL , nprio
+      integer NSYMOP
+      double precision one , SYMFAC
+      logical REJECT
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      dimension NEQSHL(MAXSHL,8)
+      data one/1.0D0/
+C
+C
+C      given four shell numbers: i,j,k, and l, determine if the current
+C      set of integrals is to be computed or skipped based upon the
+C      symmetry of the nuclear framework.  if the set defined by
+C      i, j, k, and l is to be computed each integral in the set will
+C      be divided by symfac, the number of times the set is transformed
+C      into itself by a symmetry operation.
+C
+C
+C
+C
+C                                          isym2e is a flag indicating
+C                                          whether symmetry is to be
+C                                          used in the 2e integral
+C                                          packages.
+      if ( ISYM2E.eq.1 ) then
+C                                          compute the master priority.
+C                                          a priority is a number which
+C                                          uniquely defines each set of
+C                                          four shells.
+         mprio = nprio(I,J,K,L)
+         isymf = 1
+C                                          compute priorities for the
+C                                          symmetry equivalent shell
+C                                          sets.  integrals shall be
+C                                          computed only for the largest
+C                                          prioity set.  the loop begins
+C                                          at 2 to skip the idenity.
+         do 50 iop = 2 , NSYMOP
+            ip = NEQSHL(I,iop)
+            jp = NEQSHL(J,iop)
+            kp = NEQSHL(K,iop)
+            lp = NEQSHL(L,iop)
+            iprio = nprio(ip,jp,kp,lp)
+            if ( iprio.gt.mprio ) goto 100
+            if ( iprio.eq.mprio ) isymf = isymf + 1
+ 50      continue
+C                                          this shell set is to be 4
+C                                          computed.
+         SYMFAC = dfloat(isymf)
+         REJECT = .false.
+      else
+         SYMFAC = one
+         REJECT = .false.
+      endif
+      goto 200
+C                                          this shell set is to be
+C                                          skipped.
+ 100  SYMFAC = one
+      REJECT = .true.
+C
+ 200  return
+C
+      end
+@* INDEX.

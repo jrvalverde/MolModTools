@@ -1,0 +1,90 @@
+@* geta1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[INPUT:] CONST                                                     
+\item[INPUT:] INCP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  LPMAX   XINT                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DSTVNT  STVINT                                         
+                                                                    
+\end{description}
+@a
+      subroutine geta1(A,CONST,INCP)
+      implicit none
+      double precision A , CONST , Xint , Zero1
+      integer In , INCP , Iout , Ipunch , Lamax , Lbmax , Lpmax , 
+     &        lpnew , Maxdum
+      dimension A(45)
+      common /max   / Lamax , Lbmax , Lpmax , Maxdum(4)
+      common /io    / In , Iout , Ipunch
+      common /int   / Zero1 , Xint(12)
+C
+C
+C    *******************************************************************
+C
+C          this subroutine calculates the coefficients which transform
+C     the functions g(iv) into the two center integrals.  this
+C     transformation is carried out in subrouinte get2c, which should
+C     be consulted for more details of the use of these coefficients.
+C
+C          the matrix is filled using a(1) = 1.0, and the recursion
+C     formula>
+C
+C          a(lv,lp+1) = (a(lv,lp-1)*(lp-1) + a(lv-1,lp))/(2*p)
+C
+C    *******************************************************************
+C
+C
+C
+      lpnew = Lpmax + INCP
+      if ( lpnew.le.1 ) return
+      A(3) = CONST
+      if ( lpnew.ne.2 ) then
+         A(4) = A(3)
+         A(6) = A(3)*A(3)
+         if ( lpnew.ne.3 ) then
+            A(8) = A(3)*(Xint(2)*A(3)+A(4))
+            A(10) = A(3)*A(6)
+            if ( lpnew.ne.4 ) then
+               A(11) = Xint(3)*A(3)*A(4)
+               A(13) = A(3)*(Xint(3)*A(6)+A(8))
+               A(15) = A(3)*A(10)
+               if ( lpnew.ne.5 ) then
+                  A(17) = A(3)*(Xint(4)*A(8)+A(11))
+                  A(19) = A(3)*(Xint(4)*A(10)+A(13))
+                  A(21) = A(3)*A(15)
+                  if ( lpnew.ne.6 ) then
+                     A(22) = Xint(5)*A(3)*A(11)
+                     A(24) = A(3)*(Xint(5)*A(13)+A(17))
+                     A(26) = A(3)*(Xint(5)*A(15)+A(19))
+                     A(28) = A(3)*A(21)
+                     if ( lpnew.ne.7 ) then
+                        A(30) = A(3)*(Xint(6)*A(17)+A(22))
+                        A(32) = A(3)*(Xint(6)*A(19)+A(24))
+                        A(34) = A(3)*(Xint(6)*A(21)+A(26))
+                        A(36) = A(3)*A(28)
+                        if ( lpnew.ne.8 ) then
+                           A(37) = Xint(7)*A(3)*A(22)
+                           A(39) = A(3)*(Xint(7)*A(24)+A(30))
+                           A(41) = A(3)*(Xint(7)*A(26)+A(32))
+                           A(43) = A(3)*(Xint(7)*A(28)+A(34))
+                           A(45) = A(3)*A(36)
+                        endif
+                     endif
+                  endif
+               endif
+            endif
+         endif
+      endif
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,56 @@
+@* get1cs.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] F                                                         
+\item[INPUT:] CONST                                                     
+\item[INPUT:] COEF                                                      
+\item[INPUT:] INC                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  F3      F5      F7      F9      LPMAX                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIPOLE  DSTVNT  OVLP    STVINT                         
+                                                                    
+\end{description}
+@a
+      subroutine get1cs(F,CONST,COEF,INC)
+      implicit none
+      double precision COEF , CONST , F , F1 , F10 , F11 , F12 , F2 , 
+     &                 F3 , F4 , F5 , F6 , F7 , F8 , F9 , Zero
+      integer INC , Lamax , Lbmax , Lpmax , lpnew , Maxdum
+      dimension F(6)
+      common /max   / Lamax , Lbmax , Lpmax , Maxdum(4)
+      common /int   / Zero , F1 , F2 , F3 , F4 , F5 , F6 , F7 , F8 , 
+     &                F9 , F10 , F11 , F12
+C
+C    *******************************************************************
+C
+C          this routine forms the one-dimensional, one-center overlap
+C     integrals.  these are formed into f, and they are later
+C     transformed into two-center integrals in routine get2ds.
+C
+C    *******************************************************************
+C
+C
+C
+      lpnew = (Lpmax+INC+1)/2
+      F(1) = CONST
+      if ( lpnew.eq.1 ) return
+      F(2) = COEF*F(1)
+      if ( lpnew.eq.2 ) return
+      F(3) = COEF*F3*F(2)
+      if ( lpnew.eq.3 ) return
+      F(4) = COEF*F5*F(3)
+      if ( lpnew.eq.4 ) return
+      F(5) = COEF*F7*F(4)
+      if ( lpnew.eq.5 ) return
+      F(6) = COEF*F9*F(5)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,53 @@
+@* labscf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IBUF                                                      
+\item[OUTPUT:] IFLST                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    KNTT1   KNTT2                                          
+\item[Uses]  IOP     IOUT    KNTT1   KNTT2                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FLD                                                    
+\item[Called by]   CIPRM   DMPINT  FOFCLO  FOFOPN  FOFPHF  FORMF   TRCL80 
+             TRCLOS  TROP80  TROPEN  WTILDA  WTILDB                 
+                                                                    
+\end{description}
+@a
+      subroutine labscf(IBUF,IFLST)
+      implicit none
+      integer Ibasd , Ibase , Ibfpad , IBUF , Icon , Ifil , IFLST , In , 
+     &        Intcnt , Iop , Iout , Ipunch , Iq , Ireset , Ismode , 
+     &        Istat , Itotal , Iux , Kntt1 , Kntt2
+      integer Last , Limint , Mode , Nrpext , Ntx , Nwiib , Nwpi
+      integer Dbase , Dbasd , fld
+      dimension IBUF(*)
+      common /iop   / Iop(50)
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Ibfpad
+      common /io    / In , Iout , Ipunch
+C
+99001 format (' BUFFER CONTROL WORD: ',i12,'   IFLST=',i2,'   KNTT1=',
+     &        i4,'   KNTT2=',i4)
+C
+C     unpack the various pieces of information from
+C     the buffer control word.
+      IFLST = fld(0,1,IBUF(1))
+      Kntt1 = fld(1,12,IBUF(1))
+      Kntt2 = fld(13,12,IBUF(1))
+C
+C     if requested, dump the buffer control word.  this is done
+C     if iop(34) .ge. 1 (as is usual for function word dumps).
+      if ( Iop(34).ge.1 ) write (Iout,99001) IBUF(1) , IFLST , Kntt1 , 
+     &                           Kntt2
+C
+C
+      return
+C
+      end
+@* INDEX.

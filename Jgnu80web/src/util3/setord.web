@@ -1,0 +1,61 @@
+@* setord.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    NORDR                                                  
+\item[Uses]  IPURD   IPURF   N10ORD  N5ORD   N6ORD   N7ORD          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIPOLE  DLPINT  DPHNIX  DSTVNT  GENL2E  GLPINT  OVLP   
+             PHOENI  STVINT                                         
+                                                                    
+\end{description}
+@a
+      subroutine setord
+      implicit none
+      integer i , Ipurd , Ipurf , Lbound , N10ord , N5ord , N6ord , 
+     &        N7ord , Nordr
+      integer Ubound , Ulpure
+      common /ipure / Ipurd , Ipurf
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+C
+C***********************************************************************
+C     routine to fill /order/ so as to assign the basis function
+C     order.  the arrangement of the basis functions can
+C     be easily altered by re-assigning the numbers in the arrays
+C     n6ord, n10ord, etc.
+C***********************************************************************
+C
+C
+C
+C
+C     initialize the ordering variables used by filmat.
+C     this piece of code may look redundant, but hang on to it.
+C     one can use this logic to alter the order of the basis functions.
+C     (ie. change the order of the six d-functiones, etc.)
+      if ( Ipurd.ne.0 ) then
+C
+         do 50 i = 1 , 10
+            Nordr(i) = N6ord(i)
+ 50      continue
+      else
+         do 100 i = 1 , 9
+            Nordr(i) = N5ord(i)
+ 100     continue
+      endif
+      if ( Ipurf.ne.0 ) then
+C
+         do 150 i = 1 , 10
+            Nordr(i+10) = N10ord(i)
+ 150     continue
+      else
+         do 200 i = 1 , 7
+            Nordr(i+10) = N7ord(i)
+ 200     continue
+      endif
+      return
+C
+      end
+@* INDEX.

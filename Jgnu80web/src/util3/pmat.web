@@ -1,0 +1,95 @@
+@* pmat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  CMP     KSPIN   MDIM    MSHIFS  MTT     NSE     NTT    
+             RHF     TWO     ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FIRST                                                  
+                                                                    
+\end{description}
+@a
+      subroutine pmat(NBASIS,A,B)
+      implicit none
+      double precision A , a0 , ai , amu , anu , ar , B , Big , bmu , 
+     &                 bnu , Four , One , Onept5 , Pt5 , Small , Three , 
+     &                 Two , Zero
+      integer i , imdim , imtt , In , Iout , Ipunch , k , Ksm , Kspin , 
+     &        Ksw , Mdim , Mdsq , Mshifs , Mtt , mu , NBASIS , Nesk , 
+     &        Nest , Nest1 , Nse
+      integer Nsep , Ntt , nu
+      logical Cmp , Rhf
+      dimension A(Mdim,*) , B(*)
+      common /const / Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /io    / In , Iout , Ipunch
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+C     ******************************************************************
+C     computes the density matrix
+C
+C     coded in july 75 by rs9b
+C     ******************************************************************
+C
+C     ******************************************************************
+      k = (Kspin-1)*Mshifs
+      if ( .not.(Cmp) ) then
+C
+C     real density matrix
+         do 50 mu = 1 , NBASIS
+            do 20 nu = 1 , mu
+               a0 = Zero
+               do 10 i = 1 , Nse
+                  a0 = a0 + A(mu,i)*A(nu,i)
+ 10            continue
+               k = k + 1
+               B(k) = a0
+ 20         continue
+ 50      continue
+         if ( .not.Rhf ) return
+         do 100 i = 1 , Ntt
+            B(i) = Two*B(i)
+ 100     continue
+         return
+      endif
+C
+C     complex density matrix
+      do 200 nu = 1 , NBASIS
+         do 150 mu = 1 , nu
+            ar = Zero
+            ai = Zero
+            do 120 i = 1 , Nse
+               imdim = i + Mdim
+               amu = A(mu,i)
+               anu = A(nu,i)
+               bmu = A(mu,imdim)
+               bnu = A(nu,imdim)
+               ar = ar + amu*anu + bmu*bnu
+               ai = ai + amu*bnu - bmu*anu
+ 120        continue
+            k = k + 1
+            B(k) = ar
+            B(k+Mtt) = ai
+ 150     continue
+ 200  continue
+C
+      if ( .not.Rhf ) return
+      do 300 i = 1 , Ntt
+         imtt = i + Mtt
+         B(i) = B(i)*Two
+         B(imtt) = B(imtt)*Two
+ 300  continue
+      return
+C
+      end
+@* INDEX.

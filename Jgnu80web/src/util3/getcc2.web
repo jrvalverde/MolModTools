@@ -1,0 +1,145 @@
+@* getcc2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] CC                                                        
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[INPUT:] L1MAX                                                     
+\item[INPUT:] L2MAX                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DPHNIX  PHOENI                                         
+                                                                    
+\end{description}
+@a
+      subroutine getcc2(CC,A,B,L1MAX,L2MAX)
+      implicit none
+      double precision A , B , CC
+      integer L1MAX , L2MAX
+      dimension CC(48)
+C
+C***********************************************************************
+C     routine to obtain c-coefficients for splitting
+C     two-dimensional integrals in routines twod3c and twod4c.
+C***********************************************************************
+C
+C
+      if ( L2MAX.gt.1 ) then
+C
+         CC(1) = B
+C
+         if ( L2MAX.gt.2 ) then
+C
+            CC(2) = B*CC(1)
+            CC(3) = B + CC(1)
+C
+            if ( L2MAX.gt.3 ) then
+C
+               CC(4) = B*CC(2)
+               CC(5) = B*CC(3) + CC(2)
+               CC(6) = B + CC(3)
+            endif
+         endif
+      endif
+C
+      if ( L1MAX.gt.1 ) then
+C
+         CC(7) = A
+C
+         if ( L2MAX.gt.1 ) then
+C
+            CC(8) = A*CC(1)
+            CC(9) = A + CC(1)
+C
+            if ( L2MAX.gt.2 ) then
+C
+               CC(10) = A*CC(2)
+               CC(11) = A*CC(3) + CC(2)
+               CC(12) = A + CC(3)
+C
+               if ( L2MAX.gt.3 ) then
+C
+                  CC(13) = A*CC(4)
+                  CC(14) = A*CC(5) + CC(4)
+                  CC(15) = A*CC(6) + CC(5)
+                  CC(16) = A + CC(6)
+               endif
+            endif
+         endif
+C
+         if ( L1MAX.gt.2 ) then
+C
+            CC(17) = A*CC(7)
+            CC(18) = A + CC(7)
+C
+            if ( L2MAX.gt.1 ) then
+C
+               CC(19) = A*CC(8)
+               CC(20) = A*CC(9) + CC(8)
+               CC(21) = A + CC(9)
+C
+               if ( L2MAX.gt.2 ) then
+C
+                  CC(22) = A*CC(10)
+                  CC(23) = A*CC(11) + CC(10)
+                  CC(24) = A*CC(12) + CC(11)
+                  CC(25) = A + CC(12)
+C
+                  if ( L2MAX.gt.3 ) then
+C
+                     CC(26) = A*CC(13)
+                     CC(27) = A*CC(14) + CC(13)
+                     CC(28) = A*CC(15) + CC(14)
+                     CC(29) = A*CC(16) + CC(15)
+                     CC(30) = A + CC(16)
+                  endif
+               endif
+            endif
+C
+            if ( L1MAX.gt.3 ) then
+C
+               CC(31) = A*CC(17)
+               CC(32) = A*CC(18) + CC(17)
+               CC(33) = A + CC(18)
+C
+               if ( L2MAX.gt.1 ) then
+C
+                  CC(34) = A*CC(19)
+                  CC(35) = A*CC(20) + CC(19)
+                  CC(36) = A*CC(21) + CC(20)
+                  CC(37) = A + CC(21)
+C
+                  if ( L2MAX.gt.2 ) then
+C
+                     CC(38) = A*CC(22)
+                     CC(39) = A*CC(23) + CC(22)
+                     CC(40) = A*CC(24) + CC(23)
+                     CC(41) = A*CC(25) + CC(24)
+                     CC(42) = A + CC(25)
+C
+                     if ( L2MAX.gt.3 ) then
+C
+                        CC(43) = A*CC(26)
+                        CC(44) = A*CC(27) + CC(26)
+                        CC(45) = A*CC(28) + CC(27)
+                        CC(46) = A*CC(29) + CC(28)
+                        CC(47) = A*CC(30) + CC(29)
+                        CC(48) = A + CC(30)
+                     endif
+                  endif
+               endif
+            endif
+         endif
+      endif
+C
+      return
+C
+      end
+@* INDEX.

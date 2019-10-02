@@ -1,0 +1,113 @@
+@* filmat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] F                                                         
+\item[OUTPUT:] A                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IEND    IRANGE  JEND    JRANGE                         
+\item[Uses]  AOS     IEND    IMJ     INEW    ISTART  JEND    JNEW   
+             JRANGE  JSTART  LAMAX   LBMAX   LIND    NORDR   UBOUND 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       PURDF1                                                 
+\item[Called by]   DIPOLE  STVINT                                         
+                                                                    
+\end{description}
+@a
+      subroutine filmat(F,A)
+      implicit none
+      double precision A , C1 , C2 , C3 , Exx , F , X , Y , Z
+      integer i , Iend , Ifilla , ii , Imj , indfm , indx1 , Inew , 
+     &        intc , Ipurd , Ipurf , Irange , ist , Istart , ix , j , 
+     &        Jan , Jend , jj , Jnew
+      integer Jrange , jst , Jstart , jx , Lamax , Lbmax , Lbound , 
+     &        Lentq , Limdum , Lind , Lpmax , Maxdum , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , N10ord , N5ord , N6ord
+      integer N7ord , Nordr , Nshell
+      integer Aos , Aon , Shella , Shelln , Shellt , Shellc
+      integer Ubound , Ulpure
+      dimension F(*) , A(*)
+      common /ipure / Ipurd , Ipurf
+      common /max   / Lamax , Lbmax , Lpmax , Maxdum(4)
+      common /limit / Imj , Istart , Jstart , Iend , Jend , Irange , 
+     &                Jrange , Lentq , Limdum(11)
+      common /new   / Inew , Jnew
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+      common /ia    / Lind(164) , Ifilla(92)
+C
+C
+C***********************************************************************
+C     this routine fills the lower triangular matrix a (in linear form)
+C     this routine receives as input the shell numbers (inew,jnew),
+C     shell duplicate test variable (imj), limiting information (via
+C     /limit/), and addresses of shells via /b/, and performs matrix
+C     building.
+C     if necessary, purdf1 is called to transform to pure d or pure f.
+C***********************************************************************
+C
+C
+C     note that iend, jend, irange and jrange may be modified by purdf1.
+      call purdf1(F)
+C
+C
+C     commence main processing loop.
+C     here, the correct indices are obtained, referred to lower
+C     triangular form, and the matrix elements are planted in a.
+C     also, shell duplicate elimination is performed here.
+C     ordering is achieved through nordr.
+C
+C     obtain correct bias for j-loop.
+      indx1 = 0
+C     obtain correct atomic orbital starting values.
+      ist = Aos(Inew) - 1
+      jst = Aos(Jnew) - 1
+C     commence loop.
+      do 100 i = Istart , Iend
+         ix = Nordr(i)
+         if ( Imj.eq.0 ) Jend = i
+         intc = indx1
+         do 50 j = Jstart , Jend
+            intc = intc + 1
+            jx = Nordr(j)
+C     obtain raw indices.
+            ii = ix + ist
+            jj = jx + jst
+C     obtain full matrix index.
+            if ( ii.lt.jj ) then
+C     jj greater.
+               indfm = Lind(jj) + ii
+            elseif ( ii.eq.jj ) then
+C     equal.
+               indfm = Lind(ii+1)
+            else
+C     ii greater.
+               indfm = Lind(ii) + jj
+            endif
+C
+C     plant the value.
+            A(indfm) = F(intc)
+ 50      continue
+         indx1 = indx1 + Jrange
+ 100  continue
+C
+C
+C     restore iend, jend, irange, and jrange.
+      Iend = Ubound(Lamax)
+      Jend = Ubound(Lbmax)
+      Irange = Iend - Istart + 1
+      Jrange = Jend - Jstart + 1
+      return
+C
+      end
+@* INDEX.

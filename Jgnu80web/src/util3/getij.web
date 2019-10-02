@@ -1,0 +1,41 @@
+@* getij.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[OUTPUT:] I                                                         
+\item[OUTPUT:] J                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  GSQRT                                          
+\item[Called by]   INTPRT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine getij(N,I,J)
+      implicit none
+      double precision fpi , gfloat , gsqrt , one , pt5 , thr1
+      integer I , J , N
+      data thr1/0.001/ , pt5/0.5/ , one/1.0/
+C
+C***********************************************************************
+C     given n, a linearized index, this routine extracts i and j.
+C***********************************************************************
+C
+C
+      fpi = pt5*(one+gsqrt(one+gfloat(8*N)))
+      I = idint(fpi+thr1)
+      J = N - ((I*(I-1))/2)
+      if ( J.le.0 ) then
+         I = I - 1
+         J = N - ((I*(I-1))/2)
+      endif
+      return
+C
+      end
+@* INDEX.

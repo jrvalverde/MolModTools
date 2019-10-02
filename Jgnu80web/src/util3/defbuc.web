@@ -1,0 +1,38 @@
+@* defbuc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUCK                                                     
+\item[PASSED:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO                                                 
+\item[Called by]   CIDENS  DD1SD4  DD2     DD3     DOUBAR  GETA    NORMDS 
+             PRINTP  TRCL80  TRCLOS  TROP80  TROPEN                 
+                                                                    
+\end{description}
+@a
+      subroutine defbuc(IBUCK,LENGTH)
+      implicit none
+      integer IBUCK , LENGTH
+C
+C     ******************************************************************
+C
+C1defbuc
+C     subroutine defbuc(ibuck,length)
+C
+C     defines bucket ibuck with length 'length'
+C
+C     ******************************************************************
+C
+      call fileio(0,IBUCK,LENGTH,0,0)
+C
+      return
+C
+      end
+@* INDEX.

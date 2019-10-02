@@ -1,0 +1,60 @@
+@* matout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] X                                                         
+\item[INPUT:] M                                                         
+\item[INPUT:] N                                                         
+\item[INPUT:] MM                                                        
+\item[INPUT:] NN                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CYCOPN  CYCPHF  EXCHN3  FERMI   FORMBG  FPDUMP  GETMAT 
+             OFIX    PHFCHK  PHFPRT  ROTCOR  RYSPOL  TIOC    UHFOPN 
+             WINDOW                                                 
+                                                                    
+\end{description}
+@a
+      subroutine matout(X,M,N,MM,NN)
+      implicit none
+      integer i , iflg , ilower , In , Iout , Ipunch , iupper , j , M , 
+     &        MM , N , NN
+      double precision X
+      dimension X(M,N)
+      common /io    / In , Iout , Ipunch
+C
+C
+C     matrix print routine
+C
+C
+C
+C
+99001 format (9(11x,i3))
+99002 format (i4,9D14.6)
+C
+      iflg = 1
+      ilower = 1
+ 100  iupper = ilower + 5
+      if ( iupper.ge.NN ) then
+         iupper = NN
+         iflg = 0
+      endif
+      write (Iout,99001) (j,j=ilower,iupper)
+      do 200 i = 1 , MM
+         write (Iout,99002) i , (X(i,j),j=ilower,iupper)
+ 200  continue
+      if ( iflg.ne.0 ) then
+         ilower = iupper + 1
+         goto 100
+      endif
+C
+      return
+C
+      end
+@* INDEX.

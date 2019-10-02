@@ -1,0 +1,63 @@
+@* labint.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IBUF                                                      
+\item[INPUT:] IFLAST                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  MODE                                                   
+\item[Uses]  IOP     IOUT    IRESET  ISMODE  KNTT1   KNTT2   MODE   
+             NWPI                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LFLD                                                   
+\item[Called by]   OUT2E                                                  
+                                                                    
+\end{description}
+@a
+      subroutine labint(IBUF,IFLAST)
+      implicit none
+      integer Ibasd , Ibase , Ibfpad , IBUF , Icon , Ifil , IFLAST , 
+     &        In , Intcnt , Iop , Iout , Ipunch , Iq , Ireset , Ismode , 
+     &        Istat , Itotal , Iux , k1 , k2
+      integer Kntt1 , Kntt2 , Last , Limint , Mode , Nrpext , Ntx , 
+     &        Nwiib , Nwpi
+      integer Dbase , Dbasd
+      dimension IBUF(*)
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Ibfpad
+C
+99001 format (' BUFFER LABEL PACKED: ',i12,'   IFLST=',i2,'   KNTT1=',
+     &        i4,'   KNTT2=',i4)
+C
+C     apply adjustments based on ismode and iflag.
+      if ( Ismode.le.0 ) then
+         k1 = (Kntt1-1)/Nwpi
+         k2 = (Ireset(2)-Kntt2)/Nwpi
+      else
+C
+         k1 = Kntt1 - 1
+         k2 = 0
+      endif
+C
+C     pack required quantities into ibuf(1).
+      IBUF(1) = 0
+      if ( IFLAST.ne.0 ) call lfld(0,1,IBUF(1),1)
+      call lfld(1,12,IBUF(1),k1)
+      call lfld(13,12,IBUF(1),k2)
+C dbc test
+      call lfld(25,4,IBUF(1),Mode)
+C
+      if ( Iop(34).ge.1 ) write (Iout,99001) IBUF(1) , IFLAST , k1 , k2
+C
+      return
+C
+      end
+@* INDEX.

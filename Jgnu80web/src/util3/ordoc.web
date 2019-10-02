@@ -1,0 +1,210 @@
+@* ordoc.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine ordoc
+      implicit none
+C
+C1orient
+C
+C                conventions for orienting molecules in cartesian space
+C
+C
+C
+C  a.  goals
+C
+C           1.  the molecule is oriented  so  as  to  simplify  the  3x3
+C               transformation matrices.
+C
+C           2.  two z-matrices differing  only  in  the  values  of  the
+C               internal  coordinates but which are identical as regards
+C               the integer quantites  (such  as  occurs  on  subsequent
+C               points  of  a  geometry  optimization) shall produce the
+C               same orientation of the molecule.
+C
+C           3.  two different z-matrices for  the  same  molecule  shall
+C               produce  the  same  coordinates,  save  for  a  possible
+C               renumbering of the atoms.
+C
+C           4.  the number of molecular  orbital  coefficients  zero  by
+C               symmetry should be maximized.
+C
+C  b.  general considerations
+C
+C           1.  a  right  handed  coordinate   system   will   be   used
+C               throughout.
+C
+C           2.  the molecule will be translated so that  its  center  of
+C               charge is at the origin.
+C
+C           3.  atoms will not be reordered relative to their order upon
+C               input.
+C
+C           4.  the cartesian axes will be  considered  to  increase  in
+C               priority in the order x < y < z.
+C
+C  c.  rules for the positioning of an axis
+C
+C           1.  an axis of rotation or a principal axis of charge may be
+C               aligned with a cartesian axis in one of two ways.  which
+C               way  will  be  decided  by  successively  applying   the
+C               following tests until a definitive result is achieved:
+C               1.  the third moment of charge should be positive.
+C               2.  the sum of the projections of the atomic coordinates
+C                   onto the reference axis should be positive.
+C               3.  the first atom with a  non-zero  projection  on  the
+C                   reference  axis should have a positive projection on
+C                   that axis.
+C
+C           2.  if a rotation is neccessary in order to meet one of  the
+C               above  criteria  it shall be a 180 degree rotation about
+C               the axis defined below:
+C                          reference         axis
+C                            axis         of rotation
+C
+C                             x                y
+C                             y                z
+C                             z                x
+C
+C  d.  rules for  postioning  the  principal  axes  of  charge:  in  the
+C      abscence  of any other rules, the principal axis corresponding to
+C      the largest principal moment of charge will be aligned  with  the
+C      highest priority cartesian axis available.
+C
+C  e.  special rules for asymmetric top molecules
+C
+C           1.  cs:  the molecular plane shall be made  coincident  with
+C               the  xy plane.  note that this convention conflicts with
+C               mulliken's suggestion, but that it  is  consistent  with
+C               the  character  tables  of  cotton and of herzberg.  the
+C               moleule is then rotated about the z-axis  in  accordance
+C               with the rules given below for cn molecules.
+C
+C           2.  c2v:  following mulliken's recommendation for planar c2v
+C               molecules,  the  molecular  plane  is  placed  in the yz
+C               plane.  for non-planar molecules the following tests are
+C               successively applied:
+C               1.  the mirror plane with the most atoms is put  in  the
+C                   yz plane.
+C               2.  the mirror plane with the most non-hydrogen atoms is
+C                   put in the yz plane.
+C               3.  the mirror plane with the lowest  numbered  atom  is
+C                   made coincident with yz.
+C               4.  apply axes of charge rules as per section d.
+C
+C           3.  planar     d2h     molecules:  following      mulliken's
+C               recommendation,  the molecular plane is placed in the yz
+C               plane.  the molecule is rotated about the x axis so that
+C               the  z  axis  shall  pass  through the greater number of
+C               atoms, or, if this is not decisive, the  greater  number
+C               of bonds.
+C
+C           4.  c2 molecules follow the general rules given below for cn
+C               molecules.
+C
+C           5.  c1 molecules are not re-oriented.
+C
+C           6.  ci molecules are translated but not rotated.
+C
+C  f.  special rules for symmetric top molecules
+C
+C           1.  the unique axis is aligned with the z axis.
+C
+C           2.  definition:  a "circular-set" of atoms  is  composed  of
+C               those  atoms lying in a plane which have the same atomic
+C               number and which are equidistant from a  reference  axis
+C               perpindicular to the plane.  atoms on the reference axis
+C               are not included in any circular-sets.   a  circular-set
+C               of atoms is generated by a proper rotation axis.
+C
+C           3.  definition:  the "key-atom" in a symmetric top  molecule
+C               is  the  lowest  numbered  atom in the key circular-set.
+C               the following tests are carried out successively to find
+C               the key circular-set:
+C               1.  which set is nearest the xy plane
+C               2.  which set has a positive projection on the z axis
+C               3.  which set is nearest to the z axis
+C               4.  which set is comprised  of  atoms  with  the  lowest
+C                   atomic number
+C
+C           4.  cn, cnh, sn:  the molecule is rotated about  the  z-axis
+C               so  as  to  maximize  the number of pairs of heavy atoms
+C               which  are  parallel  to  the  y  axis.   if   no   such
+C               arrangement  is satisfactory then the key atom is placed
+C               in  the  yz  plane  so  as  to  give  it  a  positive  y
+C               coordinate.
+C
+C           5.  dn, dnh:  one of the c2 axes is made coincident with the
+C               y  cartesian  axis.   the  tests  in 7 below are used to
+C               decide which c2 axis is so positioned.
+C
+C           6.  dnd, cnv:  one of the vertical planes is made coincident
+C               with  the  yz cartesian plane.  the tests in 7 below are
+C               used to decide which plane is so positioned.
+C
+C           7.  test for orienting dn, dnh, dnd, and cnv molecules:
+C               1.  maximize the projection of the key  atom  on  the  y
+C                   axis/
+C               2.  if two orientations give the maximum projection on y
+C                   choose the one with the maximum projection on x.
+C
+C           8.  for molecules contained in the  xy  plane  the  standard
+C               axis orientation rule (see section c) are applied to the
+C               x axis to complete the  specification  of  a  molecule's
+C               orientation.
+C
+C  g.  special rules for spherical top molecules
+C
+C           1.  definitions:  a "spherical-set" of atoms is composed  of
+C               those  atoms  which  are equidistant from the origin and
+C               which have the same atomic number.  spherical-sets shall
+C               be  ordered  in  terms  of  increasing distance from the
+C               origin and in terms of increasing atomic number  at  any
+C               one  distance.   the  "key  atom" is the lowest numbered
+C               atom in the first spherical-set.
+C
+C           2.  t, td, th
+C               1.  align the three c2 axes with the cartesian  axes  so
+C                   as to maximize the z-coordinate of the key atom.
+C               2.  treat the molecule as a symmetric top.
+C
+C           3.  o, oh
+C               1.  align the three c4 axes with the cartesian  axes  so
+C                   as to maximize the z-coordinate of the key atom.
+C               2.  treat the molecule as a symmetric top.
+C
+C           4.  i, ih
+C               1.  align one of the c5 axes with the z axis  so  as  to
+C                   maximize the z-coordinate of the key atom.
+C               2.  treat the molecule as a symmetric top.
+C
+C
+C  h.  references
+C
+C               cotton, f.  a.,  "the  chemical  applications  of  group
+C               theory", 2nd ed., wiley-interscience, new york, 1971.
+C
+C               herzberg, g., "infrared and raman spectra of  polyatomic
+C               molecules", d. van nostrand, princeton, 1945.
+C
+C               mulliken, r. s., "report on the notation for the spectra
+C               of   polyatomic   molecules",   j.   chem.   phys.,  23,
+C               1997(1955).
+C
+C
+C
+C    lest the complier complain:
+C
+      return
+C
+      end
+@* INDEX.

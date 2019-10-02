@@ -1,0 +1,176 @@
+@* tioc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NBASIS                                                    
+\item[INPUT:] IOOP                                                      
+\item[INPUT:] IFIL                                                      
+\item[PASSED:] A                                                         
+\item[INPUT:] KEY                                                       
+\item[INPUT:] IRC                                                       
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  MDIM    MTT     NTT                                    
+\item[Uses]  IOUT    KSPIN   MDIM    MDSQ    MTT     NTT            
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DSYMM   FILEIO  ILSW    LNK1E   MATOUT  SLS     TREAD  
+             TWRITE                                                 
+\item[Called by]   BESSRT  CONUSO  FIRST   OFIX    SCFDM   SPINDM  TRACAB 
+                                                                    
+\end{description}
+
+\begin{verbatim}
+     rwf input output routine for real and complex scf routines
+
+     ioop  : 1 ... output
+             2 ... input
+     ifile : first rwf \# used
+             for real scf, ifile and ifile+2 are used
+             for complex scf, ifile and ifile+2 contain the real part,
+             ifile+1 and ifile+3 contain the imaginary part
+     a     : matrix to be transferred
+     key   : 0 and 1 (with icr=0) identical to key in tread and twrite
+             2 ... a has to be compressed symmetric (hermitian).
+                   no repacking takes place
+             3 ... a is symmetric (hermitian), but in full storage mode
+                   i/o is performed so that it appears in compressed
+                   form on the rwf
+             4 ... a is a general matrix
+     irc   : 0 ... a is real
+             1 ... a may be complex, depending on the ilsw
+
+\end{verbatim}
+
+@a
+      subroutine tioc(NBASIS,IOOP,IFIL,A,KEY,IRC,IDUMP)
+      implicit none
+      double precision A
+      integer i , i1 , icon , icr , icr1 , IDUMP , ierr , IFIL , ifile , 
+     &        ifn , ifnr , ifr , imax , In , IOOP , Iout , ip , ip1 , 
+     &        Ipunch , IRC
+      integer KEY , Ksm , Kspin , Ksw , len , m1 , Mdim , Mdsq , mr , 
+     &        Mshifs , Mtt , NBASIS , Nesk , Nest , Nest1 , Nse , Nsep , 
+     &        Ntt
+      integer fretln
+      logical Cmp , Rhf
+      dimension A(*) , IFIL(*)
+      dimension ifr(2) , mr(2)
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /io    / In , Iout , Ipunch
+      data fretln/11/
+C
+99001 format (/1x,10(1H>),' CALL TIOC(',i1,',',i3,', ,',i1,',',i1,')',
+     &        10x,5x,2(i4,i5,5x))
+99002 format (///' FILE  #',i3,' IS NOT INITIALIZED')
+      ip = 1
+      ierr = 0
+C
+C     'classical i/o'
+C
+      ifile = IFIL(1)
+      if ( KEY.gt.1 ) then
+C
+C     complex or real, depending on the ilsw
+C
+         call ilsw(2,1,icon)
+         ip = icon/2 + 1
+         ifn = 2*(Kspin-1)
+C
+         do 50 icr = 1 , ip
+            ip1 = icr
+            icr1 = icr - 1
+            ifnr = IFIL(ifn+icr)
+            ifr(icr) = ifnr
+            if ( IOOP.eq.2 ) then
+C
+C     input
+               call fileio(fretln,ifnr,len,i,i)
+               if ( len.eq.0 ) goto 200
+               if ( KEY.gt.3 ) then
+C
+                  m1 = icr1*Mdsq + 1
+                  call tread(ifnr,A(m1),Mdim,Mdim,NBASIS,NBASIS,0)
+               else
+                  m1 = icr1*Mtt + 1
+                  call tread(ifnr,A(m1),Mtt,1,Ntt,1,0)
+                  if ( KEY.eq.3 .and. icr.eq.ip )
+     &                 call sls(2,A,Mdim,NBASIS)
+               endif
+C
+C     output
+            elseif ( KEY.gt.3 ) then
+C
+               m1 = icr1*Mdsq + 1
+               call twrite(ifnr,A(m1),Mdim,Mdim,NBASIS,NBASIS,0)
+            else
+               m1 = icr1*Mtt + 1
+               if ( icr.eq.1 .and. KEY.eq.3 ) call sls(1,A,Mdim,NBASIS)
+               call twrite(ifnr,A(m1),Mtt,1,Ntt,1,0)
+               if ( KEY.eq.3 .and. icr.eq.ip ) call sls(2,A,Mdim,NBASIS)
+            endif
+            mr(icr) = m1
+ 50      continue
+      elseif ( IRC.ne.0 ) then
+C
+C     error modes
+C
+C     illegal use of classical i/o
+         ierr = 1
+         goto 100
+      else
+         ip1 = 1
+         m1 = 1
+         ifr(1) = ifile
+         ifnr = ifile
+         imax = 1
+         mr(1) = 1
+         if ( IOOP.eq.2 ) then
+C
+            call fileio(fretln,ifile,len,i,i)
+            if ( len.eq.0 ) goto 200
+            call tread(ifile,A,Mdim,Mdim,NBASIS,NBASIS,KEY)
+         else
+C
+            call twrite(ifile,A,Mdim,Mdim,NBASIS,NBASIS,KEY)
+         endif
+      endif
+C
+C     test output
+      if ( IDUMP.eq.0 ) return
+ 100  write (Iout,99001) IOOP , ifile , KEY , IRC , 
+     &                   (ifr(i),mr(i),i=1,ip1)
+C     dump section
+      if ( IDUMP.gt.2 ) then
+         i1 = KEY + 1
+         if ( i1.eq.3 ) then
+C
+            call dsymm(A,NBASIS)
+         elseif ( i1.eq.4 ) then
+C
+            if ( IOOP.eq.1 ) then
+               call dsymm(A,NBASIS)
+            elseif ( IOOP.eq.2 ) then
+C
+               call matout(A,Mdim,Mdim,NBASIS,NBASIS)
+            endif
+         else
+            call matout(A,Mdim,Mdim,NBASIS,NBASIS)
+         endif
+      endif
+C
+      if ( ierr.ne.0 ) call lnk1e
+      return
+C
+C     rwf not initialized, and tried to read
+ 200  write (Iout,99002) ifnr
+      ierr = 1
+      goto 100
+C
+      end
+@* INDEX.

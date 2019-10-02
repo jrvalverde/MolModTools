@@ -1,0 +1,38 @@
+@* amove.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FOFPHF  FORMF   UHFTST                                 
+                                                                    
+\end{description}
+@a
+      subroutine amove(N,A,B)
+      implicit none
+      double precision A , B
+      integer i , N
+C
+C***********************************************************************
+C     routine to move n words from a to b.
+C***********************************************************************
+C
+      dimension A(*) , B(*)
+C
+      do 100 i = 1 , N
+         B(i) = A(i)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

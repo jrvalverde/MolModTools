@@ -1,0 +1,115 @@
+@* rootn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IERR                                                      
+\item[OUTPUT:] ROOT                                                      
+\item[INPUT:] X0                                                        
+\item[INPUT:] A                                                         
+\item[INPUT:] N                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  FOUR    ONE     ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GFLOAT  GSQRT                                  
+\item[Called by]   LOCMIN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rootn(IERR,ROOT,X0,A,N)
+      implicit none
+      double precision A , a0 , a01 , a02 , a2 , a23 , a3 , Big , conv , 
+     &                 disc , dx , f0 , f1 , Four , gabs , gfloat , 
+     &                 gsqrt , One , Onept5 , Pt5
+      double precision ROOT , Small , Three , Two , X0 , x00 , Zero
+      integer i , IERR , jcyc , maxcyc , N , n1
+      dimension A(3)
+      common /const / Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      data maxcyc , conv/50 , 1.D-10/
+C     ******************************************************************
+C     newton-raphson iteration for real roots and real polynomials
+C     f(x)=a(1)+a(2)*x+a(3)*x**2+..., closest to the input value x0.
+C     n is the degree of the polynomial
+C
+C     coded in april 75 by rs9b
+C     ******************************************************************
+C
+C
+C     ******************************************************************
+      if ( N.ne.0 ) then
+         IERR = 0
+         if ( N.gt.2 ) then
+            n1 = N + 1
+            jcyc = 0
+            x00 = X0
+C
+ 20         jcyc = jcyc + 1
+            if ( jcyc.le.maxcyc ) then
+C
+C     f0(x00)
+               f0 = Zero
+               a0 = One
+               do 30 i = 1 , n1
+                  f0 = f0 + A(i)*a0
+                  a0 = a0*x00
+ 30            continue
+C
+C     f1(x00)
+               f1 = Zero
+               a0 = One
+               do 40 i = 1 , N
+                  f1 = f1 + gfloat(i)*A(i+1)*a0
+                  a0 = a0*x00
+ 40            continue
+C
+               dx = f0/f1
+               if ( gabs(dx).le.conv ) then
+C
+C     convergence criterion met
+                  ROOT = x00 - dx
+                  return
+               else
+                  x00 = x00 - dx
+                  goto 20
+               endif
+            endif
+C
+C     ******************************************************************
+C     quadratic and linear equations
+C     ******************************************************************
+         elseif ( N.eq.2 ) then
+C
+            a2 = A(2)
+            a3 = A(3)
+            disc = a2*a2 - Four*A(1)*a3
+            if ( disc.ge.Zero ) then
+               disc = gsqrt(disc)
+               a23 = a3 + a3
+               a01 = (disc-a2)/a23
+               a02 = -(a2+disc)/a23
+               if ( gabs(X0-a01).gt.gabs(X0-a02) ) then
+C
+                  ROOT = a02
+                  return
+               else
+                  ROOT = a01
+                  return
+               endif
+            endif
+         else
+C
+            ROOT = -A(1)/A(2)
+            return
+         endif
+      endif
+C
+C     error condition
+      IERR = 1
+      return
+C
+      end
+@* INDEX.

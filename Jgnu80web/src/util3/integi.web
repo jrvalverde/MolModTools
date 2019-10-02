@@ -1,0 +1,152 @@
+@* integi.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[PASSED:] X                                                         
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  LENBUF                                                 
+\item[Uses]  IFIL    IOUT    LEN03   LEN21   LENBUF  NRPEXT         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E   NTRAN                                          
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine integi(X)
+      implicit none
+      integer i , Ibf , IBUF , ierr , Ifil , IFLAG , In , Iout , 
+     &        Ipunch , IUNIT , KUNIT , l , len , Len03 , Len18 , Len19 , 
+     &        Len21 , Lenbuf , lenext , lenfil
+      integer lenrec , loc , LUNIT , NREC , Nrpext , NUMBLK
+      real X(*)
+      common /io    / In , Iout , Ipunch
+      common /ibf   / Ibf(30)
+      common /ntrlen/ Len03 , Len18 , Len19 , Len21
+      equivalence (Ifil,Ibf(24))
+      equivalence (Nrpext,Ibf(12))
+      equivalence (Lenbuf,Ibf(29))
+C
+C
+C     integral i/o routines.
+C=>   note that integi  itself is never called.
+C     through its various entry points it does all the
+C     sequential i/o (for repulsion integrals)
+C
+C
+C
+C
+C
+C    *--------------------------*
+      entry iwrite(IUNIT,IBUF,X)
+C    *--------------------------*
+C
+      loc = (IBUF-1)*Lenbuf + 1
+      if ( len.ge.lenfil ) then
+C     call ntran(iunit,28,lenext)
+         if ( IUNIT.eq.3 ) lenfil = Len03
+         if ( IUNIT.eq.21 ) lenfil = Len21
+      endif
+      call ntran(IUNIT,1,Lenbuf,X(loc),ierr)
+      if ( ierr.ne.-1 ) goto 200
+      len = (Ifil+2)*lenrec
+      return
+C
+C    *-------------------------*
+      entry iread(IUNIT,IBUF,X)
+C    *-------------------------*
+C
+      loc = (IBUF-1)*Lenbuf + 1
+      call ntran(IUNIT,2,Lenbuf,X(loc),ierr)
+      if ( ierr.ne.-1 ) goto 200
+      return
+C
+C    *------------------*
+      entry idef(IUNIT,IFLAG)
+C    *------------------*
+C
+      call ntran(IUNIT,27,l,l,l)
+      call ntran(IUNIT,29,IFLAG,l,l)
+C
+C    *------------------*
+      entry iwind(IUNIT)
+C    *------------------*
+C
+      call ntran(IUNIT,10,0,l,l)
+      if ( IUNIT.eq.3 ) lenfil = Len03
+      if ( IUNIT.eq.21 ) lenfil = Len21
+      lenext = Nrpext*Lenbuf/128
+      lenrec = Lenbuf/128 + 1
+      len = lenrec
+      return
+C
+C    *------------------*
+      entry ipr(IUNIT)
+C    *------------------*
+C
+      call ntran(IUNIT,29,1,l,l)
+      return
+C
+C    *------------------*
+      entry iwait(IUNIT)
+C    *------------------*
+C      ignored in f77 portable i/o
+      call ntran(IUNIT,23,0,l,ierr)
+C     if(ierr .ne. lenbuf) goto 9999
+      return
+C
+C    *-----------------*
+      entry irel(IUNIT)
+C    *-----------------*
+C
+C     call ntran(iunit,22)
+      return
+C
+C    *------------------------*
+      entry ipos(IUNIT,NUMBLK)
+C    *------------------------*
+C
+C     numwrd = numblk * lenbuf
+      call ntran(IUNIT,6,NUMBLK,l,l)
+      return
+C
+C    *------------------*
+      entry ifile(IUNIT)
+C    *------------------*
+C
+C     call ntran(iunit,9)
+      return
+C
+C    *-------------------------------*
+      entry icopy(KUNIT,LUNIT,NREC,X)
+C    *-------------------------------*
+C
+      do 100 i = 1 , NREC
+         IUNIT = KUNIT
+         call ntran(IUNIT,-2,Lenbuf,X,ierr)
+         if ( ierr.ne.Lenbuf ) goto 200
+         IUNIT = LUNIT
+         call ntran(IUNIT,-1,Lenbuf,X,ierr)
+         if ( ierr.ne.Lenbuf ) goto 200
+ 100  continue
+      return
+C    *----------*
+C     error exit
+C    *----------*
+C
+ 200  write (Iout,99001) IUNIT , Lenbuf , ierr
+C
+99001 format (/1x,'INTEGI  --ERROR--  IUNIT:',i7,' LENBUF:',i7,' IERR:',
+     &        i7)
+C
+      call lnk1e
+      stop
+C
+      end
+@* INDEX.

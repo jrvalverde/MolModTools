@@ -1,0 +1,111 @@
+@* fillcp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IT                                                        
+\item[INPUT:] IGBEG                                                     
+\item[INPUT:] IGSP                                                      
+\item[INPUT:] IGDF                                                      
+\item[OUTPUT:] CA                                                        
+\item[OUTPUT:] CMAXI                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  C1      C2      C3      C4                             
+\item[Uses]  C1      C2      C3      C4      ROOT15  ROOT3   ROOT5  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GMAX1                                          
+\item[Called by]   DPHNIX  PHOENI                                         
+                                                                    
+\end{description}
+@a
+      subroutine fillcp(IT,IGBEG,IGSP,IGDF,CA,CMAXI)
+      implicit none
+      double precision absc , C1 , C2 , C3 , C4 , CA , CMAXI , Exx , 
+     &                 gabs , gmax1 , Pt5 , R1 , R2 , R3 , R3ov2 , R4 , 
+     &                 Root15 , Root3 , Root5 , temp
+      double precision X , Y , Z , Z1 , Z2 , Z3
+      integer IGBEG , IGDF , IGSP , In , inddf , Iout , Ipunch , IT , 
+     &        Jan , MAXPRM , MAXS21 , MAXSH1 , MAXSHL , Maxtyp , Nshell
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      dimension CA(20)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /cfact / Pt5 , R3ov2 , Root3 , Root5 , Root15 , R1 , R2 , 
+     &                R3 , R4 , Z1 , Z2 , Z3
+      common /io    / In , Iout , Ipunch
+C
+C***********************************************************************
+C     routine to obtain s, p, d, and f coefficients for p-loop.
+C     additionally, the absolute value of the largest coefficient
+C     is determined.
+C***********************************************************************
+C
+C
+C     test for f-functions.
+      if ( IT.lt.3 ) then
+C
+C     no f-functions are involved, fill only the first 10 locations
+C     in ca.
+         CA(1) = C1(IGSP)
+         CMAXI = gabs(C1(IGSP))
+C
+C     test for beyond s.
+         if ( IT.gt.0 ) then
+C
+C     fill p-part.
+            CA(2) = C2(IGSP)
+            CA(3) = C2(IGSP)
+            CA(4) = C2(IGSP)
+            absc = gabs(C2(IGSP))
+            CMAXI = gmax1(CMAXI,absc)
+C
+C     test for beyond p.
+            if ( IT.gt.1 ) then
+C
+C     fill d-part, and watch out for normalization.
+C     inddf provides indexing when added to igdf.
+               inddf = IGDF + (IGSP-IGBEG)
+               CA(5) = C3(inddf)
+               CA(6) = C3(inddf)
+               CA(7) = C3(inddf)
+               temp = C3(inddf)*Root3
+               CA(8) = temp
+               CA(9) = temp
+               CA(10) = temp
+               absc = gabs(C3(inddf))
+               CMAXI = gmax1(CMAXI,absc)
+            endif
+         endif
+      else
+C
+C     fill f-part.
+C     inddf provides indexing into c4.
+         inddf = IGDF + (IGSP-IGBEG)
+         CA(11) = C4(inddf)
+         CA(12) = C4(inddf)
+         CA(13) = C4(inddf)
+         temp = C4(inddf)*Root5
+         CA(14) = temp
+         CA(15) = temp
+         CA(16) = temp
+         CA(17) = temp
+         CA(18) = temp
+         CA(19) = temp
+         CA(20) = C4(inddf)*Root15
+         CMAXI = gabs(C4(inddf))
+      endif
+C
+      return
+C
+      end
+@* INDEX.

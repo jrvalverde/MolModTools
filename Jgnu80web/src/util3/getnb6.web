@@ -1,0 +1,63 @@
+@* getnb6.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NBAS6D                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  LBOUND  NSHELL  SHELLC  SHELLT  UBOUND                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   D1E     D2ESPD  DLPINT                                 
+                                                                    
+\end{description}
+@a
+      subroutine getnb6(NBAS6D)
+      implicit none
+      double precision C1 , C2 , C3 , Exx , X , Y , Z
+      integer iend , ishell , istart , itype , Jan , lamax , Lbound , 
+     &        MAXPRM , MAXS21 , MAXSH1 , MAXSHL , Maxtyp , N10ord , 
+     &        N5ord , N6ord , N7ord , NBAS6D , Nordr , Nshell
+      integer Shella , Shelln , Shellt , Shellc , shladf , Aos , Aon
+      integer scona , sconb
+      integer Ubound , Ulpure
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+C
+C***********************************************************************
+C     routine to determine haow many basis functions there would be
+C     if this were a 6-d run (assuming that it is really a 5-d
+C     run).
+C
+C     arguments:
+C
+C     nbas6d ... returned number of basis function for the corresponding
+C                6-d run.
+C
+C     ***note*** this routine uses many of the regular integral
+C     program common blocks.
+C***********************************************************************
+C
+      NBAS6D = 0
+      do 100 ishell = 1 , Nshell
+         itype = Shellt(ishell)
+         lamax = itype + 1
+         scona = Shellc(ishell)
+         iend = Ubound(lamax)
+         istart = Lbound(lamax,scona+1)
+         NBAS6D = NBAS6D + (iend-istart+1)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

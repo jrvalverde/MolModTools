@@ -1,0 +1,304 @@
+@* getcc1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] CC                                                        
+\item[INPUT:] AP                                                        
+\item[INPUT:] BP                                                        
+\item[INPUT:] INC                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  LAMAX   LBMAX   ONE                                    
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIPOLE  DSTVNT  OVLP    STVINT                         
+                                                                    
+\end{description}
+@a
+      subroutine getcc1(CC,AP,BP,INC)
+      implicit none
+      double precision AP , BP , CC , Dummy , Half , One , Zero
+      integer INC , Lamax , lanew , Lbmax , Lpmax , Maxdum
+      dimension CC(192)
+      common /max   / Lamax , Lbmax , Lpmax , Maxdum(4)
+      common /const / Zero , Half , One , Dummy(6)
+C
+C    *******************************************************************
+C
+C          this routine calculates the coefficients which transform
+C     integrals over functions at center p into integrals over
+C     functions at centers a and b.  this transformation is carried
+C     out in routine get3c, which should be consulted for more
+C     details of the use of these coefficients.
+C
+C          the coefficient matrix is three dimensional, although the
+C     actual indexing is done linearly.  the coefficients are
+C     calculated from cc(1,1,1)=1.0, and the recursion formulae:
+C
+C          cc(lw,lb,la) = ap*cc(lw,lb,la-1) + cc(lw-1,lb,la-1)
+C
+C          cc(lw,lb,la) = bp*cc(lw,lb-1,la) + cc(lw-1,lb-1,la)
+C
+C    *******************************************************************
+C
+C
+C
+      lanew = Lamax + INC
+      CC(1) = One
+      if ( Lbmax.ne.1 ) then
+         CC(2) = BP
+         CC(3) = CC(1)
+         if ( Lbmax.ne.2 ) then
+            CC(4) = BP*CC(2)
+            CC(5) = BP + CC(2)
+            CC(6) = CC(3)
+            if ( Lbmax.ne.3 ) then
+               CC(7) = BP*CC(4)
+               CC(8) = BP*CC(5) + CC(4)
+               CC(9) = BP + CC(5)
+               CC(10) = CC(6)
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.1 ) return
+      CC(11) = AP
+      CC(12) = CC(1)
+      if ( Lbmax.ne.1 ) then
+         CC(13) = AP*CC(2)
+         CC(14) = AP + CC(2)
+         CC(15) = CC(3)
+         if ( Lbmax.ne.2 ) then
+            CC(16) = AP*CC(4)
+            CC(17) = AP*CC(5) + CC(4)
+            CC(18) = AP + CC(5)
+            CC(19) = CC(6)
+            if ( Lbmax.ne.3 ) then
+               CC(20) = AP*CC(7)
+               CC(21) = AP*CC(8) + CC(7)
+               CC(22) = AP*CC(9) + CC(8)
+               CC(23) = AP + CC(9)
+               CC(24) = CC(10)
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.2 ) return
+      CC(25) = AP*CC(11)
+      CC(26) = AP + CC(11)
+      CC(27) = CC(12)
+      if ( Lbmax.ne.1 ) then
+         CC(28) = AP*CC(13)
+         CC(29) = AP*CC(14) + CC(13)
+         CC(30) = AP + CC(14)
+         CC(31) = One
+         if ( Lbmax.ne.2 ) then
+            CC(32) = AP*CC(16)
+            CC(33) = AP*CC(17) + CC(16)
+            CC(34) = AP*CC(18) + CC(17)
+            CC(35) = AP + CC(18)
+            CC(36) = One
+            if ( Lbmax.ne.3 ) then
+               CC(37) = AP*CC(20)
+               CC(38) = AP*CC(21) + CC(20)
+               CC(39) = AP*CC(22) + CC(21)
+               CC(40) = AP*CC(23) + CC(22)
+               CC(41) = AP + CC(23)
+               CC(42) = One
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.3 ) return
+      CC(43) = AP*CC(25)
+      CC(44) = AP*CC(26) + CC(25)
+      CC(45) = AP + CC(26)
+      CC(46) = One
+      if ( Lbmax.ne.1 ) then
+         CC(47) = AP*CC(28)
+         CC(48) = AP*CC(29) + CC(28)
+         CC(49) = AP*CC(30) + CC(29)
+         CC(50) = AP + CC(30)
+         CC(51) = One
+         if ( Lbmax.ne.2 ) then
+            CC(52) = AP*CC(32)
+            CC(53) = AP*CC(33) + CC(32)
+            CC(54) = AP*CC(34) + CC(33)
+            CC(55) = AP*CC(35) + CC(34)
+            CC(56) = AP + CC(35)
+            CC(57) = One
+            if ( Lbmax.ne.3 ) then
+               CC(58) = AP*CC(37)
+               CC(59) = AP*CC(38) + CC(37)
+               CC(60) = AP*CC(39) + CC(38)
+               CC(61) = AP*CC(40) + CC(39)
+               CC(62) = AP*CC(41) + CC(40)
+               CC(63) = AP + CC(41)
+               CC(64) = One
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.4 ) return
+      CC(65) = AP*CC(43)
+      CC(66) = AP*CC(44) + CC(43)
+      CC(67) = AP*CC(45) + CC(44)
+      CC(68) = AP + CC(45)
+      CC(69) = One
+      if ( Lbmax.ne.1 ) then
+         CC(70) = AP*CC(47)
+         CC(71) = AP*CC(48) + CC(47)
+         CC(72) = AP*CC(49) + CC(48)
+         CC(73) = AP*CC(50) + CC(49)
+         CC(74) = AP + CC(50)
+         CC(75) = One
+         if ( Lbmax.ne.2 ) then
+            CC(76) = AP*CC(52)
+            CC(77) = AP*CC(53) + CC(52)
+            CC(78) = AP*CC(54) + CC(53)
+            CC(79) = AP*CC(55) + CC(54)
+            CC(80) = AP*CC(56) + CC(55)
+            CC(81) = AP + CC(56)
+            CC(82) = One
+            if ( Lbmax.ne.3 ) then
+               CC(83) = AP*CC(58)
+               CC(84) = AP*CC(59) + CC(58)
+               CC(85) = AP*CC(60) + CC(59)
+               CC(86) = AP*CC(61) + CC(60)
+               CC(87) = AP*CC(62) + CC(61)
+               CC(88) = AP*CC(63) + CC(62)
+               CC(89) = AP + CC(63)
+               CC(90) = One
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.5 ) return
+      CC(91) = AP*CC(65)
+      CC(92) = AP*CC(66) + CC(65)
+      CC(93) = AP*CC(67) + CC(66)
+      CC(94) = AP*CC(68) + CC(67)
+      CC(95) = AP + CC(68)
+      CC(96) = One
+      if ( Lbmax.ne.1 ) then
+         CC(97) = AP*CC(70)
+         CC(98) = AP*CC(71) + CC(70)
+         CC(99) = AP*CC(72) + CC(71)
+         CC(100) = AP*CC(73) + CC(72)
+         CC(101) = AP*CC(74) + CC(73)
+         CC(102) = AP + CC(74)
+         CC(103) = One
+         if ( Lbmax.ne.2 ) then
+            CC(104) = AP*CC(76)
+            CC(105) = AP*CC(77) + CC(76)
+            CC(106) = AP*CC(78) + CC(77)
+            CC(107) = AP*CC(79) + CC(78)
+            CC(108) = AP*CC(80) + CC(79)
+            CC(109) = AP*CC(81) + CC(80)
+            CC(110) = AP + CC(81)
+            CC(111) = One
+            if ( Lbmax.ne.3 ) then
+               CC(112) = AP*CC(83)
+               CC(113) = AP*CC(84) + CC(83)
+               CC(114) = AP*CC(85) + CC(84)
+               CC(115) = AP*CC(86) + CC(85)
+               CC(116) = AP*CC(87) + CC(86)
+               CC(117) = AP*CC(88) + CC(87)
+               CC(118) = AP*CC(89) + CC(88)
+               CC(119) = AP + CC(89)
+               CC(120) = One
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.6 ) return
+      CC(121) = AP*CC(91)
+      CC(122) = AP*CC(92) + CC(91)
+      CC(123) = AP*CC(93) + CC(92)
+      CC(124) = AP*CC(94) + CC(93)
+      CC(125) = AP*CC(95) + CC(94)
+      CC(126) = AP + CC(95)
+      CC(127) = One
+      if ( Lbmax.ne.1 ) then
+         CC(128) = AP*CC(97)
+         CC(129) = AP*CC(98) + CC(97)
+         CC(130) = AP*CC(99) + CC(98)
+         CC(131) = AP*CC(100) + CC(99)
+         CC(132) = AP*CC(101) + CC(100)
+         CC(133) = AP*CC(102) + CC(101)
+         CC(134) = AP + CC(102)
+         CC(135) = One
+         if ( Lbmax.ne.2 ) then
+            CC(136) = AP*CC(104)
+            CC(137) = AP*CC(105) + CC(104)
+            CC(138) = AP*CC(106) + CC(105)
+            CC(139) = AP*CC(107) + CC(106)
+            CC(140) = AP*CC(108) + CC(107)
+            CC(141) = AP*CC(109) + CC(108)
+            CC(142) = AP*CC(110) + CC(109)
+            CC(143) = AP + CC(110)
+            CC(144) = One
+            if ( Lbmax.ne.3 ) then
+               CC(145) = AP*CC(112)
+               CC(146) = AP*CC(113) + CC(112)
+               CC(147) = AP*CC(114) + CC(113)
+               CC(148) = AP*CC(115) + CC(114)
+               CC(149) = AP*CC(116) + CC(115)
+               CC(150) = AP*CC(117) + CC(116)
+               CC(151) = AP*CC(118) + CC(117)
+               CC(152) = AP*CC(119) + CC(118)
+               CC(153) = AP + CC(119)
+               CC(154) = One
+            endif
+         endif
+      endif
+C
+      if ( lanew.eq.7 ) return
+      CC(155) = AP*CC(121)
+      CC(156) = AP*CC(122) + CC(121)
+      CC(157) = AP*CC(123) + CC(122)
+      CC(158) = AP*CC(124) + CC(123)
+      CC(159) = AP*CC(125) + CC(124)
+      CC(160) = AP*CC(126) + CC(125)
+      CC(161) = AP + CC(126)
+      CC(162) = One
+      if ( Lbmax.eq.1 ) return
+      CC(163) = AP*CC(128)
+      CC(164) = AP*CC(129) + CC(128)
+      CC(165) = AP*CC(130) + CC(129)
+      CC(166) = AP*CC(131) + CC(130)
+      CC(167) = AP*CC(132) + CC(131)
+      CC(168) = AP*CC(133) + CC(132)
+      CC(169) = AP*CC(134) + CC(133)
+      CC(170) = AP + CC(134)
+      CC(171) = One
+      if ( Lbmax.eq.2 ) return
+      CC(172) = AP*CC(136)
+      CC(173) = AP*CC(137) + CC(136)
+      CC(174) = AP*CC(138) + CC(137)
+      CC(175) = AP*CC(139) + CC(138)
+      CC(176) = AP*CC(140) + CC(139)
+      CC(177) = AP*CC(141) + CC(140)
+      CC(178) = AP*CC(142) + CC(141)
+      CC(179) = AP*CC(143) + CC(142)
+      CC(180) = AP + CC(143)
+      CC(181) = One
+      if ( Lbmax.eq.3 ) return
+      CC(182) = AP*CC(145)
+      CC(183) = AP*CC(146) + CC(145)
+      CC(184) = AP*CC(147) + CC(146)
+      CC(185) = AP*CC(148) + CC(147)
+      CC(186) = AP*CC(149) + CC(148)
+      CC(187) = AP*CC(150) + CC(149)
+      CC(188) = AP*CC(151) + CC(150)
+      CC(189) = AP*CC(152) + CC(151)
+      CC(190) = AP*CC(153) + CC(152)
+      CC(191) = AP + CC(153)
+      CC(192) = One
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,341 @@
+@* intprt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] KOP                                                       
+\item[INPUT:] IBUF                                                      
+\item[INPUT:] DBUF                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IA      JA      SINDX                                  
+\item[Uses]  DBASE   IB      IBASE   IOUT    IRESET  ISMODE  JB     
+             KB      KNTT1   KNTT2   LB      MINDX   MODE    NWPI   
+             P       Q       R       SINDX   VALINT                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETIJ   UNPCK2  UNPCK4                                 
+\item[Called by]   DMPINT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine intprt(KOP,IBUF,DBUF)
+      implicit none
+      double precision DBUF , Valint , vhold , whold , xhold
+      integer i , Ia , Ib , Ibasd , Ibase , Ibfpad , IBUF , Icon , 
+     &        Ifil , igo , ih , ihold , ij , iline , In , Intcnt , 
+     &        Iout , Ipunch , Iq , Ireset
+      integer Ismode , Istat , Itotal , Iux , Ja , Jb , jhold , jq , 
+     &        Kb , khold , kl , Kntt1 , Kntt2 , KOP , Last , Lb , 
+     &        lhold , Limint , lq , m
+      integer Mindx , Mode , nbuf , Nrpext , Ntx , Nwiib , Nwpi
+      integer P , Q , R , Sindx
+      integer Dbase , dcount , Dbasd
+      dimension Ia(2) , ihold(4) , jhold(4) , khold(4) , lhold(4)
+      dimension vhold(4) , whold(4) , xhold(4)
+      dimension IBUF(*) , DBUF(*)
+      common /packed/ Ib , Jb , Kb , Lb , Valint , Ja
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Ibfpad
+      common /io    / In , Iout , Ipunch
+      equivalence (Valint,Ia(1)) , (P,Ib) , (Q,Jb) , (R,Kb,Mindx) , 
+     &             (Sindx,Lb)
+      data nbuf/0/
+C
+C
+C     this routine accepts a buffer of integrals and prints them 4
+C     to a line.  there are two modes of printing:
+C
+C     kop=1 ... normal printing mode.  the labels are reconstructed into
+C               the i, j, k, l format.  for raffenetti style integrals
+C               the linearized indices ij and kl are printed.
+C
+C     kop=2 ... debugging print mode.  the labels are printed 'as is'.
+C               for type 2 integrals, unused parts of the labels are
+C               cleared to zero.  for raffenetti integrals the labels
+C               are printed in the i, j, k, l format.
+C
+C
+C
+C
+C
+C
+99001 format (/1x,'REGULAR INTEGRALS IN STANDARD PRINT MODE:')
+99002 format (/1x,'REGULAR INTEGRALS IN DEBUG PRINT MODE:')
+99003 format (/1x,'RAFFENETTI TYPE 1 INTEGRALS')
+99004 format (/1x,'RAFFENETTI TYPE 2 INTEGRALS')
+99005 format (/1x,'RAFFENETTI TYPE 3 INTEGRALS')
+99006 format ('+','                            IN STANDARD PRINT MODE:')
+99007 format ('+','                            IN DEBUG PRINT MODE:')
+99008 format (/1x,'BUFFER NUMBER ',i5/)
+99009 format (1x,4('(',3(i3,','),i3,') ',d13.7,1x),' #',i3)
+99010 format (1x,4('(',i7,',',i7,') ',d13.7,1x),' #',i3)
+99011 format (1x,4(18x,d13.7,1x))
+C
+C     if nbuf is zero this is the first entry to intprt.  in that case
+C     print an appropriate heading.
+C
+      if ( nbuf.eq.0 ) then
+         if ( Mode.eq.2 ) then
+C
+            write (Iout,99003)
+         elseif ( Mode.eq.3 ) then
+C
+            write (Iout,99004)
+         elseif ( Mode.eq.4 ) then
+C
+            write (Iout,99005)
+         else
+C
+            if ( KOP.eq.1 ) write (Iout,99001)
+            if ( KOP.eq.2 ) write (Iout,99002)
+            goto 100
+         endif
+C
+         if ( KOP.eq.1 ) write (Iout,99006)
+         if ( KOP.eq.2 ) write (Iout,99007)
+      endif
+C
+C     print the buffer number.
+C
+ 100  nbuf = nbuf + 1
+      write (Iout,99008) nbuf
+      ih = 1
+      iline = 1
+C
+C     branch on mode.
+C
+      if ( Mode.eq.2 ) then
+C
+C     raffeneti type 1 integrals.
+C
+         igo = 1
+         m = 0
+      elseif ( Mode.eq.3 ) then
+C
+C     raffenetti type 2 integrals.
+C
+         igo = 2
+         m = 0
+         dcount = 1
+         goto 300
+      elseif ( Mode.eq.4 ) then
+C
+C     raffenetti type 3 integrals.
+C
+         igo = 3
+         m = 0
+         dcount = 1
+         goto 400
+      else
+C
+C     regular format integrals.
+C
+C     type 1 integrals.
+C
+         if ( Kntt1.gt.0 ) then
+            jq = Ireset(1) + Ibase
+            lq = jq + (Kntt1-1)*Nwpi
+            do 120 m = jq , lq , Nwpi
+               Ja = IBUF(m)
+               Ia(1) = IBUF(m+1)
+               Ia(2) = IBUF(m+2)
+               call unpck4
+               ihold(ih) = Ib
+               jhold(ih) = Jb
+               khold(ih) = Kb
+               lhold(ih) = Lb
+               vhold(ih) = Valint
+               ih = ih + 1
+               if ( ih.gt.4 ) then
+                  write (Iout,99009) (ihold(i),jhold(i),khold(i),lhold(i
+     &                               ),vhold(i),i=1,4) , iline
+                  ih = 1
+                  iline = iline + 1
+               endif
+ 120        continue
+         endif
+C
+C     type 2 integrals.
+C
+         if ( Kntt2.gt.0 ) then
+            lq = Ireset(2) + Ibase
+            jq = lq - (Kntt2-1)*Nwpi
+            do 140 m = jq , lq , Nwpi
+               Ja = IBUF(m)
+               Ia(1) = IBUF(m+1)
+               Ia(2) = IBUF(m+2)
+               call unpck4
+               vhold(ih) = Valint
+               if ( KOP.eq.1 ) then
+C
+                  Sindx = Sindx + 1
+                  if ( Sindx.eq.2 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = Q
+                     khold(ih) = Q
+                     lhold(ih) = R
+                  elseif ( Sindx.eq.3 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = Q
+                     khold(ih) = R
+                     lhold(ih) = Q
+                  elseif ( Sindx.eq.4 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = Q
+                     khold(ih) = P
+                     lhold(ih) = Q
+                  elseif ( Sindx.eq.5 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = P
+                     khold(ih) = Q
+                     lhold(ih) = R
+                  elseif ( Sindx.eq.6 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = Q
+                     khold(ih) = R
+                     lhold(ih) = R
+                  elseif ( Sindx.eq.7 ) then
+C
+                     if ( Mindx.eq.2 ) then
+C
+                        ihold(ih) = P
+                        jhold(ih) = P
+                        khold(ih) = Q
+                        lhold(ih) = Q
+                     elseif ( Mindx.eq.3 ) then
+C
+                        ihold(ih) = P
+                        jhold(ih) = P
+                        khold(ih) = P
+                        lhold(ih) = Q
+                     else
+C
+                        ihold(ih) = P
+                        jhold(ih) = Q
+                        khold(ih) = Q
+                        lhold(ih) = Q
+                     endif
+                  elseif ( Sindx.eq.8 ) then
+C
+                     ihold(ih) = P
+                     jhold(ih) = P
+                     khold(ih) = P
+                     lhold(ih) = P
+                  else
+C
+                     ihold(ih) = P
+                     jhold(ih) = Q
+                     khold(ih) = P
+                     lhold(ih) = R
+                  endif
+               else
+                  ihold(ih) = Ib
+                  jhold(ih) = Jb
+                  khold(ih) = Kb
+                  lhold(ih) = Lb
+                  Sindx = Sindx + 1
+                  if ( Sindx.eq.1 .or. Sindx.eq.2 .or. Sindx.eq.3 .or. 
+     &                 Sindx.eq.5 .or. Sindx.eq.6 .or. Sindx.eq.7 ) then
+                  elseif ( Sindx.eq.8 ) then
+C
+                     jhold(ih) = 0
+                     khold(ih) = 0
+                  else
+C
+                     khold(ih) = 0
+                  endif
+               endif
+C
+               ih = ih + 1
+               if ( ih.gt.4 ) then
+                  write (Iout,99009) (ihold(i),jhold(i),khold(i),lhold(i
+     &                               ),vhold(i),i=1,4) , iline
+                  ih = 1
+                  iline = iline + 1
+               endif
+ 140        continue
+         endif
+C
+C     print the last (partial) line.
+C
+         ih = ih - 1
+         if ( ih.eq.0 ) return
+         write (Iout,99009) (ihold(i),jhold(i),khold(i),lhold(i),
+     &                      vhold(i),i=1,ih)
+         return
+      endif
+ 200  m = m + 1
+      if ( m.gt.Kntt1 ) goto 600
+      Ja = IBUF(m+Ibase)
+      call unpck2
+      ihold(ih) = Ib
+      jhold(ih) = Jb
+      vhold(ih) = DBUF(m+Dbase)
+      goto 500
+ 300  m = m + 1
+      if ( m.gt.Kntt1 ) goto 600
+      Ja = IBUF(m+Ibase)
+      call unpck2
+      ihold(ih) = Ib
+      jhold(ih) = Jb
+      vhold(ih) = DBUF(dcount+Dbase)
+      whold(ih) = DBUF(dcount+Dbase+1)
+      dcount = dcount + Ismode
+      goto 500
+ 400  m = m + 1
+      if ( m.gt.Kntt1 ) goto 600
+      Ja = IBUF(m+Ibase)
+      call unpck2
+      ihold(ih) = Ib
+      jhold(ih) = Jb
+      vhold(ih) = DBUF(dcount+Dbase)
+      whold(ih) = DBUF(dcount+Dbase+1)
+      xhold(ih) = DBUF(dcount+Dbase+2)
+      dcount = dcount + Ismode
+C
+ 500  if ( KOP.ne.1 ) then
+         ij = ihold(ih)
+         kl = jhold(ih)
+         call getij(ij,ihold(ih),jhold(ih))
+         call getij(kl,khold(ih),lhold(ih))
+      endif
+      ih = ih + 1
+      if ( ih.gt.4 ) then
+         if ( KOP.eq.1 ) write (Iout,99010)
+     &                          (ihold(i),jhold(i),vhold(i),i=1,4) , 
+     &                          iline
+         if ( KOP.eq.2 ) write (Iout,99009)
+     &                          (ihold(i),jhold(i),khold(i),lhold(i),
+     &                          vhold(i),i=1,4) , iline
+         if ( Ismode.ge.2 ) write (Iout,99011) (whold(i),i=1,4)
+         if ( Ismode.eq.3 ) write (Iout,99011) (xhold(i),i=1,4)
+         ih = 1
+         iline = iline + 1
+      endif
+      if ( igo.eq.1 ) goto 200
+      if ( igo.eq.2 ) goto 300
+      if ( igo.eq.3 ) goto 400
+C
+C     print the last (partial) line.
+C
+ 600  ih = ih - 1
+      if ( ih.eq.0 ) return
+      if ( KOP.eq.1 ) write (Iout,99010)
+     &                       (ihold(i),jhold(i),vhold(i),i=1,ih)
+      if ( KOP.eq.2 ) write (Iout,99009)
+     &                       (ihold(i),jhold(i),khold(i),lhold(i),
+     &                       vhold(i),i=1,ih)
+      if ( Ismode.ge.2 ) write (Iout,99011) (whold(i),i=1,ih)
+      if ( Ismode.eq.3 ) write (Iout,99011) (xhold(i),i=1,ih)
+      return
+C
+      end
+@* INDEX.

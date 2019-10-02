@@ -1,0 +1,69 @@
+@* dsymm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] NDIM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CSYMM   TIOC                                           
+                                                                    
+\end{description}
+@a
+      subroutine dsymm(A,NDIM)
+      implicit none
+      double precision A
+      integer i , iad , ii , In , init , Iout , Ipunch , irc , irc1 , 
+     &        j , ll , lu , NDIM
+      dimension A(*)
+      common /io    / In , Iout , Ipunch
+C     ******************************************************************
+C     print output routine for a real symmetric matrix in
+C     packed form.
+C     it appears as the lower triangle
+C     the packing must be the following   1  2,3  4,5,6  7,8,9,10 ...
+C
+C     oct 74/rs9b
+C     ******************************************************************
+C
+C
+C2000 format(1h0,5x,10(i9,3x))
+C2001 format(1x,i5,10f12.7)
+C2002 format(1h )
+C2003 format(/////)
+99001 format (6x,10(i9,3x))
+99002 format (1x,i5,10F12.7)
+C     ******************************************************************
+      irc1 = 0
+      irc = 0
+      ll = 1
+ 100  lu = min0(NDIM,ll+9)
+      irc = irc + NDIM - ll + 4
+      if ( irc.gt.52 ) then
+         irc = 0
+         if ( irc1.eq.0 ) then
+         endif
+      endif
+C2    write(iout,2003)
+      write (Iout,99001) (i,i=ll,lu)
+      init = 1
+C2    write(iout,2002)
+      do 200 i = ll , NDIM
+         iad = i*(i-1)/2
+         ii = min0(i,lu)
+         write (Iout,99002) i , (A(iad+j),j=ll,ii)
+ 200  continue
+C2    if(irc.eq.0) write(iout,2003)
+      irc1 = irc
+      ll = lu + 1
+      if ( ll.le.NDIM ) goto 100
+      return
+C
+      end
+@* INDEX.

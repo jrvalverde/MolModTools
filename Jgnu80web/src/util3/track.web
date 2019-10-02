@@ -1,0 +1,50 @@
+@* track.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MSG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT    IPRINT                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   AACLOS  AATILD  ABTILD  CIDENS  COMIJW  CTWC1   CTWC2  
+             DD1SD4  DD2     DD3     EXCHN1  EXCHN2  EXCHN3  EXCHN4 
+             EXCHN5  EXCHN6  EXP78   EXPABA  EXPABS  EXPAND  EXPIJA 
+             EXPIJS  EXPIJW  EXPOL   EXPSYM  GETA    GETDE   INIBUC 
+             LSEXA   MATCA1  MATCA2  MATCAB  MATTRN  MULTVC  NORMDS 
+             PFORM   PRINTP  PSEUD1  PSEUD2  SANTAB  SANTIJ  SCALP  
+             SCALP1  SCAN    SCANAA  SCANAB  SCANSS  SUMANT  SUMN   
+             TRANSP  TRSFR   TSTARA  TSTARB  VEWA    VEWB    VEWS   
+             WTILDA  WTILDB  WTOADA  WTOADB  WTOAS                  
+                                                                    
+\end{description}
+@a
+      subroutine track(MSG)
+      implicit none
+      integer In , Iout , Iprint , Ipunch
+      character*1 MSG(6)
+      common /print / Iprint
+      common /io    / In , Iout , Ipunch
+C
+C     ******************************************************************
+C
+C     prints 'msg' if iprint.ge.2
+C
+C     nov 76/rs9b
+C
+C     ******************************************************************
+C
+C
+99001 format (/1x,6A1,':')
+C
+      if ( Iprint.ge.2 ) write (Iout,99001) MSG
+C
+C      write (iout,9000) msg
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,172 @@
+@* redop.
+
+\begin{verbatim}
+Routine to re-format a density matrix, given the array
+nao (output from redob).
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NBAS6D                                                    
+\item[INPUT:] NAO                                                       
+\item[OUTPUT:] D                                                         
+\item[INPUT:] IPRINT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IN                                                     
+\item[Uses]  AOS     IN      IOUT    LBOUND  NSHELL  SHELLC  SHELLT 
+             UBOUND                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT   LTOUTD                                         
+\item[Called by]   D1E     D2ESPD  DLPINT                                 
+                                                                    
+\end{description}
+@a
+      subroutine redop(NBASIS,NBAS6D,NAO,D,IPRINT)
+      implicit none
+      double precision C1 , C2 , C3 , D , d0 , d1m , d1p , d2m , d2p , 
+     &                 Exx , gsqrt , h , r , three , tq , X , Y , Z , 
+     &                 zero
+      integer i , ii , iin , ij , ijn , In , Iout , IPRINT , Ipunch , 
+     &        ishell , ist , itmp , j , Jan , jbasis , jn , jshell , 
+     &        jst , jtmp , lamax
+      integer lbmax , Lbound , MAXPRM , MAXS21 , MAXSH1 , MAXSHL , 
+     &        Maxtyp , mu , munu , N10ord , N5ord , N6ord , N7ord , 
+     &        NAO , NBAS6D , NBASIS , Nordr , Nshell , ntt , ntt6d
+      integer nu
+      integer scona , sconb , Ubound , Ulpure
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      dimension D(*) , NAO(*) , tq(6,6)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+      common /io    / In , Iout , Ipunch
+      data zero/0.D0/ , h/0.5D0/ , three/3.0D0/
+C
+99001 format (' FROM REDOP, EXPANDED MATRIX:')
+99002 format ('             TRANSFORMED MATRIX:')
+C
+C
+      r = h*gsqrt(three)
+      ntt6d = (NBAS6D*(NBAS6D+1))/2
+C
+C     expand the matrix.
+      do 100 itmp = 1 , NBASIS
+         i = NBASIS + 1 - itmp
+         ii = i*(i-1)/2
+         In = NAO(i)
+         iin = In*(In-1)/2
+         do 50 jtmp = 1 , i
+            j = i + 1 - jtmp
+            ij = ii + j
+            jn = NAO(j)
+            ijn = iin + jn
+            D(ijn) = D(ij)
+            if ( ij.lt.ijn ) D(ij) = zero
+ 50      continue
+ 100  continue
+C
+      if ( IPRINT.ne.0 ) then
+         write (Iout,99001)
+         call ltoutd(NBAS6D,D,1)
+      endif
+C
+C     transformation from five d to six d functions.
+      jbasis = Aos(Nshell+1) - 1
+      ntt = jbasis*(jbasis+1)/2
+      do 200 ishell = 1 , Nshell
+         do 150 jshell = 1 , ishell
+            if ( (Shellt(ishell).ge.2) .or. (Shellt(jshell).ge.2) ) then
+C
+               lamax = Shellt(ishell) + 1
+               lbmax = Shellt(jshell) + 1
+               scona = Shellc(ishell) + 1
+               sconb = Shellc(jshell) + 1
+               ist = Aos(ishell) + Lbound(lamax,scona) - 2
+               jst = Aos(jshell) + Lbound(lbmax,sconb) - 2
+               In = Ubound(lamax) - Lbound(lamax,scona) + 1
+               jn = Ubound(lbmax) - Lbound(lbmax,sconb) + 1
+C
+C     get all elements for a given shell combination
+C
+               do 110 i = 1 , In
+                  do 105 j = 1 , jn
+                     mu = ist + i
+                     nu = jst + j
+                     if ( mu.ge.nu ) munu = mu*(mu-1)/2 + nu
+                     if ( nu.gt.mu ) munu = nu*(nu-1)/2 + mu
+                     tq(i,j) = D(munu)
+ 105              continue
+ 110           continue
+C
+C     transform the columns
+C
+               if ( Shellt(ishell).ge.2 ) then
+                  do 115 j = 1 , In
+                     d0 = tq(1,j)
+                     d1p = tq(2,j)
+                     d1m = tq(3,j)
+                     d2p = tq(4,j)
+                     d2m = tq(5,j)
+                     tq(1,j) = -h*d0 + r*d2p
+                     tq(2,j) = -h*d0 - r*d2p
+                     tq(3,j) = d0
+                     tq(4,j) = d2m
+                     tq(5,j) = d1p
+                     tq(6,j) = d1m
+ 115              continue
+               endif
+C
+C     transform the rows
+C
+               if ( Shellt(jshell).ge.2 ) then
+                  do 120 i = 1 , In
+                     d0 = tq(i,1)
+                     d1p = tq(i,2)
+                     d1m = tq(i,3)
+                     d2p = tq(i,4)
+                     d2m = tq(i,5)
+                     tq(i,1) = -h*d0 + r*d2p
+                     tq(i,2) = -h*d0 - r*d2p
+                     tq(i,3) = d0
+                     tq(i,4) = d2m
+                     tq(i,5) = d1p
+                     tq(i,6) = d1m
+ 120              continue
+               endif
+C
+C     replace the current shell combination in the matrix
+C
+               do 130 i = 1 , In
+                  do 125 j = 1 , jn
+                     mu = ist + i
+                     nu = jst + j
+                     if ( mu.ge.nu ) munu = mu*(mu-1)/2 + nu
+                     if ( nu.gt.mu ) munu = nu*(nu-1)/2 + mu
+                     D(munu) = tq(i,j)
+ 125              continue
+ 130           continue
+            endif
+C
+ 150     continue
+ 200  continue
+C
+C
+      if ( IPRINT.ne.0 ) then
+         write (Iout,99002)
+         call ltoutd(NBAS6D,D,1)
+      endif
+      return
+C
+      end
+@* INDEX.

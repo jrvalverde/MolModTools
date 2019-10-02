@@ -1,0 +1,72 @@
+@* ltoutd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] A                                                         
+\item[INPUT:] KEY                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   ANNIL   CIDENS  CYCCLO  CYCPHF  FOFCLO  FRCOUT  FRMP   
+             FRMV    FRMW    PFORM   PHFPRT  PUTFF   REDOP   RHFCLO 
+             UHFOPN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ltoutd(N,A,KEY)
+      implicit none
+      double precision A , gabs , s , thresh , zero
+      integer icol , iend , ij , In , Iout , Ipunch , ir , irange , 
+     &        irow , istart , KEY , kl , m , N , numcol
+C***********************************************************************
+      dimension A(*) , s(9)
+      common /io    / In , Iout , Ipunch
+      data thresh/1.0D-6/ , zero/0.0D0/
+      data numcol/5/
+C
+C     double precision routine to print out the lower triangular part
+C     of a symmetric matrix stored in compressed lower triangular form.
+C
+C        n         dimension of matrix.
+C        a         array to be printed.
+C        key       0 ... suppress elements with absolute values less
+C                  than thresh (see data statement).
+C                  1 ... print complete matrix.
+C
+C***********************************************************************
+C
+C
+C
+C
+99001 format (9(11x,i3))
+99002 format (i4,9D14.6)
+C
+      istart = 1
+ 100  m = 0
+      iend = min0(istart+numcol-1,N)
+      write (Iout,99001) (ir,ir=istart,iend)
+      do 200 irow = istart , N
+         m = m + 1
+         irange = min0(m,numcol)
+         icol = istart
+         kl = irow*(irow-1)/2
+         do 150 ir = 1 , irange
+            ij = kl + icol
+            icol = icol + 1
+            s(ir) = A(ij)
+            if ( KEY.eq.0 .and. gabs(s(ir)).lt.thresh ) s(ir) = zero
+ 150     continue
+         write (Iout,99002) irow , (s(ir),ir=1,irange)
+ 200  continue
+      istart = istart + numcol
+      if ( istart.le.N ) goto 100
+      return
+C
+      end
+@* INDEX.

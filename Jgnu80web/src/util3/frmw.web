@@ -1,0 +1,117 @@
+@* frmw.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] NAE                                                       
+\item[PASSED:] NBE                                                       
+\item[PASSED:] IRWCA                                                     
+\item[PASSED:] IRWCAI                                                    
+\item[PASSED:] IRWCB                                                     
+\item[PASSED:] IRWEIG                                                    
+\item[PASSED:] IRWW                                                      
+\item[PASSED:] W                                                         
+\item[PASSED:] E                                                         
+\item[PASSED:] C                                                         
+\item[INPUT:] IPR                                                       
+\item[INPUT:] IOUT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  ILSW    LTOUTD  TREAD   TWRITE  WINC           
+\item[Called by]   RHFCLO  SCFDM   UHFOPN                                 
+                                                                    
+\end{description}
+@a
+      subroutine frmw(NBASIS,NAE,NBE,IRWCA,IRWCAI,IRWCB,IRWEIG,IRWW,W,E,
+     &                C,IPR,IOUT)
+      implicit none
+      double precision C , E , W
+      integer IOUT , IRWCA , IRWCAI , IRWCB , IRWEIG , IRWW , itemp , 
+     &        NAE , NBASIS , NBE , ntt
+      logical open , complx , IPR
+      dimension C(*) , E(*) , W(*)
+C
+C***********************************************************************
+C     routine to form the energy-weighted density matrix from the
+C     appropriate rw-files.
+C
+C     arguments:
+C
+C     nbasis ... number of basis functions.
+C     nae    ... number of alpha-electrons.
+C     nbe    ... number of beta-electrons.
+C     irwca  ... rw-file of the real-alpha or closed shell
+C                m.o. coefficients.
+C     irwcai ... rw-file of imaginary-alpha or closed shell
+C                m.o. coefficients.
+C     irwcb  ... rw-file of the real-beta m.o. coefficients.
+C     irweig ... rw-file of the orbital energies, alpha and
+C                (if the run is open shell) beta.
+C     irww   ... output rw-file to receive the energy-weighted
+C                density matrix.
+C     e      ... scratch array of length nbasis.
+C                (2*nbasis for uhf runs.)
+C     w      ... scratch array of length (nbasis*(nbasis+1))/2.
+C     c      ... scratch array of length nbasis**2.
+C     ipr    ... logical print flag.
+C     iout   ... fortran logical unit to which the w-matrix
+C                will be printed if ipr=.true..
+C
+C     implicit inputs:
+C
+C     ilsw   ... the ilsw is interrogated to find out just what kind
+C                of wave-function we are dealing with.
+C
+C     note about rw-file numbers:
+C     this routine reads the ilsw before doing anything.
+C     so, if the caller knows that the run does not have irwcb
+C     or irwcai, he can simply set the rw-file numbers to -1
+C     in the call.
+C
+C***********************************************************************
+C
+C
+99001 format (5x,'ENERGY-WEIGHTED DENSITY MATRIX')
+C
+C     read out the ilsw.
+      call ilsw(2,1,itemp)
+      open = .false.
+      complx = .false.
+      if ( itemp.eq.1 ) open = .true.
+      if ( itemp.eq.2 ) complx = .true.
+C
+C     read in the orbital energies.
+      itemp = NBASIS
+      if ( open ) itemp = NBASIS + NBASIS
+      call tread(IRWEIG,E(1),itemp,1,itemp,1,0)
+C
+C     clear out the w-array.
+      ntt = (NBASIS*(NBASIS+1))/2
+      call aclear(ntt,W(1))
+C
+C     add in the necessary contributions.
+      itemp = 2
+      if ( open ) itemp = 1
+      call winc(NAE,NBASIS,itemp,IRWCA,E(1),W,C)
+      if ( complx ) call winc(NAE,NBASIS,itemp,IRWCAI,E(1),W,C)
+      if ( open ) call winc(NBE,NBASIS,itemp,IRWCB,E(1+NBASIS),W,C)
+C
+C     if requested, print the w-matrix out.
+      if ( IPR ) then
+         write (IOUT,99001)
+         call ltoutd(NBASIS,W,0)
+      endif
+C
+C     put the w-matrix out to the specified rw-file.
+      call twrite(IRWW,W(1),ntt,1,ntt,1,0)
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

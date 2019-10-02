@@ -1,0 +1,39 @@
+@* ascale.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] S                                                         
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMF   FRCOUT  UHFTST  VIBFRQ                         
+                                                                    
+\end{description}
+@a
+      subroutine ascale(N,S,A,B)
+      implicit none
+      double precision A , B , S
+      integer i , N
+C
+C***********************************************************************
+C     routine to do b = s * a, where a and b are vectors, s a scalar.
+C***********************************************************************
+C
+      dimension A(*) , B(*)
+C
+      do 100 i = 1 , N
+         B(i) = S*A(i)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.
