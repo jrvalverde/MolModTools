@@ -1,0 +1,443 @@
+@* frcout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ENERGY  FX      GEN     MXCORE                         
+\item[Transmits as argument]  ALPHA   ATMCHG  BETA    BL      C       CORE    EX     
+             FFX     FORCE   FRCNST  FXYZ    IAN     IANZ    IOUT   
+             IZ      LALPHA  LBETA   LBL     MULTIP  NATOMS  NBASIS 
+             NVAR    NZ      PHYCON                                 
+\item[Uses]  ALPHA   ATMCHG  BETA    BL      C       CORE    ENERGY 
+             EX      FFX     FORCE   FRCNST  FX      FXYZ    GEN    
+             IAN     IANZ    IOP     IOUT    IZ      LALPHA  LBETA  
+             LBL     MULTIP  MXCORE  NATOMS  NBASIS  NVAR    NZ     
+             PHYCON                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  ASCALE  DCLOSE  DOPEN   DRVSRD  FCORPR  FFRCNN 
+             FORMBG  FRCNN   FZPRNT  ILSW    LTOUTD  PUTF    PUTFF  
+             RMSVEC  ROTF    ROTFF   TRANF   TRANFF  TREAD   TSTCOR 
+             TWRITE  VIBFRQ  ZPRINT                                 
+\item[Called by]   L716                                                   
+                                                                    
+\end{description}
+@a
+      subroutine frcout(JUMP)
+      implicit none
+      double precision Alpha , Atmchg , Beta , Bl , C , Core , Energy , 
+     &                 Ex , f , Ffx , fmax , fmaxi , Force , Frcnst , 
+     &                 frms , frmsi , Fx , Fxyz , Gen , one
+      double precision Phycon , toang , trot , zero
+      integer i , i1 , i2 , i3 , i4 , i5 , i6 , i7 , i8 , Ian , Ianz , 
+     &        Icharg , idump , iend , ifd2e , ifrc , ifreq , igeig , 
+     &        igrd , igrdnt
+      integer In , iogen , Iop , Iout , iozmat , iprint , Ipunch , 
+     &        irwfx , iscf , isymm , Iz , jtrans , JUMP , Lalpha , 
+     &        Lbeta , Lbl , lgrdnt , lrwfx , maxnz , mout
+      integer msym , Multip , Mxcore , Nae , nat3 , Natoms , Nbasis , 
+     &        Nbe , Ndum , Ne , neqatm , nnprm , nosym , nparm , Nsubs , 
+     &        ntt , Nvar , nwib , Nz
+      logical intrnl
+      dimension f(105) , iozmat(2)
+      character*6 nam2e(2)
+      dimension jtrans(3,8) , neqatm(100,8) , mout(846) , trot(3,3)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /io    / In , Iout , Ipunch
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nsubs
+      common /grdnt / Energy , Force(50) , Frcnst(1275) , Nvar , Ndum
+      common /gen   / Gen(47)
+      common /force / Ex , Fx(105) , Ffx(5565)
+      common /fxyz  / Fxyz(105)
+      common /phycon/ Phycon(30)
+C      common /co716/core(15000),mxcore
+      common /memry / Core(49999) , Mxcore
+      equivalence (msym,mout(1))
+      equivalence (jtrans(1,1),mout(2))
+      equivalence (neqatm(1,1),mout(26))
+      equivalence (trot(1,1),mout(829))
+      data zero , one/0.D0 , 1.D0/
+      data maxnz/50/ , nwib/3200/
+      data nam2e/6HDCLOSE , 6HDOPEN /
+      data igrdnt/511/ , lgrdnt/1327/ , iogen/501/
+      data iozmat(1) , iozmat(2)/507 , 351/
+      data irwfx/521/ , lrwfx/5671/ , isymm/551/
+C
+C
+C1ov7
+C     overlay 7 is concerned with calculation of first and second
+C     derivatives of the energy with respect to nuclear coordinates.
+C
+C
+C     link 701:  calculates and uses one-electron integral derivatives
+C                to get first energy derivatives.
+C
+C     link 702:  calculates and uses two-electron integral (sp only)
+C                derivatives to get first energy derivatives.
+C
+C     link 703:  calculates and uses two-electron integral (spd)
+C                derivatives to get first energy derivatives.
+C
+C     link 705:  calculates and uses one-electron pseudopotential
+C                integrals.
+C
+C     link 707:  calculates and uses one-electron integral
+C                second derivatives to get second energy derivatives
+C
+C     link 708:  calculates and uses two-electron integral
+C                second derivatives to get second energy derivatives
+C
+C     link 709:  calculates and uses two-electron integral (two
+C                and three centre) second derivatives to get second
+C                energy derivatives.
+C
+C     link 716:  completes evaluation of energy derivatives and
+C                transforms results to internal coordinates.
+C
+C2   *******************************************************************
+C
+C     options ... iop( ):
+C     ****************************************************************
+C
+C2iop(7)
+C     iop(7).....   use of internal coordinates
+C                0  yes
+C                1  no
+C2iop(8)
+C
+C     iop(8).....   harmonic frequency calculation
+C                0  no
+C                1  yes with most common isotopes
+C2iop(25)
+C
+C     iop(25)....   use if second derivatives calculated analytically
+C                0  no second derivative calculation.
+C                1  second derivative found analytically.  units
+C                   have to be changed.
+C2iop(27)
+C
+C     iop(27)....   does l702 read previous force information
+C                0  no
+C                1  yes
+C2iop(29)
+C
+C     iop(29)....   mode of use of l716
+C                0  hartree-fock first derivative
+C                5  hartree-fock second derivative
+C                6  nuclear repulsion only (useful for testing).
+C
+C2iop(30)
+C
+C      iop(30) ... use of symmetry in overlay 7
+C                 0 use (subject to availability).
+C                 1 don't use
+C
+C2iop(31)
+C      iop(31) ... print eigenvalues of g matrix
+C                 0 don't print
+C                 1 print
+C
+C ... end of file for ghelp.
+C
+C        link 716
+C
+C        transformation and output of 1st and 2nd derivatives
+C         and communication to optimization control links.
+C
+C
+C            the energy,forces and force constants with cartesian
+C            coordinates are kept in common/force/
+C=    common /syminf/ msym(825),trot(3,3),ipad
+C=    common /syminf/ msym(825),ipad,trot(3,3)
+C           the array fxyz is used for hf-first derivatives. note that
+C           the array fx is used for the current first derivatives. (may
+C           be mp2-derivatives or ci derivatives)
+C
+C
+C
+C
+99001 format (1x,10x,'MAX ',f12.6,5x,'RMS ',f12.6)
+99002 format (1x,17x,'MAX ',f12.6,5x,'RMS ',f12.6)
+99003 format (' FORCE CONSTANTS IN CARTESIAN COORDINATES (',
+     &        'HARTREES/BOHR)')
+99004 format (' FORCE CONSTANTS IN INTERNAL COORDINATES (',
+     &        'ATOMIC UNITS)')
+99005 format ('0 ERROR IN CONVERSION TO INTERNAL COORDINATES'/
+     &        '  **** STOP')
+99006 format (' ***** AXES RESTORED TO ORIGINAL SET *****')
+C
+C  temporary stopgap
+      Mxcore = 49999
+C
+C     get angstrom to bohr conversion factor
+      toang = Phycon(1)
+C     read in symmetry information if necessary
+      call ilsw(2,26,nosym)
+      if ( nosym.ne.1 ) call tread(isymm,msym,423,1,423,1,0)
+C     skip ahead if l716 is not being used for energy derivatives.
+      call ilsw(2,24,ifrc)
+      if ( ifrc.ne.1 ) then
+C     have second derivatives been calculated
+         iprint = Iop(33)
+         ifd2e = Iop(25)
+         idump = Iop(34)
+C     are harmonic frequencies to be calculated
+         ifreq = Iop(8)
+C     calculate and print eigenvalues of g-matrix
+         igeig = Iop(31)
+         nat3 = 3*Natoms
+         ntt = (Nbasis*(Nbasis+1))/2
+         nparm = nat3
+         do 50 i = 1 , nat3
+            Fx(i) = zero
+ 50      continue
+C
+C     calculate nuclear repulsion derivatives.  only used for
+C     debug purposes.   called by iop(29)=6.
+C
+         if ( Iop(29).ne.6 ) then
+C
+C
+C      find what kind of scf was performed.
+C
+            call ilsw(2,1,iscf)
+C
+C      calculate forces from integral derivative files. used only
+C      if l702 and l703 have not been processed as in second
+C      derivative runs with iop(29)=5.
+C
+            if ( Iop(29).eq.5 ) then
+C     allocate space in core for drvsrd.
+C             d(ntt)
+               i1 = 1
+C             dd(ntt)
+               i2 = i1 + ntt
+C             iatms( (nbasis+1)/2 )
+               i3 = i2 + ntt
+               iend = i3 + ((Nbasis+1)/2) - 1
+               call tstcor(iend,Mxcore,6HDRVSRD)
+               call aclear(nat3,Fxyz)
+               call frcnn(Natoms,Atmchg,C,Fxyz)
+               call drvsrd(Natoms,Nbasis,Fxyz,Core(i1),Core(i2),Core(i3)
+     &                     ,idump)
+            endif
+C     form two-electron part if requested.
+            if ( Iop(29).ge.3 ) then
+C     allocate space in core for two-electron work.
+C                d(ntt)
+               i1 = 1
+C                buf2e(nwib)
+               i2 = i1 + ntt
+C                lind( nbasis+1 )
+               i3 = i2 + nwib
+               iend = i3 + Nbasis
+               if ( iscf.ne.0 ) then
+C                db(ntt)  (open shell only.)
+                  i4 = i3 + Nbasis + 1
+                  iend = i4 + ntt - 1
+               endif
+               call tstcor(iend,Mxcore,nam2e(iscf+1))
+               if ( iscf.eq.0 ) call dclose(Natoms,Nbasis,Fxyz,Core(i1),
+     &              Core(i2),Core(i2),Core(i3),idump)
+               if ( iscf.eq.1 ) call dopen(Natoms,Nbasis,Fxyz,Core(i1),
+     &              Core(i4),Core(i2),Core(i2),Core(i3),idump)
+            endif
+C
+C     read in derivatives ( cf. l701,l702,l703,l705)
+C
+            if ( Iop(29).ne.6 ) call tread(irwfx,Ex,lrwfx,1,lrwfx,1,0)
+         else
+            call frcnn(Natoms,Atmchg,C,Fxyz)
+            call ffrcnn(Natoms,Ian,C,Ffx)
+         endif
+C      add in any contributions to forces already calculated
+C      in l716.
+C
+         do 100 i = 1 , nat3
+            Fx(i) = Fx(i) + Fxyz(i)
+ 100     continue
+C
+C        calculation of harmonic frequencies
+C
+         if ( ifreq.ne.0 ) then
+C     prevent destruction of derivatives by vibfrq.
+            call twrite(irwfx,Ex,lrwfx,1,lrwfx,1,0)
+C                  atmass (natoms).
+            i1 = 1
+C                  orthog(nat3,nat3).
+            i2 = i1 + Natoms
+C                  vv(nat3*nat3).
+            i3 = i2 + nat3*nat3
+C                  vecout(nat3*nat3).
+            i4 = i3 + nat3*nat3
+C                  trialv(nat3)
+            i5 = i4 + nat3*nat3
+C                  e2(nat3*3).
+            i6 = i5 + nat3
+C                  eig(nat3).
+            i7 = i6 + nat3*3
+C                  table(3*nat3)
+            i8 = i7 + nat3
+            iend = i8 + 3*nat3 - 1
+            call tstcor(iend,Mxcore,6HVIBFRQ)
+            call vibfrq(Natoms,Multip,Ian,C,nat3,Ffx,Core(i1),Core(i2),
+     &                  Core(i3),Core(i4),Core(i5),Core(i6),Core(i7),
+     &                  Core(i8),Phycon)
+C     restore common /force/.
+            call tread(irwfx,Ex,lrwfx,1,lrwfx,1,0)
+         endif
+C
+C     at this point, all cartesian energy derivatives are complete.
+C     however, it may be necessary to rotate back from symmetry
+C     axes to the original set.
+C
+         if ( nosym.ne.1 ) then
+            write (Iout,99006)
+            call rotf(Natoms,trot,Fx,Fx)
+            call rotf(Natoms,trot,Fxyz,Fxyz)
+            if ( ifd2e.ne.0 ) call rotff(Natoms,trot,Ffx,Ffx)
+         endif
+C
+C     write out final energy derivatives
+         call twrite(irwfx,Ex,lrwfx,1,lrwfx,1,0)
+C
+C     convert energy derivatives to forces (scale by -1).
+         call ascale(nat3,-one,Fx,Fx)
+         call ascale(nat3,-one,Fxyz,Fxyz)
+C
+C     compute rms and max cartesian forces.
+         call rmsvec(nat3,Fx,frms,fmax)
+         intrnl = .false.
+C                                     print cartesian forces.
+         write (Iout,99001) fmax , frms
+         call fcorpr(Natoms,Ian,Fx,Iout)
+C
+C        transform forces from cartesian coordinates
+C        to internal coordinates
+C
+         if ( Iop(7).eq.0 ) then
+C     recover the z-matrix from the rw-files.
+            call tread(iozmat(1),Ianz,iozmat(2),1,iozmat(2),1,0)
+            if ( idump.ne.0 ) call zprint(Nz,Ianz,Iz,Bl,Alpha,Beta,
+     &           toang)
+C     determine the number of z-matrix degrees of freedom.
+C     note that this does not understand linear molecules.
+            nparm = 3*Nz - 6
+C     there has to be at least one.
+            nparm = max(nparm,1)
+            intrnl = .true.
+C
+C     setup for, and call formbg.
+C        b(3*4*nparm)
+            i1 = 1
+C        ib(4*nparm)
+            i2 = i1 + 3*4*nparm
+C        g(nparm*nparm).
+            i3 = i2 + 4*nparm
+C        xm(5*nz).
+            i4 = i3 + nparm**2
+C        cz(3*nz).
+            i5 = i4 + 5*Nz
+C        cc(3*natoms).   (use nz instead ... this mimics l202).
+            i6 = i5 + 3*Nz
+C        ll(nparm)   (don't worry about integer).
+            i7 = i6 + 3*Nz
+C        mm(nparm).
+            i8 = i7 + nparm
+            iend = i8 + nparm
+            call tstcor(iend,Mxcore,6HFORMBG)
+            call formbg(maxnz,Nz,Ianz,Iz,Bl,Alpha,Beta,nparm,igeig,
+     &                  Core(i1),Core(i2),Core(i3),Core(i4),Core(i5),
+     &                  Core(i6),Core(i7),Core(i8),idump,toang)
+C     transform cartesian forces from fx and form internal forces
+C     in f.
+            call tranf(nparm,Nz,Ianz,Fx,f,Core(i2),Core(i1),Core(i3),
+     &                 Core(i7))
+C     obtain rms and max internal coordinate change.
+            call rmsvec(nparm,f,frmsi,fmaxi)
+         endif
+C                                     print internal coordinate forces.
+         if ( intrnl ) then
+            call fzprnt(maxnz,Nz,Ianz(1),Iz(1,1),f,Iout)
+            write (Iout,99002) fmaxi , frmsi
+         endif
+C
+C
+C     print force constants in cartesian and internal coordinates
+C     this is only carried out if second derivatives are
+C     calculated analytically.
+C
+         if ( ifd2e.ne.0 ) then
+            nnprm = nat3*(nat3+1)/2
+            write (Iout,99003)
+            call ltoutd(nat3,Ffx,1)
+            if ( intrnl ) then
+               write (Iout,99004)
+C     take cartesian second derivatives in ffx and forces in
+C     fxyz.  convert to internal second derivatives in ffx.
+C                ftmp1(3*nz)
+               i1 = 1
+C                ftmp2(nparm)
+               i2 = i1 + 3*Nz
+C                fftmp(3*nz*nparm)
+               i3 = i2 + nparm
+               iend = i3 + 3*Nz*nparm - 1
+               call tstcor(iend,Mxcore,6HTRANFF)
+               call tranff(maxnz,Nz,Ianz,Iz,Bl,Alpha,Beta,nparm,Fxyz,
+     &                     Ffx,Core(i1),Core(i2),Core(i3),Mxcore-iend,
+     &                     Core(iend+1),idump,toang)
+               call ltoutd(nparm,Ffx,1)
+            endif
+         endif
+      endif
+C
+C      prepare information for return to geometry optimization
+C      links.
+C
+      call ilsw(2,23,igrd)
+      call tread(iogen,Gen(1),47,1,47,1,0)
+      Gen(21) = frms
+      call twrite(iogen,Gen(1),47,1,47,1,0)
+      if ( igrd.ne.0 ) then
+         call tread(igrdnt,Energy,lgrdnt,1,lgrdnt,1,0)
+         Energy = Gen(43)
+C
+C     if second derivatives have been computed stuff the hartre-
+C     fock energy into /grdnt/ since gen(43) will contain the mp2 energy
+C     and links 103 and 105 don't want to hear about it.
+C
+         if ( ifd2e.ne.0 ) Energy = Gen(32)
+         call ilsw(2,24,ifrc)
+         if ( ifrc.ne.1 ) then
+C     prepare derivatives for variables--separate parameters
+C     into variables and constants.
+C     these are placed in force and frcnst in common/grdnt/
+C     for transmission.
+            call putf(Nz,Lbl,Lalpha,Lbeta,nparm,Nvar,f,Force,iprint)
+            if ( ifd2e.ne.0 ) then
+C              ftmp1(nparm)
+               i1 = 1
+C              ftmp2(nvar)
+               i2 = i1 + nparm
+C              fftmp(nparm*nvar)
+               i3 = i2 + Nvar
+               iend = i3 + nparm*Nvar - 1
+               call tstcor(iend,Mxcore,6HPUTFF )
+               call putff(Nz,Lbl,Lalpha,Lbeta,nparm,Nvar,Ffx,Frcnst,
+     &                    Core(i1),Core(i2),Core(i3),iprint)
+            endif
+         endif
+         call twrite(igrdnt,Energy,lgrdnt,1,lgrdnt,1,0)
+      endif
+      JUMP = 0
+      return
+C
+      end
+@* INDEX.

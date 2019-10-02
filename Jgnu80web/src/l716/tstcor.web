@@ -1,0 +1,46 @@
+@* tstcor.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IEND                                                      
+\item[INPUT:] MXCORE                                                    
+\item[INPUT:] NAME                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   FRCOUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine tstcor(IEND,MXCORE,NAME)
+      implicit none
+      integer IEND , In , Iout , Ipunch , MXCORE
+      character*6 NAME
+      common /io    / In , Iout , Ipunch
+C
+C***********************************************************************
+C     routine to check for storage allocation overruns.
+C
+C     arguments:
+C
+C     iend   ... needed store.
+C     mxcore ... available store.
+C     name   ... step name requiring allocation (displayed
+C                in print statement if it fails.
+C***********************************************************************
+C
+99001 format (' STORAGE ALLOCATION FAILURE FOR ',a6/'   NEEDS:',i6,
+     &        '   AVAILABLE:',i6)
+C
+      if ( IEND.le.MXCORE ) return
+      write (Iout,99001) NAME , IEND , MXCORE
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

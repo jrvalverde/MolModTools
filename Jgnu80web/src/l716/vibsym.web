@@ -1,0 +1,74 @@
+@* vibsym.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] VIBS                                                      
+\item[PASSED:] LEN                                                       
+\item[PASSED:] NCOL                                                      
+\item[PASSED:] SYMVIB                                                    
+\item[PASSED:] TABLE                                                     
+\item[PASSED:] A                                                         
+\item[PASSED:] AA                                                        
+\item[PASSED:] AMASS                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  NSYMOP                                                 
+\item[Uses]  NSYMOP                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETREP  TQUERY  TREAD   VIBTBL                         
+\item[Called by]   VIBFRQ                                                 
+                                                                    
+\end{description}
+@a
+      subroutine vibsym(VIBS,LEN,NCOL,SYMVIB,TABLE,A,AA,AMASS)
+      implicit none
+      real A , AA , AMASS , SYMVIB , TABLE , VIBS
+      integer irwrep , LEN , lenf , lrwrep , NCOL , nosym
+C ----------------------------------------------------------------------
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      dimension VIBS(*) , A(*) , TABLE(*) , AA(*) , AMASS(*) , SYMVIB(*)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      data irwrep/562/ , lrwrep/767/
+C           this routine assigns symmetries to molecular vibrations.
+C     many of the routines used in making orbital symmetry assignments
+C     are used here, so some of the comments in subsequent routines
+C     may seem strange.  "vibs" should be a (len x ncol) array
+C     containing the normal vibrational modes.  "symvib", an
+C     integer vector of length "ncol", is returned with the symmetry
+C     assignments for each mode.  these assignments are returned as
+C     hollerith data (max of four characters per mode) in symvib.
+C     "amass(i)" should contain the mass of the i-th atom.
+C
+C           "table" and "a" are just some scratch arrays:  "a" must
+C     be at least as large as "vibs", and "table" should be (ncol x 3).
+C     "aa" is a scratch vector of length "len".
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+C                  be sure we can run.
+      call tquery(irwrep,lenf)
+      if ( lenf.le.0 ) return
+C
+C                  read in the symmetry operations and the character
+C                  table.
+      call tread(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+C
+C
+C                  vibtbl builds the table describing how each
+C                  vibrational mode behaves under each symmetry
+C                  operation.
+      call vibtbl(VIBS,A,TABLE,AA,LEN,NCOL,AMASS)
+C
+C                  getrep compares the behaviour of each mode with
+C                  values in the character table, and assigns
+C                  a symmetry to each mode.
+      call getrep(TABLE,SYMVIB,NCOL,0,nosym)
+      return
+C
+      end
+@* INDEX.

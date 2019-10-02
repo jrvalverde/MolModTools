@@ -1,0 +1,55 @@
+@* rmsvec.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] V                                                         
+\item[OUTPUT:] VRMS                                                      
+\item[OUTPUT:] VMAX                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GFLOAT  GSQRT                                  
+\item[Called by]   FRCOUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rmsvec(N,V,VRMS,VMAX)
+      implicit none
+      double precision gabs , gfloat , gsqrt , V , VMAX , VRMS , zero
+      integer i , N
+      dimension V(*)
+      data zero/0.0D0/
+C
+C***********************************************************************
+C     routine to find the rms and maximum value of a vector.
+C
+C     arguments:
+C
+C     n      ... number of elements in the vector.
+C     v      ... array of length n containing the vector.
+C     vrms   ... rms of the vector.
+C     vmax   ... maxiimum value in the vector.
+C***********************************************************************
+C
+C
+C     clear outpu arguments.
+      VMAX = zero
+      VRMS = zero
+C
+C     loop over the vector, treating each element in turn.
+      do 100 i = 1 , N
+         if ( gabs(V(i)).gt.VMAX ) VMAX = gabs(V(i))
+         VRMS = VRMS + (V(i)**2)
+ 100  continue
+      VRMS = gsqrt(VRMS/gfloat(N))
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

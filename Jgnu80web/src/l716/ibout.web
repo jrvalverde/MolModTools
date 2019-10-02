@@ -1,0 +1,47 @@
+@* ibout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IB                                                        
+\item[INPUT:] NMAX                                                      
+\item[INPUT:] MMAX                                                      
+\item[INPUT:] NP                                                        
+\item[INPUT:] MP                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMBG                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ibout(IB,NMAX,MMAX,NP,MP)
+      implicit none
+      integer i , IB , ii , In , Iout , Ipunch , j , jj , l1 , l2 , 
+     &        MMAX , MP , NMAX , NP
+C  printing of integer matrix ib(np,mp)
+      dimension IB(NMAX,MMAX)
+      common /io    / In , Iout , Ipunch
+C
+      ii = 1 + MP/10
+      do 100 i = 1 , ii
+         l1 = (i-1)*10 + 1
+         l2 = l1 + 9
+         if ( l2.gt.MP ) l2 = MP
+         write (Iout,99001) (j,j=l1,l2)
+         do 50 j = 1 , NP
+            write (Iout,99002) j , (IB(j,jj),jj=l1,l2)
+ 50      continue
+ 100  continue
+C
+99001 format ('0',4x,10I10)
+99002 format (' ',i5,10I10)
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,85 @@
+@* putf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NZ                                                        
+\item[INPUT:] LBL                                                       
+\item[INPUT:] LALPHA                                                    
+\item[INPUT:] LBETA                                                     
+\item[UNUSED:] NPARM                                                     
+\item[INPUT:] NVAR                                                      
+\item[INPUT:] F                                                         
+\item[OUTPUT:] FORCE                                                     
+\item[INPUT:] IPRINT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR                                                 
+\item[Called by]   FRCOUT  PUTFF                                          
+                                                                    
+\end{description}
+@a
+      subroutine putf(NZ,LBL,LALPHA,LBETA,NPARM,NVAR,F,FORCE,IPRINT)
+      implicit none
+      double precision dx , F , FORCE
+      integer i , ialpha , ibeta , ibl , In , Iout , IPRINT , Ipunch , 
+     &        j , LALPHA , LBETA , LBL , NPARM , NVAR , NZ
+      dimension LBL(*) , LALPHA(*) , LBETA(*) , F(*) , FORCE(*)
+      common /io    / In , Iout , Ipunch
+C
+C
+C***********************************************************************
+C     routine to add force contributions over internal coordinates
+C     into the vector over actual variables.
+C***********************************************************************
+99001 format (' FROM PUTF, CONTENTS OF FORCE:')
+99002 format (1x,i3,d20.10)
+C
+      call aclear(NVAR,FORCE)
+      if ( NZ.ge.2 ) then
+         do 50 i = 2 , NZ
+            ibl = iabs(LBL(i))
+            if ( ibl.ne.0 ) then
+               dx = F(i-1)
+               if ( LBL(i).lt.0 ) dx = -dx
+               FORCE(ibl) = FORCE(ibl) + dx
+            endif
+ 50      continue
+C
+         if ( NZ.ge.3 ) then
+            j = NZ - 3
+            do 60 i = 3 , NZ
+               ialpha = iabs(LALPHA(i))
+               if ( ialpha.ne.0 ) then
+                  dx = F(i+j)
+                  if ( LALPHA(i).lt.0 ) dx = -dx
+                  FORCE(ialpha) = FORCE(ialpha) + dx
+               endif
+ 60         continue
+C
+            if ( NZ.ge.4 ) then
+               j = NZ + NZ - 6
+               do 70 i = 4 , NZ
+                  ibeta = iabs(LBETA(i))
+                  if ( ibeta.ne.0 ) then
+                     dx = F(i+j)
+                     if ( LBETA(i).lt.0 ) dx = -dx
+                     FORCE(ibeta) = FORCE(ibeta) + dx
+                  endif
+ 70            continue
+            endif
+         endif
+      endif
+C
+      if ( IPRINT.gt.0 ) then
+         write (Iout,99001)
+         write (Iout,99002) (i,FORCE(i),i=1,NVAR)
+      endif
+      return
+C
+      end
+@* INDEX.

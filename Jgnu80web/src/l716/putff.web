@@ -1,0 +1,108 @@
+@* putff.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NZ                                                        
+\item[PASSED:] LBL                                                       
+\item[PASSED:] LALPHA                                                    
+\item[PASSED:] LBETA                                                     
+\item[INPUT:] NPARM                                                     
+\item[INPUT:] NVAR                                                      
+\item[INPUT:] FFX                                                       
+\item[OUTPUT:] FRCNST                                                    
+\item[OUTPUT:] FTMP1                                                     
+\item[INPUT:] FTMP2                                                     
+\item[OUTPUT:] FFTMP                                                     
+\item[INPUT:] IPRINT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  LTOUTD  PUTF                                   
+\item[Called by]   FRCOUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine putff(NZ,LBL,LALPHA,LBETA,NPARM,NVAR,FFX,FRCNST,FTMP1,
+     &                 FTMP2,FFTMP,IPRINT)
+      implicit none
+      double precision FFTMP , FFX , FRCNST , FTMP1 , FTMP2
+      integer i , ii , ij , In , Iout , IPRINT , Ipunch , j , LALPHA , 
+     &        LBETA , LBL , lind , NPARM , NVAR , nvartt , NZ
+      dimension LBL(*) , LALPHA(*) , LBETA(*) , FFX(*) , FRCNST(*)
+      dimension FTMP1(*) , FTMP2(*) , FFTMP(*)
+      common /io    / In , Iout , Ipunch
+C
+C
+C***********************************************************************
+C     routine to transform second-derivatives over internal
+C     coordinates to second-derivatives over actual z-matriz
+C     variables.
+C
+C     arguments:
+C
+C     nz     ... number of rows in z-matrix.
+C     lbl    ... z-matrix mapping array for bl.
+C     lalpha ... z-matrix mapping array for alpha.
+C     lbeta  ... z-matrix mapping array for beta.
+C     nparm  ... number of z-matrix degrees of freedom.
+C     nvar   ... number of actual variables.
+C     ffx    ... input matrix of second derivatives (lower
+C                triangle.)
+C     frcnst ... output matrix of second derivatives over
+C                actual variables.
+C     ftmp1  ... scratch vector of length (nparm).
+C     ftmp2  ... scratch vector of length (nvar).
+C     fftmp  ... scratch vector of length (nparm*nvar).
+C***********************************************************************
+C
+C=nr  data zero/0.d0/
+C
+99001 format (' FROM PUTFF, CONTENTS OF FRCNST:')
+C
+C     statement function for linear indexing.
+      lind(i,j) = (i*(i-1))/2 + j
+C
+C     clear the output array.
+      nvartt = (NVAR*(NVAR+1))/2
+      call aclear(nvartt,FRCNST)
+C
+      do 200 i = 1 , NPARM
+         do 50 j = 1 , i
+            ij = lind(i,j)
+            FTMP1(j) = FFX(ij)
+ 50      continue
+         do 100 j = i , NPARM
+            ij = lind(j,i)
+            FTMP1(j) = FFX(ij)
+ 100     continue
+         call putf(NZ,LBL,LALPHA,LBETA,NPARM,NVAR,FTMP1,FTMP2,IPRINT-1)
+         do 150 j = 1 , NVAR
+            ij = i + NPARM*(j-1)
+            FFTMP(ij) = FTMP2(j)
+ 150     continue
+ 200  continue
+C
+      do 300 i = 1 , NVAR
+         ii = NPARM*(i-1)
+         call putf(NZ,LBL,LALPHA,LBETA,NPARM,NVAR,FFTMP(ii+1),FTMP2,
+     &             IPRINT-1)
+         do 250 j = 1 , i
+            ij = lind(i,j)
+            FRCNST(ij) = FRCNST(ij) + FTMP2(j)
+ 250     continue
+ 300  continue
+C
+C     possibly print frcnst.
+      if ( IPRINT.gt.0 ) then
+         write (Iout,99001)
+         call ltoutd(NVAR,FRCNST,1)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

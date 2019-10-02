@@ -1,0 +1,87 @@
+@* symnum.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] LINEAR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  IORD    NUMER   TREAD                          
+\item[Called by]   THERMO                                                 
+                                                                    
+\end{description}
+@a
+      double precision function symnum(LINEAR)
+      implicit none
+      double precision f24 , gfloat , one , twelve , two
+      integer i , ifwg , iord , n , numer
+      integer fwg(132) , pg(3) , num(10)
+      logical LINEAR , test
+      data ifwg/552/
+      data one , two , twelve , f24/1.0D0 , 2.0D0 , 12.0D0 , 24.0D0/
+      data num/1H0 , 1H1 , 1H2 , 1H3 , 1H4 , 1H5 , 1H6 , 1H7 , 1H8 , 
+     &     1H9/
+C
+C
+C     provide the calling routine with the rotational symmetry number
+C     of the molecule.  a table look up is done based upon the point
+C     group of the molecule.  see s. w. benson, "thermochemical
+C     kinetics, 2nd ed.", wiley, new york, 1976, p49.
+C     in addition, the logical variable linear is set true if the
+C     molecular point group is d*h or c*v.
+C
+C
+C
+C
+C     tread the framework group and extract the point group.
+C
+      call tread(ifwg,fwg,66,1,66,1,0)
+      pg(1) = fwg(33)
+      pg(2) = fwg(34)
+      pg(3) = fwg(35)
+C
+C     determine the symmetry number.
+C
+      symnum = one
+      LINEAR = pg(2).eq.iord('*')
+      n = numer(pg)
+      test = .false.
+      do 100 i = 1 , 10
+         test = test .or. pg(3).eq.num(i)
+ 100  continue
+      if ( .not.test ) n = n/10
+C
+C     ci, cs, cn, cnh, cnv.
+C
+      if ( pg(1).ne.iord('C') ) then
+C
+C     dn, dnh, dnd.
+C
+         if ( pg(1).eq.iord('D') ) then
+            symnum = two*gfloat(n)
+            if ( LINEAR ) symnum = two
+C
+C     sn.
+C
+         elseif ( pg(1).ne.iord('S') ) then
+C
+C     t, td, o, oh.
+C
+            if ( pg(1).eq.iord('T') ) symnum = twelve
+            if ( pg(1).eq.iord('O') ) symnum = f24
+         else
+            symnum = gfloat(n)/two
+         endif
+      elseif ( .not.(LINEAR .or. pg(2).eq.iord('I') .or. 
+     &         pg(2).eq.iord('S')) ) then
+         symnum = gfloat(n)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

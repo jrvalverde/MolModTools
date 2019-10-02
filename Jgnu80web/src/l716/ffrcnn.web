@@ -1,0 +1,100 @@
+@* ffrcnn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] C                                                         
+\item[OUTPUT:] FFXYZ                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  GFLOAT  GSQRT                                  
+\item[Called by]   FRCOUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ffrcnn(NATOMS,IAN,C,FFXYZ)
+      implicit none
+      double precision ab , C , FFXYZ , fn , fnn , gfloat , gsqrt , 
+     &                 rabsq , temp , vnnxx , zero
+      integer i , i1 , ia , IAN , ib , ijaa , ijab , ijbb , ik , j , 
+     &        jiab , jk , k , lind , nat3 , nat3tt , NATOMS
+      dimension IAN(*) , C(*) , FFXYZ(*)
+      dimension ab(3)
+      data zero/0.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to compute the contribution of the v(nn) term
+C     to the second derivatives.
+C
+C     arguments:
+C
+C     natoms ... number of atoms.
+C     ian    ... array containing integer atomic numbers.
+C     c      ... coordinate array, stored (x,y,z) for each atom.
+C     ffxyz  ... array of dimension nat3tt to receive the
+C                derivative contributions.
+C***********************************************************************
+C
+C
+C
+C
+C
+C     the following statement function is for computing the
+C     linear address in a lower triangular array.
+      lind(i,j) = (i*(i-1))/2 + j
+C
+      nat3 = 3*NATOMS
+      nat3tt = (nat3*(nat3+1))/2
+C
+C     clear the input array.
+      call aclear(nat3tt,FFXYZ)
+C
+C     loop over all pairs of atoms.
+      do 100 i = 1 , NATOMS
+         i1 = i - 1
+         if ( i1.ne.0 ) then
+            ia = 3*(i-1)
+            do 40 j = 1 , i1
+               ib = 3*(j-1)
+               rabsq = zero
+               do 10 k = 1 , 3
+                  ab(k) = C(k+ia) - C(k+ib)
+                  rabsq = rabsq + ab(k)**2
+ 10            continue
+               fn = gfloat(IAN(i)*IAN(j))/gsqrt(rabsq)
+               vnnxx = vnnxx + fn
+               fn = fn/rabsq
+               fnn = (fn+fn+fn)/rabsq
+C
+C     loop over (x,y,z) for the pair of atoms.
+               do 20 ik = 1 , 3
+                  do 15 jk = 1 , ik
+                     ijaa = lind(ia+ik,ia+jk)
+                     ijbb = lind(ib+ik,ib+jk)
+                     ijab = lind(ia+ik,ib+jk)
+                     jiab = lind(ia+jk,ib+ik)
+                     temp = ab(ik)*ab(jk)*fnn
+                     if ( ik.eq.jk ) temp = temp - fn
+                     FFXYZ(ijaa) = FFXYZ(ijaa) + temp
+                     FFXYZ(ijbb) = FFXYZ(ijbb) + temp
+                     FFXYZ(ijab) = FFXYZ(ijab) - temp
+                     if ( ik.ne.jk ) FFXYZ(jiab) = FFXYZ(jiab) - temp
+ 15               continue
+ 20            continue
+ 40         continue
+         endif
+ 100  continue
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

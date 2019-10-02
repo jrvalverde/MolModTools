@@ -1,0 +1,89 @@
+@* tranf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NPARM                                                     
+\item[INPUT:] NZ                                                        
+\item[INPUT:] IANZ                                                      
+\item[INPUT:] FX                                                        
+\item[OUTPUT:] F                                                         
+\item[INPUT:] IB                                                        
+\item[INPUT:] B                                                         
+\item[INPUT:] G                                                         
+\item[OUTPUT:] LL                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FRCOUT  TRANFF                                         
+                                                                    
+\end{description}
+@a
+      subroutine tranf(NPARM,NZ,IANZ,FX,F,IB,B,G,LL)
+      implicit none
+      double precision B , F , FX , G , r , zero
+      integer i , IANZ , IB , ii , j , k , k1 , l , LL , NPARM , NZ
+      dimension IANZ(*) , FX(*) , F(*) , IB(4,NPARM) , B(3,4,NPARM) , 
+     &          G(*) , LL(*)
+      data zero/0.D0/
+C
+C
+C*********************************************************************
+C     routine to transform cartesian first derivatives to
+C     derivatives over internal coordinates.
+C
+C     arguments:
+C
+C     nparm  ... number of z-matrix degrees of freedom (3*nz-6).
+C     nz     ... number of rows in the z-matrix.
+C     ianz   ... integer atomic numbers of z-matrix elements.
+C     fx     ... input vector (length 3*natoms) containing
+C                cartesian derivatives.
+C     f      ... output vector of length nparm containing
+C                derivatives over internal coordinates.
+C     ib     ... integer b-matrix as produced by formbg.
+C     b      ... b-matrix as produced by formbg.
+C     g      ... g-matrix produced by formbg.
+C     ll     ... scratch vector of length nz.
+C***********************************************************************
+C
+C
+C
+      do 100 i = 1 , NPARM
+         F(i) = zero
+ 100  continue
+      ii = 1
+      do 200 i = 1 , NZ
+         LL(i) = 0
+         if ( IANZ(i).ne.-1 ) then
+            LL(i) = ii
+            ii = ii + 1
+         endif
+ 200  continue
+      do 400 i = 1 , NPARM
+         ii = NPARM*(i-1)
+         r = zero
+         do 250 k1 = 1 , 4
+            k = IB(k1,i)
+            if ( k.eq.0 ) goto 300
+            k = LL(k)
+            if ( k.ne.0 ) then
+               k = 3*(k-1)
+               do 210 l = 1 , 3
+                  r = r + B(l,k1,i)*FX(k+l)
+ 210           continue
+            endif
+ 250     continue
+ 300     do 350 j = 1 , NPARM
+            F(j) = F(j) + G(ii+j)*r
+ 350     continue
+ 400  continue
+C
+      return
+C
+      end
+@* INDEX.

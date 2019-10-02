@@ -1,0 +1,407 @@
+@* thermo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IAN                                                       
+\item[PASSED:] C                                                         
+\item[INPUT:] MULTIP                                                    
+\item[INPUT:] AMASS                                                     
+\item[INPUT:] FREQ                                                      
+\item[INPUT:] NIMAG                                                     
+\item[INPUT:] PHYCON                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  GEN                                                    
+\item[Uses]  GEN     IOUT                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GATAN   GEXP    GLOG    GSQRT   MOFI    SYMNUM  TREAD  
+\item[Called by]   VIBFRQ                                                 
+                                                                    
+\end{description}
+@a
+      subroutine thermo(NATOMS,IAN,C,MULTIP,AMASS,FREQ,NIMAG,PHYCON)
+      implicit none
+      double precision akilo , AMASS , arg , avog , boltz , C , ccont , 
+     &                 con , crot , ctot , ctran , cv , cvib , cvibn , 
+     &                 dum , dum1 , dum2 , e , econt , eight
+      double precision em1 , erot , esum , etot , etovt , etran , evib , 
+     &                 evibn , ezau , ezj , ezkc , ezpe , four , FREQ , 
+     &                 gas , gatan , Gen , gexp , glog , gsqrt
+      double precision half , hartre , one , onept5 , p , patm , 
+     &                 PHYCON , pi , pipi , planck , pmom , pstd , pt2 , 
+     &                 rt , rtemp , rtemp1 , rtemp2 , rtemp3 , s , scont
+      double precision sn , srot , stot , stran , svib , svibn , 
+     &                 symnum , t , thresh , tocal , tokcal , tokg , 
+     &                 tomet , tovt , tstd , two , twopt5 , vtemp , 
+     &                 weight , zero
+      integer i , ia , IAN , iat , In , Iout , Ipunch , itop , lofreq , 
+     &        MULTIP , NATOMS , ndof , NIMAG
+      logical linear
+      double precision jpcal
+      dimension IAN(*) , AMASS(*) , FREQ(*) , C(*) , PHYCON(30)
+      dimension vtemp(300) , evibn(20) , cvibn(20) , svibn(20) , pmom(3)
+      common /io    / In , Iout , Ipunch
+      common /gen   / Gen(47)
+      data tstd/298.15D00/
+      data pstd/1.01325D+05/
+      data zero , pt2 , half , one , onept5/0.0D0 , 0.2D0 , 0.5D0 , 
+     &     1.0D0 , 1.5D0/
+      data two , twopt5 , four , eight , akilo/2.0D0 , 2.5D0 , 4.0D0 , 
+     &     8.0D0 , 1000.D0/
+      data thresh/900.D0/
+C
+C
+C     given the structure of a molecule and its normal mode vibrational
+C     frequencies this routine uses standard statistical mechanical
+C     formulas for an ideal gas (in the canonical ensemble, see,
+C     for example, d. a. mcquarrie, "statistical thermodynamics",
+C     harper & row, new york, 1973, chapters 5, 6, and 8) to compute
+C     the entropy, heat capacity, and internal energy.
+C
+C     the si system of units is used internally.  conversion to units
+C     more familiar to most chemists is made for output.
+C
+C
+C
+C     ian:     atomic numbers.
+C     amass:   atomic weights, in amu.
+C     pmom:    principal moments of inertia, in amu-bohr**2 and
+C              in ascending order.
+C     freq:    vibrational frequencies, in hz and in ascending
+C              order starting with the first real value.
+C     vtemp:   vibrational temperatures, in kelvin.
+C     evibn:   contribution to e from the vibration n.
+C     cvibn:   contribution to cv from the vibration n.
+C     svibn:   contribution to s from the vibration n.
+C
+C
+C     tstd:    standard temperature, in kelvin.
+C     pstd:    standard pressure, in pascals.
+C
+C
+C
+99001 format (1x,19('-')/1x,'- THERMOCHEMISTRY -'/1x,19('-'))
+99002 format (1x,'MOLECULAR MASS (PRINCIPAL ISOTOPES) ',f11.5,' AMU')
+99003 format (1x,'TEMPERATURE ',f9.3,' KELVIN'/1x,'PRESSURE    ',f9.5,
+     &        ' ATM')
+99004 format (1x,'WARNING-- ASSUMPTIONS MADE ABOUT THE ELECTRONIC ',
+     &        'PARTITION FUNCTION'/1x,
+     &        '          ARE NOT VALID FOR MULTIPLETS!')
+99005 format (1x,'INTERNAL ENERGY:   ',f10.3,' JOULE/MOL',9x,f10.3,
+     &        ' KCAL/MOL'/1x,'ENTROPY:           ',f10.3,' JOULE/K-MOL',
+     &        7x,f10.3,' CAL/K-MOL'/1x,'HEAT CAPACITY CV:  ',f10.3,
+     &        ' JOULE/K-MOL',7x,f10.3,' CAL/K-MOL')
+99006 format (1x,'ROTATIONAL SYMMETRY NUMBER ',f3.0)
+99007 format (1x,'WARNING-- ASSUMPTION OF CLASSICAL BEHAVIOR FOR ',
+     &        'ROTATION'/1x,'          MAY CAUSE SIGNIFICANT ERROR')
+99008 format (1x,'ROTATIONAL TEMPERATURES (KELVIN) ',3F12.5)
+99009 format (1x,'ROTATIONAL TEMPERATURE (KELVIN) ',f12.5)
+99010 format (1x,'ZERO POINT VIBRATIONAL ENERGY ',f12.1,
+     &        ' (JOULES/MOL) ',/1x,30x,f12.5,' (KCAL/MOL)'/1x,30x,f12.7,
+     &        ' (HARTREE/PARTICLE)')
+99011 format (1x,'WARNING-- EXPLICIT CONSIDERATION OF ',i3,
+     &        ' DEGREES ''OF FREEDOM AS '/1x,
+     &        '          VIBRATIONS MAY CAUSE SIGNIFICANT ERROR')
+99012 format (1x,'VIBRATIONAL TEMPERATURES: ',5F9.2)
+99013 format (1x,9x,'(KELVIN)',9x,5F9.2)
+99014 format (1x,26x,5F9.2)
+99015 format (1x,15x,9x,'E',9x,9x,'CV',8x,9x,'S',9x)
+99016 format (1x,15x,5x,'JOULES/MOL',4x,1x,'JOULES/MOL-KELVIN',1x,2x,
+     &        'JOULES/MOL-KELVIN')
+99017 format (1x,'TOTAL',10x,3(4x,f11.3,4x))
+99018 format (1x,'TRANSLATIONAL',2x,3(4x,f11.3,4x))
+99019 format (1x,'ROTATIONAL',5x,3(4x,f11.3,4x))
+99020 format (1x,'VIBRATIONAL',4x,3(4x,f11.3,4x))
+99021 format (1x,'VIBRATION',i3,3x,3(4x,f11.3,4x))
+99022 format (1x,15x,6x,'KCAL/MOL',5x,3x,'CAL/MOL-KELVIN',2x,2x,
+     &        'CAL/MOL-KELVIN')
+99023 format (1x,i3,' IMAGINARY FREQUENCIES IGNORED')
+99024 format (1x,'PRINCIPAL MOMENTS OF INERTIA (NUCLEII ONLY) IN ',
+     &        'ATOMIC UNITS:'/1x,5x,3F12.4)
+99025 format (1x,'SUM OF HARTREE-FOCK AND THERMAL ENERGIES: ',f12.7,
+     &        ' (HARTREE/PARTICLE)')
+C
+C
+C     tokg:    kilograms per amu.
+C     boltz:   boltzman constant, in joules per kelvin.
+C     planck:  planck constant, in joule-seconds.
+C     avog:    avogadro constant, in mol**(-1).
+C     jpcal:   joules per calorie.
+C     tomet:   metres per bohr.
+C     hartre:  joules per hartree.
+C
+      tokg = PHYCON(2)
+      boltz = PHYCON(10)
+      planck = PHYCON(4)
+      avog = PHYCON(5)
+      jpcal = PHYCON(6)
+      tomet = PHYCON(7)
+      hartre = PHYCON(8)
+C
+C     compute the gas constant, pi, pi**2, and e.
+C     compute the conversion factors cal per joule and kcal per joule.
+C
+      gas = avog*boltz
+      pi = four*gatan(one)
+      pipi = pi*pi
+      e = gexp(one)
+      tocal = one/jpcal
+      tokcal = tocal/akilo
+C
+C     print the temperature and pressure.  code for inputing t and p
+C     would be put here.  note that the units of p are pascals.
+C
+      t = tstd
+      p = pstd
+      patm = p/pstd
+      write (Iout,99001)
+      write (Iout,99003) t , patm
+      rt = gas*t
+C
+C     compute and print the molecular mass in amu, then convert to
+C     kilograms.
+C
+      weight = zero
+      do 100 iat = 1 , NATOMS
+         ia = IAN(iat)
+         weight = weight + AMASS(ia)
+ 100  continue
+      write (Iout,99002) weight
+      weight = weight*tokg
+C
+C     trap non-unit multiplicities.
+C
+      if ( MULTIP.ne.1 ) write (Iout,99004)
+C
+C     compute contributions due to translation:
+C        etran-- internal energy
+C        ctran-- constant v heat capacity
+C        stran-- entropy
+C
+      dum1 = boltz*t
+      dum2 = (two*pi)**onept5
+      arg = dum1**onept5/planck
+      arg = (arg/p)*(dum1/planck)
+      arg = arg*dum2*(weight/planck)
+      arg = arg*gsqrt(weight)*e**twopt5
+      stran = gas*glog(arg)
+      etran = onept5*rt
+      ctran = onept5*gas
+C
+C     compute contributions due to electronic motion:
+C        it is assumed that the first electronic excitation energy
+C        is much greater than kt and that the ground state has a
+C        degeneracy of one.  under these conditions the electronic
+C        partition function can be considered to be unity.  the
+C        ground electronic state is taken to be the zero of
+C        electronic energy.
+C
+C
+C     for monatomics print and return.
+C
+      if ( NATOMS.gt.1 ) then
+C
+C     compute contributions due to rotation.
+C
+C
+C     compute the principal moments of inertia, get the rotational
+C     symmetry number, see if the molecule is linear, and compute
+C     the rotational temperatures.  note the imbedded conversion
+C     of the moments to si units.
+C
+         call mofi(NATOMS,IAN,C,AMASS,pmom)
+         write (Iout,99024) (pmom(i),i=1,3)
+         sn = symnum(linear)
+         write (Iout,99006) sn
+         con = planck/(boltz*eight*pipi)
+         con = (con/tokg)*(planck/(tomet*tomet))
+         if ( linear ) then
+C
+            rtemp = con/pmom(3)
+            if ( rtemp.lt.pt2 ) write (Iout,99007)
+            write (Iout,99009) rtemp
+         else
+            rtemp1 = con/pmom(1)
+            rtemp2 = con/pmom(2)
+            rtemp3 = con/pmom(3)
+C
+            if ( rtemp1.lt.pt2 ) write (Iout,99007)
+            write (Iout,99008) rtemp1 , rtemp2 , rtemp3
+         endif
+C
+C         erot-- rotational contribution to internal energy.
+C         crot-- rotational contribution to cv.
+C         srot-- rotational contribution to entropy.
+C
+         if ( linear ) then
+C
+            erot = rt
+            crot = gas
+            arg = (t/rtemp)*(e/sn)
+            srot = gas*glog(arg)
+         else
+            erot = onept5*rt
+            crot = onept5*gas
+            arg = gsqrt(pi*e*e*e)/sn
+            dum = (t/rtemp1)*(t/rtemp2)*(t/rtemp3)
+            arg = arg*gsqrt(dum)
+            srot = gas*glog(arg)
+         endif
+C
+C     compute contributions due to vibration.
+C
+C
+C     compute vibrational temperatures and zero point vibrational
+C     energy.  only real frequencies are included in the analysis.
+C
+         ndof = 3*NATOMS - 6 - NIMAG
+         if ( NIMAG.ne.0 ) write (Iout,99023) NIMAG
+         if ( linear ) ndof = ndof + 1
+         con = planck/boltz
+         ezpe = zero
+         do 150 i = 1 , ndof
+            vtemp(i) = FREQ(i)*con
+            ezpe = ezpe + FREQ(i)
+ 150     continue
+         ezpe = half*planck*ezpe
+         ezj = ezpe*avog
+         ezkc = ezpe*tokcal*avog
+         ezau = ezpe/hartre
+         write (Iout,99010) ezj , ezkc , ezau
+C
+C     compute the number of vibrations for which more than 5  of an
+C     assembly of molecules would exist in vibrational excited states.
+C     special printing for these modes is done to allow the user to
+C     easily take internal rotations into account.  the criterion
+C     corresponds roughly to a low frequency of 1.9(10**13) hz, or
+C     625 cm**(-1), or a vibrational temperature of 900 k.
+C
+         lofreq = 0
+         do 200 i = 1 , ndof
+            if ( vtemp(i).lt.thresh ) lofreq = lofreq + 1
+ 200     continue
+         if ( lofreq.ne.0 ) write (Iout,99011) lofreq
+C
+         itop = min0(ndof,5)
+         write (Iout,99012) (vtemp(i),i=1,itop)
+         if ( ndof.le.5 ) write (Iout,99013)
+         itop = min0(ndof,10)
+         if ( ndof.gt.5 ) write (Iout,99013) (vtemp(i),i=6,itop)
+         if ( ndof.gt.10 ) write (Iout,99014) (vtemp(i),i=11,ndof)
+C
+C     compute:
+C        evib-- the vibrational component of the internal energy.
+C        cvib-- the vibrational component of the heat capacity.
+C        svib-- the vibrational component of the entropy.
+C
+         evib = zero
+         cvib = zero
+         svib = zero
+         do 250 i = 1 , ndof
+C
+C     compute some common factors.
+C
+            tovt = vtemp(i)/t
+            etovt = gexp(tovt)
+            em1 = etovt - one
+C
+C     compute contributions due to the i'th vibration.
+C     for the low frequency modes these are stored.
+C     for all modes they are added into the total.
+C
+            econt = tovt*(half+one/em1)
+            ccont = etovt*(tovt/em1)**2
+            scont = tovt/em1 - glog(one-one/etovt)
+            if ( lofreq.ge.i ) then
+               evibn(i) = econt*rt
+               cvibn(i) = ccont*gas
+               svibn(i) = scont*gas
+            endif
+C
+            evib = evib + econt
+            cvib = cvib + ccont
+            svib = svib + scont
+ 250     continue
+         evib = evib*rt
+         cvib = cvib*gas
+         svib = svib*gas
+C
+C     the units are now:
+C         e-- joules/mol
+C         c-- joules/mol-kelvin
+C         s-- joules/mol-kelvin
+C
+         etot = etran + erot + evib
+         ctot = ctran + crot + cvib
+         stot = stran + srot + svib
+C
+C     print the sum of the hartree-fock energy and the thermal energy.
+C
+         call tread(501,Gen,47,1,47,1,0)
+         esum = Gen(32) + etot/avog/hartre
+         write (Iout,99025) esum
+C
+         write (Iout,99015)
+         write (Iout,99016)
+         write (Iout,99017) etot , ctot , stot
+         write (Iout,99018) etran , ctran , stran
+         write (Iout,99019) erot , crot , srot
+         write (Iout,99020) evib , cvib , svib
+         if ( lofreq.ne.0 ) then
+            do 260 i = 1 , lofreq
+               write (Iout,99021) i , evibn(i) , cvibn(i) , svibn(i)
+ 260        continue
+         endif
+C
+C     convert to the following and print
+C         e-- kcal/mol
+C         c-- cal/mol-kelvin
+C         s-- cal/mol-kelvin
+C
+         etran = etran*tokcal
+         ctran = ctran*tocal
+         stran = stran*tocal
+         erot = erot*tokcal
+         crot = crot*tocal
+         srot = srot*tocal
+         evib = evib*tokcal
+         cvib = cvib*tocal
+         svib = svib*tocal
+         etot = etran + erot + evib
+         ctot = ctran + crot + cvib
+         stot = stran + srot + svib
+         if ( lofreq.ne.0 ) then
+            do 280 i = 1 , lofreq
+               evibn(i) = evibn(i)*tokcal
+               cvibn(i) = cvibn(i)*tocal
+               svibn(i) = svibn(i)*tocal
+ 280        continue
+         endif
+C
+         write (Iout,99015)
+         write (Iout,99022)
+         write (Iout,99017) etot , ctot , stot
+         write (Iout,99018) etran , ctran , stran
+         write (Iout,99019) erot , crot , srot
+         write (Iout,99020) evib , cvib , svib
+         if ( lofreq.ne.0 ) then
+            do 300 i = 1 , lofreq
+               write (Iout,99021) i , evibn(i) , cvibn(i) , svibn(i)
+ 300        continue
+         endif
+      else
+         s = stran*tocal
+         e = etran*tokcal
+         cv = ctran*tocal
+         write (Iout,99005) etran , e , stran , s , ctran , cv
+         return
+      endif
+C
+      return
+C
+      end
+@* INDEX.

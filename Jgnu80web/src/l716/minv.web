@@ -1,0 +1,166 @@
+@* minv.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[INPUT:] N                                                         
+\item[OUTPUT:] D                                                         
+\item[OUTPUT:] L                                                         
+\item[OUTPUT:] M                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   FORMBG                                                 
+                                                                    
+\end{description}
+@a
+      subroutine minv(A,N,D,L,M)
+      implicit none
+      double precision A , biga , D , gabs , hold , one , zero
+      integer i , ij , ik , iz , j , ji , jk , jp , jq , jr , k , ki , 
+     &        kj , kk , L , M , N , nk
+      dimension A(*) , L(*) , M(*)
+      data one , zero/1.0D0 , 0.0D0/
+C
+C        standard ssp matrix inversion subroutine
+C
+C
+C        search for largest element
+C
+      D = 1.0
+      nk = -N
+      do 200 k = 1 , N
+         nk = nk + N
+         L(k) = k
+         M(k) = k
+         kk = nk + k
+         biga = A(kk)
+         do 50 j = k , N
+            iz = N*(j-1)
+            do 20 i = k , N
+               ij = iz + i
+               if ( gabs(biga).lt.gabs(A(ij)) ) then
+                  biga = A(ij)
+                  L(k) = i
+                  M(k) = j
+               endif
+ 20         continue
+ 50      continue
+C
+C        interchange rows
+C
+         j = L(k)
+         if ( j.gt.k ) then
+            ki = k - N
+            do 60 i = 1 , N
+               ki = ki + N
+               hold = -A(ki)
+               ji = ki - k + j
+               A(ki) = A(ji)
+               A(ji) = hold
+ 60         continue
+         endif
+C
+C        interchange columns
+C
+         i = M(k)
+         if ( i.gt.k ) then
+            jp = N*(i-1)
+            do 80 j = 1 , N
+               jk = nk + j
+               ji = jp + j
+               hold = -A(jk)
+               A(jk) = A(ji)
+               A(ji) = hold
+ 80         continue
+         endif
+C
+C        divide column by minus pivot (value of pivot element is
+C        contained in biga)
+C
+         if ( biga.ne.0 ) then
+C
+            do 100 i = 1 , N
+               if ( i.ne.k ) then
+                  ik = nk + i
+                  A(ik) = A(ik)/(-biga)
+               endif
+ 100        continue
+C
+C        reduce matrix
+C
+            do 120 i = 1 , N
+               ik = nk + i
+               hold = A(ik)
+               ij = i - N
+               do 110 j = 1 , N
+                  ij = ij + N
+                  if ( i.ne.k ) then
+                     if ( j.ne.k ) then
+                        kj = ij - i + k
+                        A(ij) = hold*A(kj) + A(ij)
+                     endif
+                  endif
+ 110           continue
+ 120        continue
+C
+C        divide row by pivot
+C
+            kj = k - N
+            do 140 j = 1 , N
+               kj = kj + N
+               if ( j.ne.k ) A(kj) = A(kj)/biga
+ 140        continue
+C
+C        product of pivots
+C
+            D = D*biga
+C
+C        replace pivot by reciprocal
+            A(kk) = one/biga
+         else
+            D = zero
+            return
+         endif
+ 200  continue
+C
+C        final row and column interchange
+C
+      k = N
+ 300  k = (k-1)
+      if ( k.gt.0 ) then
+         i = L(k)
+         if ( i.gt.k ) then
+            jq = N*(k-1)
+            jr = N*(i-1)
+            do 320 j = 1 , N
+               jk = jq + j
+               hold = A(jk)
+               ji = jr + j
+               A(jk) = -A(ji)
+               A(ji) = hold
+ 320        continue
+         endif
+         j = M(k)
+         if ( j.gt.k ) then
+            ki = k - N
+            do 340 i = 1 , N
+               ki = ki + N
+               hold = A(ki)
+               ji = ki - k + j
+               A(ki) = -A(ji)
+               A(ji) = hold
+ 340        continue
+         endif
+         goto 300
+      endif
+C
+      return
+C
+      end
+@* INDEX.

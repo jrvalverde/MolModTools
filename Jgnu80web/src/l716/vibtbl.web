@@ -1,0 +1,107 @@
+@* vibtbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[OUTPUT:] TABLE                                                     
+\item[PASSED:] AA                                                        
+\item[INPUT:] LEN                                                       
+\item[INPUT:] NCOL                                                      
+\item[PASSED:] AMASS                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IPRMUT  SYMOPS                                         
+\item[Uses]  IPRMUT  NSYMOP  SYMOPS                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DGNMAP  DOROT   PERMUT  VIBOVL                         
+\item[Called by]   VIBSYM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine vibtbl(A,B,TABLE,AA,LEN,NCOL,AMASS)
+      implicit none
+      integer i , id , iop , j , LEN , mapdgn , mapper , maprot , n , 
+     &        natoms , NCOL , ndgn , nosym
+      real sum
+C ----------------------------------------------------------------------
+      double precision TABLE(NCOL,3) , A(LEN,NCOL) , B(LEN,NCOL)
+      double precision Symops , Chrtbl , AMASS(*) , AA(*) , zero
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      dimension maprot(100) , mapper(127) , mapdgn(100)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      data zero/0.0D0/
+C           this routine builds "table", which describes how each
+C     vibrational mode behaves under each symmetry operation.  the
+C     symmetry operations are assumed to be in /repdat/.  "a" should
+C     contain the normal vibrational modes and be dimensioned
+C     (len x ncol).  "b" is just some scratch space of the same size.
+C     "table" is dimensioned (ncol x nsymop).  thus, on return,
+C     table(i,j) describes how the i-th orbital behaves under the
+C     the j-th symmetry operation.  "aa" is a srcatch vector of
+C     length "len".  "amass(i)" should contain the mass of the i-th
+C     atom.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C=nr  data irwrep/562/,lrwrep/767/
+C
+C                        make "maps" for input to "dorot" and
+C                        "permut".
+      ndgn = 0
+      n = 1
+      natoms = LEN/3
+      do 100 i = 1 , natoms
+         mapper(i) = n
+         n = n + 3
+         maprot(i) = 3
+ 100  continue
+C
+C                        main loop over symmetry operations.
+      do 300 iop = 1 , Nsymop
+C
+C                        copy the old modes into b.
+         do 150 i = 1 , NCOL
+            do 120 j = 1 , LEN
+               B(j,i) = A(j,i)
+ 120        continue
+ 150     continue
+C                        transform the modes by iop-th operation.
+         call dorot(Symops(1,iop),0,0,B,LEN,NCOL,maprot,natoms)
+         call permut(B,AA,mapper,Iprmut(1,iop),natoms,LEN,NCOL)
+C
+C                        now, evaluate overlaps between old and
+C                        new modes.
+         call vibovl(A,B,AA,LEN,NCOL,AMASS)
+C
+C                        call routine to figure out degeneracies.
+         call dgnmap(B,LEN,NCOL,mapdgn,ndgn,nosym)
+C
+C                        copy the result into table.
+         do 200 i = 1 , NCOL
+            TABLE(i,iop) = B(i,i)
+ 200     continue
+ 300  continue
+C
+C     .... end of loop over symmetry operations.
+C
+C                        sum up degenerate values.
+      if ( ndgn.eq.0 ) return
+      do 400 id = 1 , ndgn
+         do 350 iop = 1 , Nsymop
+            sum = zero
+            do 320 i = 1 , NCOL
+               if ( mapdgn(i).eq.id ) sum = sum + TABLE(i,iop)
+ 320        continue
+            do 340 i = 1 , NCOL
+               if ( mapdgn(i).eq.id ) TABLE(i,iop) = sum
+ 340        continue
+ 350     continue
+ 400  continue
+      return
+C
+      end
+@* INDEX.

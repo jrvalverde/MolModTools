@@ -1,0 +1,42 @@
+@* zmmod.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] BL                                                        
+\item[OUTPUT:] ALPHA                                                     
+\item[OUTPUT:] BETA                                                      
+\item[INPUT:] IPZ                                                       
+\item[INPUT:] JPZ                                                       
+\item[INPUT:] DEL                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   TRANFF                                                 
+                                                                    
+\end{description}
+@a
+      subroutine zmmod(BL,ALPHA,BETA,IPZ,JPZ,DEL)
+      implicit none
+      double precision ALPHA , BETA , BL , DEL
+      integer IPZ , JPZ
+      dimension BL(*) , ALPHA(*) , BETA(*)
+C
+      if ( JPZ.eq.2 ) then
+C
+         ALPHA(IPZ) = ALPHA(IPZ) + DEL
+      elseif ( JPZ.eq.3 ) then
+C
+         BETA(IPZ) = BETA(IPZ) + DEL
+      else
+C
+         BL(IPZ) = BL(IPZ) + DEL
+      endif
+      return
+C
+      end
+@* INDEX.

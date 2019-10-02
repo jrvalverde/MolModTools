@@ -1,0 +1,59 @@
+@* vibovl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[OUTPUT:] AA                                                        
+\item[INPUT:] NAT3                                                      
+\item[INPUT:] NVIB                                                      
+\item[INPUT:] AMASS                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   VIBTBL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine vibovl(A,B,AA,NAT3,NVIB,AMASS)
+      implicit none
+      integer i , j , k , kat , NAT3 , NVIB
+C ----------------------------------------------------------------------
+      double precision A(NAT3,NVIB) , B(NAT3,NVIB) , AA(NVIB) , 
+     &                 AMASS(36)
+      double precision zero , t
+      data zero/0.0D0/
+C          a routine to conpute vibrational overlaps.  the transformed
+C     displacements should be in "a", and the untransformed in "b".
+C     the resulting overlap will be returned in "b".  "aa" is a vector
+C     of length "nvib" and is used for scratch.  "a" and "b" are
+C     dimensioned to (nat3 x nvib), and on return, "b" is filled
+C     to only (nvib x nvib).  "amass(i)" should contain the mass
+C     of the i-th atom.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      do 200 i = 1 , NVIB
+         do 50 j = 1 , NVIB
+            AA(j) = zero
+            do 20 k = 1 , NAT3
+               t = A(k,j)*B(k,i)
+               kat = (k-1)/3 + 1
+               if ( j.ne.i ) t = t*AMASS(kat)
+               AA(j) = AA(j) + t
+ 20         continue
+ 50      continue
+C
+         do 100 j = 1 , NVIB
+            B(j,i) = AA(j)
+ 100     continue
+ 200  continue
+      return
+C
+      end
+@* INDEX.

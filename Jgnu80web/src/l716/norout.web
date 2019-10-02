@@ -1,0 +1,104 @@
+@* norout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] EIG                                                       
+\item[INPUT:] MNDIM                                                     
+\item[INPUT:] MDIM                                                      
+\item[INPUT:] IAN                                                       
+\item[PASSED:] ISYM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT                                                   
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETB    PUTB    STROUT                                 
+\item[Called by]   VIBFRQ                                                 
+                                                                    
+\end{description}
+@a
+      subroutine norout(A,EIG,MNDIM,MDIM,IAN,ISYM)
+      implicit none
+      double precision A , blank , EIG , t , temp
+      integer i , IAN , iatom , ifin , In , ind , Iout , Ipunch , ist , 
+     &        ist1 , ISYM , j , len , max , max1 , MDIM , min , MNDIM , 
+     &        n , nc
+      integer ncur , ndim
+      dimension A(MNDIM) , EIG(MDIM)
+      dimension IAN(100)
+      dimension ISYM(MDIM)
+      dimension temp(30) , t(5)
+      common /io    / In , Iout , Ipunch
+      data blank/1H /
+C ----------------------------------------------------------------------
+C
+C     frequency and normal coordinate output routine.
+C
+C
+99001 format (34H HARMONIC FREQUENCIES (CM**-1) AND,1x,
+     &        29HNORMALIZED NORMAL COORDINATES)
+99002 format (' FREQUENCIES ----',5x,10F10.4)
+99003 format (20H COORD ATOM ELEMENT )
+99004 format (1x,i3,1x,i5,1x,i5,5x,10F10.5)
+99005 format (18x,10I10)
+C ----------------------------------------------------------------------
+      ndim = MNDIM/MDIM
+C                  number of columns in a row.
+      nc = 5
+C                  cursor for getting symmetry labels.
+      ncur = 0
+C                  initialize some stuff.
+      min = 1
+      max = MDIM
+      ifin = 0
+C                  print heading.
+      write (Iout,99001)
+C                  top of loop.
+ 100  max1 = min + nc - 1
+C                  is this last pass thru loop
+      if ( max.le.max1 ) then
+         max1 = max
+         ifin = 1
+      endif
+C                  print integer column numbers.
+      write (Iout,99005) (i,i=min,max1)
+C
+C                  print symmetry assignments.
+C                  first, fill "temp" with blanks.
+      do 200 i = 1 , 30
+         temp(i) = blank
+ 200  continue
+C                  then, build output line into "temp".
+      ist = 26
+      do 300 i = min , max1
+         call getb(2,t,len,ISYM,ncur)
+         ist1 = ist - len/2
+         call putb(t,len,temp,ist1)
+         ist = ist + 10
+ 300  continue
+C                  print out line.
+      call strout(Iout,temp,ist1,1)
+C                  print frequencies.
+      write (Iout,99002) (EIG(i),i=min,max1)
+C                  ... and another heading.
+      write (Iout,99003)
+C                  top of loop printing rows.
+      do 400 i = 1 , ndim
+         n = max1 - min + 1
+         iatom = (i-1)/3 + 1
+         do 350 j = 1 , n
+            ind = ndim*(min+j-2) + i
+            temp(j) = A(ind)
+ 350     continue
+         write (Iout,99004) i , iatom , IAN(iatom) , (temp(j),j=1,n)
+ 400  continue
+      min = min + nc
+      if ( ifin.ne.1 ) goto 100
+      return
+C
+      end
+@* INDEX.
