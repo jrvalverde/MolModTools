@@ -1,0 +1,76 @@
+@* zparm.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[OUTPUT:] X
+\item[OUTPUT:] LX
+\item[PASSED:] SYMBLS
+\item[PASSED:] NSB
+\item[OUTPUT:] ISYMB
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Uses]   NOTHING
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   FFGET   IORD    NOSIGN  PUTB    PUTCHR  PUTDEL
+             SZPRNT
+\item[Called by]   ZSYMB
+
+\end{description}
+
+\begin{verbatim}
+A routine to read a Z-matrix parameter (variable or
+floating point number).  uses the "ff" routines.  if a
+constant is found, this is stored into "x", ans "lx" is set
+to 2.  in this case, a name of "0" is stored into "symbls".
+
+If a name (string) is found, then this name is appended
+to "symbls", and "isymb" is incremented.  "x" is set to zero,
+and "lx" is set to 3 (or -3 if "-name" is found).
+
+This routine also calls the Z-matrix output routine for
+each parameter read in.
+\end{verbatim}
+
+@a
+      subroutine zparm(X,LX,SYMBLS,NSB,ISYMB)
+      implicit none
+      double precision fp , str , SYMBLS , X , zero
+      integer i , if1 , iord , isgn , ISYMB , len , LX , NSB
+      dimension str(5) , SYMBLS(*)
+      data zero/0.0D0/
+C
+      call ffget(str,len,i,fp,if1)
+      if ( if1.ne.iord('FP') ) then
+         if ( if1.eq.iord('STR') ) goto 100
+         call fferr('FP',if1)
+      endif
+C
+C                  found real number.
+      X = fp
+      LX = 2
+      call szprnt(1,fp,0,2)
+C            put a phoney parameter name into "symbls".
+      call putchr('0',SYMBLS,NSB)
+      call putdel(2,SYMBLS,NSB)
+      return
+C
+C                  found a name.
+ 100  call nosign(str,len,isgn)
+      call putb(str,len,SYMBLS,NSB)
+      call putdel(2,SYMBLS,NSB)
+      X = zero
+      LX = 3*isgn
+      ISYMB = ISYMB + 1
+      call szprnt(1,str,len,LX)
+      return
+C
+      end
+@* INDEX.

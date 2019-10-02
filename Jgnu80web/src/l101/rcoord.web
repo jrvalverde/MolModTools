@@ -1,0 +1,123 @@
+@* rcoord.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[OUTPUT:] NATOMS                                                    
+\item[OUTPUT:] MULTIP                                                    
+\item[OUTPUT:] ICHARG                                                    
+\item[OUTPUT:] IAN                                                       
+\item[OUTPUT:] C                                                         
+\item[INPUT:] IOP                                                       
+\item[INPUT:] TOANG                                                     
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       FFERR   FFGET   FFREAD  FFSET   ISUBST  KILLER  LNK1E  
+\item[Called by]   RDGEOM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rcoord(NATOMS,MULTIP,ICHARG,IAN,C,IOP,TOANG)
+      implicit none
+      integer*4 cnumb , end , eof , found , fp , i , IAN , iatom , 
+     &          ICHARG , In , int , intger , IOP , Iout , Ipunch , 
+     &          isubst , len , MAXATM , MULTIP , NATOMS
+      integer*4 nul , str , string
+      parameter (MAXATM=100)
+      double precision C(*) , float , TOANG
+      dimension IAN(*) , IOP(50)
+      common /io    / In , Iout , Ipunch
+      data fp/2HFP/ , int/3HINT/ , str/3HSTR/ , end/3HEND/ , nul/3HNUL/
+C
+C     read in cartesian coordinates
+C
+99001 format (1x,'NATOMS OUTSIDE VALID RANGE IN RCOORD IN LINK 101, ',
+     &        'NATOMS = ',i5)
+99002 format (1x,'INPUT ERROR IN RCOORD IN LINK 101')
+99003 format (1x,'NO COORDINATE INPUT FOUND')
+99004 format (1x,13x,'CHARGE =',i3,' MULTIPLICITY =',i3)
+C
+C
+C                                        initialize free-field input
+C                                        routines.
+      call ffset(IOP(34))
+C
+C                                        read charge and multiplicity.
+      call ffread(eof)
+      if ( eof.ne.1 ) then
+         call ffget(string,len,intger,float,found)
+         if ( found.eq.int ) ICHARG = intger
+         if ( found.eq.nul ) ICHARG = 0
+         if ( found.eq.int .or. found.eq.nul ) then
+            call ffget(string,len,intger,float,found)
+            if ( found.ne.int ) goto 100
+            MULTIP = intger
+            write (Iout,99004) ICHARG , MULTIP
+C
+C                                        loop over atoms until no more
+C                                        input is found.
+            iatom = 0
+            cnumb = 0
+ 20         call ffread(eof)
+            if ( eof.ne.1 ) then
+C
+C                     get an atomic number and three
+C                     cartesian coordinates.
+               call ffget(string,len,intger,float,found)
+               if ( found.ne.end ) then
+                  iatom = iatom + 1
+                  if ( iatom.gt.MAXATM ) then
+                     write (Iout,99001) iatom
+                     call lnk1e
+                  endif
+                  if ( found.eq.int ) IAN(iatom) = intger
+                  if ( found.eq.str ) IAN(iatom) = isubst(string)
+                  if ( found.ne.int .and. found.ne.str ) goto 100
+                  do 25 i = 1 , 3
+                     call ffget(string,len,intger,float,found)
+                     if ( found.ne.fp ) goto 60
+                     cnumb = cnumb + 1
+                     C(cnumb) = float
+ 25               continue
+                  goto 20
+               endif
+            endif
+C
+C                                        all available cards have been
+C                                        processed.  set and test
+C                                        natoms then return.
+            NATOMS = iatom
+C
+C                                        convert to atomic units.
+            if ( mod(IOP(20),2).eq.1 ) return
+            do 40 i = 1 , cnumb
+               C(i) = C(i)/TOANG
+ 40         continue
+            return
+C                                        input error handling section.
+C                                        fferr will not return.
+ 60         write (Iout,99002)
+            call fferr(fp,found)
+         endif
+C
+ 100     write (Iout,99002)
+         call fferr(int,found)
+      endif
+C
+      write (Iout,99003)
+      call lnk1e
+C no return to this point:
+      call killer
+      stop
+C
+      end
+@* INDEX.

@@ -1,0 +1,68 @@
+@* lsubst.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[PASSED:] NAMCNT
+\item[INPUT:] N
+\item[PASSED:] STR
+\item[INPUT:] LEN
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Transmits as argument]  IOUT
+\item[Uses]  IOUT
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   GETB    LNK1E   STREQC  STROUT
+\item[Called by]   RDCHG   ZCENTR
+
+\end{description}
+
+\begin{verbatim}
+A routine to return the sequential number of the center
+whose name is in "str" (a Hollerith string of length "len").
+The list of known names in the delimited string "namcnt", and
+there are "n" of these names.
+\end{verbatim}
+
+@a
+      integer function lsubst(NAMCNT,N,STR,LEN)
+      implicit none
+      integer i , ians , In , Iout , Ipunch , LEN , lent , N , NAMCNT ,
+     &        ncur , STR , tstr
+      logical streqc
+      dimension tstr(5) , STR(*) , NAMCNT(*)
+      common /io    / In , Iout , Ipunch
+C
+C                        initialize and loop over names.
+      ncur = 0
+      do 100 i = 1 , N
+C
+C                        get the next name from the list and see
+C                        if it matches the supplied name.
+         call getb(2,tstr,lent,NAMCNT,ncur)
+         if ( LEN.eq.lent ) then
+            if ( streqc(tstr,STR,LEN) ) then
+               ians = i
+               goto 200
+            endif
+         endif
+C
+ 100  continue
+C
+C                        center is not found.
+      call strout(Iout,15HUNKNOWN CENTER:,15,0)
+      call strout(Iout,STR,LEN,1)
+      call fferr(0,0)
+      call lnk1e
+ 200  lsubst = ians
+      return
+C
+      end
+@* INDEX.

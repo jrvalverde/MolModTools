@@ -1,0 +1,64 @@
+@* rdtitl.
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]    ITITLE
+\item[Transmits as argument]  LABEL
+\item[Uses]  IN      IOUT    ITITLE  LABEL
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       PAKSTR  PUTICR  TWRITE
+\item[Called by]   RDGEOM
+
+\end{description}
+
+\begin{verbatim}
+This routine deals with the title of the job.  This
+section is read from fortran unit "in", and is packed into
+/label/.  The updated common block is then "twritten" out,
+and the title is printed in the output file.
+\end{verbatim}
+
+@a
+      subroutine rdtitl
+      implicit none
+      integer i , ic , In , iolbl , Iout , Ipunch , Irtcrd , Ititle ,
+     &        Label , len , lend , lent , lold
+      integer dash , blank
+      dimension ic(20)
+      common /label / Label(1000) , Ititle(100) , Irtcrd(100)
+      common /io    / In , Iout , Ipunch
+      data iolbl/502/
+      data dash/'-'/ , blank/' '/
+C
+99001 format (20A4)
+99002 format (2x,19A4)
+99003 format (2x,128A1)
+C
+      len = 0
+      do 100 i = 1 , 100
+         Ititle(i) = blank
+ 100  continue
+C
+ 200  read (In,99001) (ic(i),i=1,20)
+      lold = len
+      call pakstr(ic,80,Ititle,len)
+      call puticr(blank,Ititle,len)
+      if ( lold+1.ne.len ) goto 200
+C
+      call twrite(iolbl,Label,600,1,600,1,0)
+C
+      len = len - 1
+      lend = min0(len,76)
+      write (Iout,99003) (dash,i=1,lend)
+      lent = len/4 + 1
+      write (Iout,99002) (Ititle(i),i=1,lent)
+      write (Iout,99003) (dash,i=1,lend)
+      return
+C
+      end
+@* INDEX.

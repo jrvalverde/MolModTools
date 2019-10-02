@@ -1,0 +1,254 @@
+@* zget.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[INPUT:] IOP
+\item[PASSED:] ICHARG
+\item[PASSED:] MULTIP
+\item[INPUT:] TOANG
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]    ALPHA   BETA    BL      FPVEC   INTVEC  LALPHA  LBETA
+             LBL     NVAR    VALUES
+\item[Transmits as argument]  ANAMES  IANZ    NZ
+\item[Uses]  ALPHA   ANAMES  BETA    BL      FPVEC   IANZ    INTVEC
+             IOUT    LALPHA  LBETA   LBL     NVAR    NZ      VALUES
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   FFGET   FFREAD  GATAN   IORD    LNK1E   PRMOUT
+             PUTB    PUTDEL  RDCHG   ZMATCH  ZSYMB
+\item[Called by]   RDGEOM
+
+\end{description}
+
+\begin{verbatim}
+Read the up to 3 geometry input sections and fill /zmat/ and
+/zsubst/.
+\end{verbatim}
+
+@a
+      subroutine zget(IOP,ICHARG,MULTIP,TOANG)
+      implicit none
+      double precision Alpha , Anames , Beta , Bl , con , f45 , fp ,
+     &                 Fpvec , gatan , one , symbls , tmpstr , TOANG ,
+     &                 tobohr , torad , tstr , Values , zero
+      integer i , Ianz , ICHARG , ieof , if1 , In , Intvec , IOP ,
+     &        iord , Iout , Ipunch , iunits , Iz , j , Lalpha , Lbeta ,
+     &        Lbl , len , lent , MULTIP
+      integer namcnt , ncursr , nsymb , Nvar , Nz
+      integer maxsym
+      logical ok , iv0 , streqc
+      dimension IOP(*)
+      dimension symbls(100) , tstr(6) , tmpstr(6) , namcnt(50)
+      common /io    / In , Iout , Ipunch
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) ,
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz ,
+     &                Nvar
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+C maximum number of symbols in z-matrix
+      data maxsym/50/
+      data zero/0.0D0/
+      data one/1.0D0/ , f45/45.D0/
+C
+C
+C
+C
+C
+99001 format (' Integer Parameters Encountered on Z-MATRIX Card ',i3)
+99002 format (' THE MAXIMUM OF ',i4,'  VARIABLES HAS BEEN EXCEEDED')
+99003 format (' Too Many Symbols Encountered by SUBROUTINE ZGET.')
+99004 format (' UNDEFINED SYMBOL (Bond Length); Record ',i4)
+99005 format (' UNDEFINED SYMBOL (Alpha Angle); Record ',i4)
+99006 format (' UNDEFINED SYMBOL (Beta Angle); Record ',i4)
+99007 format (1x,5x,'VARIABLES')
+99008 format (1x,5x,'CONSTANTS')
+C
+C
+C                            read z-matrix section.
+C                            upon return from zsymb:
+C                             nsymb: total number of symbols
+C                                    (non-numbers) in z-mat
+C                             lbl, lalpha, lbeta:
+C                                    1 for integer
+C                                    2 for floating point
+C                                    3 for symbol
+C                                   -3 for -symbol
+      do 100 i = 1 , maxsym
+         nsymb = 0
+         Lbl(i) = 0
+         Lalpha(i) = 0
+         Lbeta(i) = 0
+         Intvec(i) = 0
+         Fpvec(i) = zero
+         Bl(i) = zero
+         Alpha(i) = zero
+         Beta(i) = zero
+ 100  continue
+      call zsymb(nsymb,IOP,ICHARG,MULTIP,symbls,namcnt)
+C
+C                                        scan for integers as z-matrix
+C                                        parameters and convert the
+C                                        code used for constants.
+      ok = .true.
+      do 200 i = 1 , Nz
+         if ( Lbl(i).eq.2 ) Lbl(i) = 0
+         if ( Lalpha(i).eq.2 ) Lalpha(i) = 0
+         if ( Lbeta(i).eq.2 ) Lbeta(i) = 0
+         if ( Lbl(i).eq.1 .or. Lalpha(i).eq.1 .or. Lbeta(i).eq.1 ) then
+            ok = .false.
+            write (Iout,99001) i
+         endif
+ 200  continue
+      if ( .not.ok ) call lnk1e
+C
+C                                        only 0 and +/- 3 remains in
+C                                        lbl, lalpha, lbeta.  unless
+C                                        there are no symbols convert
+C                                        these to +/- 3000 so that they
+C                                        won't be confused as pointers
+C                                        to variable 3.
+      if ( nsymb.ne.0 ) then
+         do 250 i = 1 , Nz
+            Lbl(i) = Lbl(i)*1000
+            Lalpha(i) = Lalpha(i)*1000
+            Lbeta(i) = Lbeta(i)*1000
+ 250     continue
+C
+C                                       process variables section.
+         Nvar = 0
+         ncursr = 0
+         write (Iout,99007)
+C
+C                                       top of loop over variables.
+ 300     call ffread(ieof)
+         if ( ieof.eq.0 ) then
+            Nvar = Nvar + 1
+            if ( Nvar.gt.maxsym ) then
+               write (Iout,99002) maxsym
+               call lnk1e
+            endif
+C
+C                                       read in name, value, integer,
+C                                        floating point.
+C            get variable name.
+            call ffget(tstr,lent,i,fp,if1)
+            if ( if1.eq.iord('END') ) Nvar = Nvar - 1
+            if ( if1.ne.iord('END') ) then
+               if ( if1.ne.iord('STR') ) call fferr('STR',if1)
+C                  pack the name into "anames".
+               call putb(tstr,lent,Anames,ncursr)
+               call putdel(2,Anames,ncursr)
+C                  get the value.
+               call ffget(tstr,len,i,Values(Nvar),if1)
+               if ( if1.ne.iord('FP') ) call fferr('FP',if1)
+C                  look for some integer.
+               iv0 = .false.
+               call ffget(tstr,len,Intvec(Nvar),fp,if1)
+               if ( if1.ne.iord('END') ) then
+                  if ( if1.ne.iord('INT') ) call fferr('INT',if1)
+                  iv0 = .true.
+C                  look for some floating point value.
+                  call ffget(tstr,len,i,Fpvec(Nvar),if1)
+                  if ( if1.ne.iord('END') ) then
+                     if ( if1.ne.iord('FP') ) call fferr('FP',if1)
+                  endif
+               endif
+C
+C                                      look for matches in the z-matrix.
+               call zmatch(ok,symbls,tstr,lent,Values(Nvar),.true.,
+     &                     nsymb)
+C
+C                                    print out record.
+               call prmout(ok,iv0,tstr,lent,Values(Nvar),Intvec(Nvar),
+     &                     Fpvec(Nvar))
+               if ( .not.ok ) call lnk1e
+               goto 300
+            endif
+         endif
+C
+C                                        end of variables section.
+C                                        process constants section if
+C                                        undefined symbols remain.
+         if ( nsymb.ne.0 ) then
+            write (Iout,99008)
+C
+C                                        top of loop over constants.
+ 320        call ffread(ieof)
+            if ( ieof.eq.0 ) then
+C
+C                                        read in name and value.
+               call ffget(tstr,lent,i,fp,if1)
+               if ( if1.ne.iord('END') ) then
+                  if ( if1.ne.iord('STR') ) call fferr('STR',if1)
+C
+                  call ffget(tstr,lent,i,fp,if1)
+                  if ( if1.ne.iord('FP') ) call fferr('FP',if1)
+C
+C
+C                                        search for matches in the
+C                                        z-matrix.
+                  call zmatch(ok,symbls,tstr,lent,fp,.false.,nsymb)
+C
+C                                    print out data.
+                  call prmout(ok,.false.,tstr,lent,fp,0,0)
+                  if ( .not.ok ) call lnk1e
+                  goto 320
+               endif
+            endif
+C
+C                                         end of loop over constants.
+C                                         insure that all symbols have
+C                                         been defined.
+            if ( nsymb.ne.0 ) then
+               if ( nsymb.le.0 ) then
+                  write (Iout,99003)
+                  call lnk1e
+               endif
+               do 330 i = 1 , Nz
+                  if ( iabs(Lbl(i)).eq.3000 ) write (Iout,99004) Bl(i)
+                  if ( iabs(Lalpha(i)).eq.3000 ) write (Iout,99005)
+     &                 Alpha(i)
+                  if ( iabs(Lbeta(i)).eq.3000 ) write (Iout,99006)
+     &                 Beta(i)
+ 330           continue
+               call lnk1e
+            endif
+         endif
+      endif
+C
+C                                         convert to atomic units.
+C
+      iunits = IOP(20)
+      if ( iunits.ne.3 ) then
+         tobohr = one
+         torad = one
+         if ( iunits.eq.0 .or. iunits.eq.2 ) tobohr = one/TOANG
+         if ( iunits.le.1 ) torad = gatan(one)/f45
+         do 350 i = 1 , Nz
+            Bl(i) = Bl(i)*tobohr
+            Alpha(i) = Alpha(i)*torad
+            Beta(i) = Beta(i)*torad
+ 350     continue
+         if ( Nvar.ne.0 ) then
+            do 380 i = 1 , Nvar
+               con = torad
+               do 360 j = 1 , Nz
+                  if ( iabs(Lbl(j)).eq.i ) con = tobohr
+ 360           continue
+               Values(i) = Values(i)*con
+ 380        continue
+         endif
+      endif
+C
+C     possibly read non default atomic charges:
+      if ( IOP(31).ne.0 ) call rdchg(namcnt,Nz,Ianz,IOP)
+      return
+C
+      end
+@* INDEX.

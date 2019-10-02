@@ -1,0 +1,58 @@
+@* nosign.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[PASSED:] STR
+\item[OUTPUT:] LEN
+\item[OUTPUT:] ISGN
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Uses]   NOTHING
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       GETCHR  IORD    PUTICR
+\item[Called by]   ZPARM
+
+\end{description}
+
+\begin{verbatim}
+A routine to look for a leading minus sign in a string.
+The string (of length "len") is in "str".  If a minus is found,
+Then this is removed from the string ("str" and "len" are updated
+accordingly).  If no sign is found, then "isgn" is returned
++1, if a minus is found, then it is returned -1.
+C
+\end{verbatim}
+
+@a
+      subroutine nosign(STR,LEN,ISGN)
+      implicit none
+      integer chr , cursor , getchr , iord , ISGN , LEN , ocursr , STR
+      dimension STR(*)
+C                        get the first character in the string, and
+C                        see if it's  minus or plus.
+      cursor = 0
+      ISGN = 1
+      chr = getchr(STR,cursor)
+      if ( chr.ne.iord('-') .and. chr.ne.iord('+') ) return
+C
+C                        copy the characters of the string down,
+C                        and set value of isgn.
+      ISGN = -1
+      if ( chr.eq.iord('+') ) ISGN = 1
+      LEN = LEN - 1
+      ocursr = 0
+ 100  if ( cursor.gt.LEN ) return
+      chr = getchr(STR,cursor)
+      call puticr(chr,STR,ocursr)
+      goto 100
+C
+      end
+@* INDEX.

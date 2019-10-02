@@ -1,0 +1,433 @@
+@* rdgeom.
+\begin{verbatim}
+     overlay 1 ... gaussian system input and optimization control
+
+      in the gaussian system, overlay one contains those programs
+  that read in geometry and optimization input and those that control
+  optimization calculations.  currently, the following links are
+  implemented:
+
+      link 101 ...  basic input.  this link reads in the title,
+                    z-matrix, variables, and constants sections of
+                    the input.
+
+      link 102 ... fletcher-powell optimization program.  this link
+                   implements the algorithm of fletcher and powell
+                   as modified by binkley and pople.
+                   it, along with the interface code present in
+                   other links, is capable of driving geometry
+                   optimizations.  derivative information is gained
+                   by numerical differentiation of the energy with
+                   respect to the geometrical variables.
+
+      link 103 ... gradient optimization program.4  this program
+                   is used in conjunction with those links that
+                   produce analytical energy derivatives to per-
+                   form geometry optimizations.
+
+      link 105 ... murtaugh-sargent optimization program.
+                   this program also uses analtically determined
+                   first derivatives to optimize geometry with
+                   respect to energy.  although, in general, it is
+                   not as efficient as link 103, it has a more
+                   stable algorithm and is less prone to aimless
+                   wandering on the potential surface.
+
+    note that most of the options for link 103 are only examined
+    in the first call to the link in any given run.
+
+iop(5)
+
+   iop(5)  l103   mode of optimization
+             0    find local minimum
+             1    find a saddle point
+             n    find a stationary point on the energy surface with
+                  n negative eigenvalues of the 2nd derivative matrix
+iop(6)
+
+   iop(6)  l103 and l105   maximum number of steps
+             0    nstep = min(20,nvar+10)
+             n    nstep = n
+iop(7)
+
+   iop(7)  l103 and l105   convergence on the first derivative
+                  and estimated displacement for the optimization:
+                  rms first derivative .lt. confv,
+                  rms est. displacement .lt. convx=4*convf
+             0    convf = 0.0003 hartre/bohr or radian
+             n    convf = 0.001 / n
+iop(8)
+
+   iop(8)  l103   maximum step size allowed during optimization
+             0    dxmaxt = 0.2 bohr or radian
+             n    dxmaxt = 0.01 * n
+iop(10)
+
+   iop(10) l103   input of initial second derivative matrix
+                  all values must be in atomic units (hartre, bohr,
+                  and radians).
+             0    no
+             1    read ((fc(i,j),j=1,i),i=1,nvar)  (8f10.6)
+             2    read i,j,fc(i,j)      (5i3,f20.0)
+                  end with a blank card.
+             3    read from guess file
+             4    second derivative matrix calculated analytically
+
+   iop(10) l105 initial second derivative matrix
+                0 ... idenity
+                4 ... use analytical second derivatives
+
+iop(12)
+
+   iop(12)  l103  optimization control parameters
+             0    use default values
+             1    read in new values for all parameters (see initbs)
+
+iop(14)
+
+   iop(14)  l103  minimum rms force for which a linear search
+                  will be attempted
+             0    fswtch = 0.01 hartrees/bohr or /radian
+             n    fswtch = 0.001 * n
+iop(15)
+
+   iop(15)  l103  abort if derivatives too large
+             0    fmaxt = 1.0 hartre / bohr or radian
+             n    fmaxt = 0.1 * n
+iop(16)
+
+   iop(16)  l103  maximum allowable magnitude of the eigenvalues
+                  of the second derivative matrix. if the limit is
+                  exceeded, the size of the eigenvalue is reduce
+                  to the maximum, and processing continues.
+             0    eigmax = 25.0 hartre / bohr**2 or radian**2
+             n    eigmax = 0.1 * n
+iop(17)
+
+   iop(17)  l103  minimum allowable magnitude of the eigenvalues
+                  of the second derivative matrix. simmilar to iop(16)
+             0    eigmin = 0.0001
+             n    eigmin = 1. / n
+
+iop(18)
+
+  iop(18) l103 ... star only option
+     0 ... proceed normally
+     1 ... second derivatives will be computed as directed on the
+           variable definition cards.  no optimization will occur.
+
+iop(19)
+
+   iop(19)  l103  skip linear search.
+             0    no
+             1    yes.
+
+iop(20)
+
+  iop(20) l101 ... input units
+      0 ... angstroms degrees
+      1 ... bohrs     degrees
+      2 ... angstroms radians
+      3 ... bohrs     radians
+
+iop(29)
+
+      iop(29) l101 ... specification of nuclear centers
+                   note that this option is usually set in conjuntion
+                   with iop(29) in link 202.
+      0 ... by z-matrix
+      1 ... by direct coordinate input
+
+
+iop(31)
+
+   iop(31)  l103  are the read-write files to be updated
+                  this option is set for the last call to 103 in
+                  frequency calculations in order to preserve the
+                  values of the variables for archiving.
+             0    yes
+             1    no
+iop(32)
+
+   iop(32)  l103  writing of second derivatives to the punch unit
+                    (guess file) at the conclusion of the optimization
+             0    no
+             1    yes
+
+
+iop(33)
+
+     iop(33)  l101 l102 l103  ... debug print
+       0 .. off
+       1 .. on
+
+iop(34)
+
+     iop(34)  l101 l102 l103  ... debug + dump print
+       0 .. off
+       1 .. on
+
+
+
+l101
+                       read geometry input
+
+
+      purpose:  link 101 reads the title section, z-matrix section,
+                variables section, and constants section of the input
+                deck.  the data are placed on the r/w file for use
+                by subsequent links in the gaussian system.
+                optionally, l101 may read coordinates directly.
+      input:    data on cards in the input deck.
+                options in iop as outlined above.
+      output:   all geometrical output is in atomic units
+                (bohrs/radians).
+               /zmat/  this is replaced by zmat for overlaying
+                      purpuse, but they are the same commons.
+               /zmat/ consists of eight arrays dimensioned to hold the
+                       data from up to 50 z-matrix cards and two
+                       variables containing counters.
+                       ianz-   atomic numbers
+                       iz-     connectivity data
+                       bl-     bond lengths
+                       alpha-  valence angles
+                       beta-   dihedral or second valence angle
+                       lbl-    an array used to map from the array of
+                               variable values in /zsubst/ to the array
+                               bl in /zmat/.   for lbl(n)=0, no
+                               substitution is required to get bl(n):
+                               it already contains the proper value.
+                               for lbl(n)=i, bl(n)=values(i); for
+                               lbl(n)=-i, bl(n)=-values(i).
+                      lalpha-  analagous to lbl for alpha.
+                      lbeta-   analagous to lbl for beta.
+                      nz-      the number of cards in the z-matrix.
+                      nvar-    the number of variables, equal to the
+                               number of symbols defined in the
+                               variables section of the input.
+                /zsubst/ contains the data in the variables section of
+                         the input.
+                      anames-  alphanumeric names of the variables.
+                               (limited to 8 characters in the current
+                                vax version).
+                      values-  the corresponding numeric values.  these
+                               will be altered in the course of
+                               geometry optimizations and potential
+                               surface scans.
+                      intvec-  an array of the integer values following
+                               the symbol and value on a line in the
+                               variables section.
+                      fpvec-   a corresponding array containing the
+                               floating point number.  the use of these
+                               two vectors depends upon the route.
+
+
+     a description of the means of specifying the nuclear coordinates
+     follows.
+
+geometry
+z-matrix
+
+      z-matrix specification section.
+
+          this section is  always  required.   it  specifies  the
+     nuclear  positions  and the number of electrons of alpha and
+     beta spin.  the input is free-field;  the several  items  on
+     each card may be separated by either blanks or commas.
+
+          the  first  card  of  the  section  specifies  the  net
+     electric  charge  (signed integer) and the spin multiplicity
+     (positive integer).  thus,  for  a  neutral  molecule  in  a
+     singlet state, the entry "0 1" is appropriate.
+
+          the remaining cards are used to  specify  the  relative
+     positions of the nuclei.  most of these will be real nuclei,
+     used later in the molecular orbital  computation.   however,
+     it  is  frequently  useful to introduce "dummy nuclei" which
+     help specify the  geometry  but  are  ignored  subsequently.
+     their use will become clear in examples given below.
+
+          each   nucleus   (including   dummies)   is    numbered
+     sequentially  and specified on a single card.  (this data is
+     referred to as the z-matrix).  thus, the nature and location
+     of  the n-th nucleus is specified on the (n+1)th card in the
+     section in terms of the positions of the previously  defined
+     nuclei 1,2,...(n-1).
+
+          the information about the n-th nucleus is contained  in
+     up to eight separated items on the card:
+
+                element, n1, length, n2, angle, n3 twist, j
+
+     each of these items is now discussed.
+
+          "element" specifies the chemical nature of the nucleus.
+     it  may  consist  of just the chemical symbol such as "h" or
+     "c" for of carbon.  alternatively, it may be an alphanumeric
+     string   beginning   with   the  chemical  symbol,  followed
+     immediately by a secondary identifying integer.  thus,  "c5"
+     can  be  used to specify a carbon nucleus, identified as the
+     fifth carbon in the molecule.  this is sometimes  convenient
+     in  following conventional chemical numbering.  dummy nuclei
+     are denoted by the symbols "x" or "-".  the  item  "element"
+     is  required  for  every  nucleus.   for  the  first nucleus
+     specified (n=1), it is the only item on the card.
+
+          "n1" specifies the  (previously  defined)  nucleus  for
+     which  the  internuclear length r(n,n1) will be given.  this
+     item may be either an integer (the value of n1 <  n)  or  an
+     alphanumeric  string.   in  the latter case, the string must
+     match the "element" field of a previous z-matrix card.
+
+          "length" is the internuclear length r(n,n1).  this  may
+     be either a positive floating point number giving the length
+     in  angstroms  or  an  alphanumeric   string   (maximum   16
+     characters).   in the latter case, the length is represented
+     by a "variable" for which  a  value  will  be  specified  in
+     section 4.  use of variables in the z-matrix is essential if
+     optimization is to be carried out.  however, they  can  also
+     be  used  in single-point runs.  the items "n1" and "length"
+     are required for all nuclei after the first.  for the second
+     nucleus, only "element", "n1", and "length" are required.
+
+          "n2" specifies the nucleus for which  the  internuclear
+     angle  theta(n,n1,n2)  will  be given.  again this may be an
+     integer (the value of n2 <  n)  or  an  alphanumeric  string
+     which  matches  a  previous "element" entry.  note that "n1"
+     and "n2" must represent different nuclei.
+
+          "angle" is the internuclear angle theta(n,n1,n2).  this
+     may  be  a floating point number giving the angle in degrees
+     or an alphanumeric string representing a variable.  "n2" and
+     "angle"  are  required for all nuclei after the second.  for
+     the third nucleus, only "element", "n1", "length", "n2", and
+     "angle" are rquired.
+
+          "n3".  the significance of "n3" and "twist" depends  on
+     the value of the last item "j".  if j=0, or is omitted, "n3"
+     specifies th nucleus for  which  the  internuclear  dihedral
+     angle,  phi(n,n1,n2,n3)  will  be  given;   as with "n1" and
+     "n2", this  may  be  either  an  integer  (n3  <  n)  or  an
+     alphanumeric string matching a previous "element" entry.
+
+          "twist" (if j=0) is  the  internuclear  dihedral  angle
+     phi(n,n1,n2,n3).  again, this may be a floating point number
+     giving the  angle  in  degrees  or  an  alphanumeric  string
+     representing  a  variable  (or  a  variable  preceeded  by a
+     negative sign).  the dihedral angle is defined as the  angle
+     (-180.0  <  phi  <= +180.0) between the planes (n,n1,n2) and
+     (n1,n2,n3).  the sign is positive if  the  movement  of  the
+     directed   vector   (n1-->n)  towards  the  directed  vector
+     (n2-->n3) involves a righthanded screw motion.
+
+          "j".  the above descriptions of "n3" and "twist"  apply
+     if  the  item "j" is zero or absent.  although it is usually
+     possible to specify the nucleus n by a bond length,  a  bond
+     angle,  and  a  dihedral  angle,  it is sometimes simpler to
+     replace th dihedral angle by a second bond angle.   this  is
+     called for by using j = +1 or -1.
+
+          "n3".  if "j" is +1 or -1, "n3" specifies  the  nucleus
+     for which the second internuclear angle chi(n,n1,n3) will be
+     given.  as usual, this may be either an integer (n3 < n)  or
+     an  alphanumeric  string  representing  a previously defined
+     nucleus.
+
+          "twist".  if "j" is +1 or -1, then this item gives  the
+     value  for  the  second internuclear angle chi(n,n1,n3).  as
+     before, this may be either a floating point number (value in
+     degrees) or an alphanumeric string representing a variable.
+
+          "j".  in the event of specification by two internuclear
+     angles  theta, chi, there will be two possible positions for
+     the nucleus n.  this is fixed by the sign of "j".  thus j=+1
+     if the triple vector product:
+
+          (n1-->n) .  ((n1-->n2) x (n1-->n3))  is  positive,  and
+     j=-1 if the product is negative.
+
+          the z-matrix is terminated  by  the  blank  card  which
+     indicates the end of the molecule specification section.  if
+     no variables have been introduced and if the command "alter"
+     has  not  been invoked in the job-type section, the input is
+     complete  and  gaussian  78  will  perform   the   requested
+     computation.
+
+
+
+
+
+\end{verbatim}
+\section*{\sf Dummy Arguments}  
+\begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  ANAMES  C       IAN     IANZ    ICHARG  IOP     MULTIP 
+             NATOMS  TOANG                                          
+\item[Uses]  ANAMES  C       IAN     IANZ    ICHARG  IOP     IZ     
+             MULTIP  NATOMS  NVAR    TOANG                          
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       CHGMLT  DRUM    ILSW    RCOORD  RDTITL  TWRITE  ZGET   
+\item[Called by]   L101                                                   
+                                                                    
+\end{description}
+
+@a
+      subroutine rdgeom(JUMP)
+      implicit none
+      double precision Alpha , Anames , Atmchg , Beta , Bl , C , Fpvec , 
+     &                 Phycon , Toang , Values
+      integer i , Ian , Ianz , Icharg , Intvec , Iop , iozmat , iozsub , 
+     &        Iz , j , JUMP , Lalpha , Lbeta , Lbl , Multip , Nae , 
+     &        Natoms , Nbasis , Nbe , Ne
+      integer Nvar , Nz, ii
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvar
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      common /phycon/ Toang , Phycon(29)
+C
+      data iozmat/507/ , iozsub/570/
+C
+C
+      call drum
+      call rdtitl
+      if ( Iop(29).eq.0 ) then
+C
+         call zget(Iop,Icharg,Multip,Toang)
+      else
+         call rcoord(Natoms,Multip,Icharg,Ian,C,Iop,Toang)
+C Unfortunately the two types of geometry-reading routines
+C do not return values in the same place; here is a fix:
+         nz = natoms
+         do 1 ii = 1,nz
+    1 ianz(ii) = ian(ii)
+C end of fix
+      endif
+      call ilsw(1,18,1)
+      call chgmlt(Icharg,Multip)
+      call twrite(iozmat,Ianz,351,1,351,1,0)
+C     common mol is saved in the chaining (nextov) routine
+      if ( Nvar.ne.0 ) call twrite(iozsub,Anames,175,1,175,1,0)
+      if ( Iop(34).ne.0 ) write (6,99001) ((Iz(i,j),j=1,3),i=1,3)
+C
+99001 format (' IZ=',3I10)
+C
+      JUMP = 0
+      return
+C
+      end
+@* INDEX.

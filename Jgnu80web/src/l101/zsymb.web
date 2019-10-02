@@ -1,0 +1,181 @@
+@* zsymb.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[OUTPUT:] ISYMB
+\item[PASSED:] IOP
+\item[OUTPUT:] ICHARG
+\item[INPUT:] MULTIP
+\item[PASSED:] SYMBLS
+\item[PASSED:] NAMCNT
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]    IANZ    IZ      NZ
+\item[Transmits as argument]  ALPHA   BETA    BL      LALPHA  LBETA   LBL
+\item[Uses]  ALPHA   BETA    BL      IOUT    IZ      LALPHA  LBETA
+             LBL     NZ
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   FFGET   FFREAD  FFSET   ILSW    IORD    ISUBST
+             LNK1E   PAD     PUTB    PUTDEL  SZPRNT  ZCENTR  ZPARM
+\item[Called by]   ZGET
+
+\end{description}
+@a
+      subroutine zsymb(ISYMB,IOP,ICHARG,MULTIP,SYMBLS,NAMCNT)
+      implicit none
+      double precision Alpha , Beta , Bl , fp , str , SYMBLS
+      integer i , Ianz , ICHARG , ieof , if1 , if2 , In , IOP , iord ,
+     &        Iout , Ipunch , isubst , ISYMB , Iz , Lalpha , Lbeta ,
+     &        Lbl , len , lenx , MULTIP
+      integer NAMCNT , ncur , nsb , Nvar , Nz
+      dimension IOP(50) , str(10) , SYMBLS(100)
+      dimension NAMCNT(*)
+      common /io    / In , Iout , Ipunch
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) ,
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz ,
+     &                Nvar
+C
+C
+C
+C
+C
+99001 format (1H0,' **** END OF FILE')
+99002 format (1x,'   CHARGE =',i2,' MULTIPLICITY =',i2)
+99003 format (1x,'SYMBOLIC Z-MATRIX')
+99004 format (1H0,'  CHARGE, MULTIPLICITY CARD SEEMS DEFECTIVE:')
+99005 format (1x,5x,'MULTIPLICITY IS ZERO')
+99006 format (1x,5x,'CHARGE IS BOGUS.')
+99007 format (1x,5x,'MULTIPLICITY IS BOGUS.')
+99008 format (1H0,'THE MAXIMUM OF 50 Z-MATRIX CARDS HAS BEEN EXCEEDED')
+99009 format ('  THE NAME OF THE CENTER IS TOO LONG.')
+C
+C     initialize the free-field input routine, the output routine,
+C     and some flags.
+C
+      write (Iout,99003)
+      call szprnt(0,0,0,0)
+      Nz = 0
+      ISYMB = 0
+      nsb = 0
+      ncur = 0
+      call ffset(IOP(34))
+      call ffread(ieof)
+      if ( ieof.ne.0 ) then
+         write (Iout,99001)
+         call lnk1e
+      endif
+C
+C     read and deal with charge and multiplicity.
+C
+      call ffget(str,len,ICHARG,fp,if1)
+      call ffget(str,len,MULTIP,fp,if2)
+C                  default charge of zero.
+      if ( if1.eq.iord('NUL') ) ICHARG = 0
+      if ( if1.ne.iord('NUL') ) then
+C
+C                        make sure charge and multiplicit look ok.
+         if ( if1.ne.iord('INT') .or. if2.ne.iord('INT') .or.
+     &        MULTIP.le.0 ) then
+C
+C                        something's bogus.  print error message.
+            write (Iout,99004)
+            if ( if1.ne.iord('INT') ) write (Iout,99006)
+            if ( if1.ne.iord('INT') ) call fferr(3HINT,if1)
+            if ( if2.ne.iord('INT') ) write (Iout,99007)
+            if ( if2.ne.iord('INT') ) call fferr(3HINT,if2)
+            if ( MULTIP.le.0 ) write (Iout,99005)
+            call lnk1e
+         endif
+      endif
+C
+C                        print charge, multiplicity.
+      write (Iout,99002) ICHARG , MULTIP
+      i = 0
+      if ( MULTIP.gt.1 ) i = 1
+      call ilsw(1,1,i)
+C
+C     here is the top of the loop for reading z-matrix cards.
+C
+C     print the just processed card.
+ 100  if ( Nz.ne.0 ) call szprnt(2,0,0,0)
+C
+C     read the next card.
+      call ffread(ieof)
+      if ( ieof.ne.0 ) then
+         write (Iout,99001)
+         call lnk1e
+      endif
+C
+C                        get name of this center. make sure it's legal.
+      call ffget(str,len,i,fp,if1)
+      if ( if1.ne.iord('END') ) then
+         if ( if1.ne.iord('STR') ) call fferr(3HSTR,if1)
+         if ( len.gt.4 ) write (Iout,99009)
+         if ( len.gt.4 ) call fferr(0,0)
+         lenx = len
+         call pad(str,lenx,2,1H )
+C
+C                        append this to the list (namcnt).
+         call putb(str,len,NAMCNT,ncur)
+         call putdel(2,NAMCNT,ncur)
+C
+C                        print it out.
+         call szprnt(1,str,len,4)
+         Nz = Nz + 1
+C
+C                        get atomic number of center.
+         Ianz(Nz) = isubst(str)
+         if ( Nz.ne.1 ) then
+C
+C     trap for too many cards.
+            if ( Nz.gt.50 ) then
+               write (Iout,99008)
+               call lnk1e
+            endif
+C
+C                        get the name of the center to which this
+C                        is attached.
+            call zcentr(Iz(Nz,1),NAMCNT,Nz)
+C
+C                        get the bond length.
+            call zparm(Bl(Nz),Lbl(Nz),SYMBLS,nsb,ISYMB)
+            if ( Nz.ge.3 ) then
+C
+C                        get name of third center.
+               call zcentr(Iz(Nz,2),NAMCNT,Nz)
+C
+C                        get the internuclear angle.
+               call zparm(Alpha(Nz),Lalpha(Nz),SYMBLS,nsb,ISYMB)
+               if ( Nz.ge.4 ) then
+C
+C                        get the fourth center.
+                  call zcentr(Iz(Nz,3),NAMCNT,Nz)
+C
+C                        get the last angle.
+                  call zparm(Beta(Nz),Lbeta(Nz),SYMBLS,nsb,ISYMB)
+C
+C                        get the last integer.
+                  call ffget(str,len,i,fp,if1)
+                  if ( if1.ne.iord('END') .and. if1.ne.iord('INT') )
+     &                 call fferr(3HINT,if1)
+                  if ( if1.eq.iord('END') ) Iz(Nz,4) = 0
+                  if ( if1.eq.iord('INT') ) Iz(Nz,4) = i
+                  call szprnt(1,Iz(Nz,4),0,1)
+               endif
+            endif
+         endif
+         goto 100
+      endif
+C
+C                        exit.
+      return
+C
+      end
+@* INDEX.

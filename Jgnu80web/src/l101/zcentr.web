@@ -1,0 +1,86 @@
+@* zcentr.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[OUTPUT:] IZ
+\item[PASSED:] NAMCNT
+\item[INPUT:] NZ
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Transmits as argument]  IOUT
+\item[Uses]  IOUT
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   FFGET   IORD    LSUBST  STROUT  SZPRNT
+\item[Called by]   ZSYMB
+
+\end{description}
+
+\begin{verbatim}
+A routine to read (via "ff" routines) a center specification
+from a Z-matrix card.  this specification may be either an
+integer (the sequential number of a previous Z-matrix card),
+or the name of a previously defined center.  "iz" is returned
+as the sequential number of the center being referenced.
+"namcnt" is a delimited Hollerith string containing the names
+of the centers.  "nz"  is the sequential number of the curent
+Z-matrix card.
+\end{verbatim}
+
+@a
+      subroutine zcentr(IZ,NAMCNT,NZ)
+      implicit none
+      integer i , if1 , In , iord , Iout , Ipunch , IZ , len , lsubst ,
+     &        NAMCNT , NZ , str
+      double precision fp
+      dimension str(10) , NAMCNT(*)
+      common /io    / In , Iout , Ipunch
+C
+C                  get whatever is in the line.
+      call ffget(str,len,i,fp,if1)
+C
+C                  make sure it's legal.
+      if ( if1.ne.iord('STR') ) then
+         if ( if1.eq.iord('INT') ) then
+C
+C                  found integer.
+            IZ = i
+            call szprnt(1,IZ,0,1)
+            return
+         else
+            write (Iout,99001)
+C
+99001       format ('  CENTER SPEC. MUST BE EITHER INTEGER OR STRING.')
+C
+            call fferr(0,if1)
+         endif
+      endif
+C
+C                  found a string. make srure it's not too long,
+C                  then locate it in the name list.
+      if ( len.le.4 ) then
+         IZ = lsubst(NAMCNT,NZ-1,str,len)
+         call szprnt(1,str,len,4)
+         return
+      endif
+C
+C                  center name is too long.
+      write (Iout,99002)
+C
+99002 format ('  CENTER NAME IS TO LONG.')
+C
+      call strout(Iout,3H  ?,3,0)
+      call strout(Iout,str,len,1)
+      call strout(Iout,1H?,1,1)
+      call fferr(0,0)
+      return
+C
+      end
+@* INDEX.

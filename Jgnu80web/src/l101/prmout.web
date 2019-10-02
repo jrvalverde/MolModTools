@@ -1,0 +1,102 @@
+@* prmout.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[INPUT:] OK
+\item[INPUT:] IV0
+\item[PASSED:] STR
+\item[PASSED:] LEN
+\item[INPUT:] VALUE
+\item[INPUT:] INT
+\item[INPUT:] FP
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Transmits as argument]  IOUT
+\item[Uses]  IOUT
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       GABS    PAD     PUTB    PUTBC   PUTCHR  PUTFP   PUTI
+             STROUT
+\item[Called by]   ZGET
+
+\end{description}
+
+\begin{verbatim}
+A routine to print out a Z-matrix parameter definition
+card.  the arguments are:
+          ok ..... a logical variable indicating whether this name
+              was actually located in the z-matrix.
+          iv0 .... a logical variable indicating whether any of
+              the optional fields on the definition card are prestnt.
+          str .... the name of the parameter (hollerith).
+          len .... the number of characters in "str".
+          value .. the value of the parameter.
+          int .... the optional integer value in the card.
+          fp ..... the optional floating point value.
+                              space for 80 characters.
+\end{verbatim}
+
+@a
+      subroutine prmout(OK,IV0,STR,LEN,VALUE,INT,FP)
+      implicit none
+      integer In , INT , Iout , Ipunch , LEN , line , ncur , STR
+      double precision FP , VALUE , zero , ten , hundrd , gabs
+      logical IV0 , OK
+      dimension STR(*)
+      dimension line(20)
+      common /io    / In , Iout , Ipunch
+      data hundrd/100.0D0/ , ten/10.0D0/ , zero/0.0D0/
+C
+C            init. the output line cursor and clear the line.
+      ncur = 0
+      call pad(line,ncur,80,1H )
+      ncur = 1
+C
+C                  put the parameter name into the line.
+      call putb(STR,LEN,line,ncur)
+C
+C                  tab, and put value.
+      ncur = 20
+      if ( VALUE.ge.zero ) ncur = ncur + 1
+      if ( gabs(VALUE).lt.hundrd ) ncur = ncur + 1
+      if ( gabs(VALUE).lt.ten ) ncur = ncur + 1
+      call putfp(VALUE,5,line,ncur)
+C            erase the comma
+      ncur = ncur - 1
+      call putchr(' ',line,ncur)
+C
+C                  put the optional integer.
+      if ( IV0 ) then
+         ncur = 30
+         if ( INT.lt.10 ) ncur = ncur + 1
+         call puti(INT,line,ncur)
+         ncur = ncur - 1
+         call putchr(' ',line,ncur)
+C
+C                  put the optional fp value.
+         ncur = 35
+         if ( FP.ge.zero ) ncur = ncur + 1
+         if ( gabs(FP).lt.hundrd ) ncur = ncur + 1
+         if ( gabs(FP).lt.ten ) ncur = ncur + 1
+         call putfp(FP,5,line,ncur)
+         ncur = ncur - 1
+         call putchr(' ',line,ncur)
+      endif
+C
+C                  perhaps put error message.
+      ncur = 45
+      if ( .not.OK ) call putbc('NOT FOUND IN Z-MATRIX.',22,line,ncur)
+C
+C                  write our line.
+      call strout(Iout,line,ncur,1)
+      return
+C
+      end
+@* INDEX.

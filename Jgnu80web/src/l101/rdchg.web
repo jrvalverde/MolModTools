@@ -1,0 +1,104 @@
+@* rdchg.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[PASSED:] NAMCNT
+\item[INPUT:] NZ
+\item[INPUT:] IANZ
+\item[INPUT:] IOP
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]     NOTHING
+\item[Uses]  IOUT
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   FFGET   FFREAD  IORD    LNK1E   LSUBST  SZPRNT
+             TWRITE
+\item[Called by]   ZGET
+
+\end{description}
+@a
+      subroutine rdchg(NAMCNT,NZ,IANZ,IOP)
+      implicit none
+      double precision charge , chg , fp , str
+      integer i , IANZ , ichg , ieof , if1 , In , IOP , iord , Iout ,
+     &        Ipunch , irwchg , iz , len , lsubst , NAMCNT , NZ
+      dimension str(10) , NAMCNT(*) , charge(50) , IANZ(*) , IOP(50)
+      common /io    / In , Iout , Ipunch
+      data irwchg/577/
+C     routine to read and save non default charges
+C     p.n. van kampen feb. 1982
+99001 format (' NON DEFAULT ATOMIC CHARGES READ IN:')
+99002 format ('*** END OF FILE')
+99003 format ('CENTER SPEC. MUST BE EITHER INTEGER OR STRING.')
+99004 format ('CENTER SPEC. TOO LONG')
+C
+      write (Iout,99001)
+      do 100 i = 1 , NZ
+         charge(i) = IANZ(i)
+ 100  continue
+      call ffread(ieof)
+      if ( ieof.ne.0 ) then
+         write (Iout,99002)
+         call lnk1e
+      endif
+C     top of loop for getting the atomic charges:
+C
+C                  get whatever is in the line.
+ 200  call ffget(str,len,i,fp,if1)
+C
+C                  make sure it's legal.
+      if ( if1.eq.iord('END') ) goto 400
+      if ( if1.ne.iord('STR') ) then
+         if ( if1.eq.iord('INT') ) then
+C
+C                  found integer.
+            iz = i
+            call szprnt(1,iz,0,1)
+            goto 300
+         else
+            write (Iout,99003)
+            call fferr(0,if1)
+         endif
+      endif
+C
+C                  found a string. make sure it's not too long,
+C                  then locate it in the name list.
+      if ( len.gt.4 ) then
+         write (Iout,99004)
+         call fferr(0,0)
+      endif
+      iz = lsubst(NAMCNT,NZ,str,len)
+      call szprnt(1,str,len,4)
+C
+C     get the atomic charge
+ 300  call ffget(str,len,ichg,chg,if1)
+C     something bogus:
+      if ( if1.ne.iord('FP') ) call fferr('FP',if1)
+      charge(iz) = chg
+C     append to output buffer:
+      call szprnt(1,chg,0,2)
+C     flush and print:
+      call szprnt(2,0,0,0)
+C     read next line:
+      call ffread(ieof)
+      if ( ieof.eq.0 ) goto 200
+C     save non-default atomic charges:
+ 400  call twrite(irwchg,charge,NZ,1,NZ,1,0)
+      if ( IOP(34).eq.0 ) return
+      do 500 i = 1 , NZ
+         write (Iout,99005) i , charge(i)
+ 500  continue
+C
+99005 format (1x,i10,g15.5)
+C
+      return
+C
+      end
+@* INDEX.

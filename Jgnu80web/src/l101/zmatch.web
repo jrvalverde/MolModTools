@@ -1,0 +1,153 @@
+@* zmatch.
+\section*{\sf Dummy Arguments}
+\begin{description}
+
+\item[OUTPUT:] OK
+\item[PASSED:] SYMBLS
+\item[PASSED:] NAME
+\item[INPUT:] LEN
+\item[INPUT:] VALUE
+\item[INPUT:] IFVAR
+\item[OUTPUT:] NSYMB
+
+\end{description}
+\section*{\sf Common Variables}
+\begin{description}
+
+\item[Modifies]    ALPHA   BETA    BL      LALPHA  LBETA   LBL
+\item[Transmits as argument]  IOUT
+\item[Uses]  BL      IOUT    LALPHA  LBETA   LBL     NVAR    NZ
+
+\end{description}
+\section*{\sf External Subprograms}
+\begin{description}
+
+\item[Calls]       FFERR   GETB    LNK1E   STREQC  STROUT
+\item[Called by]   ZGET
+
+\end{description}
+
+\begin{verbatim}
+A routine to search for a match in the symbolic Z-matrix
+for the symbol "symbol" (length "lensmb").  The calling routine
+has read the symbol and its value;  This routine does all of
+the necessary processing of the data.  The arguments are:
+
+          ok ....... a logical flag returned to indicate whether the
+               name was found in the Z-matrix.
+          symbls ... a delimited hollerith string containing the
+               names of the symbols encountered in the Z-matrix.
+          name ..... the name of the variable to be matched.
+          len ...... the number of characters in "name".
+          value  ... the value of the parameter.
+          ifvar .... a logical variable indicating whether this
+               parameter is a variable of a constant:
+               t/f --- variable/constant.
+          nsymb .... number of symbols remaining in the Z-matrix.
+               this is decremented by this routine as symbols are
+               matched.
+\end{verbatim}
+
+@a
+      subroutine zmatch(OK,SYMBLS,NAME,LEN,VALUE,IFVAR,NSYMB)
+      implicit none
+      double precision Alpha , Anames , Beta , Bl , Fpvec , str ,
+     &                 SYMBLS , VALUE , Values
+      integer i , Ianz , In , Intvec , Iout , Ipunch , Iz , Lalpha ,
+     &        Lbeta , Lbl , LEN , lenstr , NAME , ncur , NSYMB , Nvar ,
+     &        Nz
+      logical OK , streqc , IFVAR
+      dimension str(10) , SYMBLS(*) , NAME(*)
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) ,
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz ,
+     &                Nvar
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      common /io    / In , Iout , Ipunch
+C
+99001 format ('  SYMBOL NOT FOUND IN Z-MATRIX.')
+C
+      ncur = 0
+      OK = .false.
+C
+C                  loop over Z-matrix cards searching for a match
+C                  for "symbol".  on each card, look to see whether
+C                  any of the parameters match.
+      do 100 i = 2 , Nz
+C
+C                  check the bond length.
+C
+C            get the string from "symbols".
+         call getb(2,str,lenstr,SYMBLS,ncur)
+C
+C            does it match
+         if ( lenstr.eq.LEN ) then
+            if ( streqc(str,NAME,LEN) ) then
+C
+C            matched.  do necessary processing.
+               OK = .true.
+               NSYMB = NSYMB - 1
+               if ( IFVAR ) Lbl(i) = isign(Nvar,Lbl(i))
+               if ( .not.(IFVAR) ) then
+                  Bl(i) = VALUE
+                  if ( Lbl(i).lt.0 ) Bl(i) = -Bl(i)
+                  Lbl(i) = 0
+               endif
+            endif
+         endif
+C
+C                  check bond angle.
+C
+C            get the string from "symbols".
+         if ( i.ne.2 ) then
+            call getb(2,str,lenstr,SYMBLS,ncur)
+C
+C            does it match
+            if ( lenstr.eq.LEN ) then
+               if ( streqc(str,NAME,LEN) ) then
+C
+C            matched.  do necessary processing.
+                  OK = .true.
+                  NSYMB = NSYMB - 1
+                  if ( IFVAR ) Lalpha(i) = isign(Nvar,Lalpha(i))
+                  if ( .not.(IFVAR) ) then
+                     Alpha(i) = VALUE
+                     if ( Lalpha(i).lt.0 ) Alpha(i) = -VALUE
+                     Lalpha(i) = 0
+                  endif
+               endif
+            endif
+C
+C                  check last angle.
+C
+C            get the string from "symbols".
+            if ( i.ne.3 ) then
+               call getb(2,str,lenstr,SYMBLS,ncur)
+C
+C            does it match
+               if ( lenstr.eq.LEN ) then
+                  if ( streqc(str,NAME,LEN) ) then
+C
+C            matched.  do necessary processing.
+                     OK = .true.
+                     NSYMB = NSYMB - 1
+                     if ( IFVAR ) Lbeta(i) = isign(Nvar,Lbeta(i))
+                     if ( .not.(IFVAR) ) then
+                        Beta(i) = VALUE
+                        if ( Lbeta(i).lt.0 ) Beta(i) = -VALUE
+                        Lbeta(i) = 0
+                     endif
+                  endif
+               endif
+            endif
+         endif
+ 100  continue
+C
+      if ( OK ) return
+      write (Iout,99001)
+      call strout(Iout,NAME,LEN,1)
+      call fferr(0,0)
+      call lnk1e
+      return
+C
+      end
+@* INDEX.
