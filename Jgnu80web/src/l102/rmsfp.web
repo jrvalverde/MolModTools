@@ -1,0 +1,69 @@
+@* rmsfp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NVAR                                                      
+\item[INPUT:] MODE                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  D1VAR   POOL1   YOLD                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   CONTT   GETMAT                                         
+                                                                    
+\end{description}
+@a
+      double precision function rmsfp(NVAR,MODE)
+      implicit none
+      double precision D1var , diff , gsqrt , Pool1 , sum , Yold , zero
+      integer i , Inf , MODE , NVAR
+      dimension D1var(1) , Yold(1) , Pool1(1)
+      common /fpinfo/ Inf(2394)
+      equivalence (Pool1(1),Inf(61))
+      equivalence (Yold(1),Inf(181))
+      equivalence (D1var(1),Inf(241))
+      data zero/0.0D0/
+C
+C
+C     compute the root mean square force or displacement for a
+C     fletcher-powell geometry optimization.
+C
+C     if mode=1 calculate the rms force
+C
+C     if mode=2 calculate the rms displacement between points.
+C
+C
+C
+C
+C
+C
+C     branch on mode.
+C
+      if ( MODE.ne.2 ) then
+C
+C     calculate the rms force.
+C
+         sum = zero
+         do 50 i = 1 , NVAR
+            sum = sum + D1var(i)*D1var(i)
+ 50      continue
+         rmsfp = gsqrt(sum)
+         return
+      endif
+C
+C
+C     compute the rms displacement.
+C
+      sum = zero
+      do 100 i = 1 , NVAR
+         diff = Pool1(NVAR) - Yold(NVAR)
+         sum = sum + diff*diff
+ 100  continue
+      rmsfp = gsqrt(sum)
+      return
+C
+      end
+@* INDEX.

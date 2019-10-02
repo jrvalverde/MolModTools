@@ -1,0 +1,81 @@
+@* value.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    F       IDONE   IRET    JUMP                           
+\item[Transmits as argument]  IGEN    IOFP    IOGEN   POOL0                          
+\item[Uses]  IDONE   IGEN    IN      IOFP    IOGEN   IOP     IOUT   
+             ISECT   ISTATS  NCYC    POOL0                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FPDUMP  TWRITE  UDFP                                   
+\item[Called by]   DERIV   FPMAIN  SEARCH                                 
+                                                                    
+\end{description}
+@a
+      subroutine value
+      implicit none
+      double precision Alpha , Convrg , D1var , D1vold , D2var , 
+     &                 Delvar , e , F , F1 , Fzero , H , Pool0 , Pool1 , 
+     &                 Tcurcy , Telcur , Teltot , Tlstcy , Tmax , 
+     &                 Vname , Xi
+      double precision Yold
+      integer idoll , Idone , Iflinf , Ifpgen , Igen , Ihflag , In , 
+     &        Incldh , Index , Intent , Iofp , Iogen , Iop , Iout , 
+     &        Ipunch , Iret , Irmsf , Isect , Istats , itest
+      integer Ititle , Itype , Jump , K , Lambda , Mode , Ncyc , 
+     &        Ncycls , Ncytot , Noinch , Noruns , Npar , Nstep , Nvar
+      common /j102  / Jump , Iret
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+      common /irw   / Iogen , Irmsf , Iofp , Ifpgen
+      common /gen   / Igen(94)
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      data idoll/2H##/
+C
+C
+C
+C
+C
+99001 format (a2,11x,d30.20)
+99002 format (' CARD READ BY VALUE: ',a2,11x,d30.20)
+99003 format (' TRANSFERRING CONTROL TO GAUSSIAN SYSTEM,  ISECT=',i1,
+     &        ',  NCYC=',i2,',  ISTATS=',i1,'.')
+C
+C the following statement disables fp's capability
+C to read energies.
+      Idone = 1
+      if ( Idone.eq.0 ) then
+C     read cards.
+         read (In,99001) itest , e
+         write (Iout,99002) itest , e
+         if ( itest.ne.idoll ) then
+C     insert energy and return.
+            F = e
+            return
+         else
+C
+C     terminator encountered. reset idone and enter gaussian system.
+            Idone = 1
+         endif
+      endif
+      call twrite(Iogen,Igen,47,1,47,1,0)
+      call twrite(Iofp,Pool0(1),1197,1,1197,1,0)
+      call udfp(Pool0)
+      if ( Iop(34).ne.0 .or. Iop(33).ne.0 ) write (Iout,99003) Isect , 
+     &     Ncyc , Istats
+      if ( Iop(34).ge.1 ) call fpdump
+C
+      Jump = 0
+      Iret = 1
+      return
+C
+      end
+@* INDEX.

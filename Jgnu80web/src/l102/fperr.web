@@ -1,0 +1,36 @@
+@* fperr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MODE                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FPDUMP  LNK1E                                          
+\item[Called by]   DERIV                                                  
+                                                                    
+\end{description}
+@a
+      subroutine fperr(MODE)
+      implicit none
+      integer In , Iout , Ipunch , MODE
+      common /io    / In , Iout , Ipunch
+C
+C
+C     routine called when the fletcher-powell procedure
+C     gets into trouble.
+C
+      write (Iout,99001) MODE
+C
+99001 format (' FPERR ACTIVE: ',i9)
+C
+      call fpdump
+      call lnk1e
+      stop
+C
+      end
+@* INDEX.

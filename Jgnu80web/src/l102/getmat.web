@@ -1,0 +1,185 @@
+@* getmat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    D1VAR   DELTAB  DELTAZ  H       IHFLAG  MODE    POOL1  
+             YOLD                                                   
+\item[Transmits as argument]  D2VAR   NVAR                                           
+\item[Uses]  D1VAR   D1VOLD  D2VAR   DELTAB  DELTAZ  H       INTENT 
+             IOP     IOUT    IRET    K       MODE    NVAR    POOL0  
+             POOL1   YOLD                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DERIV   GSQRT   MATOUT  RMSFP                          
+\item[Called by]   FPMAIN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine getmat(TOANG)
+      implicit none
+      double precision Alpha , Convrg , d1doth , D1var , D1vold , 
+     &                 D2var , Deltab , Deltaz , Delvar , F , F1 , 
+     &                 Fzero , gsqrt , H , hbar , hdotd1 , one , Pool0 , 
+     &                 Pool1 , rmsd
+      double precision rmsfp , rmshi , rmslo , sqrtd2 , Tcurcy , 
+     &                 Telcur , Teltot , Tlstcy , Tmax , TOANG , Vname , 
+     &                 Xi , Yold , zdotd1 , zero
+      integer i , Idone , Iflinf , Ihflag , In , Incldh , Index , 
+     &        Intent , Iop , Iout , Ipunch , Iret , Isect , Istats , 
+     &        Ititle , Itype , j , Jump , K , km1
+      integer Lambda , Mode , Ncyc , Ncycls , Ncytot , Noinch , Noruns , 
+     &        Npar , Nstep , Nvar
+      double precision mone , mtwo
+      dimension d1doth(30) , hdotd1(30)
+      dimension mone(30,30) , mtwo(30,30)
+      dimension Deltaz(30) , Deltab(30)
+      common /j102  / Jump , Iret
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      equivalence (Deltab(1),D1vold(1))
+      equivalence (Deltaz(1),Yold(1))
+      data zero/0.0D0/ , one/1.0D0/
+      data rmshi/0.16D0/ , rmslo/0.0010D0/
+C
+C
+C
+C
+C
+C
+99001 format (1x,'AT CYCLE ',i6,' ZDOTD1 = ',g20.10,' AND HBAR = ',
+     &        g20.10/1x,16x,'DELTAB',20x,'DELTAZ')
+99002 format (2(10x,g20.10))
+99003 format ('       H-MATRIX:')
+99004 format (1x,'THE RMS DISPLACEMENT FROM CYCLE',i3,' TO',i3,' IS ',
+     &        f8.5)
+99005 format (1x,'COMPUTE FIRST AND SECOND DERIVATIVES:')
+99006 format (1x,'COMPUTE FIRST DERIVATIVES:')
+C
+C     ******************************************************************
+C     *  test the internal entry flag.                                 *
+C     *****************************************************************
+      if ( Intent.eq.0 ) then
+C     ******************************************************************
+C     *  if this is the first entry, save pool1 in yold and then put   *
+C     *  pool0 in pool1.                                               *
+C     ******************************************************************
+         do 50 i = 1 , Nvar
+            Yold(i) = Pool1(i)
+            Pool1(i) = Pool0(i)
+ 50      continue
+         Mode = 1
+C     *****************************************************************
+C     *  calculate second derivatives if the rms displacement         *
+C     *  is not between rmslo and rmshi.  if it is too low no progress*
+C     *  is being made, probably due to bad derivatives and we're at  *
+C     *  at the bottom.  if it is too high we've gone too far to      *
+C     *  assume that the second derivatives have remained constant.   *
+C     *****************************************************************
+         km1 = K - 1
+         rmsd = rmsfp(Nvar,2)
+         write (Iout,99004) km1 , K , rmsd
+         if ( rmsd.lt.rmslo .or. rmsd.gt.rmshi ) Mode = 0
+         if ( Mode.eq.0 ) write (Iout,99005)
+         if ( Mode.ne.0 ) write (Iout,99006)
+      endif
+C     ******************************************************************
+C     *  internal entry point.  call deriv to get derivatives.         *
+C     *  control may not be returned by deriv if final victroy or      *
+C     *  defeat is detected.                                           *
+C     ******************************************************************
+      call deriv(TOANG)
+      if ( Iret.le.0 ) then
+C     ******************************************************************
+C     *  transform pool1 and d1var to xi-space and then evaluate       *
+C     *  deltaz and deltab.                                            *
+C     ******************************************************************
+         do 100 i = 1 , Nvar
+C
+            sqrtd2 = gsqrt(D2var(i))
+            Pool1(i) = Pool1(i)*sqrtd2
+            Yold(i) = Yold(i)*sqrtd2
+            D1var(i) = D1var(i)/sqrtd2
+C
+            Deltaz(i) = Pool1(i) - Yold(i)
+            Deltab(i) = D1var(i) - D1vold(i)
+ 100     continue
+C     ******************************************************************
+C     *  check to see if this is the first cycle.  if it is, then the  *
+C     *  initial h-matrix must be formed.                              *
+C     ******************************************************************
+         if ( K.eq.1 ) then
+C     ******************************************************************
+C     *  form the initial h-matrix. (the identity matrix.)            *
+C     ******************************************************************
+            do 120 i = 1 , Nvar
+               do 110 j = 1 , Nvar
+                  H(i,j) = zero
+ 110           continue
+               H(i,i) = one
+ 120        continue
+C     ******************************************************************
+C     *  set ihflag to one.                                            *
+C     ******************************************************************
+            Ihflag = 1
+         endif
+C     ******************************************************************
+C     *  initialize d1doth and hdotd1.                                 *
+C     ******************************************************************
+         do 150 i = 1 , Nvar
+            hdotd1(i) = zero
+            d1doth(i) = zero
+ 150     continue
+C     ******************************************************************
+C     *  now, evaluate d1doth and hdotd1.                              *
+C     ******************************************************************
+         do 200 i = 1 , Nvar
+            do 160 j = 1 , Nvar
+               hdotd1(i) = hdotd1(i) + (H(i,j)*Deltab(j))
+               d1doth(i) = d1doth(i) + (H(i,j)*Deltab(j))
+ 160        continue
+ 200     continue
+C     ******************************************************************
+C     *  now, evaluate zdotd1 and hbar.                                *
+C     ******************************************************************
+         zdotd1 = zero
+         hbar = zero
+         do 250 i = 1 , Nvar
+            zdotd1 = zdotd1 + (Deltaz(i)*Deltab(i))
+            hbar = hbar + (Deltab(i)*hdotd1(i))
+ 250     continue
+C     ******************************************************************
+C     *  now, put all the information together and evaluate the        *
+C     *  corrective matrices mone and mtwo and combine themn with      *
+C     *  the old value of h to get h(k+1).                             *
+C     ******************************************************************
+         do 300 i = 1 , Nvar
+            do 260 j = 1 , Nvar
+               mone(i,j) = (Deltaz(i)*Deltaz(j))/zdotd1
+               mtwo(i,j) = (-hdotd1(i)*d1doth(j))/hbar
+C
+               H(i,j) = H(i,j) + mone(i,j) + mtwo(i,j)
+C
+ 260        continue
+ 300     continue
+C
+         if ( Iop(33).ne.0 .or. Iop(34).ne.0 ) write (Iout,99001) K , 
+     &        zdotd1 , hbar
+         write (Iout,99003)
+         call matout(H,30,30,Nvar,Nvar)
+      endif
+      return
+C
+      end
+@* INDEX.

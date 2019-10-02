@@ -1,0 +1,95 @@
+@* contt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IFPGEN  NVAR                                           
+\item[Uses]  IFPGEN  IOUT    IRMSF   ITYPE   K       NCYCLS  NVAR   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FPEXIT  ILSW    RMSFP   TREAD   TWRITE                 
+\item[Called by]   DERIV                                                  
+                                                                    
+\end{description}
+@a
+      subroutine contt(TOANG)
+      implicit none
+      double precision Alpha , Convrg , D1var , D1vold , D2var , 
+     &                 Delvar , F , F1 , Fzero , gen , H , Pool0 , 
+     &                 Pool1 , rmsf , rmsfp , Tcurcy , Telcur , Teltot , 
+     &                 thrsh , Tlstcy
+      double precision Tmax , TOANG , Vname , Xi , Yold
+      integer Idone , Iflinf , Ifpgen , Ihflag , In , Incldh , Index , 
+     &        Intent , Iofp , Iogen , Iout , Ipunch , Irmsf , Isect , 
+     &        Istats , Ititle , Itype , K , Lambda , Mode
+      integer Ncyc , Ncycls , Ncytot , Noinch , Noruns , Npar , Nstep , 
+     &        Nvar
+      dimension gen(47)
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      common /irw   / Iogen , Irmsf , Iofp , Ifpgen
+      common /io    / In , Iout , Ipunch
+      data thrsh/0.0003D0/
+C
+C
+C
+C
+C
+C
+99001 format (1x,'AT CYCLE',i3,' THE RMS FORCE IS ',f8.5,' HARTREE / ',
+     &        'BOHR OR / RADIAN')
+99002 format (1x,'FLETCHER-POWELL OPTIMIZATION TERMINATED')
+99003 format (1x,39('='))
+99004 format (1x,'FORCES BELOW THRESHOLD AFTER',i3,' CYCLES')
+99005 format (1x,63('='))
+99006 format (1x,'MAXIMUM NUMBER OF CYCLES EXCEEDED -- FORCES NOT ',
+     &        'BELOW THRESHOLD')
+99007 format (1x,'FLAG RESET TO TURN OFF ARCHIVING')
+C
+C     ****************************************************************
+C     *  convergence checks                                          *
+C     ****************************************************************
+C
+      if ( Itype.eq.1 ) then
+      elseif ( Itype.eq.3 ) then
+         goto 100
+      endif
+C
+      rmsf = rmsfp(Nvar,1)
+      write (Iout,99001) K , rmsf
+      call tread(Ifpgen,gen,47,1,47,1,0)
+      gen(Irmsf) = rmsf
+      call twrite(Ifpgen,gen,47,1,47,1,0)
+      if ( rmsf.le.thrsh ) then
+         write (Iout,99003)
+         write (Iout,99002)
+         write (Iout,99004) K
+         write (Iout,99003)
+         call fpexit
+         goto 200
+      endif
+C
+ 100  if ( K.ge.Ncycls ) then
+         write (Iout,99005)
+         write (Iout,99002)
+         write (Iout,99006)
+         write (Iout,99007)
+         call ilsw(1,25,0)
+         write (Iout,99005)
+         call fpexit
+      endif
+C
+ 200  return
+C
+      end
+@* INDEX.

@@ -1,0 +1,137 @@
+@* enter.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    F       IDONE   IFPGEN  INTENT  IOFP    IOGEN   IRMSF  
+             ISECT   ISTATS                                         
+\item[Transmits as argument]  IGEN    POOL0                                          
+\item[Uses]  FGEN    IGEN    IOFP    IOGEN   IOP     IOUT    ISECT  
+             POOL0                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FPDUMP  ILSW    INITFP  TREAD                          
+\item[Called by]   FPMAIN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine enter(TOANG)
+      implicit none
+      double precision Alpha , Alphaz , Beta , Bl , Convrg , D1var , 
+     &                 D1vold , D2var , delloc , Delvar , F , F1 , 
+     &                 Fgen , Fzero , H , Pool0 , Pool1 , Tcurcy , 
+     &                 Telcur , Teltot
+      double precision Tlstcy , Tmax , TOANG , varloc , Vname , Xi , 
+     &                 Yold
+      integer Ianz , idate , Idone , ifcont , Iflfp , Iflinf , Ifpgen , 
+     &        Igen , Ihflag , In , Incldh , Index , Intent , Iofp , 
+     &        Iogen , Iold , Iop , Iout , Ipunch , Irmsf
+      integer Isect , Istats , itime , Ititle , Itype , Iz , K , 
+     &        Lalpha , Lambda , Lbeta , Lbl , Mode , Ncyc , Ncycls , 
+     &        Ncytot , Noinch , Noruns , Npar , Nstep , Nvar
+      integer Nvarrd , Nz
+C      integer datime(8)
+      dimension varloc(30) , delloc(30)
+      dimension idate(3) , itime(2)
+      common /io    / In , Iout , Ipunch
+      common /irw   / Iogen , Irmsf , Iofp , Ifpgen
+      common /gen   / Igen(94)
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alphaz(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvarrd
+      common /iop   / Iop(50)
+      equivalence (Iold,Tmax)
+      equivalence (Fgen,Igen(85))
+      equivalence (Iflfp,Igen(1))
+C
+C     definition of istats:
+C        0   continuation of current run.
+C        1   initial entry.
+C        2   restart.
+C        3   continuation of run, where optimization is complete.
+C            this mode is used by following routines to enable punched
+C            output.
+C
+C
+C     idone is used to control input of energies via cards.
+C     idone = 0, no energies have been inputted.  routine value will
+C     read energies until $$ is encountered.
+C     idone = 1, $$ has been encountered, input of energies via cards
+C     is terminated.
+C
+C
+C
+C
+C
+C
+99001 format (1x,'FLETCHER-POWELL TOTAL OPTIMIZATION PROGRAM. ')
+99002 format (1x,'FLETCHER-POWELL TOTAL OPTIMIZATION PROGRAM. ')
+C
+      Iogen = 501
+      Iofp = 510
+      Irmsf = 21
+      Ifpgen = 553
+      call tread(Iogen,Igen,47,1,47,1,0)
+C
+C     check for type of entry.
+C          if iop(12) = 1, then this is a restart.
+C          if the ifprun bit is set in ilsw, then this a continuation.
+C          otherwise, this is the initial entry.
+C
+C      call dagtyd(datime)
+      call ilsw(2,19,ifcont)
+      call ilsw(1,19,1)
+      if ( Iop(12).eq.1 ) then
+C
+C     ******************************************************************
+C     *  entry point for restart.                                      *
+C     ******************************************************************
+C     ******************************************************************
+C     *  restore running status from last run.                         *
+C     ******************************************************************
+         write (Iout,99002)
+C     ******************************************************************
+C     *  get proper value of intent as specified by isect, and then    *
+C     *  return to the main program.                                   *
+C     ******************************************************************
+         Intent = 1
+         if ( Isect.eq.1 ) Intent = 0
+         return
+      elseif ( ifcont.ne.1 ) then
+C     ******************************************************************
+C     *  this is the entry point for initial entry.                    *
+C     ******************************************************************
+         call initfp(TOANG)
+         Idone = 0
+         Istats = 1
+         Isect = 1
+         write (Iout,99001)
+         return
+      endif
+C     ****************************************************************
+C     *  entry point for continuation of current run.                  *
+C     ******************************************************************
+      call tread(Iofp,Pool0(1),1197,1,1197,1,0)
+      if ( Iop(34).ge.2 ) call fpdump
+      Istats = 0
+      F = Fgen
+C     ******************************************************************
+C     *  derive intent from the value of isect.                        *
+C     ******************************************************************
+      Intent = 1
+      if ( Isect.eq.1 ) Intent = 0
+      return
+C
+      end
+@* INDEX.

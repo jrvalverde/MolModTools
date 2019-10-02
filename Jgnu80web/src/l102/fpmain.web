@@ -1,0 +1,105 @@
+@* fpmain.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    D1VAR   FZERO   INTENT  ISECT   K       POOL1          
+\item[Transmits as argument]  D2VAR   GEN     IFPGEN  TOANG                          
+\item[Uses]  D1VAR   D2VAR   F       GEN     IFPGEN  IRET    ISECT  
+             K       NVAR    POOL1   TOANG                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DERIV   ENTER   GETMAT  GSQRT   SEARCH  TWRITE  VALUE  
+\item[Called by]   L102                                                   
+                                                                    
+\end{description}
+@a
+      subroutine fpmain
+      implicit none
+      double precision Alpha , Convrg , D1var , D1vold , D2var , 
+     &                 Delvar , F , F1 , Fzero , Gen , gsqrt , H , 
+     &                 Phycon , Pool0 , Pool1 , sqrtd2 , Tcurcy , 
+     &                 Telcur , Teltot , Tlstcy
+      double precision Tmax , Toang , Vname , Xi , Yold
+      integer i , Idone , Iflinf , Ifpgen , Ihflag , In , Incldh , 
+     &        Index , Intent , Iofp , Iogen , Iout , Ipunch , Iret , 
+     &        Irmsf , Isect , Istats , Ititle , Itype , Jump
+      integer K , Lambda , Mode , Ncyc , Ncycls , Ncytot , Noinch , 
+     &        Noruns , Npar , Nstep , Nvar
+      common /j102  / Jump , Iret
+      common /io    / In , Iout , Ipunch
+      common /gen   / Gen(47)
+      common /irw   / Iogen , Irmsf , Iofp , Ifpgen
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      common /phycon/ Toang , Phycon(29)
+C
+C
+C
+C
+      call enter(Toang)
+C
+      if ( Isect.eq.2 ) then
+      elseif ( Isect.eq.3 ) then
+         goto 100
+      elseif ( Isect.eq.4 ) then
+         goto 200
+      elseif ( Isect.eq.5 ) then
+         goto 300
+      elseif ( Isect.eq.6 ) then
+         goto 400
+      else
+C
+         Isect = 2
+         call value
+         if ( Iret.gt.0 ) goto 500
+      endif
+      Fzero = F
+      call twrite(Ifpgen,Gen,47,1,47,1,0)
+      K = 0
+      Intent = 0
+ 100  Isect = 3
+C
+      call deriv(Toang)
+      if ( Iret.gt.0 ) goto 500
+C
+      Intent = 0
+ 200  Isect = 4
+C
+      call search
+      if ( Iret.gt.0 ) goto 500
+C
+ 300  Fzero = F
+      K = K + 1
+      call twrite(Ifpgen,Gen,47,1,47,1,0)
+      Intent = 0
+ 400  Isect = 6
+C
+      call getmat(Toang)
+      if ( Iret.le.0 ) then
+C
+         Intent = 0
+C     
+C       set up for re-entry into search.  back-transform pool1 and    
+C       d1var into x-space.                                          
+C     
+         do 450 i = 1 , Nvar
+C
+            sqrtd2 = gsqrt(D2var(i))
+C
+            Pool1(i) = Pool1(i)/sqrtd2
+            D1var(i) = D1var(i)*sqrtd2
+C
+ 450     continue
+         goto 200
+      endif
+C
+ 500  return
+C
+      end
+@* INDEX.

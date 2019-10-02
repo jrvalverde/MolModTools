@@ -1,0 +1,170 @@
+@* deriv.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    D1VAR   D1VOLD  D2VAR   FMINUS  FPLUS   INDEX   NSTEP  
+             POOL0                                                  
+\item[Transmits as argument]  VNAME                                                  
+\item[Uses]  D1VAR   D1VOLD  D2VAR   DELVAR  F       FMINUS  FPLUS  
+             FZERO   INDEX   INTENT  IOP     IOUT    IRET    ISECT  
+             MODE    NSTEP   NVAR    POOL0   POOL1   VNAME          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CONTT   FPERR   GETB    GETCHR  GSQRT   VALUE          
+\item[Called by]   FPMAIN  GETMAT                                         
+                                                                    
+\end{description}
+@a
+      subroutine deriv(TOANG)
+      implicit none
+      double precision Alpha , Convrg , D1var , D1vold , D2var , 
+     &                 Delvar , dinc , F , F1 , Fminus , Fplus , Fzero , 
+     &                 gsqrt , H , one , Pool0 , Pool1 , sign , Tcurcy , 
+     &                 Telcur
+      double precision Teltot , Tlstcy , Tmax , TOANG , two , Vname , 
+     &                 Xi , Yold , zero
+      integer i , iblank , icur , Idone , Iflinf , Ihflag , In , 
+     &        Incldh , Index , Intent , Iop , Iout , Ipunch , Iret , 
+     &        Isect , Istats , istr , Ititle , itmp , Itype
+      integer j , Jump , K , Lambda , len , Mode , modulo , ncur , 
+     &        Ncyc , Ncycls , Ncytot , Noinch , Noruns , Npar , Nstep , 
+     &        Nvar
+      integer getchr
+      dimension itmp(10) , istr(10)
+      common /j102  / Jump , Iret
+      common /io    / In , Iout , Ipunch
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      common /iop   / Iop(50)
+      equivalence (Fplus,F1(1))
+      equivalence (Fminus,F1(2))
+      data zero/0.0D0/ , one/1.0D0/ , two/2.0D0/
+      data iblank/1H /
+C
+C
+C
+C
+C
+C
+99001 format (1x,1x,'VARIABLE',4x,' FIRST DERIVATIVE',13x,
+     &        'SECOND DERIVATIVE')
+99002 format (1x,1x,10A1,g20.10,10x,g20.10)
+99003 format (1x,'IN DERIV, VARIABLE ',i3,' INCREMENTED:  WAS ',d20.10,
+     &        ',  STEPPED BY ',d10.3,',  IS NOW ',d20.10,'.')
+C
+C         intent is the internal entry flag.  it must be set to zero    
+C         before the first entry into deriv.  on subsequent entries, it 
+C         is set by subroutine enter so that a jump can be executed to  
+C         the point where deriv was exited in the last cycle.           
+      if ( Intent.ne.0 ) goto 200
+C         initialize the counters used by deriv.                        
+      Nstep = 0
+      Index = 1
+      sign = one
+ 100  Pool0(Index) = Pool1(Index) + Delvar(Index)*sign
+      dinc = Delvar(Index)*sign
+      if ( Iop(34).ne.0 .or. Iop(33).ne.0 ) write (Iout,99003) Index , 
+     &     Pool1(Index) , dinc , Pool0(Index)
+C         nstep is incremented by the sum of mode and one.  if mode is  
+C         zero, nstep = 1,2,3,...,2*n, where n is the number of vari-
+C         ables being optimized.  if mode is one, nstep = 2,4,... .     
+C         derivative(s) are only calculated when nstep is even.  thus,  
+C         when mode is one, derivatives are calculated every cycle.  the
+C         appropriate formulae are used to compensate for the missing   
+C         values of the function that is being optimized.               
+      Nstep = Nstep + Mode + 1
+C         subroutine value is called to obtain the value of the function
+C
+C     ..........
+      call value
+      if ( Iret.gt.0 ) goto 300
+C     ..........
+C
+C         this is the continuation point for internal entry.            
+ 200  modulo = mod(Nstep,2)
+      if ( modulo.ne.0 ) then
+C         change the value of isig so that the variable will be decre-  
+C         mented next time.                                             
+         Fplus = F
+         sign = -one
+         goto 100
+      else
+C
+C         check the value of mode to determine which derivative(s) are  
+C         to be calculated this time.                                   
+         if ( Mode.ne.0 ) then
+C
+C         mode=1, only the first derivative will be calculated.  it will
+C         be corrected by the the existing second derivative.  also,    
+C         the value of the old first derivative will be saved in the    
+C         array d1vold.                                                 
+            Fplus = F
+            D1vold(Index) = D1var(Index)
+            D1var(Index) = (Fplus-Fzero)/Delvar(Index) - D2var(Index)
+     &                     *Delvar(Index)/two
+         else
+C         mode=0, both the first and second derivatives are to be calc-
+C         ulated.                                                       
+            Fminus = F
+            if ( Isect.ne.3 ) D1vold(Index) = D1var(Index)
+     &           *gsqrt(D2var(Index))
+            D1var(Index) = (Fplus-Fminus)/(Delvar(Index)+Delvar(Index))
+            D2var(Index) = (Fplus+Fminus-(Fzero+Fzero))
+     &                     /(Delvar(Index)*Delvar(Index))
+            if ( Isect.ne.3 ) D1vold(Index) = D1vold(Index)
+     &           /gsqrt(D2var(Index))
+C         if the second derivative is negative, it indicates that the   
+C         function is tending toward a maximum rather than a minimum.
+C         if this is the case, this program can no longer handle the    
+C         situation.  a call to pchout in error mode is made.  this     
+C         will provide error termination with a dump (to cards) of the  
+C         available restart information.                                
+            if ( D2var(Index).le.zero ) call fperr(-1)
+         endif
+C         set isig back to the value for incrementing in case it has    
+C         been changed, and increment index.                            
+C         also, restore the original value of the variable from         
+C         pool1 to pool0                                                
+         sign = one
+         Pool0(Index) = Pool1(Index)
+         Index = Index + 1
+C         now compare index against the value of nvar.  if index is     
+C         greater than nvar the calculation of derivatives is done for  
+C         now.                                                          
+         if ( Index.le.Nvar ) goto 100
+         write (Iout,99001)
+         ncur = 0
+         do 250 i = 1 , Nvar
+C                  get the name from vname.
+            call getb(2,itmp,len,Vname,ncur)
+C                  clear out istr.
+            do 220 j = 1 , 10
+               istr(j) = iblank
+ 220        continue
+C                  copy the name into istr in a1.
+            len = min0(10,len)
+            icur = 0
+            do 240 j = 1 , len
+               istr(j) = getchr(itmp,icur)
+ 240        continue
+C                  print the name and values.
+            write (Iout,99002) (istr(j),j=1,10) , D1var(i) , D2var(i)
+ 250     continue
+C         are the forces below threshold at this point              
+         call contt(TOANG)
+      endif
+C
+ 300  return
+C
+      end
+@* INDEX.
