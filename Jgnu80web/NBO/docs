@@ -1,0 +1,236 @@
+
+
+
+                  n  b  o     p  r  o  g  r  a  m
+
+                   (system independent routines)
+
+
+            last program modification:  may 7, 1990
+
+
+  main subroutine:
+
+      subroutine nbo(core,nboopt,memory)
+
+  job initialization routines: (called by sr nbo)
+
+      subroutine nboset(nboopt)
+      subroutine jobopt(nboopt)
+      subroutine nbodim(memory)
+
+  nao/nbo/nlmo formation routines: (called by sr nbo)
+
+      subroutine naodrv(dm,t,a)
+      subroutine naosim(dm,t,a)
+      subroutine dmnao(dm,t,a)
+      subroutine dmsim(dm,t,a)
+      subroutine nbodrv(dm,t,a)
+
+  routines called by the NAO drivers:
+
+      subroutine simtrm(a,s,v,ndim,n,iwmulp,iwcubf)
+      subroutine mulana(bs,vmayer,bmayer,iwmulp,iwcubf)
+      subroutine dfgorb(renorm,dm,t,itran,iwcubf,itopt,lfnpr)
+      subroutine nao(t,s,occ,blk,sblk,eval,c,evect,eval2,listao,nblock)
+      subroutine naoanl(dm,spnao,bindex,bindt,ovpop,f,enao)
+      subroutine frmtmo(t,tmo,c,scr,index,iflg)
+
+  routines called by sr nao:
+
+      subroutine loadav(listao,nl,m,s,ndim,a,b,mxaolm)
+      subroutine atdiag(n,a,b,eval,c)
+      subroutine setbas(lstocc,lstemt,nocc,nemt,iat,l,nl,nf,ndim)
+      subroutine newwts(s,t,wt)
+      subroutine worth(s,t,blk,list,ndim,nbas,n,occ,eval,bigblk)
+      subroutine shmdt(t,s,ndim,nbas,nocc,lstocc,nemt,lstemt,sblk)
+      subroutine newryd(t,s,tpnao,dmblk,sblk,evect,occ,eval,eval2,
+     +                       list,irpnao)
+      subroutine rydiag(t,s,tpnao,dmblk,sblk,occ,eval,evect,eval2,
+     +                    iorb,nc,nm,nstart,nrydc,larc,list,irpnao)
+      subroutine rydsel(lstemt,nemt,nsel1,list1,nsel2,list2,wt)
+      subroutine rediag(dm,t,tpnao,eval,blk,c,irank,irpnao)
+      subroutine redblk(t,tpnao,il,dm,blk,eval,c,nf,iorb,nc,irank,irpnao)
+
+  routines called by the nbo/nlmo drivers:
+
+      subroutine nathyb(dm,t,guide,bndocc,pol,q,v,blk,c,eval,borb,
+     +                                       p,ta,hyb,va,vb,topo)
+      subroutine chsdrv(dm,t,guide,bndocc,pol,q,v,blk,c,eval,borb,
+     +                                       p,ta,hyb,va,vb,topo)
+      subroutine choose(dm,t,guide,bndocc,pol,q,v,blk,c,eval,borb,
+     +                                  p,ta,hyb,va,vb,topo,iflg)
+      subroutine srtnbo(t,bndocc)
+      subroutine xcited(dm,t,hyb,thyb,s,occ,scr,iscr)
+      subroutine anlyze(t,bndocc,hyb,hycoef,thyb)
+      subroutine htype(hyb,ltyp,mxao,nh,coef,pct,nl,isgn)
+      subroutine frmhyb(hyb,thyb,coef,hycoef,kl,ku,nhyb)
+      subroutine hybdir(bndocc,atcoor,thyb,tbnd,scr)
+      subroutine hybcmp(xyz,pcent,ihyb,jctr,hyb)
+      subroutine fndmol(iatoms)
+      subroutine nbocla(bndocc,accthr)
+      subroutine fnboan(bndocc,f,molnbo)
+      subroutine nbosum(f,bndocc,list,lista,scr)
+      subroutine getdel(ibo,occ,thr1,thr2,nl,list,del,deloc,iflg)
+      subroutine dlcstr(ibo,il,nl,list,ml,istr)
+      subroutine nlmo(n,a,eval,evec,tsym,reson,nocc,ialarm)
+      subroutine lmoanl(t,s,reson,occ,ts,border,owbord,atlmo,siab,nocc,nab)
+      subroutine dipanl(dm,t,c,tnbo,dx,dy,dz,scr,index)
+      subroutine dipele(dxyz,c,t,scr,eta,nocc,index)
+      subroutine dipnuc(dx,dy,dz,atcoor,eta,nocc)
+
+  routines called by sr nathyb, sr choose:
+
+      subroutine core(dm,t,borb,pol,q,hyb,bndocc,ibd,detail,lfnpr)
+      function iwprj(nctr)
+      subroutine deplet(dm,t,q,pol,borb,bndocc,nbd)
+      subroutine load(dm,iat1,iat2,iat3,blk,nb)
+      subroutine prjexp(borb,iat1,iat2,iat3,q,p,pk,hyb,va,vb,hybexp)
+      subroutine stash(borb,ibd,iat1,iat2,iat3,pol,q,hyb)
+      subroutine orthyb(q,s,ta,eval,c,ialarm,iflg)
+      subroutine frmpro(p,ia,q,nk,pk,vk,pi)
+      subroutine augmnt(p,blk,c,eval,dm,ta,borb,v,larc,ia,nocc,norb)
+      subroutine repol(dm,q,pol,blk,eval,c,nbd)
+      subroutine formt(t,q,pol)
+      subroutine cycles(iter,thresh,guide,bndocc,topo,icont)
+
+  routines called by sr nlmo:
+
+      subroutine symuni(tsym,a,cos,sin,ovlp,blk,eval,nrot,
+     +           niuniq,njuniq,ilist,jlist,noff,ioff,joff,ndim)
+      subroutine symort(s,t,blk,ndim,n,eval)
+
+  NBO energetic analysis routines:
+
+      subroutine nboean(a,memory,nboopt,idone)
+      subroutine nbodel(a,memory,idone)
+      subroutine delete(f,trf,ndim,idel,len,itype,ndel,ntrunc,done,
+     +                  ispin)
+      subroutine newdm(dm,u,eig,ndim,idel,len,ndel,itype,nmoocc,ispin)
+      subroutine rnkeig(rank,eig,n,ndim,arcrnk)
+      subroutine simltr(n,ndim,f,u,r,s,kntrol)
+
+  NBO direct access file (daf) routines:
+
+      subroutine nbopen(new,error)
+      subroutine nbwrit(ix,nx,idar)
+      subroutine nbread(ix,nx,idar)
+      subroutine nbclos
+      subroutine nbinqr(idar)
+
+      subroutine fetitl(title)
+      subroutine fee0(edel,etot)
+      subroutine sve0(edel)
+      subroutine fecoor(atcoor)
+      subroutine fesraw(s)
+      subroutine fedraw(dm,scr)
+      subroutine fefao(f,iwfock)
+      subroutine feaomo(t,it)
+      subroutine fedxyz(dxyz,i)
+      subroutine svnbo(t,occ,iscr)
+      subroutine fenbo(t,occ,iscr,nelec)
+      subroutine fetnbo(t)
+      subroutine svpnao(t)
+      subroutine fepnao(t)
+      subroutine svsnao(s)
+      subroutine fesnao(s)
+      subroutine svtnab(t)
+      subroutine fetnab(t)
+      subroutine svtlmo(t)
+      subroutine fetlmo(t)
+      subroutine svtnho(t)
+      subroutine fetnho(t)
+      subroutine svppao(dm)
+      subroutine feppao(dm)
+      subroutine svtnao(t)
+      subroutine fetnao(t)
+      subroutine svnlmo(t)
+      subroutine fenlmo(t)
+      subroutine svdnao(dm)
+      subroutine fednao(dm)
+      subroutine svfnbo(f)
+      subroutine fefnbo(f)
+      subroutine svnewd(dm)
+      subroutine fenewd(dm)
+      subroutine feinfo(icore,iswean)
+      subroutine febas(nshell,nexp,iscr)
+
+  free format input routines:
+
+      subroutine strtin(lfnin)
+      subroutine rdcard
+      subroutine ifld(int,error)
+      subroutine rfld(real,error)
+      subroutine hfld(keywd,leng,endd)
+      subroutine fndfld
+      function equal(ia,ib,l)
+
+  other system-independent i/o routines:
+
+      subroutine geninp(newdaf)
+      subroutine nboinp(nboopt,idone)
+      subroutine corinp(iess,icor)
+      subroutine chsinp(iess,ichs)
+      subroutine delinp(nboopt,idone)
+
+      subroutine rdcore(jcore)
+      subroutine wrppna(t,occ,iflg)
+      subroutine rdppna(t,occ,iflg)
+      subroutine wrtnao(t,iflg)
+      subroutine rdtnao(dm,t,scr,iflg)
+      subroutine wrtnab(t,iflg)
+      subroutine rdtnab(t,dm,bndocc,scr,iflg)
+      subroutine wrtnbo(t,bndocc,iflg)
+      subroutine wrnlmo(t,dm,iflg)
+      subroutine wrbas(scr,iscr,lfn)
+      subroutine wrarc(scr,iscr,lfn)
+
+      subroutine aout(a,mr,nr,nc,title,index,iflg)
+      subroutine aprint(a,mr,nr,nc,title,index,mcol)
+      subroutine awrite(a,mr,nr,nc,title,lfn)
+      subroutine aread(a,mr,nr,nc,job,lfn,error)
+      subroutine output(a,mr,mc,nr,nc)
+      subroutine keypar(string,len,iflg,lfn,read,error)
+      function ioinqr(iflg)
+      subroutine lblao
+      subroutine lblnao
+      subroutine lblnbo
+      subroutine lblnho(inho,inbo,ictr,nctr)
+
+  general utility routines:
+
+      subroutine angles(x,y,z,theta,phi)
+      function bdfind(iat,jat)
+      subroutine chem(nat,natoms,lista,nl,istr)
+      subroutine consol(aut,alt,ndim,n)
+      subroutine convin(ij,len,ik,error)
+      subroutine convrt(n,nc1,nc2)
+      subroutine copy(a,b,ndim,nr,nc)
+      subroutine cortbl(iat,icore,iecp)
+      subroutine debyte(i,ibyte)
+      subroutine halt(word)
+      subroutine idigit(kint,ik,nd,maxd)
+      function ihtyp(ibo,jbo)
+      subroutine jacobi(n,a,eivu,eivr,ndim,nvdim,icontr)
+      subroutine limtrn(t,m,a,b,ndim,nbas,ncdim,nc,iopt)
+      subroutine matmlt(a,b,v,ndim,n)
+      subroutine matml2(a,b,v,ndim,n)
+      function nameat(iz)
+      subroutine normlz(a,s,m,n)
+      subroutine orderr(rank,list,n,ndim,arcrnk)
+      subroutine pack(t,ndim,nbas,l2)
+      subroutine rank(eig,n,ndim,arcrnk)
+      subroutine simtrn(a,t,v,ndim,n)
+      subroutine simtrs(a,s,v,ndim,n)
+      subroutine trnspo(a,ndim,n)
+      subroutine unpack(t,ndim,nbas,l2)
+      subroutine valtbl(iat,ival)
+      function veclen(x,n,ndim)
+
+      subroutine lineq(a,x,b,scr,n,m,ndim,mdim,zertol,eps,maxit,lfnpr,
+     +                 ierr)
+      subroutine factor(a,w,d,ipivot,n,ndim,zertol,iflag)
+      subroutine fndsol(a,x,b,w,r,e,ipivot,n,ndim,eps,maxit,lfnpr,ierr)
+      subroutine subst(x,w,b,ipivot,n,ndim)
+
+
