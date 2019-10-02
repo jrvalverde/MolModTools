@@ -1,0 +1,14 @@
+#!/bin/bash -x
+# Run over all directories
+ cd ~/QChem/gnu80web/NBO/src
+# Now all web files in the directory
+      for x in `ls *.web`
+         do
+# Strip the web extension
+          name=${x:%.web}
+         echo $name
+            ftangle-1.53 $name
+            mv ${name}.f ${name}.F
+         g77 -c ${name}.F
+            \rm -f ${name}.F
+       done 
