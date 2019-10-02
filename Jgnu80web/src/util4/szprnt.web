@@ -1,0 +1,125 @@
+@* szprnt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] OP                                                        
+\item[PASSED:] VAL                                                       
+\item[PASSED:] LEN                                                       
+\item[INPUT:] TYPE                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT                                                   
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DECCHR  LNK1E   PUTB    PUTFP   PUTICR  STROUT         
+\item[Called by]   RDCHG   ZCENTR  ZPARM   ZSYMB                          
+                                                                    
+\end{description}
+@a
+      subroutine szprnt(OP,VAL,LEN,TYPE)
+      implicit none
+      integer i , In , Iout , Ipunch , LEN , minus , nb , OP , string , 
+     &        tab , TYPE
+      save 
+      double precision VAL
+      dimension string(40)
+      integer blank(1)
+      common /io    / In , Iout , Ipunch
+      data blank(1)/'    '/
+      data minus/'-'/
+C
+C
+C
+C     purpose:  to build a string containing the synbolic z-matrix and
+C               to print it.  items will be added to the string one
+C               per call and formatted for ouput by this routine.
+C     input:    op -- opcode
+C                     0 -- initialize buffer and counters
+C                     1 -- append val to buffer
+C                     2 -- print buffer and re-initialize
+C               val -- quantity to be placed in the buffer
+C               type -- describes val
+C                     0 -- integer value
+C                     1 -- integer value
+C                     2 -- floating point value (5 decimal figures).
+C                     3 -- "len"  character symbol
+C                    -3 -- "len" character symbol prefixed with '-'
+C                     4 -- "len"  character symbol
+C
+C
+C
+99001 format ('  UNRECOGNIZED VALUE OF TYPE IN "SZPRNT": ',i5)
+99002 format ('  BAD OP-CODE IN "SZPRNT":',i5)
+C
+C
+C                        branch on op code.
+      if ( OP.lt.0 .or. OP.gt.2 ) write (Iout,99002) TYPE
+      if ( OP.lt.0 .or. OP.gt.2 ) call lnk1e
+      i = OP + 1
+      if ( i.eq.2 ) then
+C
+C                  append val to string.
+C            1. integer value.
+         nb = tab
+         if ( TYPE.eq.1 .or. TYPE.eq.0 ) then
+            call decchr(VAL,string,nb)
+            tab = tab + 6
+C
+C            2. floating point number.
+         elseif ( TYPE.eq.2 ) then
+            call putfp(VAL,5,string,nb)
+C            erase the comma appended by putfp.
+            nb = nb - 1
+            call puticr(blank,string,nb)
+            tab = tab + 10
+C
+C            3. 8 chracter string (with or without minus sign).
+         elseif ( iabs(TYPE).eq.3 ) then
+            if ( TYPE.eq.-3 ) call puticr(minus,string,nb)
+            call putb(VAL,LEN,string,nb)
+            tab = tab + 10
+C
+C            4. four character string.
+         elseif ( TYPE.ne.4 ) then
+C
+C                  unrecognized value of type.
+            write (Iout,99001) TYPE
+            call lnk1e
+         else
+            nb = tab
+            call putb(VAL,LEN,string,nb)
+            tab = tab + 6
+         endif
+C
+         return
+      elseif ( i.ne.3 ) then
+C
+C                  initialize buffer.
+         nb = 0
+         do 50 i = 1 , 10
+            call putb(blank,4,string,nb)
+ 50      continue
+         nb = 0
+         tab = 0
+         return
+      endif
+C
+C                  flush buffer and re-init.
+      if ( nb.ne.0 ) call strout(Iout,string,nb,1)
+      if ( nb.eq.0 ) write (Iout,99003)
+C
+99003 format (' ','  SZPRNT OUTPUTS NULL STRING.')
+C
+      tab = 0
+      nb = 0
+      do 100 i = 1 , 40
+         call putb(blank,4,string,nb)
+ 100  continue
+      nb = 0
+      return
+C
+      end
+@* INDEX.

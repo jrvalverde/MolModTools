@@ -1,0 +1,44 @@
+@* deltyc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] CHR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GETBC                                                  
+                                                                    
+\end{description}
+@a
+      integer function deltyc(CHR)
+      implicit none
+      integer i
+      character*1 CHR
+C      data lf/10/
+C          this integer function checks to see what kind of delimiter
+C     the character in "chr" is.  possible values of the function are:
+C          0 ... the character is not a delimiter.
+C          1 ... the character is a word delimiter.
+C          2 ... the character is a statement delimiter.
+C          4 ... the character is a record delimiter.
+C not impl 5 ... the character is an end-of-information mark.
+C2
+C ----------------------------------------------------------------------
+C
+      i = 0
+C                  word delimiters.
+      if ( CHR.eq.' ' .or. CHR.eq.',' .or. CHR.eq.'=' ) i = 1
+C  slash is statement delimiter.
+      if ( CHR.eq.'/' ) i = 2
+C lf=10 in ibm version. check it.
+C      if (chr.eq.lf) i = 4
+      deltyc = i
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,48 @@
+@* deltyp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] CHR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD                                                   
+\item[Called by]   GETB    SKIP                                           
+                                                                    
+\end{description}
+@a
+      integer function deltyp(CHR)
+      implicit none
+      integer CHR , i , iord , lf
+      data lf/10/
+C          this integer function checks to see what kind of delimiter
+C     the character in "chr" is.  possible values of the function are:
+C          0 ... the character is not a delimiter.
+C          1 ... the character is a word delimiter.
+C          2 ... the character is a statement delimiter.
+C          4 ... the character is a record delimiter.
+C not impl 5 ... the character is an end-of-information mark.
+C2
+C ----------------------------------------------------------------------
+C                  bell character is end-of-info, line-feed is eor.
+C     data bell/z02020207/
+C
+      i = 0
+C                  word delimiters.
+      if ( CHR.eq.iord(' ') .or. CHR.eq.iord(',') .or. CHR.eq.iord('=')
+     &     ) i = 1
+C                 (back-)slash is statement delimiter.
+C vk: ibm version: slash is statement delimiter.
+      if ( CHR.eq.iord('/') ) i = 2
+C lf=10 in ibm version. check it.
+      if ( CHR.eq.lf ) i = 4
+C     if(chr.eq.bell) i=5
+      deltyp = i
+      return
+C
+      end
+@* INDEX.

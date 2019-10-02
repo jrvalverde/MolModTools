@@ -1,0 +1,118 @@
+@* getb.
+\begin{verbatim}
+          this routine gets a string of characters from bb, starting
+    at the current position of the cursos, nbb.  the first argument,
+    ieo, indicates whether a "word", "statement", or a "section" is
+    to be gotten from bb:
+          ieo = 1 ... get a "word", which is a string of characters
+                      terminated by either <blank>, <comma>, or
+                      <equals>.  this is the lowest level object
+                      which can be taken from bb by this routine:
+                      <end-of-section> or <end-of-statement> marks
+                      can also terminate a "word".
+          ieo = 2 ... get a "statement" from bb.  this is one level
+                      higher than "word":  a statement may consist
+                      of several "words".
+          ieo = 3 ... get a "section".  this is the highest level
+                      string, and may consist of several sections.
+                      the <end-of-section> is marked by two
+                      adjacent <end-of-statement>'s.
+    the characters are put into "to", and the number of characters is
+    stored into "lento".  if the delimiter is exact (for instance, a
+    word terminated by a comma and not an <end-of-section>), then the
+    delimiter is "eaten".  in no case, however, will the delimiter
+    appear in the output string, "to".
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IEO                                                       
+\item[PASSED:] TO                                                        
+\item[OUTPUT:] LENTO                                                     
+\item[PASSED:] BB                                                        
+\item[OUTPUT:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DELTYP  GETCHR  PUTICR                                 
+\item[Called by]   DERIV   ECNFIG  FPEXIT  GETREP  GRDOPT  INITBS  INITFP 
+             INITMS  LSUBST  MATPRT  MSPRNT  NOROUT  OUTREP  PRMTBL 
+             PRTSYM  SAVSCF  SYMLBL  ZMATCH                         
+                                                                    
+\end{description}
+@a
+      subroutine getb(IEO,TO,LENTO,BB,NBB)
+      implicit none
+      integer BB , deltyp , getchr , IEO , j , jt , LENTO , leost , n , 
+     &        NBB , TO
+      dimension TO(*) , BB(*)
+C
+      LENTO = 0
+      if ( IEO.eq.2 ) then
+C
+C     get a statement.
+ 50      j = getchr(BB,NBB)
+         jt = deltyp(j)
+         if ( jt.ge.3 ) then
+            NBB = NBB - 1
+            return
+C
+         elseif ( jt.eq.2 ) then
+C
+            if ( LENTO.ne.0 ) return
+            n = NBB - 2
+            j = getchr(BB,n)
+            jt = deltyp(j)
+            if ( jt.eq.2 ) NBB = NBB - 1
+            return
+         else
+            call puticr(j,TO,LENTO)
+            goto 50
+         endif
+      elseif ( IEO.eq.3 ) then
+C
+C     get a section.
+         leost = 0
+         if ( NBB.gt.0 ) then
+            NBB = NBB - 1
+            j = getchr(BB,NBB)
+            jt = deltyp(j)
+            if ( jt.eq.2 ) leost = 1
+         endif
+ 100     j = getchr(BB,NBB)
+         jt = deltyp(j)
+         if ( jt.ge.4 ) then
+            NBB = NBB - 1
+            return
+C
+         elseif ( jt.ne.2 .or. leost.ne.1 ) then
+            leost = 0
+            if ( jt.eq.2 ) leost = 1
+            call puticr(j,TO,LENTO)
+            goto 100
+         endif
+      else
+C
+C     get a word.
+ 150     j = getchr(BB,NBB)
+         jt = deltyp(j)
+         if ( jt.lt.2 ) then
+C
+            if ( jt.eq.1 ) return
+            call puticr(j,TO,LENTO)
+            goto 150
+         else
+            NBB = NBB - 1
+            return
+         endif
+      endif
+C
+      if ( LENTO.gt.0 ) LENTO = LENTO - 1
+      return
+C
+      end
+@* INDEX.

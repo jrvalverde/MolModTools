@@ -1,0 +1,41 @@
+@* getlcu.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITRING                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CAPTLZ  L0CMND                                         
+                                                                    
+\end{description}
+@a
+      character function getlcu(ITRING,CURSOR)
+      implicit none
+      integer i , icur , imod
+C get the character at cursor+1 from the integer array itring
+C which is used as a character array and return it as
+C  character*1
+C this is the same as getchr without the final use of iord
+      integer ITRING(20) , jtring
+      integer CURSOR
+      character*1 string(4)
+      equivalence (jtring,string(1))
+C
+      CURSOR = CURSOR + 1
+      i = CURSOR/4
+      imod = mod(CURSOR,4)
+      if ( imod.gt.0 ) i = i + 1
+      icur = CURSOR - 4*(i-1)
+      jtring = ITRING(i)
+      getlcu = (string(icur))
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,36 @@
+@* ilord.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ICR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   INTCHR                                                 
+                                                                    
+\end{description}
+
+      implicit none
+This is to provide the same capability as ichar
+but applied to an integer variable with stored
+characters; it may be chr(1) or chr(4) depending
+on machine implementation of integer storage.a
+
+It is an apalling hack using equivalence and hope.
+@a
+      integer function ilord(ICR)
+      integer ICR , jcr
+      character*1 chr(4)
+      equivalence (jcr,chr(1))
+C
+      jcr = ICR
+      ilord = ichar(chr(1))
+      return
+C
+      end
+@* INDEX.

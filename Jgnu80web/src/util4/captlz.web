@@ -1,0 +1,48 @@
+@* captlz.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IN                                                        
+\item[PASSED:] OUT                                                       
+\item[INPUT:] N                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETLCU  PUTCHR                                         
+\item[Called by]   DOLLAR  ECNFIG  FFREAD  QPDEST  QPDP                   
+                                                                    
+\end{description}
+@a
+      subroutine captlz(IN,OUT,N)
+      implicit none
+      integer i , j , jj , kk , N
+C  turns the input string in in to upper case,
+C  leaving non-alphbetics unchanged
+      integer IN(*) , OUT(*)
+      character*1 up(26) , low(26)
+      character chr , getlcu
+      data up/'A' , 'B' , 'C' , 'D' , 'E' , 'F' , 'G' , 'H' , 'I' , 
+     &     'J' , 'K' , 'L' , 'M' , 'N' , 'O' , 'P' , 'Q' , 'R' , 'S' , 
+     &     'T' , 'U' , 'V' , 'W' , 'X' , 'Y' , 'Z'/
+      data low/'a' , 'b' , 'c' , 'd' , 'e' , 'f' , 'g' , 'h' , 'i' , 
+     &     'j' , 'k' , 'l' , 'm' , 'n' , 'o' , 'p' , 'q' , 'r' , 's' , 
+     &     't' , 'u' , 'v' , 'w' , 'x' , 'y' , 'z'/
+      jj = 0
+      kk = 0
+      do 200 j = 1 , N
+         chr = getlcu(IN,jj)
+         do 50 i = 1 , 26
+            if ( chr.eq.low(i) ) then
+               chr = up(i)
+               goto 100
+            endif
+ 50      continue
+ 100     call putchr(chr,OUT,kk)
+ 200  continue
+      return
+      end
+@* INDEX.

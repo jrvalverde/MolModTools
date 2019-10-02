@@ -1,0 +1,83 @@
+@* puticr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ICHR                                                      
+\item[OUTPUT:] ITRING                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     CURSOR                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   BASPRT  DECCHR  GETB    NOSIGN  PAD     PAKSTR  PRTSYM 
+             PUTB    PUTDEL  PUTSTR  QPSCHR  QPSKEY  QPUTIT  QPWORD 
+             RDROUT  RDTITL  SZPRNT                                 
+                                                                    
+\end{description}
+@a
+      subroutine puticr(ICHR,ITRING,CURSOR)
+      implicit none
+      integer i , icur , imod , In , Iout , Ipunch
+C  insert the first "character" in the integer ichr into
+C  the integer array itring which is used as a character array
+      integer ITRING(*) , CURSOR
+      integer ICHR , jchr
+      integer jtring
+      character*1 string(4) , chr(4)
+      common /io    / In , Iout , Ipunch
+      equivalence (jchr,chr(1))
+      equivalence (jtring,string(1))
+C
+      jchr = ICHR
+C*** JR ***
+C On some compilers the caller's variable is modified.
+C Some others (g77) work on a copy instead and break semantics in 'altges'.
+C*** JR ***
+      CURSOR = CURSOR + 1
+      i = CURSOR/4
+      imod = mod(CURSOR,4)
+      if ( imod.gt.0 ) i = i + 1
+C check that puticr does not try to put information into
+C an area beyond the longest object in the code: currently
+C /label/label(1000), .....
+      if ( i.gt.4000 ) then
+C this is a de-bugging ghost
+         write (Iout,*) ' PUTICR: Off the end of /LABEL/'
+         call lnk1e
+         goto 99999
+      endif
+      icur = CURSOR - 4*(i-1)
+      jtring = ITRING(i)
+      string(icur) = chr(1)
+      ITRING(i) = jtring
+      return
+C      return
+C
+99999 end
+      subroutine putchr(CHR,ITRING,CURSOR)
+      implicit none
+      integer i , icur , imod
+C insert the character in the integer array itring
+C which is being used as a character string
+      integer ITRING(20) , CURSOR
+      integer jtring
+      character*1 CHR
+      character*1 string(4)
+      equivalence (string(1),jtring)
+C
+      CURSOR = CURSOR + 1
+      i = CURSOR/4
+      imod = mod(CURSOR,4)
+      if ( imod.gt.0 ) i = i + 1
+      icur = CURSOR - 4*(i-1)
+      jtring = ITRING(i)
+      string(icur) = CHR
+      ITRING(i) = jtring
+      return
+C
+      end
+@* INDEX.

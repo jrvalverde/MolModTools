@@ -1,0 +1,27 @@
+@* getch.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] STRING                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GETBC   PUTBC                                          
+                                                                    
+\end{description}
+@a
+      character function getch(STRING,CURSOR)
+      implicit none
+      character*1 STRING(*)
+      integer CURSOR
+      CURSOR = CURSOR + 1
+      getch = STRING(CURSOR)
+      return
+      end
+@* INDEX.

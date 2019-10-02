@@ -1,0 +1,43 @@
+@* getchr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITRING                                                    
+\item[OUTPUT:] CURSOR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD                                                   
+\item[Called by]   CROP    DERIV   FFGET   FPEXIT  GETB    GRDOPT  LOCSTR 
+             MATPRT  MSPRNT  NOSIGN  PAKSTR  PUTB    PUTDEL  QPAINT 
+             QPANY1  QPDP    QPSCHR  QPSKBL  QPSKEY  QPUTIT  QPWORD 
+             RDROUT  SAVSCF  SKIP    STREQ                          
+                                                                    
+\end{description}
+@a
+      integer function getchr(ITRING,CURSOR)
+      implicit none
+      integer i , icur , imod , iord
+C get the character at cursor+1 from the integer array itring
+C which is used as a character array and put it into full
+C  integer format
+      integer ITRING(20) , jtring
+      integer CURSOR
+      character*1 string(4)
+      equivalence (jtring,string(1))
+C
+      CURSOR = CURSOR + 1
+      i = CURSOR/4
+      imod = mod(CURSOR,4)
+      if ( imod.gt.0 ) i = i + 1
+      icur = CURSOR - 4*(i-1)
+      jtring = ITRING(i)
+      getchr = iord(string(icur))
+      return
+C
+      end
+@* INDEX.

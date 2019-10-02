@@ -1,0 +1,27 @@
+@* lord.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] CHR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   INTCHR                                                 
+                                                                    
+\end{description}
+@a
+      integer function lord(CHR)
+      implicit none
+C this is simply ichar the f77 standard
+      character*1 CHR
+C
+      lord = ichar(CHR)
+      return
+C
+      end
+@* INDEX.

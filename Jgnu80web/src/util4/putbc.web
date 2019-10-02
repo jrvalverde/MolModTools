@@ -1,0 +1,44 @@
+@* putbc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] INSTR                                                     
+\item[INPUT:] LENIN                                                     
+\item[PASSED:] BB                                                        
+\item[PASSED:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCH   PUTCHR                                         
+\item[Called by]   ECNFIG  GESPRT  GRDOPT  LABREP  MULPOP  PRMOUT  PRMTBL 
+             PRTSYM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine putbc(INSTR,LENIN,BB,NBB)
+      implicit none
+      integer BB , i , in , LENIN , NBB
+      dimension BB(*)
+      character*1 INSTR(*)
+      character*1 chr
+      character getch
+C          this routine appends the character string "instr", of
+C     length "lenin", to the (packed) string "bb", updating the
+C     cursor "nbb" as it does.
+C2
+C     r. a. whiteside - october 1979
+C ----------------------------------------------------------------------
+C
+      in = 0
+      do 100 i = 1 , LENIN
+         chr = getch(INSTR,in)
+         call putchr(chr,BB,NBB)
+ 100  continue
+      return
+C
+      end
+@* INDEX.
