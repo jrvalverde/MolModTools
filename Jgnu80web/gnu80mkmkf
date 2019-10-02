@@ -1,0 +1,79 @@
+#!/bin/bash
+#
+# Create a Makefile:
+#
+# Clean up
+cat > Makefile<<RULES
+#
+#   This is the makefile for GNU80 the portable version of Gaussian80
+#
+#   Note that source is literary programmed using FWEB and FORTRAN77.
+#
+#   When using FWEB, the following options should be set in you ~/.fweb
+#   file or the command line:
+#
+#   +TD
+#   +PL
+#   +wfwebmac.sty
+#   +ykw1000
+#   +i
+#   +ybs2000
+#   +Tv
+#   +#
+#
+#   If not, the uncomment the conversion lines in the production rules.
+#   If the last statement sounds like martian to you, seek assistance.
+#
+#   (C) Jose R. Valverde, 2009.
+#
+#   $Log$
+
+FC=/opt/gcc2/bin/g77
+FFLAGS=-g
+TANGLE=ftangle
+
+.web.o:
+	\$(TANGLE) \$<
+	mv \`basename \$*.f\` \`dirname \$<\`
+	#cat \$*.f | sed -e 's/C\* 1: \*//g' > \$*.F
+	#mv \$*.F \$*.f
+	\$(FC) -c \$(FFLAGS) \$*.f
+
+.web.f:
+	\$(TANGLE) \$<
+	mv \`basename \$*.f\` \`dirname \$<\`
+	#cat \$*.f | sed -e 's/C\* 1: \*//g' > \$*.F
+	#mv \$*.F \$*.f
+
+.f.o:
+	\$(FC) -c \$(FFLAGS) \$<
+
+RULES
+# src
+for i in src/* NBO/src ; do 
+    cd $i
+    echo processing $i 
+    echo -n `basename $i`" = " >> ../../Makefile 
+    for j in *.web ; do 
+    	echo -n " " `echo $i/$j | sed -e 's/web$/o/g'` >> ../../Makefile 
+    done
+    echo "" >> ../../Makefile
+    echo "" >> ../../Makefile
+    echo "finished $i"
+    cd ../..
+done
+# all
+echo  -n "EVERYTHING = " >> Makefile
+for i in src/* NBO/src ; do
+    echo -n " \$("`basename $i`")" >> Makefile
+done
+echo "" >> Makefile
+echo "" >> Makefile
+cat >> Makefile<<TRAIL
+all : \$(EVERYTHING) NBO/jobopt.o
+	\$(FC) \$(FFLAGS) -c NBO/jobopt.f
+	\$(FC) \$(FFLAGS) \$(EVERYTHING) NBO/jobopt.o
+
+clean:
+	\rm -f src/*/*.[ofF] NBO/src/*.[ofF] NBO/jobopt.o
+TRAIL

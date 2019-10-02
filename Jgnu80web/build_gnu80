@@ -1,0 +1,111 @@
+#!/bin/bash -x
+# Run over all directories
+PREFIX="/u/jr/work/Quantum/gaussian80/gnu80web"
+f77='/opt/gcc2/bin/g77 -g3 '
+
+cd $PREFIX/src
+  for dirr in `ls`
+      do
+#  `ls` puts a slash at the end of a directory, get rid of it
+      dir=${dirr%/}
+         cd $dir
+# Get rid of old stuff
+         rm -f *.F *.o
+#         echo $dir
+# Now all files in each directory
+      for x in `ls *.web`
+         do
+# Strip the web extension
+          name=${x%.web}
+         echo $name
+            ftangle -ybs15000 $name
+            cat ${name}.f | sed -e 's/C\* 1: \*//g' > ${name}.F
+            #mv ${name}.f ${name}.F
+            ${f77} -c ${name}.F
+            #rm -f ${name}.F ${name}.mk
+       done 
+# End of current directory
+   cd $PREFIX/src
+   done
+# End of scan through all gnu80/src directories
+#
+# Now compile the NBO stuff (except for jobopt which is not Webised)
+#
+# Only one source directory in NBO
+ cd $PREFIX/NBO/src
+# Remove old stuff
+  \rm -f *.f *.o
+# Now all web files in the directory
+      for x in `ls *.web`
+         do
+# Strip the web extension
+          name=${x%.web}
+          echo $name
+            ftangle -ybs15000 $name
+	    cat ${name}.f | sed -e 's/C\* 1: \*//g' > ${name}.F
+            #mv ${name}.f ${name}.F
+            ${f77} -c ${name}.F
+            #rm -f ${name}.F
+       done 
+# Compile the defaulter jobopt.f which is not a Web (yet)
+  cd $PREFIX/NBO
+  ${f77} -c jobopt.f
+# back to gnu80 directory to link the objects
+ cd $PREFIX/
+# now link the lot  Including the non-Web jobopt.o
+  ${f77} $PREFIX/src/*/*.o $PREFIX/NBO/src/*.o $PREFIX/NBO/jobopt.o
+#
+#
+# And now try to create a Makefile:
+#
+# Clean up
+cat > Makefile<<RULES
+FC=$f77
+FFLAGS=-g
+TANGLE=ftangle
+
+.web.o:
+	\$(TANGLE) \$<
+	mv `basename \$*.f` `dirname \$<`
+	cat \$*.f | sed -e 's/C\* 1: \*//g' > \$*.F
+	mv \$*.F \$*.f
+	\$(FC) -c \$(FFLAGS) \$*.f
+
+.web.f:
+	\$(TANGLE) \$<
+	mv `basename \$*.f` `dirname \$<`
+	cat \$*.f | sed -e 's/C\* 1: \*//g' > \$*.F
+	mv \$*.F \$*.f
+
+.f.o:
+	\$(FC) -c \$(FFLAGS) \$<
+
+RULES
+# src
+for i in src/* NBO/src ; do 
+    cd $i
+    echo processing $i 
+    echo -n `basename $i`" = " >> ../../Makefile 
+    for j in *.web ; do 
+    	echo -n " " `echo $i/$j | sed -e 's/web$/o/g'` >> ../../Makefile 
+    done
+    echo "" >> ../../Makefile
+    echo "" >> ../../Makefile
+    echo "finished $i"
+    cd ../..
+done
+# all
+echo  -n "EVERYTHING = " >> Makefile
+for i in src/* NBO/src ; do
+    echo -n " \$("`basename $i`")" >> Makefile
+done
+echo "" >> Makefile
+echo "" >> Makefile
+cat >> Makefile<<TRAIL
+all : \$(EVERYTHING) NBO/jobopt.o
+	\$(FC) \$(FFLAGS) -c NBO/jobopt.f
+	\$(FC) \$(FFLAGS) \$(EVERYTHING) NBO/jobopt.o
+
+clean:
+	\rm -f src/*/*.[ofF] NBO/src/*.[ofF] NBO/jobopt.o
+TRAIL
