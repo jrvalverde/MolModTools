@@ -1,0 +1,27 @@
+@* rwfspc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IFLAG                                                     
+\item[UNUSED:] LEN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ANNIL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine rwfspc(IFLAG,LEN)
+      implicit none
+      integer IFLAG , LEN
+C
+      IFLAG = 0
+      return
+C
+      end
+@* INDEX.

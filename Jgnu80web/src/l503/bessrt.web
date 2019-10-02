@@ -1,0 +1,219 @@
+@* bessrt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] ISW                                                       
+\item[OUTPUT:] TAU                                                       
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[INPUT:] MDIM                                                      
+\item[PASSED:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CRIT    E       IOR     KEY     KSPIN   S              
+\item[Transmits as argument]  IOUS                                                   
+\item[Uses]  CMP     CRIT    E       IOR     IOUS    IOUT    ITCNT  
+             KSM     KSPIN   NEST    NSE     ONE     S       ZERO   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DOT     GMIN1   ILSW    LNK1E   TIOC                   
+\item[Called by]   FIRST                                                  
+                                                                    
+\end{description}
+@a
+      subroutine bessrt(NBASIS,ISW,TAU,A,B,MDIM,IDUMP)
+      implicit none
+      double precision A , a0 , a1 , ai , ar , B , Big , blow , Crit , 
+     &                 Dumscr , E , Four , gmin1 , One , Onept5 , Pt5 , 
+     &                 reduct , S , Small , TAU
+      double precision Three , Two , Zero
+      integer i , Idscr , IDUMP , Ieval , Ievals , Ifill , Igeno , ii , 
+     &        In , Iob , Ioc0 , iocc , Iocs , Iod , Iof1p , Iofa , 
+     &        Ione , Ioq , Ior , Ios
+      integer Iou , Iouab , Ious , Iout , Ipspin , Iptot , Ipunch , 
+     &        ircmax , ISW , Itcnt , Iuo , j , jj , jjmdim , Jmat , k , 
+     &        Ksm , Kspin , Ksw , MDIM
+      integer minprt , NBASIS , Nesk , Nest , Nest1 , nocc , Nse , Nsep
+      logical Key , kej , Cmp , Rhf , Skpsym
+      dimension A(MDIM,*) , B(MDIM,*)
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /scr   / S(140) , Iou(70) , Iuo(70) , Ior(70,2) , E(140) , 
+     &                Key , Itcnt , Crit , Skpsym , Idscr , Dumscr(5209)
+     &                , Ifill
+      common /rwf503/ Igeno , Ieval , Ios , Ione , Iofa(4) , Iod(4) , 
+     &                Iob(4) , Iocs(4) , Ioc0(4) , Ioq(4) , Ious(4) , 
+     &                Jmat(4) , Iof1p(4) , Ievals , Iouab(4) , Iptot(2)
+     &                , Ipspin(2)
+      common /io    / In , Iout , Ipunch
+      data ircmax , reduct , blow/20 , .5D0 , .75D0/
+C     ******************************************************************
+C     reordering of v(xlam),p if desired and necessary
+C     such a reordering means maintaining continuity of the wavefunction
+C     along the path of the univariate search
+C     decision whether a given eigenvector is occupied or not by means
+C     of the overlap criterion using the bessel equation
+C     or the stronger individual-overlap criterion
+C
+C     oct 76/rs9b
+C     ******************************************************************
+C
+C
+C
+99001 format (' CONTINUITY OF WAVEFUNCTION CAN NOT BE ACHIEVED')
+99002 format (72x,'FURTHER REDUCTION OF TAU MEANINGLESS. KEEP IT.')
+C     ******************************************************************
+      call ilsw(2,21,minprt)
+      if ( ISW.eq.2 ) then
+C
+C     ******************************************************************
+C     dot product of the eigenvector i with all occupied vectors of the
+C     reference matrix  (eqns. 46 and 47)
+C     ******************************************************************
+C
+         call tioc(NBASIS,2,Ious,A,4,1,IDUMP)
+         do 50 i = 1 , NBASIS
+            Ior(i,Kspin) = 0
+ 50      continue
+         Key = .false.
+         iocc = 0
+         nocc = Nse
+         do 100 i = 1 , NBASIS
+            a0 = Zero
+            do 60 j = 1 , Nse
+               call dot(NBASIS,A(1,j),B(1,i),ar,ai)
+               a0 = a0 + ar**2 + ai**2
+ 60         continue
+            if ( a0.lt.blow ) then
+C
+               nocc = nocc + 1
+               Ior(nocc,Kspin) = i
+            else
+               iocc = iocc + 1
+               Crit = gmin1(Crit,a0)
+               if ( iocc.gt.Nse ) goto 400
+               Ior(iocc,Kspin) = i
+            endif
+ 100     continue
+         if ( iocc.ge.Nse ) return
+      elseif ( ISW.eq.3 ) then
+C
+C     ******************************************************************
+C     stronger individual-overlap criterion
+C     ******************************************************************
+C
+         call tioc(NBASIS,2,Ious,A,4,1,IDUMP)
+         Key = .false.
+         do 150 i = 1 , NBASIS
+            Ior(i,Kspin) = 0
+ 150     continue
+         do 200 i = 1 , NBASIS
+            a0 = Zero
+            do 160 j = 1 , NBASIS
+               call dot(NBASIS,A(1,i),B(1,j),ar,ai)
+               a1 = ar**2 + ai**2
+               if ( a1.gt.a0 ) then
+                  a0 = a1
+                  jj = j
+               endif
+ 160        continue
+            Crit = gmin1(Crit,a0)
+            if ( a0.lt.blow ) goto 400
+            jjmdim = jj + MDIM
+            do 180 k = 1 , NBASIS
+               if ( Cmp ) B(k,jjmdim) = Zero
+               B(k,jj) = Zero
+ 180        continue
+            Ior(i,Kspin) = jj
+ 200     continue
+         return
+      elseif ( ISW.eq.4 ) then
+         goto 600
+      else
+C
+C     ******************************************************************
+C     initialization of the pattern of v(xlam),p  (unit matrix)
+C     ******************************************************************
+C
+         do 250 i = 1 , NBASIS
+            do 220 j = 1 , NBASIS
+               B(i,j) = Zero
+ 220        continue
+ 250     continue
+         if ( Cmp ) then
+            do 260 Kspin = 1 , Ksm
+               call tioc(NBASIS,1,Ious(2*Kspin),B,0,0,IDUMP)
+ 260        continue
+         endif
+         do 300 i = 1 , NBASIS
+            B(i,i) = One
+ 300     continue
+         do 350 Kspin = 1 , Ksm
+            call tioc(NBASIS,1,Ious(2*Kspin-1),B,0,0,IDUMP)
+ 350     continue
+         return
+      endif
+C
+C     ******************************************************************
+C     assignment not completed
+C     ******************************************************************
+C
+ 400  do 500 i = 1 , NBASIS
+         if ( Ior(i,Kspin).eq.0 ) then
+            do 420 j = 1 , NBASIS
+               jj = j
+               do 410 k = 1 , NBASIS
+                  if ( j.eq.Ior(k,Kspin) ) goto 420
+ 410           continue
+               goto 440
+C
+ 420        continue
+            call lnk1e
+ 440        Ior(i,Kspin) = jj
+         endif
+ 500  continue
+C
+      if ( Itcnt.le.ircmax ) then
+         TAU = TAU*reduct
+         Key = .true.
+         kej = .true.
+         return
+C
+      elseif ( minprt.ne.0 ) then
+C
+         write (Iout,99001)
+         call lnk1e
+      else
+         if ( kej ) write (Iout,99002)
+         kej = .false.
+         return
+      endif
+C
+C     ******************************************************************
+C     reordering
+C     ******************************************************************
+C
+ 600  do 700 i = 1 , NBASIS
+         S(i) = E(i+Nest)
+ 700  continue
+      do 800 i = 1 , NBASIS
+         ii = Ior(i,Kspin)
+         if ( Cmp ) then
+            do 720 j = 1 , NBASIS
+               B(j,i+MDIM) = A(j,ii+MDIM)
+ 720        continue
+         endif
+         do 750 j = 1 , NBASIS
+            B(j,i) = A(j,ii)
+ 750     continue
+         E(i+Nest) = S(ii)
+ 800  continue
+      call tioc(NBASIS,1,Ious,B,4,1,IDUMP)
+      return
+C
+      end
+@* INDEX.

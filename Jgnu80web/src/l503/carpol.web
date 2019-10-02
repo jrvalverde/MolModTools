@@ -1,0 +1,46 @@
+@* carpol.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] AR                                                        
+\item[INPUT:] AI                                                        
+\item[OUTPUT:] R                                                         
+\item[OUTPUT:] PHI                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  ZERO                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   CMAT    CSYMM                                          
+                                                                    
+\end{description}
+@a
+      subroutine carpol(AR,AI,R,PHI)
+      implicit none
+      double precision a0 , a1 , AI , AR , Constd , Four , gsqrt , One , 
+     &                 PHI , Pt5 , R , Three , Two , Zero
+      common /const / Zero , Pt5 , One , Two , Three , Four , Constd(3)
+C     ******************************************************************
+C     converts cartesian coordinates (ar and ai) to polar ones
+C     (r and phi)
+C
+C     dec 76/rs9b
+C     ******************************************************************
+C     ******************************************************************
+      a0 = AR
+      a1 = AI
+      R = gsqrt(a0**2+a1**2)
+      if ( R.lt.1.D-14 ) then
+C
+         R = Zero
+         PHI = Zero
+      else
+         PHI = datan2(a1,a0)
+      endif
+      return
+C
+      end
+@* INDEX.

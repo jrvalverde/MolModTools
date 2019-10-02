@@ -1,0 +1,59 @@
+@* formv.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] MAXNBF                                                    
+\item[OUTPUT:] V                                                         
+\item[OUTPUT:] D                                                         
+\item[PASSED:] VV                                                        
+\item[PASSED:] DD                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DIAG    GSQRT   TREAD   TWRITE                         
+\item[Called by]   UHFOPN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine formv(NBASIS,MAXNBF,V,D,VV,DD)
+      implicit none
+      double precision D , DD , fact , gsqrt , one , V , VV
+      integer i , irws , irwtm , j , MAXNBF , NBASIS
+      dimension V(MAXNBF,MAXNBF) , D(MAXNBF,MAXNBF) , VV(*) , DD(*)
+      data one/1.0D0/
+      data irws/514/ , irwtm/2555/
+C
+C
+C     form transformation matrix
+C
+C
+C     the overlap matrix is read from rwtape file 8
+      call tread(irws,V,MAXNBF,MAXNBF,NBASIS,NBASIS,1)
+C     the overlap matrix is now diagnolized and the v matrix is formed
+C     overlap matrix in v
+C     eigenvectors in d
+C     eigenvalues in vv
+C     dd is just a scratch array
+      call diag(NBASIS,MAXNBF,V,D,VV,DD)
+      do 100 j = 1 , NBASIS
+         fact = one/gsqrt(VV(j))
+         do 50 i = 1 , NBASIS
+            D(i,j) = D(i,j)*fact
+ 50      continue
+ 100  continue
+      do 200 i = 1 , NBASIS
+         do 150 j = 1 , NBASIS
+            V(i,j) = D(j,i)
+ 150     continue
+ 200  continue
+C     write out transformation matrix on rwtape ... file 4
+      call twrite(irwtm,V,MAXNBF,MAXNBF,NBASIS,NBASIS,0)
+      return
+C
+      end
+@* INDEX.

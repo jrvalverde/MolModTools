@@ -1,0 +1,238 @@
+@* conclo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] N                                                         
+\item[INPUT:] ACURCY                                                    
+\item[OUTPUT:] FINAC                                                     
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[INPUT:] KOP                                                       
+\item[UNUSED:] PREDUC                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICOUNT  IFLAG   KEY                                    
+\item[Transmits as argument]  IRWC1   NTT                                            
+\item[Uses]  ICOUNT  IOUT    IRWC1   IRWC2   IRWC3   NTT     PSAVE  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GFLOAT  SCFTRC  TREAD   TWRITE                 
+\item[Called by]   CYCCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine conclo(N,ACURCY,FINAC,A,B,KOP,PREDUC)
+      implicit none
+      double precision A , ACURCY , B , cosphi , cospsi , dp1 , dp2 , 
+     &                 dp3 , FINAC , four , gabs , gfloat , one , 
+     &                 onept9 , PREDUC , pt99 , pt995 , rmsdp , scftrc , 
+     &                 sp11
+      double precision sp12 , sp13 , sp22 , sp23 , sp33 , x , xxx , xy , 
+     &                 y , yyy
+      integer i , Icount , Iflag , ifour , In , inone , Iout , Ipunch , 
+     &        Irwc , Irwc1 , Irwc2 , Irwc3 , Irweig , Irwf , Irwgen , 
+     &        Irwh , Irwibf , Irwlc , Irwle , Irwlp
+      integer Irwp , Irwpt , Irws , Irwt , Irwtm , Irww , iskpd , 
+     &        ithree , itype , Key , KOP , Length , Lenibf , loc1 , 
+     &        loc2 , N , Nsq , Ntt
+      integer Psave
+      dimension ithree(2) , ifour(2) , itype(2) , iskpd(3)
+      dimension A(100) , B(100)
+      common /ntt   / Ntt , Length , Nsq
+      common /irw501/ Irwgen , Irws , Irwh , Irwt , Irweig , Irwc , 
+     &                Irwp , Irwpt , Irwf , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwtm , Irwibf , Lenibf , Irwle , Irwlc , Irwlp , 
+     &                Irww
+      common /psave / Psave
+      common /convg / Icount , Iflag , Key
+      common /io    / In , Iout , Ipunch
+      save 
+      data pt99/0.99D0/ , pt995/0.995D0/ , one/1.0D0/ , onept9/1.9D0/
+      data four/4.0D0/
+      data inone/4H    / , ithree/4H3-PO , 4HINT./
+      data ifour/4H4-PO , 4HINT./ , iskpd/4H3PT  , 4H4PT  , 4HSKPD/
+C
+C
+C
+C***********************************************************************
+C     routine to perform convergence checking for the regular
+C     closed shell scf.  this version uses only two ntt
+C     arrays.  the variable kop determines what (if any) extrapolation
+C     is done:
+C
+C     kop = 0 ... (default) use either four-point or three-point
+C                 when possible.
+C     kop = 1 ... lock out use of three-point extrapolation.
+C     kop = 2 ... lock out use of four-point extrapolation.
+C
+C***********************************************************************
+C
+C***********************************************************************
+99001 format (1x,30x,d11.4)
+99002 format (1x,48x,2A4)
+C***********************************************************************
+C
+      Iflag = 0
+      Icount = Icount + 1
+      itype(1) = inone
+      itype(2) = inone
+      loc1 = Irwc3
+      if ( mod(Icount,2).ne.0 ) loc1 = Irwc2
+      loc2 = (Irwc2+Irwc3) - loc1
+C     ******************************************************************
+C     skip to end in first cycle or immediately after extrapolation
+C     ******************************************************************
+      if ( Icount.ne.1 ) then
+C     ******************************************************************
+C     p(n) now in a. read p(n-1) into b. store p(n) in 31. form p(n)-
+C     p(n-1) in b.
+C     ******************************************************************
+         call tread(Irwc1,B,Ntt,1,Ntt,1,0)
+         call twrite(Irwc1,A,Ntt,1,Ntt,1,0)
+         do 50 i = 1 , Ntt
+            B(i) = A(i) - B(i)
+ 50      continue
+C     ******************************************************************
+C     find length dp1
+C     ******************************************************************
+         sp11 = scftrc(B,B,N,1)
+         dp1 = sqrt(sp11)
+C     ******************************************************************
+C     test for convergence by finding if root mean square dp is less
+C     than acurcy
+C     ******************************************************************
+         rmsdp = dp1/gfloat(N)
+         FINAC = rmsdp
+         if ( rmsdp.lt.ACURCY ) then
+            Key = 0
+C
+         elseif ( Icount.ne.2 ) then
+C
+            if ( Icount.ge.4 ) then
+C     ******************************************************************
+C     read p(n-2)-p(n-3) into a and update
+C     ******************************************************************
+               call tread(loc1,A,Ntt,1,Ntt,1,0)
+               sp23 = sp12
+               sp33 = sp22
+               sp13 = scftrc(A,B,N,1)
+C     ******************************************************************
+C     find length dp3
+C     ******************************************************************
+               dp3 = sqrt(sp33)
+            endif
+            call twrite(loc1,B,Ntt,1,Ntt,1,0)
+C     ******************************************************************
+C     read p(n-1)-p(n-2) into a
+C     ******************************************************************
+            call tread(loc2,A,Ntt,1,Ntt,1,0)
+            sp12 = scftrc(A,B,N,1)
+            sp22 = scftrc(A,A,N,1)
+C     ******************************************************************
+C     find length dp2
+C     ******************************************************************
+            dp2 = sqrt(sp22)
+C     ******************************************************************
+C     recover p(n) in a
+C     ******************************************************************
+            call tread(Irwc1,A,Ntt,1,Ntt,1,0)
+C     ******************************************************************
+C     find cosine of angle between successive displacements
+C     ******************************************************************
+            cosphi = sp12/(dp1*dp2)
+            if ( Icount.ne.3 ) then
+C     ******************************************************************
+C     find cosine of angle between dp3 and plane of dp1 and dp2
+C     ******************************************************************
+               x = (sp13*sp22-sp12*sp23)/(sp11*sp22-sp12*sp12)
+               y = (sp23*sp11-sp12*sp13)/(sp11*sp22-sp12*sp12)
+               cospsi = sqrt(x*x*sp11+y*y*sp22+(x+x)*y*sp12)/dp3
+               if ( Psave.eq.0 ) write (Iout,99001) rmsdp
+C     ******************************************************************
+C     do not extrapolate unless 4 consecutive points are nearly coplanar
+C     ******************************************************************
+               if ( cospsi.gt.pt99 ) then
+C     ******************************************************************
+C     express vector dp1 as x*dp3(projected)+y*dp2
+C     ******************************************************************
+                  y = -y/x
+                  x = one/x
+C     ******************************************************************
+C     test if 2*2 matrix has real eigenvalues between -.95 and+.95
+C     ******************************************************************
+                  xy = y*y + four*x
+                  if ( xy.ge.0 ) then
+                     xy = gabs(y) + sqrt(xy)
+                     if ( xy.le.onept9 ) then
+C
+                        if ( KOP.le.1 ) then
+C
+                           xxx = x/(one-x-y)
+                           yyy = (x+y)/(one-x-y)
+                           do 52 i = 1 , Ntt
+                              A(i) = A(i) + yyy*B(i)
+ 52                        continue
+C     ******************************************************************
+C     recover p(n-1)-p(n-2) in b
+C     ******************************************************************
+                           call tread(loc2,B,Ntt,1,Ntt,1,0)
+                           do 54 i = 1 , Ntt
+                              A(i) = A(i) + xxx*B(i)
+ 54                        continue
+                           itype(1) = ifour(1)
+                           itype(2) = ifour(2)
+                           Iflag = 1
+                           Icount = 0
+                           call twrite(Irwc1,A,Ntt,1,Ntt,1,0)
+                           if ( Psave.eq.0 ) write (Iout,99002) itype(1)
+     &                          , itype(2)
+                        else
+                           itype(1) = iskpd(2)
+                           itype(2) = iskpd(3)
+                           if ( Psave.eq.0 ) write (Iout,99002) itype(1)
+     &                          , itype(2)
+                        endif
+                        goto 100
+                     endif
+                  endif
+C     ******************************************************************
+C     if 4-point extrapolation is not possible try 3-point
+C     ******************************************************************
+                  if ( gabs(cosphi).gt.pt995 ) then
+                     if ( KOP.le.0 ) then
+C
+                        x = dp1/(dp2*cosphi-dp1)
+                        do 56 i = 1 , Ntt
+                           A(i) = A(i) + x*B(i)
+ 56                     continue
+                        itype(1) = ithree(1)
+                        itype(2) = ithree(2)
+                        Iflag = 1
+                        Icount = 0
+                        call twrite(Irwc1,A,Ntt,1,Ntt,1,0)
+                        if ( Psave.eq.0 ) write (Iout,99002) itype(1) , 
+     &                       itype(2)
+                     else
+                        itype(1) = iskpd(1)
+                        itype(2) = iskpd(3)
+                        if ( Psave.eq.0 ) write (Iout,99002) itype(1) , 
+     &                       itype(2)
+                     endif
+                  endif
+               endif
+            else
+               if ( Psave.eq.0 ) write (Iout,99001) rmsdp
+            endif
+         else
+            call twrite(loc1,B,Ntt,1,Ntt,1,0)
+            if ( Psave.eq.0 ) write (Iout,99001) rmsdp
+         endif
+      else
+         call twrite(Irwc1,A,Ntt,1,Ntt,1,0)
+         if ( Psave.eq.0 ) write (Iout,99002) itype(1) , itype(2)
+      endif
+ 100  return
+C
+      end
+@* INDEX.

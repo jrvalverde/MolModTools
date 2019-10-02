@@ -1,0 +1,121 @@
+@* incrd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP6                                                      
+\item[OUTPUT:] ACURCY                                                    
+\item[INPUT:] IOP8                                                      
+\item[OUTPUT:] ENGCON                                                    
+\item[OUTPUT:] THRESH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FFERR   FFGET   FFREAD  FFSET   IORD    LNK1E          
+\item[Called by]   RHFCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine incrd(IOP6,ACURCY,IOP8,ENGCON,THRESH)
+      implicit none
+      double precision ACURCY , ecut , five , rhocon , rhocut , str , 
+     &                 ten , tenm5 , THRESH , zero
+      integer ieof , if1 , if2 , In , intgr , IOP6 , IOP8 , iord , 
+     &        Iout , Ipunch , len
+      integer ENGCON
+      dimension str(10)
+      common /io    / In , Iout , Ipunch
+      data five/5.0D0/ , ten/10.0D0/ , tenm5/1.0D-5/
+      data zero/0.0D0/
+C
+C
+C***********************************************************************
+C     routine to process those scf options that may require reading
+C     cards:
+C
+C     iop6 ... scf density matrix convergence.
+C     iop8 ... scf energy convergence.
+C
+C     the options are tested to see if a card is to be read.
+C     if it is necessary to input data, only one card will be read.
+C     it is read in free-field format and has two fields:
+C
+C     field 1, floating point, rhocut
+C     field 2, floating point, ecut.
+C
+C     the routine always reads two fields.  if you only want to
+C     specify one of the items, use commas as separators,
+C     viz:
+C
+C     ,1.0d-10
+C
+C     would set the energy convergence
+C     criterion to 1.0*(10**-10).
+C***********************************************************************
+C
+C
+C
+C***********************************************************************
+99001 format (' UNEXPECTED END-OF-FILE IN INCRD.')
+99002 format (' CANNOT INTERPRET FIELD IN INCRD.')
+C***********************************************************************
+C
+C
+C
+C     do we need to read a card
+      if ( (IOP6.eq.8) .or. (IOP8.eq.7) ) then
+C
+C     yes, a card is necessary.  read 1 card in free-field format
+C     as described above.
+         call ffset(0)
+         call ffread(ieof)
+         if ( ieof.eq.1 ) goto 100
+         rhocut = zero
+         call ffget(str,len,intgr,rhocut,if1)
+         if ( if1.ne.iord('NUL') .and. if1.ne.iord('FP') )
+     &         call fferr('FP',if1)
+         ecut = zero
+         call ffget(str,len,intgr,ecut,if2)
+         if ( if2.ne.iord('END') .and. if2.ne.iord('NUL') .and. 
+     &        if2.ne.iord('FP') ) call fferr('FP',if2)
+      endif
+C
+C
+C     process density matrix convergence option.
+      ACURCY = five*tenm5
+      if ( IOP6.gt.0 ) then
+         if ( IOP6.ne.8 ) then
+C
+            ACURCY = ten**(-IOP6)
+         else
+            ACURCY = rhocon
+         endif
+      endif
+C
+C     process energy convergence criterion.
+      THRESH = tenm5
+      ENGCON = IOP8
+      if ( IOP8.gt.0 ) then
+         if ( IOP8.ne.7 ) then
+C
+            ecut = ten**(-3-IOP8)
+         else
+            THRESH = ecut
+         endif
+      endif
+      return
+C
+C***********************************************************************
+C     error messages.
+C*********************************************************************
+ 100  write (Iout,99001)
+      call lnk1e
+      write (Iout,99002)
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

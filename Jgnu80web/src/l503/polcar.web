@@ -1,0 +1,37 @@
+@* polcar.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] R                                                         
+\item[INPUT:] PHI                                                       
+\item[OUTPUT:] AR                                                        
+\item[OUTPUT:] AI                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GCOS    GSIN                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine polcar(R,PHI,AR,AI)
+      implicit none
+      double precision a0 , a1 , AI , AR , gcos , gsin , PHI , R
+C     ******************************************************************
+C     converts polar coordinates (r and phi) to cartesian ones
+C     (ar and ai)
+C
+C     dec 76/rs9b
+C     ******************************************************************
+      a0 = R
+      a1 = PHI
+      AR = a0*gcos(a1)
+      AI = a0*gsin(a1)
+      return
+C
+      end
+@* INDEX.

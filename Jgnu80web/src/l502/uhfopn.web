@@ -1,0 +1,505 @@
+@* uhfopn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DA      DB      DGEN    FA      IJ      NTT            
+\item[Transmits as argument]  D       FB      IBF     IDA     IGEN    IOP     IOUT   
+             IRWC1   IRWC2   IRWC3   IRWCA   IRWCB   IRWDEN  IRWEIG 
+             IRWFA   IRWFB   IRWGEN  IRWH    IRWIBF  IRWPA   IRWPB  
+             IRWPS   IRWPT   IRWT    IRWUR   ITITLE  LENIBF  MAXNBF 
+             NAE     NBASIS  NBE     NTTMAX  PSAVE   V       VV     
+\item[Uses]  D       DA      DB      DGEN    FA      FB      IBF    
+             IDA     IGEN    IOP     IOUT    IRWC1   IRWC2   IRWC3  
+             IRWCA   IRWCB   IRWDEN  IRWEIG  IRWFA   IRWFB   IRWGEN 
+             IRWH    IRWIBF  IRWPA   IRWPB   IRWPS   IRWPT   IRWT   
+             IRWUR   ISYM2E  ITITLE  LENIBF  MAXNBF  NAE     NBASIS 
+             NBE     NTT     NTTMAX  PSAVE   V       VV      WORD   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ANNIL   BINRD   BINWT   CYCOPN  DRUM    FORMV   FRMW   
+             ILSW    LNK1E   LTOUTD  MATOUT  SPIN    TREAD   TWRITE 
+             VIRIAL                                                 
+\item[Called by]   L502                                                   
+                                                                    
+\end{description}
+@a
+      subroutine uhfopn(JUMP)
+      implicit none
+      double precision acurcy , Atmchg , C , D , Da , Db , Dgen , 
+     &                 energy , Fa , Fb , Filabc , finac , s2 , t , 
+     &                 ten , tenrgy , V , vir , Vv , zero
+      integer i , Ian , Ibf , Icharg , icnvg , icyc , Ida , ide , 
+     &        idump , iextp , Igen , iguess , ihalt , Ij , In , Iop , 
+     &        Iout , ipch , iprint , Ipunch
+      integer irwan , Irwc1 , Irwc2 , Irwc3 , Irwca , Irwcb , Irwden , 
+     &        Irweig , Irwfa , Irwfb , Irwgen , Irwh , Irwibf , Irwpa , 
+     &        Irwpb , Irwps , Irwpt , Irws , Irwt , Irwtm
+      integer Irwur , irww , iscf , Isym2e , isymm , itemp , Ititle , 
+     &        jcycle , JUMP , labdck , len , LENB , Lenibf , lneq , 
+     &        MAXBAS , maxcyc , Maxnbf , MAXNTT , MAXPRM , MAXS21
+      integer MAXSH1 , MAXSHL , MEMLEN , mout , MOUTD , MPLUS1 , 
+     &        Multip , n , Nae , Natoms , nb , Nbasis , nbasp , Nbe , 
+     &        Ne , neq , neqbas , nsymop , Ntt , ntt2
+      integer Nttmax , Nwiib , nwrd
+C
+C these parameters are for common /b/ and related matters
+C     maxshl is the maximum number of shells
+C     maxprm is the maximum number of primitives
+C     lenb is the length of /b/ (in units of 8 bytes)
+C     maxsh1 and maxs21 are sillies for equivalencing
+C
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+C
+C these parameters are for mostly scf routines:
+C     maxbas is the maximum number of basis functions
+C     maxshl is the maximum number of shells (from above)
+C     memlen is the length of common /memry/
+C     lenfil is the length of the "left-over" of /memry/
+C            when the requirements of the current routine are met.
+C     moutd  and mplus1 are sillies to get the reading and
+C            equivalencing of neqbas and neqshl right
+      parameter (MAXBAS=150,MEMLEN=50000,MAXNTT=((MAXBAS*(MAXBAS+1))/2),
+     &           MOUTD=(8*MAXBAS+8*MAXSHL),MPLUS1=(8*MAXSHL+1))
+C     for consistency, maxntt should be replaced by nttmax
+C     as soon as practical (at the moment, nttmax is used for the
+C     same purpose but not as a parameter
+C
+      integer Psave
+C      double precision word
+      character*6 Word
+      logical ipr
+      dimension Igen(1)
+      dimension irwan(13)
+      dimension Ititle(80)
+      dimension labdck(4,5)
+      dimension Ida(1)
+      dimension mout(MOUTD) , neqbas(MAXBAS,8)
+      dimension D(75,75) , Irwden(4)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /memry / Da(2850) , Db(2850) , Fa(2850) , Fb(2850) , 
+     &                V(75,75) , Vv(75) , Filabc(32900)
+C      common /memry/da(maxntt),db(maxntt),fa(maxntt),fb(maxntt)
+C     &        ,v(maxbas,maxbas),vv(maxbas)
+C  this means memlen must be 51000 for maxbas=150
+      common /psave / Psave
+      common /word  / Word(4)
+      common /ind   / Ntt , Ij(127)
+      common /max502/ Maxnbf , Nttmax
+      common /io    / In , Iout , Ipunch
+      common /gen   / Dgen(47)
+C      common /fact/fact,facti
+      common /irw502/ Irwgen , Irweig , Irwca , Irwcb , Irwpa , Irwpb , 
+     &                Irwpt , Irwps , Irwfa , Irwfb , Irwur , Irws , 
+     &                Irwh , Irwt , Irwtm , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwibf , Lenibf
+      common /ibf   / Ibf(30)
+      equivalence (Igen(1),Dgen(1))
+      equivalence (Nwiib,Ibf(29))
+      equivalence (D(1,1),Da(1))
+      equivalence (Ititle(1),Fa(1))
+C more need for parameter
+      equivalence (mout(MPLUS1),neqbas(1,1))
+      equivalence (Ida(1),Da(1))
+      equivalence (Isym2e,Ibf(30))
+      equivalence (Irwpa,Irwden(1))
+      data labdck/'ALPH' , 'A MO' , ' COE' , 'FS  ' , 'BETA' , ' MO ' , 
+     &     'COEF' , 'S   ' , 'ALPH' , 'A DE' , 'NSIT' , 'Y   ' , 
+     &     'BETA' , ' DEN' , 'SITY' , '    ' , 'EIGE' , 'NVAL' , 
+     &     'UES ' , '   '/
+      data irwan/2551 , 2552 , 2553 , 2554 , 2555 , 2556 , 2557 , 2558 , 
+     &     2559 , 2560 , 2561 , 2552 , 2553/ , irww/571/
+      data finac/5.0D-5/ , zero/0.0D0/ , ten/10.0D0/
+C lneq is parameter-dependent
+      data isymm/551/ , neq/565/ , lneq/1000/
+C     program open
+C     link 502
+C
+C
+C1l502
+C     link 502 ... program uhfopn
+C     solution of the pople-nesbet equations
+C     by the method of repeated diagonalizations.
+C     j.chem.phys. 22, 571 (1954)
+C2
+C
+C     ******************************************************************
+C     options ... iop( )
+C     ******************************************************************
+C
+C2iop(5)
+C     iop(5) ... where to find initial guess.
+C     0 ... density matrix from read-write files, produced by l401.
+C     1 ... diagonalize core hamiltonian for initial guess.
+C
+C2iop(6)
+C     iop(6) ... convergence on density matrix
+C     0  5*10**(-5)
+C     1 to 7  (n)  10**(-n)
+C
+C2iop(7)
+C     iop(7) ... maximum number of cycles
+C     0 ... 32 cycles.
+C     n ... "n" cycles.
+C
+C2iop(11)
+C     iop(11) ... control of extrapolation.
+C     0 ... use both three-point and four-point extrapolation when
+C           possible.
+C     1 ... lock-out three-point extrapolation.
+C     2 ... lock out both three-point and four-point extrapolation.
+C
+C2iop(12)
+C     iop(12) ... entry mode.
+C     0 ... normal mode, scf is performed.
+C     1 ... null mode.  entry is made only for possible saving of the
+C           mo coefficients on the "ges" file (controled by iop(32)).
+C           this option is used by standard routes at the end of
+C           optimizations.
+C
+C2iop(13)
+C     iop(13) ... termination of run for convergence failure in scf.
+C     0 ... force termination (should be used in conjunction with
+C           optimizations).
+C     1 ... do not force termination.
+C
+C2iop(14)
+C     iop(14) ... control of annihilation of spin contaminants.
+C     0 ... calculation is performed  (provided of course that
+C           enough space exists in the rw-files).
+C     1 ... calculation is bypassed.
+C     2 ... calculation is performed, contingent on space, and
+C           the system rw-files for the appropriate density matrices
+C           are updated (useful if one wants a population analysis).
+C
+C
+C2iop(32)
+C     iop(32) ... whether to save the mo coefficients or density
+C                 matrices on the "ges" file.
+C     0 ... don't save.
+C     1 ... save final mo coefficients.
+C     2 ... save final density matrices.
+C     3 ... save both.
+C     4 ... save both each cycle of the scf.
+C
+C2iop(33)
+C     iop(33) ... printing of density matrices and/or mo coefficients.
+C     0 ... minimal amount of printing.
+C     1 ... print final mo coefficients.
+C     2 ... print final mo coefficients and density matrices.
+C     3 ... print both each cycle.
+C
+C2iop(34)
+C     iop(34) ... dump option.
+C     0 ... no dump.
+C     1 ... turn on all possible printing.
+C
+C
+C
+C
+C     ******************************************************************
+C
+C     rw-files used in l502:
+C
+C     file     contents (* indicates that file is written in l502)
+C                       (v indicates that file is volatile)
+C
+C      501  *    common gen
+C      514      overlap matrix
+C      515      core hamiltonian
+C      516      kinetic energy matrix
+C
+C      522 *    eigenvalues (alpha and beta)
+C      524 *    m. o. coefficients (alpha)
+C      526 *    m. o. coefficients (beta)
+C      528 *    density matrix (alpha)
+C      530 *    density matrix (beta)
+C      532 *    density matrix (total)
+C      534 *    density matrix (spin)
+C      536 *    fock matrix (alpha)
+C      538 *    fock matrix (beta)
+C      540 *    molecular alpha-beta overlap
+C
+C      2551 v    convergence scratch file 1
+C      2552 v    convergence scratch file 2
+C      2553 v    convergence scratch file 3
+C      2554 v    transformation matrix
+C
+C     ******************************************************************
+C
+C
+C
+C
+C
+C
+C
+C
+C
+C     data maxnbf/75/,nttmax/2850/
+C     data irwibf/508/,lenibf/15/
+C     data word/6halpha-,6h beta-,6htotal-,6h spin-/
+C     data irwgen/501/,irweig/522/,irwca/524/,
+C    $     irwcb/526/,irwpa/528/,irwpb/530/,
+C    $     irwpt/532/,irwps/534/,irwfa/536/,irwfb/538/,irwur/540/,
+C    $     irws/514/,irwh/515/,irwt/516/,
+C    $     irwtm/2555/,irwc1/2551/,irwc2/2552/,irwc3/2553/
+C
+99001 format (' UHF OPEN SHELL SCF.'/
+     &        ' REQUESTED CONVERGENCE ON DENSITY MATRIX =',d11.4,
+     &        8H WITHIN ,i3,8H CYCLES.)
+99002 format (1x,4HITER,2x,17HELECTRONIC-ENERGY,7x,11HCONVERGENCE,4x,
+     &        13HEXTRAPOLATION/1x,4(1H-),2x,17(1H-),7x,11(1H-),4x,
+     &        13(1H-))
+99003 format (12H CORE GUESS.)
+99004 format (33H DENSITY MATRIX READ FROM CARDS: ,13A6)
+99005 format (' ','SCF DONE:  E(UHF) = ',g19.12,' A.U. AFTER ',i4,
+     &        ' CYCLES'/1x,'           CONVG  = ',d13.4,12x,' -V/T = ',
+     &        f7.4/1x,'           S**2   =   ',f7.4)
+99006 format ('+',20x,g19.12)
+99007 format (1x)
+99008 format (1x,10(1H<),a6,11HEIGENVALUES,10(1H>)
+     &        /(i4,d14.7,i4,d14.7,i4,d14.7,i4,d14.7,i4,d14.7))
+99009 format (1x,10(1H<),a6,30HMOLECULAR ORBITAL COEFFICIENTS,10(1H>))
+99010 format (1x,10(1H<),a6,14HDENSITY MATRIX,10(1H>))
+99011 format (1x,10(1H<),18HALPHA-BETA OVERLAP,10(1H>))
+99012 format ('  DENSITY MATRIX READ IN HAS WRONG BASIS.')
+99013 format (38H0CONVERGENCE FAILURE---RUN TERMINATED./)
+99014 format (i3)
+C
+C     preset common /io/
+      call drum
+C
+      call ilsw(2,1,iscf)
+      if ( iscf.eq.0 .or. iscf.gt.1 ) goto 500
+C
+      ipch = Iop(32)
+      iprint = Iop(33)
+      idump = Iop(34)
+      iguess = Iop(5)
+      icnvg = Iop(6)
+      icyc = Iop(7)
+      iextp = Iop(11)
+      ihalt = Iop(13) - 1
+      acurcy = finac
+C
+C     figure out maxcyc.
+      maxcyc = 32
+      if ( icyc.ne.0 ) maxcyc = icyc
+C
+      if ( icnvg.ne.0 ) acurcy = ten**(-icnvg)
+C     set psave switch.
+      call ilsw(2,21,Psave)
+      if ( idump.ne.0 ) iprint = 3
+C
+      write (Iout,99001) acurcy , maxcyc
+      if ( Psave.eq.0 ) write (Iout,99002)
+      Ntt = (Nbasis*(Nbasis+1))/2
+      nbasp = Nbasis + 1
+      do 100 i = 1 , nbasp
+         Ij(i) = (i*(i-1))/2
+ 100  continue
+      len = 3*(Maxnbf*Maxnbf+Maxnbf)
+      do 200 i = 1 , len
+         Da(i) = zero
+ 200  continue
+      if ( Iop(12).eq.0 ) then
+C
+C     define all necessary non-volatile rw-files.
+         if ( iguess.ne.0 ) then
+            call twrite(Irweig,Da,2*Nbasis,1,2*Nbasis,1,0)
+            call twrite(Irwca,Da,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+            call twrite(Irwcb,Da,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+            call twrite(Irwpa,Da,Nttmax,1,Ntt,1,0)
+            call twrite(Irwpb,Da,Nttmax,1,Ntt,1,0)
+         endif
+         call twrite(Irwpt,Da,Nttmax,1,Ntt,1,0)
+         call twrite(Irwps,Da,Nttmax,1,Ntt,1,0)
+         call twrite(Irwfa,Da,Nttmax,1,Ntt,1,0)
+         call twrite(Irwfb,Da,Nttmax,1,Ntt,1,0)
+         call twrite(Irwur,Da,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+C
+C     pre-set the first non-volatile rw-files here.
+         ntt2 = Ntt + Ntt
+         call twrite(Irwc1,Da,ntt2,1,ntt2,1,0)
+         call twrite(Irwc2,Da,ntt2,1,ntt2,1,0)
+         call twrite(Irwc3,Da,ntt2,1,ntt2,1,0)
+C
+C     read in file specifying 2-e integral format.
+         call tread(Irwibf,Ibf,Lenibf,1,Lenibf,1,0)
+C
+C     read in the symmetry information if requested.
+         if ( Isym2e.eq.1 ) then
+            call tread(isymm,Ida(1),1,1,1,1,0)
+            nsymop = Ida(1)
+            call tread(neq,mout(1),lneq,1,lneq,1,0)
+         endif
+C     formv reads in the overlap matrix from drum ... file 8
+C     computes transformation matrix and writes it on rwtape (drum)
+C     file 4
+C     this is the same routine called for by program closed
+         call formv(Nbasis,Maxnbf,D,V,Fa,Fb)
+C     what form of initial guess is specified
+         iguess = Iop(5) + 1
+         if ( iguess.eq.2 ) then
+C     diagonalize core hamiltonian to form guess
+C     core hamiltonian read in ... rwtape file 13
+C     place in arrays fa and fb
+            call tread(Irwh,Fa,Nttmax,1,Ntt,1,0)
+            call tread(Irwh,Fb,Nttmax,1,Ntt,1,0)
+C     zero density matrices
+            do 220 i = 1 , Ntt
+               Da(i) = zero
+               Db(i) = zero
+ 220        continue
+            ide = 0
+            write (Iout,99003)
+         elseif ( iguess.eq.3 ) then
+C     read in density matrices from cards
+            call binrd(Da,Ititle,1,1HP,nwrd,nb)
+            write (Iout,99004) (Ititle(i),i=1,14)
+            if ( nb.ne.Nbasis ) then
+               write (Iout,99012)
+               call lnk1e
+            endif
+            call binrd(Db,Ititle,1,1HP,nwrd,nb)
+            write (Iout,99004) (Ititle(i),i=1,14)
+            if ( nb.ne.Nbasis ) then
+               write (Iout,99012)
+               call lnk1e
+            endif
+            ide = 1
+         else
+C     density matrices read in from drum ... files 19 and 21
+            call tread(Irwpa,Da,Nttmax,1,Ntt,1,0)
+            call tread(Irwpb,Db,Nttmax,1,Ntt,1,0)
+            ide = 1
+         endif
+C     enter iteration routine cycopn
+C     returns when rms difference between two successive
+C     density matrices is less than acurcy ... standard value is 0.00005
+         call cycopn(energy,acurcy,maxcyc,ide,jcycle,iextp,nsymop,
+     &               neqbas)
+C     convergence has been met
+C
+C     write the total density matrix on rwf 75.
+         call tread(Irwpa,Da,Ntt,1,Ntt,1,0)
+         call tread(Irwpb,Db,Ntt,1,Ntt,1,0)
+         do 250 i = 1 , Ntt
+            Da(i) = Da(i) + Db(i)
+ 250     continue
+         call twrite(Irwpt,Da,Ntt,1,Ntt,1,0)
+C
+C     form the spin density matrix and write it out.
+         do 300 i = 1 , Ntt
+            Da(i) = Da(i) - (Db(i)+Db(i))
+ 300     continue
+         call twrite(Irwps,Da,Ntt,1,Ntt,1,0)
+C
+C     compute s**2 and the alpha-beta overlap.
+         call spin(Nbasis,Nae,Nbe,Maxnbf,Da,Fa,Vv,s2)
+C
+C     read in common gen
+         call tread(Irwgen,Dgen,47,1,47,1,0)
+C
+C     summary printing.
+         tenrgy = Dgen(41) + energy
+C
+C     compute virial ratio and kinetic energy.
+         call virial(Nbasis,tenrgy,Da,Db,Irwpt,Irwt,vir,t)
+C
+         write (Iout,99007)
+C      write (iout,9050) (tenrgy,i=1,4)
+         write (Iout,99005) tenrgy , jcycle , acurcy , vir , s2
+C
+C     attempt to perform annihilation of the largest spin
+C     contaminant.
+         call annil(Iop(14),Nae,Nbe,Nbasis,irwan,iprint,Da,Fa,V(1,1),
+     &              V(1,2))
+C     insert calculated energies ... kinetic energy not available at
+C     this point
+         Dgen(23) = acurcy
+         Dgen(32) = tenrgy
+         Dgen(40) = vir
+         Dgen(42) = t
+         Dgen(43) = tenrgy
+         Dgen(44) = s2
+C     write out gen
+         call twrite(Irwgen,Igen,47,1,47,1,0)
+C
+C     print requested output.
+C
+         if ( iprint.gt.0 ) then
+            call tread(Irweig,Fa,Nttmax,1,2*Nbasis,1,0)
+            write (Iout,99008) Word(1) , (i,Fa(i),i=1,Nbasis)
+            call tread(Irwca,D,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+            write (Iout,99009) Word(1)
+            call matout(D,Maxnbf,Maxnbf,Nbasis,Nbasis)
+            do 320 i = 1 , Nbasis
+               Fa(i) = Fa(i+Nbasis)
+ 320        continue
+            write (Iout,99008) Word(2) , (i,Fa(i),i=1,Nbasis)
+            call tread(Irwcb,D,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+            write (Iout,99009) Word(2)
+            call matout(D,Maxnbf,Maxnbf,Nbasis,Nbasis)
+C
+            if ( iprint.gt.1 ) then
+               do 330 i = 1 , 4
+                  call tread(Irwden(i),Da,Nttmax,1,Ntt,1,0)
+                  write (Iout,99010) Word(i)
+                  call ltoutd(Nbasis,Da,1)
+ 330           continue
+               write (Iout,99011)
+               call tread(Irwur,D,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+               call matout(D,Maxnbf,Maxnbf,Nbasis,Nbasis)
+            endif
+         endif
+      endif
+C
+C     punch requested output.
+C
+      if ( ipch.lt.1 ) goto 400
+      if ( ipch.ne.1 ) then
+         call tread(Irwpa,Da,Nttmax,1,Ntt,1,0)
+         call binwt(Da,2*Ntt,labdck(1,3),Nbasis)
+         call tread(Irwpb,Da,Nttmax,1,Ntt,1,0)
+         call binwt(Da,2*Ntt,labdck(1,4),Nbasis)
+         if ( ipch.eq.2 ) goto 400
+      endif
+      n = Nbasis*Nbasis
+      call tread(Irwca,Da,n,1,n,1,0)
+      call binwt(Da,2*n,labdck(1,1),Nbasis)
+      call tread(Irwcb,Da,n,1,n,1,0)
+      call binwt(Da,2*n,labdck(1,2),Nbasis)
+      call tread(Irweig,Da,Ntt,1,2*Nbasis,1,0)
+      call binwt(Da,4*Nbasis,labdck(1,5),Nbasis)
+C
+C
+C     calculate the energy-weighted density matrix for possible
+C     gradient links later in the route.
+ 400  ipr = .false.
+      if ( iprint.ge.2 ) ipr = .true.
+      call frmw(Nbasis,Nae,Nbe,Irwca,-1,Irwcb,Irweig,irww,Fa,Fb,Da,ipr,
+     &          Iout)
+C
+C     possibly terminate run for scf convergence failure.
+      call ilsw(2,5,itemp)
+      if ( ihalt*itemp.ne.0 ) then
+         write (Iout,99013)
+         call lnk1e
+      endif
+C
+C     ..............
+C=    call chainx(0)
+ 500  JUMP = 0
+C     ..............
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,460 @@
+@* fofclo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[UNUSED:] JCYCLE                                                    
+\item[OUTPUT:] D                                                         
+\item[OUTPUT:] F                                                         
+\item[INPUT:] IBUF2E                                                    
+\item[INPUT:] DBUF2E                                                    
+\item[INPUT:] IPRINT                                                    
+\item[PASSED:] NSYMOP                                                    
+\item[PASSED:] NEQBAS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DBASE   DCOUNT  I       IA      IBASE   IFIL    INTCNT 
+             J       JA      K       NTX     SINDX                  
+\item[Transmits as argument]  IJ      IRWH    IRWLP   KNTT1   NTT                    
+\item[Uses]  DBASD   DBASE   DCOUNT  I       IBASD   IBASE   ICON   
+             IFIL    IJ      INTCNT  IOUT    IRESET  IRWH    IRWLP  
+             ISMODE  ISYM2E  ITOTAL  IUX     J       K       KNTT1  
+             KNTT2   L       MINDX   MODE    NTT     NTX     NWPI   
+             P       Q       R       SINDX   VALINT                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FSYMM   IREAD   IWAIT   IWIND   LABSCF  LNK1E   LTOUTD 
+             RAFF1C  TREAD   UNPCK2  UNPCK4                         
+\item[Called by]   CYCCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine fofclo(NBASIS,JCYCLE,D,F,IBUF2E,DBUF2E,IPRINT,NSYMOP,
+     &                  NEQBAS)
+      implicit none
+      double precision Aa , D , DBUF2E , F , pt5 , secint , terint , 
+     &                 Valint , zero
+      integer I , Ia , Ibasd , Ibase , IBUF2E , Icon , Icount , Ifil , 
+     &        iflst , Ij , In , intape , Intcnt , Iop , Iout , IPRINT , 
+     &        Ipunch , Iq , iqbufr , iqproc
+      integer Ireset , Irwc , Irwc1 , Irwc2 , Irwc3 , Irweig , Irwf , 
+     &        Irwgen , Irwh , Irwibf , Irwlc , Irwle , Irwlp , Irwp , 
+     &        Irwpt , Irws , Irwt , Irwtm , Irww , Ismode
+      integer Istat , Isym2e , Itotal , Iux , J , Ja , JCYCLE , jq , 
+     &        js , jt , K , Kntt1 , Kntt2 , L , Last , Length , Limint , 
+     &        lq , m , MAXBAS
+      integer Mindx , Mode , named , namef , NBASIS , NEQBAS , next , 
+     &        nfile , Nrpext , Nsq , NSYMOP , Ntt , Ntx , Nwiib , Nwpi
+      parameter (MAXBAS=150)
+      integer P , Q , R , Sindx
+      integer Dbase , Dbasd , Dcount
+      logical fast1
+      dimension D(*) , F(*) , IBUF2E(*) , DBUF2E(*)
+      dimension Ia(2)
+      dimension NEQBAS(MAXBAS,8)
+      common /ia    / Ij(257)
+      common /ntt   / Ntt , Length , Nsq
+      common /io    / In , Iout , Ipunch
+      common /packed/ I , J , K , L , Valint , Ja
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Isym2e
+      common /irw501/ Irwgen , Irws , Irwh , Irwt , Irweig , Irwc , 
+     &                Irwp , Irwpt , Irwf , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwtm , Irwibf(2) , Irwle , Irwlc , Irwlp , Irww
+      common /iop   / Iop(50)
+      equivalence (P,I) , (Q,J) , (R,K) , (Sindx,L) , (Mindx,K)
+      equivalence (Valint,Ia(1),Aa)
+      equivalence (Kntt1,Icount) , (Kntt2,Dcount)
+      data pt5/0.5D0/ , namef/4H-F- / , named/4H-D- / , zero/0.0D0/
+      data nfile/0/
+C
+C
+C
+C***********************************************************************
+C     subroutine to form the two electron part of the fock matrix
+C     given the density matrix and any or all two electron integrals
+C
+C     input arguments:
+C     jcycle ... current cycle (just so we know what cycle it is).
+C     d      ... density matrix.
+C     ibuf2e ... integer integral array.
+C     dbuf2e ... working precision integral array.
+C     iprint ... print flag.
+C     nsymop ... number of symmetry operations.
+C     neqbas ... basis function symmetry map.
+C
+C     output arguments:
+C     f      ... will contain the fock matrix over atomic orbitals.
+C***********************************************************************
+C
+C
+C
+C
+C     the following card defines the length of the 'short' integral
+C     unit.  see link1 for details.
+C
+99001 format (25H1BAD INTEGRAL COUNT:  IS ,i9,5x,12H  SHOULD BE ,i9)
+99002 format (13H CONTENTS OF ,a4,23HAT THE START OF FOFCLO:)
+99003 format (13H CONTENTS OF ,a4,32HAFTER RAFFENETTI INITIALIZATION:)
+99004 format (13H CONTENTS OF ,a4,21HAT THE END OF FOFCLO:)
+99005 format (1H )
+C
+C***********************************************************************
+C     on entry, print input matrices if requested.
+C***********************************************************************
+C
+C     fast1=iop(31).eq.0
+      fast1 = .false.
+C     clear out the f-matrix.
+      do 100 I = 1 , Ntt
+         F(I) = zero
+ 100  continue
+      if ( IPRINT.ge.3 ) then
+         write (Iout,99002) namef
+         call ltoutd(NBASIS,F,1)
+         write (Iout,99002) named
+         call ltoutd(NBASIS,D,1)
+         write (Iout,99005)
+      endif
+C
+C
+C     if required, prepare the density matrix for the raffenetti
+C     scheme.
+      if ( Ismode.gt.0 ) then
+         K = 0
+         do 150 I = 1 , NBASIS
+            do 120 J = 1 , I
+               K = K + 1
+               D(K) = D(K) + D(K)
+ 120        continue
+            D(K) = pt5*D(K)
+ 150     continue
+C
+C     optionally, print the modified input matrices.
+         if ( IPRINT.ge.3 ) then
+            write (Iout,99003) named
+            call ltoutd(NBASIS,D,1)
+            write (Iout,99003) namef
+            call ltoutd(NBASIS,F,1)
+         endif
+      endif
+C
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     start up the i/o.
+      iqbufr = 1
+      iqproc = 2
+      Intcnt = 0
+      intape = Iux(2)
+      Ntx = 1
+      call iread(intape,iqbufr,DBUF2E)
+      Ifil = 1
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     i/o control section.  enter here to get next buffer and con-
+C     tinue i/o.  iqproc always points to the buffer available for
+C     processing (ie. computing), and iqbufr always points to
+C     the buffer into which integrals are being read.
+C     ibase points to the fwa-1 (of the data) in the current buffer.
+C     after waiting on a buffer, use buflab to decode the buffer label.
+ 200  call iwait(intape)
+      iqbufr = iabs(iqbufr-2) + 1
+      iqproc = iabs(iqproc-2) + 1
+      Ibase = Ibasd(iqproc)
+      Dbase = Dbasd(iqproc)
+C     be sure to use the integer ibuf2e in the buflab call.
+      call labscf(IBUF2E(Ibase),iflst)
+      if ( iflst.eq.0 ) then
+         if ( Ifil.eq.(nfile+Ntx*Icon) ) then
+            call iwind(intape)
+            Ntx = Ntx + 1
+            next = Iux(Ntx+1)
+            call iwind(next)
+            intape = next
+         endif
+C     bypass i/o request if the previous record was the last record.
+         call iread(intape,iqbufr,DBUF2E)
+         Ifil = Ifil + 1
+      endif
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C
+C
+C     we now have a buffer of data in dbuf2e(dbase(iqproc)).
+C     select processing code based on mode.
+      if ( Mode.eq.2 ) then
+C
+C     process integrals under the raffenetti type 1 format.
+         if ( Kntt1.gt.0 ) then
+C
+C     is there a fast (assembly language) routine available
+            if ( .not.fast1 ) then
+C
+               do 210 m = 1 , Kntt1
+                  Ja = IBUF2E(m+Ibase)
+                  call unpck2
+                  F(I) = F(I) + D(J)*DBUF2E(m+Dbase)
+                  F(J) = F(J) + D(I)*DBUF2E(m+Dbase)
+ 210           continue
+               Intcnt = Intcnt + Kntt1
+            else
+               call raff1c(F,D,Kntt1,IBUF2E,Ibase,Dbase,Intcnt)
+            endif
+         endif
+      elseif ( Mode.eq.3 ) then
+C
+C     process integrals in the raffenetti type 2 format.
+         Dcount = 1
+         if ( Kntt1.gt.0 ) then
+            do 220 m = 1 , Kntt1
+               Ja = IBUF2E(m+Ibase)
+               call unpck2
+               F(I) = F(I) + D(J)*DBUF2E(Dcount+Dbase)
+               F(J) = F(J) + D(I)*DBUF2E(Dcount+Dbase)
+               Dcount = Dcount + 2
+ 220        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+      elseif ( Mode.eq.4 ) then
+C
+C     process integrals in the raffenetti type 3 format.
+         Dcount = 1
+         if ( Kntt1.gt.0 ) then
+            do 240 m = 1 , Kntt1
+               Ja = IBUF2E(m+Ibase)
+               call unpck2
+               F(I) = F(I) + D(J)*DBUF2E(Dcount+Dbase)
+               F(J) = F(J) + D(I)*DBUF2E(Dcount+Dbase)
+               Dcount = Dcount + 3
+ 240        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+      else
+C
+C
+C     process integrals in regular format.
+C     separate loops for type 1 and type 2 integrals.
+C     before starting either loop, make sure there are integrals
+C     to process.
+         if ( Kntt1.gt.0 ) then
+            jq = Ireset(1) + Ibase
+            lq = jq + (Kntt1-1)*Nwpi
+            do 260 m = jq , lq , Nwpi
+C***********************************************************************
+C   case 0    (ab,cd)
+C***********************************************************************
+               Ja = IBUF2E(m)
+               Ia(1) = IBUF2E(m+1)
+               Ia(2) = IBUF2E(m+2)
+               call unpck4
+               secint = -pt5*Valint
+               js = Ij(I) + J
+               jt = Ij(K) + L
+               terint = Valint + Valint
+               F(js) = F(js) + D(jt)*terint
+               F(jt) = F(jt) + D(js)*terint
+               js = Ij(I) + K
+               if ( J.le.L ) then
+C
+                  jt = Ij(L) + J
+               else
+                  jt = Ij(J) + L
+               endif
+               F(js) = F(js) + D(jt)*secint
+               F(jt) = F(jt) + D(js)*secint
+               js = Ij(I) + L
+               if ( J.le.K ) then
+C
+                  jt = Ij(K) + J
+               else
+                  jt = Ij(J) + K
+               endif
+               F(js) = F(js) + D(jt)*secint
+               F(jt) = F(jt) + D(js)*secint
+ 260        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+C
+         if ( Kntt2.gt.0 ) then
+            lq = Ireset(2) + Ibase
+            jq = lq - (Kntt2-1)*Nwpi
+            do 280 m = jq , lq , Nwpi
+               Ja = IBUF2E(m)
+               Ia(1) = IBUF2E(m+1)
+               Ia(2) = IBUF2E(m+2)
+               call unpck4
+               secint = -pt5*Valint
+               Sindx = Sindx + 1
+               if ( Sindx.eq.2 ) then
+C***********************************************************************
+C   case 2     (ab,bc)=> pq,qr
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(Q) + R
+                  terint = Valint - secint
+                  F(js) = F(js) + D(jt)*terint
+                  F(jt) = F(jt) + D(js)*terint
+                  js = Ij(Q+1)
+                  jt = Ij(P) + R
+                  F(js) = F(js) - D(jt)*Valint
+                  F(jt) = F(jt) + D(js)*secint
+               elseif ( Sindx.eq.3 ) then
+C***********************************************************************
+C   case 3     (ac,bc)=> pq,rq
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(R) + Q
+                  terint = Valint - secint
+                  F(js) = F(js) + D(jt)*terint
+                  F(jt) = F(jt) + D(js)*terint
+                  js = Ij(Q+1)
+                  jt = Ij(P) + R
+                  F(js) = F(js) - D(jt)*Valint
+                  F(jt) = F(jt) + D(js)*secint
+               elseif ( Sindx.eq.4 ) then
+C***********************************************************************
+C   case 4     (ab,ab)=> pq,pq
+C***********************************************************************
+                  js = Ij(P) + Q
+                  terint = Valint - secint
+                  F(js) = F(js) + D(js)*terint
+                  js = Ij(P+1)
+                  jt = Ij(Q+1)
+                  F(js) = F(js) + D(jt)*secint
+                  F(jt) = F(jt) + D(js)*secint
+               elseif ( Sindx.eq.5 ) then
+C***********************************************************************
+C   case 5     (aa,bc)=> pp,qr
+C***********************************************************************
+                  js = Ij(P+1)
+                  jt = Ij(Q) + R
+                  terint = Valint + Valint
+                  F(js) = F(js) + D(jt)*terint
+                  F(jt) = F(jt) + D(js)*Valint
+                  js = Ij(P) + Q
+                  jt = Ij(P) + R
+                  F(js) = F(js) + D(jt)*secint
+                  F(jt) = F(jt) + D(js)*secint
+               elseif ( Sindx.eq.6 ) then
+C***********************************************************************
+C   case 6     (ab,cc)=> pq,rr
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(R+1)
+                  terint = Valint + Valint
+                  F(js) = F(js) + D(jt)*Valint
+                  F(jt) = F(jt) + D(js)*terint
+                  js = Ij(P) + R
+                  if ( Q.le.R ) then
+C
+                     jt = Ij(R) + Q
+                  else
+                     jt = Ij(Q) + R
+                  endif
+                  F(js) = F(js) + D(jt)*secint
+                  F(jt) = F(jt) + D(js)*secint
+               elseif ( Sindx.eq.7 ) then
+C***********************************************************************
+C   case 7
+C   three subcases:
+C   190        (ab,bb)=> pq,qq
+C   200        (aa,bb)=> pp,qq
+C   210        (aa,ab)=> pp,pq
+C***********************************************************************
+                  if ( Mindx.eq.2 ) then
+C
+                     js = Ij(P+1)
+                     jt = Ij(Q+1)
+                     F(js) = F(js) + D(jt)*Valint
+                     F(jt) = F(jt) + D(js)*Valint
+                     js = Ij(P) + Q
+                     F(js) = F(js) + D(js)*secint
+                  elseif ( Mindx.eq.3 ) then
+C
+                     js = Ij(P+1)
+                     jt = Ij(P) + Q
+                     F(js) = F(js) + D(jt)*Valint
+                     F(jt) = F(jt) - D(js)*secint
+                  else
+C
+                     js = Ij(P) + Q
+                     jt = Ij(Q+1)
+                     F(js) = F(js) - D(jt)*secint
+                     F(jt) = F(jt) + D(js)*Valint
+                  endif
+               elseif ( Sindx.eq.8 ) then
+C***********************************************************************
+C   case 8     (aa,aa)=> pp,pp
+C***********************************************************************
+                  js = Ij(P+1)
+                  F(js) = F(js) - D(js)*secint
+               else
+C***********************************************************************
+C   case 1     (ab,ac)=> pq,pr      ><><
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(P) + R
+                  terint = Valint - secint
+                  F(js) = F(js) + D(jt)*terint
+                  F(jt) = F(jt) + D(js)*terint
+                  js = Ij(P+1)
+                  jt = Ij(Q) + R
+                  F(js) = F(js) - D(jt)*Valint
+                  F(jt) = F(jt) + D(js)*secint
+               endif
+ 280        continue
+            Intcnt = Intcnt + Kntt2
+         endif
+      endif
+C
+C
+C
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     more i/o oriented things ... enter here after processing a buffer
+C     to test iflst.  if not set, continue processing by returning
+C     to st. nr. 10.  if set, we are done processing integrals.
+      if ( iflst.le.0 ) goto 200
+      call iwind(intape)
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C
+C     final operations.
+C     check the final count.
+      if ( Intcnt.ne.Itotal ) then
+         write (Iout,99001) Intcnt , Itotal
+         call lnk1e
+      endif
+C
+C     if symmetry is turned on, symmetrize the two-electron
+C     part of the fock matrix.
+      if ( Isym2e.eq.1 ) then
+         call fsymm(NBASIS,F,NSYMOP,NEQBAS,Ij,D)
+C     d now contains the symmetrized fock matrix (2-e part).
+C     transfer this back into f.
+         do 300 I = 1 , Ntt
+            F(I) = D(I)
+ 300     continue
+      endif
+C
+C     add in the core-hamiltonian contribution to the 2-e part.
+      call tread(Irwh,D(1),Ntt,1,Ntt,1,0)
+      do 400 I = 1 , Ntt
+         F(I) = F(I) + D(I)
+ 400  continue
+C
+C     and finally, restore the density matrix to its original
+C     form.
+      call tread(Irwlp,D(1),Ntt,1,Ntt,1,0)
+C
+C     optionally, print the output matrices.
+      if ( IPRINT.ge.3 ) then
+         write (Iout,99004) named
+         call ltoutd(NBASIS,D,1)
+         write (Iout,99004) namef
+         call ltoutd(NBASIS,F,1)
+         write (Iout,99005)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

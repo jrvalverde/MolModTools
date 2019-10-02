@@ -1,0 +1,606 @@
+@* scfdm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ACURCY  CMP     DA      DB      DEGEN   FUZZY   GEN    
+             ICOUNT  IGEN    ISYM    KSM     KSPIN   KSW     MAXCYC 
+             NESK    NEST    RHF     SPAN    STHRS                  
+\item[Transmits as argument]  E       FA      IBF     IDUM    IEVAL   IEVALS  IGENO  
+             IOC     IOD     IOUT    IPSPIN  IPTOT   IRWIBF  ISYMM  
+             LENIBF  LIGEN   MDIM    NAE     NBASIS  NBE     NEQ    
+             NTT                                                    
+\item[Uses]  ACURCY  CMP     DA      DB      E       ENERGY  FA     
+             GEN     IBF     IDUM    IEVAL   IEVALS  IGENO   IN     
+             IOC     IOD     IOP     IOUT    IPSPIN  IPTOT   IRWIBF 
+             ISYM    ISYM2E  ISYMM   KSM     KSPIN   KSW     LEHF   
+             LENIBF  LIGEN   LILSW   LIPCW   LREP    LRMSD   LS2    
+             LTAU    LTEN    LVIR    MAXCYC  MDIM    MDSQ    MTT    
+             NAE     NBASIS  NBE     NEQ     NESK    NEST    NTT    
+             RHF     RMS     ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINWT   CMAT    COMAT   CSYMM   DIMENS  DRUM    FIRST  
+             FRMW    ILSW    LNK1    LNK1E   SPINDM  TIOC    TQUERY 
+             TREAD   TWRITE                                         
+\item[Called by]   L503                                                   
+                                                                    
+\end{description}
+@a
+      subroutine scfdm(JUMP)
+      implicit none
+      double precision a0 , a1 , Acurcy , Atmchg , Big , C , Da , Db , 
+     &                 Degen , degend , Deriv , Dmatml , Dumscr , E , 
+     &                 Energy , Fa , Fb , Fillab , finac , Four
+      double precision Fuzzy , fuzzyd , Gen , One , Onept5 , Pt5 , rep , 
+     &                 Rms , Small , Span , spand , Sthrs , sthrsd , 
+     &                 ten , tenrgy , Three , Two , vir , Zero
+      integer i , i1 , Ian , Ibf , iblnk , Icharg , icons , iconsd , 
+     &        iconv , Icount , icuts , Idum , idump , ientry , Ieval , 
+     &        Ievals , Igen , Igeno , il , In
+      integer incy1 , incy64 , incy8 , inhib , Ioc , Ioc0 , Iocs , Iod , 
+     &        Iof1p , Iofa , Ione , Iop , Ioq , Ios , Iouab , Ious , 
+     &        Iout , ipart , ipch , iprint
+      integer ipsav , Ipspin , Iptot , Ipunch , iq , Irwibf , irww , 
+     &        istab , Isym , Isym2e , Isymm , j , jcycle , Jmat , JUMP , 
+     &        k , Ksm , Kspin , Ksw , labdck
+      integer ldns , Lehf , LENB , LENFIL , Lenibf , levals , Ligen , 
+     &        Lilsw , Lipcw , lmo , LNEQ , Lrep , Lrmsd , Ls2 , Ltau , 
+     &        Lten , Lvir , macc , MAXBAS , Maxcyc
+      integer MAXNTT , MAXPRM , MAXS21 , MAXSH1 , MAXSHL , mcyc , Mdim , 
+     &        Mdsq , MEMLEN , minprt , minpsv , MPLUS1 , mrest , 
+     &        Mshifs , Mtt , Multip , Nae , namscf , Natoms , nb2
+      integer nb22 , Nbasis , Nbe , nbsq , Ne , Neq , neqbas , Nesk , 
+     &        Nest , Nest1 , Nse , Nsep , nsymop , Ntt
+C
+C these parameters are for common /b/ and related matters
+C     maxshl is the maximum number of shells
+C     maxprm is the maximum number of primitives
+C     lenb is the length of /b/ (in units of 8 bytes)
+C     maxsh1 and maxs21 are sillies for equivalencing
+C
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+C
+C these parameters are for mostly scf routines:
+C     maxbas is the maximum number of basis functions
+C     maxshl is the maximum number of shells (from above)
+C     memlen is the length of common /memry/
+C     lenfil is the length of the "left-over" of /memry/
+C            when the requirements of the current routine are met.
+C             i.e. the length of the required fill
+C     lneq    is the length of the symmetry info file
+      parameter (MAXBAS=150,MEMLEN=50000,MAXNTT=((MAXBAS*(MAXBAS+1))/2),
+     &           LENFIL=(MEMLEN-4*MAXNTT),LNEQ=(4*MAXBAS+4*MAXSHL),
+     &           MPLUS1=(8*MAXSHL+1))
+C
+      logical Cmp , Rhf , Class , Extrap , ipr
+      dimension Igen(280)
+      dimension labdck(4,11)
+      dimension lmo(2,2) , ldns(2,2)
+      dimension neqbas(MAXBAS,8) , Idum(10424) , namscf(4)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /memry / Da(2485) , Db(2485) , Fa(2485) , Fb(2485) , 
+     &                Fillab(40060)
+      common /rwf503/ Igeno , Ieval , Ios , Ione , Iofa(4) , Iod(4) , 
+     &                Ioc(4) , Iocs(4) , Ioc0(4) , Ioq(4) , Ious(4) , 
+     &                Jmat(4) , Iof1p(4) , Ievals , Iouab(4) , Iptot(2)
+     &                , Ipspin(2)
+      common /io    / In , Iout , Ipunch
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /symmet/ Isym(140)
+      common /scr   / Dmatml(140) , Gen(140) , E(140) , Dumscr(5212)
+      common /cut   / Energy , Deriv , Acurcy , Rms , Maxcyc , Icount , 
+     &                Class , Extrap
+      common /fuzzyf/ Fuzzy , Degen , Sthrs , Span
+      common /ibf   / Ibf(30)
+      common /locibf/ Irwibf , Lenibf
+      common /lge503/ Lilsw , Lipcw , Ltau , Lehf , Lvir , Lrep , Lten , 
+     &                Ls2 , Ligen , Lrmsd
+      common /isy503/ Isymm , Neq
+      equivalence (Gen(1),Igen(1))
+      equivalence (Isym2e,Ibf(30)) , (Idum(1),Dumscr(1))
+C  this is part of parameter design:
+C    lneq = (maxshl*8 + maxbas*8)/2
+C      data lneq/1000/
+      data iblnk/'    '/
+      data ten/1.D1/
+      data finac/5.D-5/
+      data fuzzyd , degend , sthrsd , spand/1.D-10 , 2.D-5 , 1.D-4 , 
+     &     5.D-7/
+      data labdck/'ALPH' , 'A MO' , ' COE' , 'FS  ' , 'ALPH' , 'A MO' , 
+     &     ' COE' , 'FS,I' , 'BETA' , ' MO ' , 'COEF' , 'S   ' , 
+     &     'BETA' , ' MO ' , 'COEF' , 'S, I' , 'ALPH' , 'A DE' , 
+     &     'NSIT' , 'Y   ' , 'ALPH' , 'A DE' , 'NSIT' , 'Y, I' , 
+     &     'BETA' , ' DEN' , 'SITY' , '    ' , 'BETA' , ' DEN' , 
+     &     'SITY' , ',  I' , 'EIGE' , 'NVAL' , 'UES ' , '    ' , 
+     &     'SYMM' , 'ETRY' , '    ' , '    ' , 'COMM' , 'ON/G' , 
+     &     'EN/ ' , '    '/
+      data lmo/1 , 3 , 2 , 4/
+      data ldns/5 , 7 , 6 , 8/
+      data irww/571/
+      data namscf/4HRRHF , 4HRUHF , 4HCRHF , 4HCUHF/
+C     ******************************************************************
+C
+C1l503
+C     link 503 ... program scfdm
+C     solution of the pople nesbet equations by means of a direct
+C     minimization method involving a sequence of univariate searches.
+C2
+C
+C     ******************************************************************
+C     options ... iop( )
+C     ******************************************************************
+C
+C2iop(6)
+C     iop(6) ... convergence on density matrix
+C     0 ... 5.*10**(-5)
+C     n ... 10**(-n)
+C
+C2iop(7)
+C     iop(7) ... maximum number of univariate searches
+C     0 ... 32
+C     n ... "n" cycles.
+C
+C2iop(8)
+C     iop(8) ... selection of the procedure of direct minimization
+C     0 ... steepest descent with search parameters default
+C     1 ... steepest descent with search parameters read (see below)
+C     2 ... classical scf (roothaan's method of repeated diagonalization
+C     4 ... conjugate gradients with search parameters default
+C     5 ... conjugate gradients with search parameters read (see below)
+C     the search parameters are: max. number of search points (i1)
+C                                min. number of search points (i1)
+C                                initial stepsize, tau (g18.5)
+C                                scaling factor for subseq. tau (g20.5)
+C                                q (g20.5)
+C
+C2iop(9)
+C     iop(9) ... switch to classical scf after density matrix has
+C                 achieved a certain convergency
+C     0 ... no
+C     1 ... yes, criterion default: 10(**-3)
+C     2 ... yes, criterion read in (format g16.10)
+C
+C2iop(11)
+C     iop(11) ... apply extrapolation procedures for classical scf
+C     0 ... four-point only
+C     1 ... four-point only
+C     2 ... none
+C
+C2iop(12)
+C     iop(12) ... null entry for final saving of data.
+C     0 ... normal entry.
+C     1 ... null entry (zero cycles).  this is for saving
+C           final mo coefs in optimizations. see iop(32).
+C
+C
+C2iop(14)
+C     iop(14) ... reordering of the orbitals (maintaining continuity
+C                 of the wavefunction along the search path)
+C     0 ... on: bessel criterion
+C     1 ... on: stronger individual-overlap criterion
+C     2 ... off
+C
+C2iop(15)
+C     iop(15) ... controls the autoadjustment of tau in intopn
+C     0 ... done
+C     1 ... tau is kept fixed
+C
+C2iop(16)
+C     iop(16) ... inhibit performance of minimization of alternate
+C                 wavefunction provided by second order procedures
+C     0 ... no
+C     1 ... yes
+C
+C2iop(17)
+C     iop(17) ... condition the off-diagonal terms of the m.o.fock
+C                 matrix:
+C               -set to zero if gabs(f(i,j)).le.fuzzy
+C               -delete coupling terms between almost degenerate
+C                (delta e .le. degen) m.o. vectors
+C     0 ... fuzzy=1.d-10, degen=2.d-5
+C     1 ... fuzzy and degen read in (2d20.14)
+C
+C2iop(18)
+C     iop(18) ... cutoff criteria in symmetry determination of m.o.s
+C               -symmetry is determined if largest off-diagonal m.o.
+C                fock-matrix element gabs(f(i,j)).ge.sthrs
+C               -elements gabs(f(i,j)).le.span are considered to be zero
+C     0 ... sthrs=1.d-4, span=5.d-7
+C     1 ... sthrs and span read in (2d20.14)
+C
+C2iop(19)
+C     iop(19) ... print f(1),t. (read one card with start,end in 2i2)
+C     0 ... no
+C     1 ... yes
+C
+C2iop(20)
+C     iop(20) ... max-time exit (in order to dump for restart. see
+C                 doubar)
+C     0 ... no
+C     1 ... yes
+C     to obtain a max-time dump, proceed as follows:
+C     set this option to 1
+C     the next link to be performed should be l901 (doubar)
+C     set iop(15) there to 6
+C     note: set iop(14) on the integral route card (write integrals on
+C     tape). of course, tape 'c' has to be assigned
+C     to restart from such a dump:
+C     the link preceeding scf should be doubar
+C     set the following options there: iop(15)=7, iop(19)=1
+C     after that blank common, the integrals and the rwf are loaded
+C
+C2iop(21)
+C     iop(21) ... action if otest detects problems:
+C     0 ... abort run vialnk1e.
+C     1 ... continue run.
+C
+C
+C2iop(31)
+C     iop(31) ... override print-save option
+C     0 ... no (use ilsw)
+C     1 ... force print-save on
+C     2 ... force print-save off
+C
+C2iop(32)
+C     iop(32) ... save the m.o. coefficients and/or the density
+C                 matrix on the "ges" file.
+C     0 ... none
+C     1 ... m.o. coefficients only
+C     2 ... density matrix only
+C     3 ... both
+C
+C2iop(33)
+C     iop(33) ... printing
+C     0  no printing
+C     1 print mo coefficients at end
+C     2 print everything at end
+C     3 print everything each cycle ... and at end
+C
+C
+C     coded in june 75 by rs9b
+C     ******************************************************************
+C
+C
+C=ia  common/cut/energy,deriv,acurcy,maxcyc,rms,icount,class,extrap
+C
+C
+C
+C
+C     labels for identifying binwt decks.
+C
+C
+99001 format (1A1)
+99002 format (2G20.14)
+99003 format (i3)
+99004 format (1x)
+99005 format (' REAL RHF PROCEDURE FOR CLOSED SHELLS'/1x,20('*'))
+99006 format (' REAL UHF PROCEDURE'/1x,18('*'))
+99007 format (' COMPLEX RHF PROCEDURE FOR CLOSED SHELLS'/1x,39('*'))
+99008 format (' COMPLEX UHF PROCEDURE'/1x,21('*'))
+99009 format (' CYCLE #',i3,': EHF=',d21.12,'  NUCLEAR REP.=',d20.12,
+     &        '  VIRIAL=',d20.12/12x,'S**2=',f8.4,
+     &        '  RMS ERROR P-MATRIX=',d11.4,'  TAU=',f8.4)
+C 9090 format ('+',15x,d21.12)
+99010 format (
+     &' THIS PROCEDURE IS NOT AVAILABLE FOR EITHER FULL OR EMPTY SPINSPA
+     &CES. USE L501 OR L502')
+99011 format (' SYMMETRY-ASSIGNMENT NOT POSSIBLE DUE TO FUZZY F(1),T')
+99012 format (' M.O. COEFFICIENTS ',a6/1x,17('*'))
+99013 format (' DENSITY MATRIX ',a6/1x,14('*'))
+99014 format (' ','SCF DONE:  E(',a4,') = ',g19.12,' A.U. AFTER ',i4,
+     &        ' CYCLES'/1x,'           CONVG  = ',d13.4,12x,' -V/T = ',
+     &        f7.4)
+C 9150 format ('+',21x,g19.12)
+99015 format (' EIGENVALUES ',a6/1x,11('*'))
+99016 format (5(i7,f13.7))
+99017 format (' SYMMETRY ASSIGNMENTS ',a6/1x,20(1H*))
+99018 format (14(i5,':',i3))
+99019 format (' SCFDM CANNOT HANDLE COMPLEX WAVE-FUNCTIONS WITH'/
+     &        ' TWO-ELECTRON INTEGRAL SYMMETRY TURNED ON.')
+C     ******************************************************************
+      call drum
+      call dimens(Nbasis)
+C
+C     *****************************************************************
+C     prepare some constants for the s.d. procedures
+C     *****************************************************************
+      macc = Iop(6)
+      mcyc = Iop(7)
+      mrest = Iop(10)
+      ientry = Iop(12)
+      inhib = Iop(16)
+      iconsd = Iop(17)
+      icuts = Iop(18)
+      incy1 = Iop(24)
+      incy8 = Iop(23)
+      incy64 = Iop(22)
+      ipsav = Iop(31)
+      ipch = Iop(32)
+      iprint = Iop(33)
+      idump = Iop(34)
+C
+C     protect from being used with full or empty spinspaces
+      if ( Nae.le.0 .or. Nae.eq.Nbasis .or. Nbe.eq.0 .or. 
+     &     Nbe.eq.Nbasis ) then
+         write (Iout,99010)
+         call lnk1e
+      endif
+C
+      call ilsw(2,21,minprt)
+      minpsv = minprt
+      i1 = iabs(2-ipsav)
+      if ( ipsav.ne.0 ) call ilsw(1,21,i1)
+      call ilsw(2,21,minprt)
+C
+C     turn off diagnostic printing
+      if ( minprt.ne.0 ) call ilsw(1,20,1)
+C
+C     determine scf constraint:
+C     icons:
+C     0 ... rrhf.
+C     1 ... ruhf.
+C     2 ... crhf.
+C     3 ... cuhf.
+      call ilsw(2,1,icons)
+      icons = icons + 1
+      Cmp = .false.
+      if ( icons.gt.2 ) Cmp = .true.
+      Rhf = .false.
+      if ( mod(icons,2).ne.0 ) Rhf = .true.
+C
+C     execution prevented if stability flag in ilsw is set
+      call ilsw(2,6,istab)
+      if ( istab.ne.0 ) call lnk1
+      if ( inhib.ne.0 ) call ilsw(1,7,0)
+C
+      Ksm = mod(icons-1,2) + 1
+      Nesk(1) = 0
+      Nesk(2) = Nbasis
+      nb2 = Ksm*Nbasis
+      Icount = 0
+      if ( icons.eq.2 ) then
+C
+         write (Iout,99006)
+      elseif ( icons.eq.3 ) then
+C
+         Ksw(1) = iblnk
+         write (Iout,99007)
+      elseif ( icons.eq.4 ) then
+C
+         write (Iout,99008)
+      else
+C
+         Ksw(1) = iblnk
+         write (Iout,99005)
+      endif
+C
+C     initiate rwf 'ievals' provided it is not created already
+      call tquery(Ievals,levals)
+      if ( levals.eq.0 ) then
+         do 50 i = 1 , nb2
+            Isym(i) = 0
+ 50      continue
+         call twrite(Ievals,Isym,nb2,1,nb2,1,0)
+      endif
+C
+C     initiate total- and spin density matrices for uhf
+      if ( .not.(Rhf) ) then
+         iq = 2
+         if ( Cmp ) iq = 1
+         do 100 i = 1 , 4 , iq
+            call twrite(Iptot(i),Da,Ntt,1,Ntt,1,0)
+ 100     continue
+      endif
+C
+C
+C     initialize /ibf/.
+      call tread(Irwibf,Ibf(1),Lenibf,1,Lenibf,1,0)
+C
+C     if two-electron symmetry is to be used, read in the necessary
+C     symmetry information at this time.  thie information is read
+C     into a scratch array and reformetted into neqbas to avoid
+C     having to read in all of it.
+      if ( Isym2e.eq.1 ) then
+C     trap complex wavefunctions at this point.
+         if ( Cmp ) then
+            write (Iout,99019)
+            call lnk1e
+         endif
+         call tread(Isymm,Idum(1),1,1,1,1,0)
+         nsymop = Idum(1)
+C this is yet another way to get at neqbas via neqshl
+         call tread(Neq,Idum(1),LNEQ,1,LNEQ,1,0)
+         k = MAXSHL*8
+         do 150 j = 1 , 8
+            do 120 i = 1 , MAXBAS
+               k = k + 1
+               neqbas(i,j) = Idum(k)
+ 120        continue
+ 150     continue
+      endif
+C
+C     restart the integral tape
+      if ( mrest.eq.0 ) then
+      endif
+C     call intlod(da) in rolf version
+C
+C     set the convergence criteria and start the scf procedure
+      Acurcy = finac
+      if ( macc.gt.0 ) Acurcy = ten**(-macc)
+      Maxcyc = 32
+      if ( mcyc.gt.0 ) Maxcyc = mcyc
+C
+C     prepare some constants used in asgsym
+      Fuzzy = fuzzyd
+      Degen = degend
+      Sthrs = sthrsd
+      Span = spand
+      if ( iconsd.ne.0 ) read (In,99002) Fuzzy , Degen
+      if ( icuts.ne.0 ) read (In,99002) Sthrs , Span
+C
+C     read in symmetry criteria
+      nb22 = (nb2+1)/2
+      call tread(Ievals,Isym,nb22,1,nb22,1,0)
+      if ( Maxcyc.ne.0 ) then
+C
+C     ******************************************************************
+C     ................................
+         if ( ientry.eq.0 ) call first(nsymop,neqbas,jcycle)
+      endif
+C     ................................
+C     ******************************************************************
+C
+C     ******************************************************************
+C     calculate the nuclear repulsion energy
+C     and perform some final output
+C     ******************************************************************
+C
+C     total- and spin density matrices for uhf
+      if ( .not.(Rhf) ) then
+         iq = 1
+         if ( Cmp ) iq = 2
+         do 200 i = 1 , iq
+            call tread(Iod(i),Da,Ntt,1,Ntt,1,0)
+            call tread(Iod(i+2),Db,Ntt,1,Ntt,1,0)
+            do 160 j = 1 , Ntt
+               a0 = Da(j) + Db(j)
+               a1 = Da(j) - Db(j)
+               Da(j) = a0
+               Db(j) = a1
+ 160        continue
+            call twrite(Iptot(i),Da,Ntt,1,Ntt,1,0)
+            call twrite(Ipspin(i),Db,Ntt,1,Ntt,1,0)
+ 200     continue
+      endif
+C
+C     density matrix and m.o. coefficients
+      if ( ipch.ne.0 .or. iprint.ne.0 ) then
+         call tread(Ieval,E,nb2,1,nb2,1,0)
+         ipart = (icons-1)/2 + 1
+         nbsq = Nbasis**2
+         do 250 Kspin = 1 , Ksm
+            Nest = Nesk(Kspin)
+            call tioc(Nbasis,2,Iod,Da,2,1,idump)
+            if ( iprint.gt.1 ) then
+               write (Iout,99013) Ksw(Kspin)
+               call csymm(Da,Mdim,Nbasis,Cmp)
+            endif
+            if ( ipch.ne.0 .and. ipch.ne.1 ) then
+               il = ldns(Kspin,1)
+               call binwt(Da,2*Ntt,labdck(1,il),Nbasis)
+               il = ldns(Kspin,2)
+               if ( Cmp ) call binwt(Da(Mtt+1),2*Ntt,labdck(1,il),
+     &                               Nbasis)
+            endif
+            call tioc(Nbasis,2,Ioc,Da,4,1,idump)
+            if ( iprint.ne.0 ) then
+               write (Iout,99015) Ksw(Kspin)
+               write (Iout,99016) (i,E(i+Nest),i=1,Nbasis)
+               write (Iout,99012) Ksw(Kspin)
+               call cmat(Da,Mdim,Mdim,Nbasis,Nbasis,Cmp)
+            endif
+            if ( ipch.ne.0 .and. ipch.ne.2 ) then
+               call comat(Da,Da,Mdim,Nbasis)
+               il = lmo(Kspin,1)
+               call binwt(Da,2*nbsq,labdck(1,il),Nbasis)
+               if ( Cmp ) then
+                  call comat(Da(Mdsq+1),Da(Mdsq+1),Mdim,Nbasis)
+                  il = lmo(Kspin,2)
+                  call binwt(Da(Mdsq+1),2*nbsq,labdck(1,il),Nbasis)
+               endif
+            endif
+ 250     continue
+C
+C     one-electron energies
+         if ( ipch.ne.0 ) call binwt(E,2*nb2,labdck(1,9),Nbasis)
+      endif
+C
+C     evaluate nuclear repulsion
+      if ( ientry.ne.1 ) then
+         call tread(Igeno,Gen,Ligen,1,Ligen,1,0)
+         rep = Gen(Lrep)
+C
+         tenrgy = Energy + rep
+         if ( minprt.eq.0 ) then
+            vir = Zero
+            write (Iout,99004)
+C      write (iout,9150) (tenrgy,j=1,5)
+            write (Iout,99014) namscf(icons) , tenrgy , jcycle , Rms , 
+     &                         vir
+         endif
+C
+C     calculate the energy-weighted density matrix.
+         ipr = .false.
+         if ( iprint.ge.2 ) ipr = .true.
+         call frmw(Nbasis,Nae,Nbe,Ioc(1),Ioc(2),Ioc(3),Ieval,irww,Fa,E,
+     &             Da,ipr,Iout)
+C
+C     set 'tau-known' bit in ilsw
+         call ilsw(1,8,1)
+C
+C     turn back on diagnostic printout
+         call ilsw(1,21,minpsv)
+C
+C
+C     update common/gen/
+         Igen(Lilsw) = Iop(2)
+         Igen(Lipcw) = Iop(1)
+         Gen(Lehf) = tenrgy
+         Gen(Lten) = tenrgy
+         Gen(Ltau) = Acurcy
+         Gen(Lrmsd) = Rms
+C
+C     evaluate virial
+         vir = Zero
+         Gen(Lvir) = vir
+C
+C     calculate s,s**2
+         Gen(Ls2) = Zero
+         if ( .not.Rhf ) call spindm(Nae,Nbe,Nbasis,Gen(Ls2),Da,Fa,
+     &                               idump)
+         call twrite(Igeno,Gen,Ligen,1,Ligen,1,0)
+         if ( ipch.ne.0 ) call binwt(Gen,2*Ligen,labdck(1,11),Nbasis)
+C
+C     write out symmetry assignment
+         if ( .not.(Isym(1).ne.0 .and. (Rhf .or. Isym(Nbasis+1).ne.0)) )
+     &        then
+            write (Iout,99011)
+            do 260 i = 1 , nb2
+               Isym(i) = 0
+ 260        continue
+C
+         elseif ( iprint.ne.0 ) then
+            do 280 Kspin = 1 , Ksm
+               Nest = Nesk(Kspin)
+               write (Iout,99017) Ksw(Kspin)
+               write (Iout,99018) (i,Isym(i+Nest),i=1,Nbasis)
+ 280        continue
+         endif
+         call twrite(Ievals,Isym,nb22,1,nb22,1,0)
+         if ( ipch.ne.0 ) call binwt(Isym,2*nb22,labdck(1,10),Nbasis)
+         if ( minprt.ne.0 ) write (Iout,99004)
+C      if (minprt.ne.0) write (iout,9090) (tenrgy,i=1,4)
+         if ( minprt.ne.0 ) write (Iout,99009) Maxcyc , tenrgy , rep , 
+     &                             vir , Gen(Ls2) , Rms , Acurcy
+      endif
+      call ilsw(2,5,iconv)
+      if ( iconv.ne.0 ) call lnk1e
+C
+C     ..............
+      JUMP = 0
+      return
+C     ..............
+C
+      end
+@* INDEX.

@@ -1,0 +1,73 @@
+@* cvu.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[OUTPUT:] V                                                         
+\item[INPUT:] U                                                         
+\item[OUTPUT:] S                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CYCCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine cvu(N,V,U,S)
+      implicit none
+      integer icol , iju , indv , irow , jcol , k , N
+      double precision S , sum , U , V , zero
+      dimension V(*) , U(*) , S(*)
+      data zero/0.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to form matrix product
+C
+C     c=v*u
+C
+C     where c, v,  and u are n by n matrices stored in column-wise
+C     compressed mode.  the matrix c replaces v (ie. v is destroyed).
+C
+C***********************************************************************
+C
+C
+C     loop over rows of output matrix.
+      do 200 irow = 1 , N
+C
+C     copy one row of v into the scratch vector s.
+         indv = irow
+         do 50 icol = 1 , N
+            S(icol) = V(indv)
+            indv = indv + N
+ 50      continue
+C
+C     pass over all columns of v.
+         indv = irow
+         iju = 0
+         do 100 jcol = 1 , N
+C
+C     n**3 step:
+            sum = zero
+            do 60 k = 1 , N
+               iju = iju + 1
+               sum = sum + S(k)*U(iju)
+ 60         continue
+C
+C     plant element in output matrix.
+            V(indv) = sum
+            indv = indv + N
+ 100     continue
+ 200  continue
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

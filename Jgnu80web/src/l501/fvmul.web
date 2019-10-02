@@ -1,0 +1,102 @@
+@* fvmul.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] F                                                         
+\item[INPUT:] V                                                         
+\item[OUTPUT:] T                                                         
+\item[OUTPUT:] S                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TRSPN2                                                 
+\item[Called by]   CYCCLO  LEVSHF                                         
+                                                                    
+\end{description}
+@a
+      subroutine fvmul(N,F,V,T,S)
+      implicit none
+      double precision F , S , sum , T , V , zero
+      integer i , icol , ijt , ijv , indf1 , indf2 , irow , irp , k , N
+      dimension F(*) , V(*) , T(*) , S(*)
+      data zero/0.0D0/
+C
+C
+C
+C
+C***********************************************************************
+C     routine to form the matrix product
+C
+C     t=f*v
+C
+C     where f is an n by n matrix stored in lower triangular compressed
+C     form; v is a full n by n matrix stored compressed column-wise;
+C     the output matrix t is full n by n compressed column-wise; and
+C     s is a scratch vector at least n locations long.
+C
+C     the routine is optimized to run in a paging environment.
+C
+C     on input, the matrix f can occupy the last (n*(n+1))/2 locations
+C     of t without creating any conflicts.
+C***********************************************************************
+C
+C
+C     initialize some counters.
+      indf1 = 0
+      ijt = 0
+C
+C     commence loop over rows of output matrix.
+      do 200 irow = 1 , N
+C
+C     recover one row of f into s.  this is done in two parts:
+C     first, step across the row, getting sequential elements;
+C     then step done the column.
+         do 50 i = 1 , irow
+            S(i) = F(indf1+i)
+ 50      continue
+         indf1 = indf1 + irow
+C
+         if ( irow.lt.N ) then
+            irp = irow + 1
+            indf2 = indf1 + irow
+            do 60 i = irp , N
+               S(i) = F(indf2)
+               indf2 = indf2 + i
+ 60         continue
+         endif
+C
+C     we now have one row of f in s.  pass over all columns of
+C     v thereby forming one row of the output matrix.  store this
+C     newly created row in the next n available locations of t.
+         ijv = 0
+         do 100 icol = 1 , N
+C
+C     n**3 step:
+            sum = zero
+            do 80 k = 1 , N
+               ijv = ijv + 1
+               sum = sum + S(k)*V(ijv)
+ 80         continue
+C
+C     plant new value in output matrix.
+            ijt = ijt + 1
+            T(ijt) = sum
+ 100     continue
+ 200  continue
+C
+C
+C     we are all done except for one minor detail:
+C     the above algorithm produces the transpose of the desired
+C     matrix.  fix this now by calling trspn2.
+      call trspn2(N,T)
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

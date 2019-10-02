@@ -1,0 +1,108 @@
+@* uhftst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] IRWE                                                      
+\item[PASSED:] IRWCA                                                     
+\item[PASSED:] IRWPA                                                     
+\item[OUTPUT:] S                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  AMOVE   ASCALE  FILEIO  ILSW    TREAD   TWRITE 
+\item[Called by]   RHFCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine uhftst(NBASIS,IRWE,IRWCA,IRWPA,S)
+      implicit none
+      integer i , ii , ij , In , Iout , Ipunch , IRWCA , irwcb , IRWE , 
+     &        IRWPA , irwpb , irwps , irwu , j , NBASIS , nbsq , ntt
+      double precision one , pt5 , S , zero
+      dimension S(*)
+      common /io    / In , Iout , Ipunch
+      data irwcb , irwpb , irwu , irwps/526 , 530 , 540 , 534/
+      data pt5/0.5D0/ , one/1.0D0/ , zero/0.0D0/
+C
+C***********************************************************************
+C     routine to convert the current run into a uhf calculation
+C     this routine is convenient to use when debugging uhf
+C     procedures.
+C
+C     arguments:
+C
+C     nbasis ... number of basis functions.
+C     irwe   ... rw-file containing eigenvalues.
+C     irwca  ... rw-file containing m.o. coefficients.
+C     irwpa  ... rw-file containing closed shell density matrix.
+C     s      ... scratch array of length nbasis**2.
+C***********************************************************************
+C
+C
+99001 format (1x,'>>>>>>>> UHF CONVERSION IN UHFTST')
+C
+C
+C***********************************************************************
+C     1.  reformat eigenvalues.
+C     2.  make cb and twrite.
+C     3.  make pb and twrite.
+C     4.  make pa and twrite.
+C     5.  make ps and twrite.
+C     6.  make m.o. overlap and twrite.
+C     7.  set the ilsw bit.
+C***********************************************************************
+C
+C
+      write (Iout,99001)
+C
+C
+C     reformat eigenvalues.
+C     simply replicate beta from alpha.
+      call tread(IRWE,S,NBASIS,1,NBASIS,1,0)
+      call amove(NBASIS,S,S(1+NBASIS))
+      call fileio(5,IRWE,0,0,0)
+      call twrite(IRWE,S,2*NBASIS,1,2*NBASIS,1,0)
+C
+C     make beta m.o. coefficients.
+      nbsq = NBASIS**2
+      call tread(IRWCA,S,nbsq,1,nbsq,1,0)
+      call twrite(irwcb,S,nbsq,1,nbsq,1,0)
+C
+C     prepare uhf density matrices.
+C     fetch p-closed, scale by pt5 and write p-alpha ad p-beta.
+      ntt = (NBASIS*(NBASIS+1))/2
+      call tread(IRWPA,S,ntt,1,ntt,1,0)
+      call ascale(ntt,pt5,S,S)
+      call twrite(IRWPA,S,ntt,1,ntt,1,0)
+      call twrite(irwpb,S,ntt,1,ntt,1,0)
+C
+C     form the spin-density matrix.  for rhf closed shell,
+C     this is a zero matrix.
+      call aclear(ntt,S)
+      call twrite(irwps,S,ntt,1,ntt,1,0)
+C
+C     form the m.o. overlap matrix.
+C     for rhf closed shell, this is just a unit matrix.
+      do 100 i = 1 , NBASIS
+         do 50 j = 1 , NBASIS
+            ij = (i-1)*NBASIS + j
+            S(ij) = zero
+ 50      continue
+         ii = (i-1)*NBASIS + i
+         S(ii) = one
+ 100  continue
+      call twrite(irwu,S,nbsq,1,nbsq,1,0)
+C
+C     set the ilsw bit.
+      call ilsw(1,1,1)
+C
+C     all done, return.
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,38 @@
+@* tst503.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] ISTAT                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   RHFCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine tst503(ISTAT)
+      implicit none
+      integer ISTAT
+C
+C
+C
+C***********************************************************************
+C     routine to determine if l503 is the next or second
+C     next link to be executed in the current route.
+C
+C     istat=0 --> l503 not found.
+C     istat=1 --> l503 was found.
+C***********************************************************************
+C
+C
+C
+      ISTAT = 0
+      return
+C
+      end
+@* INDEX.

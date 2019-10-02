@@ -1,0 +1,27 @@
+@* l503.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       NEXTOV  SCFDM                                          
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l503(NCHAIN)
+      implicit none
+      integer jump , NCHAIN , nextov
+C
+      call scfdm(jump)
+      NCHAIN = nextov(jump)
+      return
+C
+      end
+@* INDEX.

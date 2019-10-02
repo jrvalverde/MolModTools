@@ -1,0 +1,85 @@
+@* vdagt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] V                                                         
+\item[INPUT:] T                                                         
+\item[OUTPUT:] F                                                         
+\item[OUTPUT:] S                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CYCCLO  LEVSHF                                         
+                                                                    
+\end{description}
+@a
+      subroutine vdagt(N,V,T,F,S)
+      implicit none
+      double precision F , S , sum , T , V , zero
+      integer i , ijf , ijt , ijv , irow , jcol , k , N
+      dimension V(*) , T(*) , F(*) , S(*)
+      data zero/0.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to form the matrix product
+C
+C      f=v(transpose)*t
+C
+C     where  the two input matrices v and t are of dimension
+C     n by n, stored compressed column-wise; the output matrix
+C     f is symmetric lower-triangular, stored in compressed
+C     form; and s is a scratch vector at least n locations
+C     long.  linear indexing is used throughout, and the algorithm
+C     is optimized for page oriented operations.
+C
+C     note that the output matrix f can be equivalenced to the first
+C     (n*(n+1))/2 locations of t.
+C***********************************************************************
+C
+C
+C     clear some suffixes.
+      ijt = 0
+      ijf = 0
+C
+C
+C     commence loop over rows of output matrix.
+      do 200 irow = 1 , N
+C
+C     copy one column of t into the scratch vector s, thereby
+C     freeing the space in t for the resultant output elements.
+         do 50 i = 1 , N
+            ijt = ijt + 1
+            S(i) = T(ijt)
+ 50      continue
+C
+C     form irow elements of the output matrix.
+         ijv = 0
+         do 100 jcol = 1 , irow
+C
+C     n**3 step:
+            sum = zero
+            do 60 k = 1 , N
+               ijv = ijv + 1
+               sum = sum + S(k)*V(ijv)
+ 60         continue
+C
+C     put result in output matrix.
+            ijf = ijf + 1
+            F(ijf) = sum
+ 100     continue
+ 200  continue
+C
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

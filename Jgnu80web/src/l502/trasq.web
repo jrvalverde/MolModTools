@@ -1,0 +1,38 @@
+@* trasq.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] A                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ANNIL                                                  
+                                                                    
+\end{description}
+@a
+      double precision function trasq(N,A)
+      implicit none
+      double precision A , sum , zero
+      integer i , ind , N
+C***********************************************************************
+      dimension A(*)
+      data zero/0.0D0/
+C     routine to obtain trace of square compressed matrix.
+C***********************************************************************
+      ind = 1
+      sum = zero
+      do 100 i = 1 , N
+         sum = sum + A(ind)
+         ind = ind + 1 + N
+ 100  continue
+      trasq = sum
+      return
+C
+      end
+@* INDEX.

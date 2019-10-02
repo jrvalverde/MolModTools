@@ -1,0 +1,64 @@
+@* gofr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] R                                                         
+\item[OUTPUT:] G                                                         
+\item[INPUT:] I                                                         
+\item[INPUT:] J                                                         
+\item[INPUT:] K                                                         
+\item[INPUT:] L                                                         
+\item[INPUT:] II                                                        
+\item[INPUT:] VA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIR2E                                                  
+                                                                    
+\end{description}
+@a
+      subroutine gofr(R,G,I,J,K,L,II,VA)
+      implicit none
+      double precision coul1 , coul2 , coul3 , exch
+      integer ij , ik , il , jk , jl , kl
+      double precision R(*) , G(*) , em , en , VA
+      integer I , J , K , L
+      integer II(*)
+      data em/1.0D00/ , en/0.5D00/
+      ij = II(I) + J
+      kl = II(K) + L
+      il = II(I) + L
+      ik = II(I) + K
+      jk = II(J) + K
+      jl = II(J) + L
+      if ( J.lt.K ) jk = II(K) + J
+      if ( J.lt.L ) jl = II(L) + J
+      coul1 = em*R(ij)*VA
+      coul2 = em*R(kl)*VA
+      exch = en*VA
+      if ( K.ne.L ) then
+         coul2 = coul2 + coul2
+         G(ik) = G(ik) - R(jl)*exch
+         if ( (I.ne.J) .and. (J.ge.K) ) G(jk) = G(jk) - R(il)*exch
+      endif
+      G(il) = G(il) - R(jk)*exch
+      G(ij) = G(ij) + coul2
+      if ( (I.ne.J) .and. (J.ge.L) ) G(jl) = G(jl) - R(ik)*exch
+      if ( ij.ne.kl ) then
+         coul3 = coul1
+         if ( I.ne.J ) coul3 = coul3 + coul1
+         if ( J.le.K ) then
+            G(jk) = G(jk) - R(il)*exch
+            if ( (I.ne.J) .and. (I.le.K) ) G(ik) = G(ik) - R(jl)*exch
+            if ( (K.ne.L) .and. (J.le.L) ) G(jl) = G(jl) - R(ik)*exch
+         endif
+         G(kl) = G(kl) + coul3
+      endif
+      return
+      end
+@* INDEX.

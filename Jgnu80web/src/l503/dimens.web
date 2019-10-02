@@ -1,0 +1,54 @@
+@* dimens.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    MDIM    MDSQ    MSHIFS  MTT     NTT                    
+\item[Uses]  IOUT    LOCAV   MDIM                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  GSQRT   ILSW    LNK1E                          
+\item[Called by]   SCFDM                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dimens(NBASIS)
+      implicit none
+      double precision disc , gfloat , gsqrt
+      integer icon , In , Iout , ipart , Ipunch , Locav , Mdim , Mdsq , 
+     &        Mshifs , Mtt , NBASIS , Ntt
+      double precision c
+      common /memlng/ Locav
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /io    / In , Iout , Ipunch
+C     ******************************************************************
+C     calculates the dimension of the square arrays depending on the
+C     available locations (locav) and the arithmetics (real, complex)
+C
+C     coded in august 75 by rs9b
+C     ******************************************************************
+C
+99001 format (///' NBASIS:',i3,' EXCEEDS MDIM:',i3///)
+C
+      call ilsw(2,1,icon)
+      ipart = icon/2 + 1
+      disc = gsqrt(1.0D00+gfloat(4*Locav/ipart))
+      Mdim = int((disc-1.0D00)/2.0D00)
+      if ( NBASIS.le.Mdim ) then
+         Mtt = Mdim*(Mdim+1)/2
+         Ntt = NBASIS*(NBASIS+1)/2
+         Mdsq = Mdim*Mdim
+         Mshifs = Locav/2
+         return
+      endif
+C
+C     error
+      write (Iout,99001) NBASIS , Mdim
+      call lnk1e
+      stop 13
+C
+      end
+@* INDEX.

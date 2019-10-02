@@ -1,0 +1,495 @@
+@* fofopn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] NSYMOP                                                    
+\item[PASSED:] NEQBAS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DA      DB      DBASE   FA      FB      I       IA     
+             IBASE   IFIL    INTCNT  J       JA      K       NTX    
+             SINDX                                                  
+\item[Transmits as argument]  DBUF2E  IBUF2E  IJ      IRWH    IRWPA   IRWPB   NTT    
+\item[Uses]  DA      DB      DBASD   DBASE   DBUF2E  FA      FB     
+             I       IBASD   IBASE   IBUF2E  ICON    IFIL    IJ     
+             INTCNT  IOUT    IRESET  IRWH    IRWPA   IRWPB   ISMODE 
+             ISYM2E  ITOTAL  IUX     J       K       KNTT1   KNTT2  
+             L       MINDX   MODE    NTT     NTX     NWPI    P      
+             Q       R       SINDX   VALINT                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FSYMM   IREAD   IWAIT   IWIND   LABSCF  LNK1E   TREAD  
+             UNPCK2  UNPCK4                                         
+\item[Called by]   CYCOPN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine fofopn(NBASIS,NSYMOP,NEQBAS)
+      implicit none
+      double precision Da , Db , Dbuf2e , Fa , Fb , Filabc , pspin , 
+     &                 pspin2 , pt25 , ptotl , ptotl2 , secint , temp , 
+     &                 terint , val1 , val2 , Valint , zero
+      integer I , Ia , Ibasd , Ibase , Ibuf2e , Icon , Ifil , iflst , 
+     &        Ij , In , intape , Intcnt , Iout , Ipunch , Iq , iqbufr , 
+     &        iqproc , Ireset , Irwc1 , Irwc2
+      integer Irwc3 , Irwca , Irwcb , Irweig , Irwfa , Irwfb , Irwgen , 
+     &        Irwh , Irwibf , Irwpa , Irwpb , Irwps , Irwpt , Irws , 
+     &        Irwt , Irwtm , Irwur , Ismode , Istat , Isym2e
+      integer Itotal , Iux , J , Ja , jq , js , jt , K , Kntt1 , Kntt2 , 
+     &        L , Last , Lenibf , Limint , lq , m , MAXBAS , Maxnbf , 
+     &        Maxntt , Mindx
+      integer Mode , NBASIS , NEQBAS , next , nfile , Nrpext , NSYMOP , 
+     &        Ntt , Ntx , Nwiib , Nwpi
+      parameter (MAXBAS=150)
+      dimension NEQBAS(MAXBAS,8)
+      integer P , Q , R , Sindx
+      integer Psave
+      integer Dbase , Dbasd , dcount
+      dimension Ia(2)
+      dimension Ibuf2e(1)
+      common /memry / Da(2850) , Db(2850) , Fa(2850) , Fb(2850) , 
+     &                Dbuf2e(4760) , Filabc(33840)
+      common /ind   / Ntt , Ij(127)
+      common /packed/ I , J , K , L , Valint , Ja
+      common /io    / In , Iout , Ipunch
+      common /psave / Psave
+      common /max502/ Maxnbf , Maxntt
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Isym2e
+      common /irw502/ Irwgen , Irweig , Irwca , Irwcb , Irwpa , Irwpb , 
+     &                Irwpt , Irwps , Irwfa , Irwfb , Irwur , Irws , 
+     &                Irwh , Irwt , Irwtm , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwibf , Lenibf
+      equivalence (Ia(1),Valint)
+      equivalence (P,I) , (Q,J) , (R,Mindx,K) , (Sindx,L)
+      equivalence (Ibuf2e(1),Dbuf2e(1))
+      equivalence (pspin2,pspin) , (ptotl2,ptotl)
+      data pt25/0.25D0/
+      data zero/0.0D0/
+      data nfile/0/
+C
+C
+C
+C***********************************************************************
+C     routine to form the alpha and beta fock-matrices for the
+C     unrestricted hartree fock  (uhf) procedure.
+C     on entry, this routine expects
+C     da to contain the alpha density matrix,
+C     db to contain the beta  density matrix.
+C
+C     on output,
+C     fa will contain the alpha fock matrix,
+C     and fb will contain the beta fock matrix.
+C     da and db will be the same as they were on input.
+C***********************************************************************
+C
+C     data pt5/0.5d0/
+C
+99001 format (' BAD INTEGRAL COUNT:  IS ',i9,5x,' SHOULD BE ',i9)
+C
+C
+C
+C     prepare the input matrices.
+      do 100 I = 1 , Ntt
+         Fa(I) = zero
+         Fb(I) = zero
+ 100  continue
+C
+C     if required, prepare the input matrices for the raffenetti
+C     scheme:
+C     fa is to initially contain zeros and will receive
+C     pt5*( f-alpha + f-beta ).
+C     fb must initially contain zero, and will receive
+C     two*( f-beta - f-alpha ).
+C     da must initially contain the total-density matrix with the
+C     off-diagonal elements multiplied by two.  this matrx will be
+C     restored to contain p-alpha at the end of this routine.
+C     db must initially contain the spin-density matrix with the
+C     off-diagonal elements multiplied by two.   this array will
+C     also be restored so as to contain the beta density
+C     matrix at the end of this routine.
+      if ( Ismode.gt.0 ) then
+         K = 0
+         do 150 I = 1 , NBASIS
+            do 120 J = 1 , I
+               K = K + 1
+               pspin = Da(K) - Db(K)
+               ptotl = Da(K) + Db(K)
+               Da(K) = ptotl + ptotl
+               Db(K) = pspin + pspin
+ 120        continue
+            Da(K) = ptotl
+            Db(K) = pspin
+ 150     continue
+      endif
+C
+C
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     start up the i/o.
+      iqbufr = 1
+      iqproc = 2
+      Intcnt = 0
+      intape = Iux(2)
+      Ntx = 1
+      call iread(intape,iqbufr,Dbuf2e)
+      Ifil = 1
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     i/o control section.  enter here to get next buffer of data.
+C     the details of this section are the same as in fofclo, and the
+C     interested person is referred to that routine.
+ 200  call iwait(intape)
+      iqbufr = iabs(iqbufr-2) + 1
+      iqproc = iabs(iqproc-2) + 1
+      Ibase = Ibasd(iqproc)
+      Dbase = Dbasd(iqproc)
+C     decode integral buffer control word.
+      call labscf(Ibuf2e(Ibase),iflst)
+      if ( iflst.eq.0 ) then
+         if ( Ifil.eq.(nfile+Ntx*Icon) ) then
+            call iwind(intape)
+            Ntx = Ntx + 1
+            next = Iux(Ntx+1)
+            call iwind(next)
+            intape = next
+         endif
+         call iread(intape,iqbufr,Dbuf2e)
+         Ifil = Ifil + 1
+      endif
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C
+C
+C     we now have a buffer of data in dbuf2e(dbasd(iqproc)).
+C     select processing code based on mode.
+      if ( Mode.eq.2 ) then
+C
+C
+C     sorry, no raffenetti type 1 integrals here.
+         call lnk1e
+      elseif ( Mode.eq.3 ) then
+      elseif ( Mode.ne.4 ) then
+C
+C
+C     process integrals in regular format.
+C     separate loops for type 1 and type 2 integrals.
+C     before starting either loop, make sure there are integrals
+C     to process.
+         if ( Kntt1.gt.0 ) then
+            jq = Ireset(1) + Ibase
+            lq = jq + (Kntt1-1)*Nwpi
+            do 220 m = jq , lq , Nwpi
+C***********************************************************************
+C   case 0     (ab,cd)
+C***********************************************************************
+               Ja = Ibuf2e(m)
+               Ia(1) = Ibuf2e(m+1)
+               Ia(2) = Ibuf2e(m+2)
+               call unpck4
+               js = Ij(I) + J
+               jt = Ij(K) + L
+               terint = Valint + Valint
+               secint = (Da(jt)+Db(jt))*terint
+               Fa(js) = Fa(js) + secint
+               Fb(js) = Fb(js) + secint
+               secint = (Da(js)+Db(js))*terint
+               Fa(jt) = Fa(jt) + secint
+               Fb(jt) = Fb(jt) + secint
+               js = Ij(I) + K
+               if ( J.le.L ) then
+C
+                  jt = Ij(L) + J
+               else
+                  jt = Ij(J) + L
+               endif
+               Fa(js) = Fa(js) - Da(jt)*Valint
+               Fb(js) = Fb(js) - Db(jt)*Valint
+               Fa(jt) = Fa(jt) - Da(js)*Valint
+               Fb(jt) = Fb(jt) - Db(js)*Valint
+               js = Ij(I) + L
+               if ( J.le.K ) then
+C
+                  jt = Ij(K) + J
+               else
+                  jt = Ij(J) + K
+               endif
+               Fa(js) = Fa(js) - Da(jt)*Valint
+               Fb(js) = Fb(js) - Db(jt)*Valint
+               Fa(jt) = Fa(jt) - Da(js)*Valint
+               Fb(jt) = Fb(jt) - Db(js)*Valint
+ 220        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+C
+         if ( Kntt2.gt.0 ) then
+            lq = Ireset(2) + Ibase
+            jq = lq - (Kntt2-1)*Nwpi
+            do 240 m = jq , lq , Nwpi
+               Ja = Ibuf2e(m)
+               Ia(1) = Ibuf2e(m+1)
+               Ia(2) = Ibuf2e(m+2)
+               call unpck4
+               Sindx = Sindx + 1
+               if ( Sindx.eq.2 ) then
+C***********************************************************************
+C   case 2     (ab,bc)=> pq,qr
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(Q) + R
+                  terint = Valint + Valint
+                  secint = (Da(jt)+Db(jt))*terint
+                  Fa(js) = Fa(js) + secint
+                  Fb(js) = Fb(js) + secint
+                  secint = (Da(js)+Db(js))*terint
+                  Fa(jt) = Fa(jt) + secint
+                  Fb(jt) = Fb(jt) + secint
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+                  js = Ij(P) + R
+                  jt = Ij(Q+1)
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*terint
+                  Fb(jt) = Fb(jt) - Db(js)*terint
+               elseif ( Sindx.eq.3 ) then
+C***********************************************************************
+C   case 3     (ac,bc)=> pq,rq
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(R) + Q
+                  terint = Valint + Valint
+                  secint = (Da(jt)+Db(jt))*terint
+                  Fa(js) = Fa(js) + secint
+                  Fb(js) = Fb(js) + secint
+                  secint = (Da(js)+Db(js))*terint
+                  Fa(jt) = Fa(jt) + secint
+                  Fb(jt) = Fb(jt) + secint
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+                  js = Ij(P) + R
+                  jt = Ij(Q+1)
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*terint
+                  Fb(jt) = Fb(jt) - Db(js)*terint
+               elseif ( Sindx.eq.4 ) then
+C***********************************************************************
+C   case 4     (ab,ab)=> pq,pq
+C***********************************************************************
+                  js = Ij(P) + Q
+                  secint = Da(js) + Db(js)
+                  Fa(js) = Fa(js) + (secint+Db(js))*Valint
+                  Fb(js) = Fb(js) + (secint+Da(js))*Valint
+                  js = Ij(P+1)
+                  jt = Ij(Q+1)
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+               elseif ( Sindx.eq.5 ) then
+C***********************************************************************
+C   case 5     (aa,bc)=> pp,qr
+C***********************************************************************
+                  js = Ij(P+1)
+                  jt = Ij(Q) + R
+                  secint = (Da(jt)+Db(jt))*Valint
+                  secint = secint + secint
+                  Fa(js) = Fa(js) + secint
+                  Fb(js) = Fb(js) + secint
+                  secint = (Da(js)+Db(js))*Valint
+                  Fa(jt) = Fa(jt) + secint
+                  Fb(jt) = Fb(jt) + secint
+                  js = Ij(P) + Q
+                  jt = Ij(P) + R
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+               elseif ( Sindx.eq.6 ) then
+C***********************************************************************
+C   case 6     (ab,cc)=> pq,rr
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(R+1)
+                  secint = (Da(jt)+Db(jt))*Valint
+                  Fa(js) = Fa(js) + secint
+                  Fb(js) = Fb(js) + secint
+                  secint = (Da(js)+Db(js))*Valint
+                  secint = secint + secint
+                  Fa(jt) = Fa(jt) + secint
+                  Fb(jt) = Fb(jt) + secint
+                  js = Ij(P) + R
+                  if ( Q.le.R ) then
+C
+                     jt = Ij(R) + Q
+                  else
+                     jt = Ij(Q) + R
+                  endif
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+               elseif ( Sindx.eq.7 ) then
+C***********************************************************************
+C    case 7
+C    three subcases:
+C    180        (ab,bb)=> pq,qq
+C    190        (aa,bb)=> pp,qq
+C    200        (aa,ab)=> pp,pq
+C***********************************************************************
+                  if ( Mindx.eq.2 ) then
+C
+                     js = Ij(P+1)
+                     jt = Ij(Q+1)
+                     secint = (Da(jt)+Db(jt))*Valint
+                     Fa(js) = Fa(js) + secint
+                     Fb(js) = Fb(js) + secint
+                     secint = (Da(js)+Db(js))*Valint
+                     Fa(jt) = Fa(jt) + secint
+                     Fb(jt) = Fb(jt) + secint
+                     js = Ij(P) + Q
+                     Fa(js) = Fa(js) - Da(js)*Valint
+                     Fb(js) = Fb(js) - Db(js)*Valint
+                  elseif ( Mindx.eq.3 ) then
+C
+                     js = Ij(P+1)
+                     jt = Ij(P) + Q
+                     secint = Valint + Valint
+                     Fa(js) = Fa(js) + Db(jt)*secint
+                     Fb(js) = Fb(js) + Da(jt)*secint
+                     Fa(jt) = Fa(jt) + Db(js)*Valint
+                     Fb(jt) = Fb(jt) + Da(js)*Valint
+                  else
+C
+                     js = Ij(P) + Q
+                     jt = Ij(Q+1)
+                     Fa(js) = Fa(js) + Db(jt)*Valint
+                     Fb(js) = Fb(js) + Da(jt)*Valint
+                     secint = Valint + Valint
+                     Fa(jt) = Fa(jt) + Db(js)*secint
+                     Fb(jt) = Fb(jt) + Da(js)*secint
+                  endif
+               elseif ( Sindx.eq.8 ) then
+C***********************************************************************
+C   case 8     (aa,aa)=> pp,pp
+C***********************************************************************
+                  js = Ij(P+1)
+                  Fa(js) = Fa(js) + Db(js)*Valint
+                  Fb(js) = Fb(js) + Da(js)*Valint
+               else
+C***********************************************************************
+C   case 1     (ab,ac)=> pq,pr
+C***********************************************************************
+                  js = Ij(P) + Q
+                  jt = Ij(P) + R
+                  terint = Valint + Valint
+                  secint = (Da(jt)+Db(jt))*terint
+                  Fa(js) = Fa(js) + secint
+                  Fb(js) = Fb(js) + secint
+                  secint = (Da(js)+Db(js))*terint
+                  Fa(jt) = Fa(jt) + secint
+                  Fb(jt) = Fb(jt) + secint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+                  Fa(js) = Fa(js) - Da(jt)*Valint
+                  Fb(js) = Fb(js) - Db(jt)*Valint
+                  js = Ij(P+1)
+                  jt = Ij(Q) + R
+                  Fa(js) = Fa(js) - Da(jt)*terint
+                  Fb(js) = Fb(js) - Db(jt)*terint
+                  Fa(jt) = Fa(jt) - Da(js)*Valint
+                  Fb(jt) = Fb(jt) - Db(js)*Valint
+               endif
+ 240        continue
+            Intcnt = Intcnt + Kntt2
+         endif
+         goto 300
+      endif
+C
+C     combined code for raffenetti types 2 and 3.
+      dcount = 1
+      if ( Kntt1.gt.0 ) then
+         do 250 m = 1 , Kntt1
+            Ja = Ibuf2e(m+Ibase)
+            call unpck2
+            val1 = Dbuf2e(dcount+Dbase)
+            val2 = Dbuf2e(dcount+1+Dbase)
+            dcount = dcount + Ismode
+            Fa(I) = Fa(I) + Da(J)*val1
+            Fa(J) = Fa(J) + Da(I)*val1
+            Fb(I) = Fb(I) + Db(J)*val2
+            Fb(J) = Fb(J) + Db(I)*val2
+ 250     continue
+         Intcnt = Intcnt + Kntt1
+      endif
+C
+C
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C     more i/o oriented things.
+C     test for last record and either continue processing or
+C     quit.
+ 300  if ( iflst.le.0 ) goto 200
+      call iwind(intape)
+C$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+C
+C     final operations.
+C     check the final integrals count.
+      if ( Intcnt.ne.Itotal ) then
+         write (Iout,99001) Intcnt , Itotal
+         call lnk1e
+      endif
+C
+C     if necessary, post process the fock matrices and density matrices.
+C     in these operations, we must split out the alpha and beta
+C     contributions from fa and fb.
+C     at the same time, restore da and db to their original
+C     contents.
+C
+C     at this point, fa and fb contain, respectively,
+C     (ismode=0)     the g-alpha and g-beta matrices;
+C     (ismode.ne.0)  the g-(1) and g-(2) matrices.
+C     if we are using symmetry in the two-electron integrals,
+C     it is now time to symmetrize these matrices.
+      if ( Isym2e.eq.1 ) then
+         call fsymm(NBASIS,Fa,NSYMOP,NEQBAS,Ij,Da)
+         call fsymm(NBASIS,Fb,NSYMOP,NEQBAS,Ij,Db)
+C     copy the symmetrized matrices back into their respective
+C     arrays.
+         do 350 I = 1 , Ntt
+            Fa(I) = Da(I)
+            Fb(I) = Db(I)
+ 350     continue
+      endif
+C
+C     now, form up the alpha and beta fock matrices.
+      call tread(Irwh,Da,Ntt,1,Ntt,1,0)
+      if ( Ismode.eq.0 ) then
+C
+C     to form the fock matrices for the regular format, merely add
+C     in the core.
+         do 400 I = 1 , Ntt
+            Fa(I) = Fa(I) + Da(I)
+            Fb(I) = Fb(I) + Da(I)
+ 400     continue
+      else
+         do 450 I = 1 , Ntt
+            temp = pt25*Fb(I)
+            Fb(I) = Da(I) + Fa(I) + temp
+            Fa(I) = Da(I) + Fa(I) - temp
+ 450     continue
+      endif
+C
+C     finally, restore the density matrices.
+      call tread(Irwpa,Da,Ntt,1,Ntt,1,0)
+      call tread(Irwpb,Db,Ntt,1,Ntt,1,0)
+C
+      return
+C
+      end
+@* INDEX.

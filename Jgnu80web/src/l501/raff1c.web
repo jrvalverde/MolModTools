@@ -1,0 +1,32 @@
+@* raff1c.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] F                                                         
+\item[UNUSED:] D                                                         
+\item[UNUSED:] K                                                         
+\item[UNUSED:] I                                                         
+\item[UNUSED:] J                                                         
+\item[UNUSED:] DD                                                        
+\item[UNUSED:] L                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FOFCLO  FORMF                                          
+                                                                    
+\end{description}
+@a
+      subroutine raff1c(F,D,K,I,J,DD,L)
+      implicit none
+      integer I , J , K , L
+      double precision D(*) , F(*) , DD(*)
+C   dummy to repace assembler
+      return
+C
+      end
+@* INDEX.

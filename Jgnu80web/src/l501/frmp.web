@@ -1,0 +1,106 @@
+@* frmp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NOCC                                                      
+\item[INPUT:] OCC                                                       
+\item[INPUT:] C                                                         
+\item[OUTPUT:] P                                                         
+\item[INPUT:] PRINT                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LINOUT  LTOUTD                                         
+\item[Called by]   CYCCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine frmp(NBASIS,NOCC,OCC,C,P,PRINT)
+      implicit none
+      double precision C , cmupib , OCC , one , P , zero
+      integer i , ibase , In , Iout , Ipunch , k , mu , NBASIS , NOCC , 
+     &        ntt , nu
+      integer PRINT
+      dimension C(*) , P(*)
+      common /io    / In , Iout , Ipunch
+      data zero/0.0D0/ , one/1.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to form a density matrix from a set of
+C     molecular orbital coefficients.
+C
+C     input data:
+C     nbasis ... number of basis functions.
+C     nocc   ... number of occupied orbitals.
+C     occ    ... occupation factor.
+C     c      ... input molecular orbital coefficients.
+C
+C     output data:
+C     p      ... density matrix.
+C
+C     'print' controls the printing in this routine.
+C***********************************************************************
+C
+C
+C
+C
+99001 format (' MOLECULAR ORBITAL COEFFICIENTS AT THE BEGINNING OF FRMP'
+     &        )
+99002 format (' DENSITY MATRIX AT END OF FRMP.')
+99003 format (1H )
+C
+C
+C
+C     print the input molecular orbital coefficients
+C     if requested.
+      if ( PRINT.ge.3 ) then
+         write (Iout,99001)
+         call linout(C,NBASIS,1)
+      endif
+C
+C     clear the input density matrix array.
+      ntt = (NBASIS*(NBASIS+1))/2
+      do 100 i = 1 , ntt
+         P(i) = zero
+ 100  continue
+C
+C     compute unscaled density matrix.
+      ibase = 0
+      do 200 i = 1 , NOCC
+         k = 0
+         do 150 mu = 1 , NBASIS
+            cmupib = C(mu+ibase)
+            do 120 nu = 1 , mu
+               k = k + 1
+               P(k) = P(k) + cmupib*C(nu+ibase)
+ 120        continue
+ 150     continue
+         ibase = ibase + NBASIS
+ 200  continue
+C
+C     apply scaling to density matrix.
+      if ( OCC.ne.one ) then
+         do 250 i = 1 , ntt
+            P(i) = OCC*P(i)
+ 250     continue
+      endif
+C
+C
+C     print the output density matrix if requested.
+      if ( PRINT.ge.3 ) then
+         write (Iout,99002)
+         call ltoutd(NBASIS,P,1)
+         write (Iout,99003)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

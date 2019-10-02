@@ -1,0 +1,609 @@
+@* rhfclo.
+
+\begin{verbatim}
+l501
+     link 501 --- perform roothaan scf procedure using the method
+                  of repeated diagonalizations.
+
+
+     options ... iops(  ),
+
+iop(5)
+  locrho   iop(5)  ... location of input density matrix.
+           0 ... density matrix is taken from the rw-files.
+           1 ... the density matrix is read in via routine binrd.
+
+iop(6)
+  acurcy   iop(6)  ... requested convergence on the density matrix.
+           0 ... iterations are performed until the rms convergence
+                 on the density matrix is .le. 10**(-5) or maxcyc
+                 is reached.
+           n ... (1 .le. n .le. 7) requested convergence is
+                 10**(-n).
+
+iop(7)
+  maxcyc   iop(7)  ... maximum number of scf iterations.
+           0 ... up to 32 iterations will be performed.
+           n ... up to "n" iterations.
+
+iop(8)
+  engcon   iop(8) ... energy convergence.
+           0 ... convergence on the density matrix.
+                 see option 6 for details.
+           n ... (1.le.n.le.6) the scf is assumed to have
+                 converged when the change in the energy
+                 is .le. 10**(-3-n).
+           7 ... input desired value via incrd.  see below.
+           note that if this option is set, the density matrix
+           criterion is not used at all.
+iop(31)   fast raffenetti subroutine available
+           0 ... yes
+           1 ... no
+4
+
+ ****** warning ... the following option is currently disabled ******
+  ioscl    iop(9) ... oscillation control.
+           0 ... the scf is terminated with convergence failure
+                 as soon as the energy is observed to oscillate.
+           1 ... oscillation is not tested for.
+           iop(9) ... is now used for level-shifting (dbc)
+                       if iop(9) is non-zero, a level shifting
+                       factor of  iop(9)/1000 is applied to the virtual
+                       orbital diagonal elements of the closed-shell
+                       fock matrix in the current mo basis.
+
+
+           iop(10) ... the upper limit of the use of level shifters;
+                       if iop(9) is set then iop(9)/1000 is used
+                       as a level-shifter for the first iop(10)
+                       scf iterations.
+iop(11)
+  inhibe   iop(11) ... extrapolation control.
+           0 ... both three-point and four-point extrapolation are
+                 performed when applicable.
+           1 ... three-point extrapolation is inhibited, but the
+                 program will still perform four-point extrapolation
+                 when possible.
+           2 ... both three-point and four-point extrapolation schemes
+                 are 'locked out' (ie. disabled).
+
+iop(12)
+  entmod   iop(12) ... entry mode.
+           0 ... normal entry mode, regular scf is performed.
+           1 ... control is passed immediately to the punch/print
+                 code (iop(32)).  this is useful at the termination of
+                 an optimization run.
+
+iop(13)
+  cvgfl    iop(13) ... action on convergence failure.
+           0 ... the run is terminated in error mode (via lnk1e)
+                 if the scf fails to converge.
+           1 ... the run is allowed to continue, but the convergence
+                 failure bit in ilsw is set.
+
+iop(14)
+  uhftst   iop(14) ... uhf test option.
+           0 ... no.
+           1 ... yes, turn the current run into a uhf run
+                 at the end of this link.
+
+
+iop(15)
+  intcmo   iop(15) ... integrals over the cmo-basis option
+           0 ... no.
+           1 ... yes, calculate the one- and twoelectronintegrals
+                 over the cmo-basis
+
+
+iop(32)
+  punden   iop(32) ... punch (via binwt) option.
+           0 ... no punching is performed.
+           1 ... the molecular orbital coefficients are written
+                 to the ".ges" file at the end of the job.  these may
+                 provided as an initial guess to a subsequent job (see
+                 link 401).
+           2 ... the m. o. coefficients and the density matrix are
+                 punched at the end of the scf.
+           3 ... the m. o. coefficients and the density matrix are
+                 punched at the end of each iteration of the scf.
+
+iop(33)
+  print    iop(33) ... print option.
+           0 ... only summary results are printed (with possible
+                 control from the 'no-print' option).
+           1 ... the eigenvalues and the m. o. coefficients are
+                 printed at the end of the scf.
+           2 ... same as iop(33)=1, but additionally the density matrix
+                 is printed.
+           3 ... same as iop(33)=2, but at the end of each iteration.
+           4 ... same as iop(33)=3, but all matrix transactions are
+                 printed (beware!!!   much output even on small
+                 molecules.)
+
+iop(34)
+  dump     iop(34) ... dump option.
+           regular system defaults apply here.
+
+
+
+     the following rw-files are used in l501:
+
+     nr.      usage (* indicates that file is written here)
+                    (v indicates that file is volatile here)
+
+      501  *    common gen, energies, etc.
+      514      overlap integrals
+      515      core hamiltonian
+      516      kinetic energy integrals
+
+      files 522, 524, 528 and 532 are only updated if the scf converg
+      522 *    eigenvalues
+      524 *    m. o. coefficients
+      528 *    density matrix
+      532 *    total density (same as 528)
+      536 *    fock matrix
+
+      2551 v    convergence scratch file 1
+      2552 v    convergence scratch file 2
+      2553 v    convergence scratch file 3
+      2555 v    transformation matrix
+      2556 v    local copy of the eigenvalues
+      2557 v    local copy of the m. o. coefficients
+      2558 v    local copy of the density matrix
+
+
+
+     input via routine incrd:
+
+     if iop 8 is equal to seven, or iop(6)=8,
+     program will read one card in free-field format to
+     obtain the user supplied values for density
+     matrix convergence and energy convergence.
+
+     this one card has two fields:
+
+     field one: floating point ... density matrix convergence criterion
+     field two: floating point ... energy convergence criterion.
+
+     the appropriate field is only used if the associated option
+     is set to 7.
+
+
+
+      parameter definitions.
+       mmdim = 50000 allows 150 basis functions
+
+
+     note that lind must be one more than the maximum number
+     of basis functions.
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    AB      DGEN    ILSHFT  INHIBE  IOSCL   LENGTH  LIND   
+             LOCRHO  MAXCYC  NLSHFT  NSQ     NTT     PRINT   PUNDEN 
+\item[Transmits as argument]  ENGCON  IAB     IBF     IOP     IOUT    IRWC    IRWC1  
+             IRWC2   IRWC3   IRWEIG  IRWF    IRWGEN  IRWIBF  IRWLC  
+             IRWLE   IRWLP   IRWP    IRWPT   IRWT    IRWTM   IRWW   
+             ISYMM   LABDCK  NAE     NBASIS  NBE     NE      NEQ    
+             PSAVE   THRESH                                         
+\item[Uses]  AB      DGEN    ENGCON  IAB     IBF     ILSHFT  IOP    
+             IOUT    IRWC    IRWC1   IRWC2   IRWC3   IRWEIG  IRWF   
+             IRWGEN  IRWIBF  IRWLC   IRWLE   IRWLP   IRWP    IRWPT  
+             IRWT    IRWTM   IRWW    ISYM2E  ISYMM   LABDCK  LENGTH 
+             LOCRHO  MAXCYC  MULTIP  NAE     NBASIS  NBE     NE     
+             NEQ     NLSHFT  NSQ     NTT     NWIIB   PRINT   PSAVE  
+             PUNDEN  THRESH                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINRD   BINWT   CYCCLO  DRUM    FRMV    FRMW    ILSW   
+             INCRD   ITQRY   LINOUT  LNK1E   LTOUTD  TREAD   TST503 
+             TWRITE  UHFTST  VIRIAL                                 
+\item[Called by]   L501                                                   
+                                                                    
+\end{description}
+@a
+      subroutine rhfclo(JUMP)
+      implicit none
+      double precision Ab , acurcy , Atmchg , C , Dgen , e100 , e100k , 
+     &                 e101 , e101k , e102 , e102k , e103 , e103k , 
+     &                 e104 , e104k , energy , enrk , eone , finac , 
+     &                 hkcal
+      integer i , Iab , Ian , Ibf , Icharg , idump , if503 , Ilshft , 
+     &        In , inda , inda1 , inda2 , indaa , indb , indb1 , indb2 , 
+     &        indbb , Inhibe , intcmo , Iop
+      integer Ioscl , Iout , ipch , Ipunch , Irwc , Irwc1 , Irwc2 , 
+     &        Irwc3 , Irweig , Irwf , Irwgen , Irwh , Irwibf , Irwlc , 
+     &        Irwle , Irwlp , Irwp , Irwpt , Irws , Irwt
+      integer Irwtm , Irww , iscf , Isym2e , Isymm , itemp , ititle , 
+     &        itqry , jcycle , JUMP , Labdck , LENFIL , Length , Lind , 
+     &        lneq , Locrho , MAXBAS , Maxcyc , MAXSHL , MEMLEN
+      integer mmdim , mout , MOUTD , MPLUS1 , Multip , Nae , Natoms , 
+     &        nb , Nbasis , nbasp1 , Nbe , Ncyset , Ne , Neq , neqbas , 
+     &        Nlshft , nlumo , Nsq , nsymop , Ntt
+      integer NTTMAX , Nwiib , nwrd
+      double precision t , tenrgk , tenrgy , Thresh , tk , vir , 
+     &                 vshift , zero
+C
+C these parameters are for mostly scf routines:
+C     maxbas is the maximum number of basis functions
+C     maxshl is the maximum number of shells
+C     memlen is the length of common /memry/
+C     lenfil is the length of the "left-over" of /memry/
+C            when the requirements of the current routine are met.
+C     moutd  and mplus1 are sillies to get the reading and
+C            equivalencing of neqbas and neqshl right
+      parameter (MAXBAS=150,MAXSHL=100,MEMLEN=50000,
+     &           NTTMAX=((MAXBAS*(MAXBAS+1))/2),LENFIL=(MEMLEN-4*NTTMAX)
+     &           ,MOUTD=(8*MAXBAS+8*MAXSHL),MPLUS1=(8*MAXSHL+1))
+C
+      integer Psave , Print , Punden , Engcon , entmod , cvgfl , dump
+      integer cvgtyp
+      logical ipr
+      dimension ititle(20) , cvgtyp(4,2)
+      dimension Iab(1)
+      dimension mout(MOUTD) , neqbas(MAXBAS,8)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /ntt   / Ntt , Length , Nsq
+      common /irw501/ Irwgen , Irws , Irwh , Irwt , Irweig , Irwc , 
+     &                Irwp , Irwpt , Irwf , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwtm , Irwibf(2) , Irwle , Irwlc , Irwlp , Irww
+      common /memry / Ab(MEMLEN)
+      common /ia    / Lind(257)
+      common /psave / Psave
+      common /thresh/ Thresh
+      common /io    / In , Iout , Ipunch
+      common /scfops/ Print , Maxcyc , Punden , Locrho , Engcon , 
+     &                Inhibe , Ncyset , Ioscl , Ilshft , Nlshft
+      common /gen   / Dgen(47)
+      common /ibf   / Ibf(30)
+      common /punlab/ Labdck(4,3)
+      common /isyrwf/ Isymm , Neq
+      equivalence (Nwiib,Ibf(29)) , (Isym2e,Ibf(30))
+C thsi is parameter dependent
+      equivalence (mout(MPLUS1),neqbas(1,1))
+      equivalence (Iab(1),Ab(1))
+C this lneq is parameter dependent
+C      data lneq/1000/
+      data zero/0.0D0/ , hkcal/627.52/
+      data cvgtyp/'DENS' , 'ITY ' , 'MATR' , 'IX= ' , 'TOTA' , 'L EN' , 
+     &     'ERGY' , '=   '/
+      lneq = MOUTD/2
+C     link 501
+C     data tenm5/1.0e-5/,ten/10.0d0/,five/5.0d0/
+C
+C***********************************************************************
+99001 format (' RHF CLOSED SHELL SCF.'/' REQUESTED CONVERGENCE ON ',4A4,
+     &        d11.4,' WITHIN ',i3,' CYCLES.')
+99002 format (1x,4HITER,2x,17HELECTRONIC-ENERGY,7x,11HCONVERGENCE,4x,
+     &        13HEXTRAPOLATION/1x,4(1H-),2x,17(1H-),7x,11(1H-),4x,
+     &        13(1H-))
+99003 format (12H CORE GUESS.)
+99004 format (33H DENSITY MATRIX READ FROM CARDS: ,13A6)
+99005 format (' ','SCF DONE:  E(RHF) = ',g19.12,' A.U. AFTER ',i4,
+     &        ' CYCLES'/1x,'           CONVG  = ',d13.4,12x,' -V/T = ',
+     &        f10.6)
+C 9050 format ('+',20x,g19.12)
+99006 format (1x,10(1H<),11HEIGENVALUES,10(1H>)
+     &        /(i4,d14.7,i4,d14.7,i4,d14.7,i4,d14.7,i4,d14.7))
+99007 format (1x,10(1H<),31HMOLECULAR ORBITAL COEFFICIENTS.,10(1H>))
+99008 format (1x,10(1H<),15HDENSITY MATRIX.,10(1H>))
+99009 format ('  DENSITY MATRIX READ IN HAS WRONG NBASIS.')
+99010 format ('  CONVERGENCE FAILURE ... ERROR TERMINATION.')
+99011 format (' NBASIS=',i3,' CANNOT BE HANDLED.  LENGTH=',i9,
+     &        ' EXCEEDS AVAILABLE MEMORY.')
+99012 format (' "RHF" SPECIFIED, BUT MULTIPLICITY NOT EQUAL TO ONE.')
+99013 format (1x)
+C
+C     *  initialize this overlay.                                      *
+      call drum
+C     see if this link is really to be executed.
+      call ilsw(2,1,iscf)
+      if ( iscf.gt.0 ) goto 500
+      if ( Multip.gt.1 ) write (Iout,99012)
+      if ( Multip.gt.1 ) call lnk1e
+C
+C        pick up options from blank common.                            
+      cvgfl = iabs(Iop(13)-1)
+      entmod = Iop(12)
+      Punden = Iop(32)
+C     fill psave from ilsw.
+      call ilsw(2,21,Psave)
+C     ioscl=iop(9)
+      Ioscl = 1
+      Ilshft = Iop(9)
+      Nlshft = Iop(10)
+      vshift = float(Ilshft)/1000
+      if ( Ilshft.ne.0 ) write (Iout,99014) vshift
+99014 format (/,'----------------------------------------------------',
+     &        /,' Level-Shifter of  ',f10.4,
+     &        ' used; Default  Cycles set to 50')
+C     figure out number of cycles.
+      Maxcyc = 32
+      if ( Ilshft.ne.0 ) Maxcyc = 50
+      if ( Iop(7).ne.0 ) Maxcyc = Iop(7)
+      if ( Iop(7).ne.0 ) write (Iout,99015) Maxcyc
+99015 format (' Maximum SCF Cycles Reset to  ',i5)
+      if ( Nlshft.ne.0 ) write (Iout,99016) Nlshft
+99016 format (' Level Shifters used for the FIRST  ',i4,'  CYCLES',/,
+     &        ' ----------------------------------------------------')
+C
+      Locrho = Iop(5)
+      Print = Iop(33)
+      idump = 0
+      if ( Iop(34).gt.2 ) then
+         idump = 1
+         Print = 4
+      endif
+      Inhibe = Iop(11)
+C
+C
+C     use routine incrd to process iops 6 and 8.
+      call incrd(Iop(6),acurcy,Iop(8),Engcon,Thresh)
+C     print header line.
+      if ( entmod.eq.0 ) then
+         if ( Engcon.le.0 ) then
+            write (Iout,99001) (cvgtyp(i,1),i=1,4) , acurcy , Maxcyc
+         else
+C
+            write (Iout,99001) (cvgtyp(i,2),i=1,4) , Thresh , Maxcyc
+         endif
+         if ( Psave.eq.0 ) write (Iout,99002)
+      endif
+C        recover integral file information for the rw-files.           
+      call tread(Irwibf(1),Ibf(1),Irwibf(2),1,Irwibf(2),1,0)
+C
+C        recover symmetry information if this run incorporates 2-e     
+C        symmetry.                                                     
+      if ( Isym2e.eq.1 ) then
+C     recover the symmetry information from the rw-files.
+         call tread(Isymm,Iab(1),1,1,1,1,0)
+         nsymop = Iab(1)
+C parameter-dependent length, so try itqry
+         lneq = itqry(Neq)
+         call tread(Neq,mout(1),lneq,1,lneq,1,0)
+      endif
+C
+C
+C        fill /ntt/ and /ia/.                                          
+      Ntt = (Nbasis*(Nbasis+1))/2
+      Nsq = Nbasis**2
+C note that nwiib (number of words in an integral buffer)
+C         is currently 4760
+      Length = max0(4*Ntt,2*Ntt+Nwiib)
+C     ensure that required data will fit in available memory.
+      mmdim = MEMLEN
+      if ( Length.gt.mmdim ) then
+         write (Iout,99011) Nbasis , Length
+         call lnk1e
+      endif
+      nbasp1 = Nbasis + 1
+      do 100 i = 1 , nbasp1
+         Lind(i) = (i*(i-1))/2
+ 100  continue
+C     put together the necessary pointers for local work space.
+      inda = 1
+      inda1 = inda
+      inda2 = 1 + Ntt
+      indaa = 1 + Nsq
+C
+      indb = 1 + 2*Ntt
+      indb1 = indb
+      indb2 = indb + Ntt
+      indbb = indb + Nsq
+C
+C     initialize rw-files.
+C     clear some space in /ab/.
+      do 200 i = 1 , Nsq
+         Ab(i) = zero
+ 200  continue
+C
+C     process entry mode at this time.
+C
+C     if entmod is set, copy the necessary files into
+C     scf scratch space so that print and punch options will
+C     work down below.
+      if ( entmod.eq.0 ) then
+C
+         call twrite(Irwpt,Ab(1),Ntt,1,Ntt,1,0)
+         call twrite(Irwf,Ab(1),Ntt,1,Ntt,1,0)
+C
+C        get initial guess density matrix.  this either comes from the 
+C        rw-files or from binrd.                                       
+         if ( Locrho.gt.0 ) then
+            call binrd(Ab(1),ititle,Labdck(1,2),nwrd,nb)
+            write (Iout,99004) (ititle(i),i=1,20)
+            if ( nb.ne.Nbasis ) then
+               write (Iout,99009)
+               call lnk1e
+            endif
+C     put the newly recovered density matrix on the rw-files.
+            call twrite(Irwp,Ab(1),Ntt,1,Ntt,1,0)
+         endif
+C
+C     the following statements serve to pre-set the first
+C     volatile rw-files.
+         call twrite(Irwc1,Ab(1),Ntt,1,Ntt,1,0)
+         call twrite(Irwc2,Ab(1),Ntt,1,Ntt,1,0)
+         call twrite(Irwc3,Ab(1),Ntt,1,Ntt,1,0)
+         call twrite(Irwle,Ab(1),Nbasis,1,Nbasis,1,0)
+         call twrite(Irwlc,Ab(1),Nsq,1,Nsq,1,0)
+         call tread(Irwp,Ab(1),Ntt,1,Ntt,1,0)
+         call twrite(Irwlp,Ab(1),Ntt,1,Ntt,1,0)
+C
+C        form the transformation matrix.                               
+         call frmv(Ab(inda),Ab(indb),Nbasis,Ab(indaa),Ab(indbb),Irwtm)
+C
+C
+C        call iteration routine.  the remaining initialization is      
+C        performed in cycclo; control is returned to this routine      
+C        when maxcyc is exceeded or the scf converges.  the            
+C        appropriate bit in ilsw will tell us what happened.           
+         call cycclo(Ab(1),energy,eone,finac,acurcy,Nbasis,Ne,jcycle,
+     &               nsymop,neqbas)
+C
+C     read in common gen ... drum file 1
+         call tread(Irwgen,Dgen,47,1,47,1,0)
+C     pick up the nuclear repulsion energy, compute total energy,
+C     and print summary information.
+         tenrgy = energy + Dgen(41)
+C     compute virial ratio and kinetic energy.
+         call virial(Nbasis,tenrgy,Ab(inda1),Ab(inda2),Irwlp,Irwt,vir,t)
+         write (Iout,99013)
+C      write (iout,9050) (tenrgy,i=1,4)
+         write (Iout,99005) tenrgy , jcycle , acurcy , vir
+99017    format (' COMPONENT                      A.U.',19x,'KCAL/MOL',
+     &           /,' ',63('-'))
+99018    format (' TOTAL                  ',f20.12,5x,f15.3)
+99019    format (' ELECTRONIC             ',f20.12,5x,f15.3)
+99020    format (' NUCLEAR REPULSION      ',f20.12,5x,f15.3)
+99021    format (' KINETIC                ',f20.12,5x,f15.3)
+99022    format (' POTENTIAL              ',f20.12,5x,f15.3)
+99023    format (' ELECTRONIC POTENTIAL   ',f20.12,5x,f15.3)
+99024    format (' ONE-ELECTRON POTENTIAL ',f20.12,5x,f15.3)
+99025    format (' TWO-ELECTRON POTENTIAL ',f20.12,5x,f15.3)
+C
+         e100 = tenrgy - Dgen(41)
+         e101 = tenrgy - t
+         e102 = e101 - Dgen(41)
+         e103 = eone - t
+         e104 = e102 - e103
+C  energycomponents in kcal
+         tenrgk = hkcal*tenrgy
+         enrk = hkcal*Dgen(41)
+         tk = hkcal*t
+         e100k = hkcal*e100
+         e101k = hkcal*e101
+         e102k = hkcal*e102
+         e103k = hkcal*e103
+         e104k = hkcal*e104
+C
+         if ( Psave.eq.0 ) then
+            write (Iout,99017)
+            write (Iout,99018) tenrgy , tenrgk
+            write (Iout,99019) e100 , e100k
+            write (Iout,99020) Dgen(41) , enrk
+            write (Iout,99021) t , tk
+            write (Iout,99022) e101 , e101k
+            write (Iout,99023) e102 , e102k
+            write (Iout,99024) e103 , e103k
+            write (Iout,99025) e104 , e104k
+         endif
+C
+C     insert the newly calculated quantities into /gen/.
+         Dgen(23) = acurcy
+         Dgen(32) = tenrgy
+         Dgen(40) = vir
+         Dgen(42) = t
+         Dgen(43) = tenrgy
+         Dgen(44) = zero
+C     write out gen
+         call twrite(Irwgen,Dgen,47,1,47,1,0)
+      else
+C     also, it is necessary to init irwc1 so as to have
+C     relrwf function properly down below.
+         call twrite(Irwc1,Ab(1),Ntt,1,Ntt,1,0)
+C     copy the following files:
+C     eigenvalues
+         call tread(Irweig,Ab(1),Nbasis,1,Nbasis,1,0)
+         call twrite(Irwle,Ab(1),Nbasis,1,Nbasis,1,0)
+C     m. o. coefficients.
+         call tread(Irwc,Ab(1),Nsq,1,Nsq,1,0)
+         call twrite(Irwlc,Ab(1),Nsq,1,Nsq,1,0)
+C     density matrix.
+         call tread(Irwp,Ab(1),Ntt,1,Ntt,1,0)
+C     all done, go to print/punch/exit section.
+         call twrite(Irwlp,Ab(1),Ntt,1,Ntt,1,0)
+      endif
+C
+C     print requested output.
+C
+      if ( Print.gt.0 ) then
+         call tread(Irwle,Ab(indaa),Nbasis,1,Nbasis,1,0)
+         call tread(Irwlc,Ab(1),Nbasis,Nbasis,Nbasis,Nbasis,0)
+         write (Iout,99006) (i,Ab(indaa-1+i),i=1,Nbasis)
+         call linout(Ab(1),Nbasis,1)
+         if ( Print.ge.2 ) then
+            call tread(Irwlp,Ab(1),Ntt,1,Ntt,1,0)
+            write (Iout,99008)
+            call ltoutd(Nbasis,Ab(1),1)
+         endif
+      endif
+C
+C     punch requested output.
+C
+      if ( Punden.lt.1 ) goto 300
+      if ( Punden.ne.1 ) then
+         call tread(Irwlp,Ab(1),Ntt,1,Ntt,1,0)
+         call binwt(Ab(1),2*Ntt,Labdck(1,2),Nbasis)
+         if ( ipch.eq.2 ) goto 300
+      endif
+      call tread(Irwlc,Ab(1),Nsq,1,Nsq,1,0)
+      call binwt(Ab(1),2*Nsq,Labdck(1,1),Nbasis)
+      call tread(Irwle,Ab(1),Nbasis,1,Nbasis,1,0)
+      call binwt(Ab(1),2*Nbasis,Labdck(1,3),Nbasis)
+C
+C
+C     all done.  examine ilsw for convergence failure
+C     or success.  if we have experienced convergence failure,
+C     examine the cvgfl option and look for l503 on the current
+C     route card.  if all goes well, we can pass the difficulty
+C     on to scfdm.
+ 300  call ilsw(2,5,itemp)
+      if ( itemp*cvgfl.ne.0 ) then
+C
+C     convergence failure without over-ride.  continue run only
+C     if l503 is present on the current route card.
+         call tst503(if503)
+         if ( if503.gt.0 ) goto 400
+C
+C     too bad ... no scfdm ... terminate run in error mode.
+         write (Iout,99010)
+         call lnk1e
+      endif
+C
+C     the scf converged.  copy pertinent data from local files
+C     to system permanent files.
+C     bypass this copy section if entmod is set.
+      if ( entmod.eq.0 ) then
+         call tread(Irwle,Ab(1),Nbasis,1,Nbasis,1,0)
+C
+C  remove the level-shift from the virtual orbital eigenvalues
+         if ( Ilshft.ne.0 ) then
+            nlumo = Nae + 1
+            do 320 i = nlumo , Nbasis
+               Ab(i) = Ab(i) - vshift
+ 320        continue
+         endif
+C
+         call twrite(Irweig,Ab(1),Nbasis,1,Nbasis,1,0)
+         call tread(Irwlc,Ab(1),Nsq,1,Nsq,1,0)
+         call twrite(Irwc,Ab(1),Nsq,1,Nsq,1,0)
+      endif
+      call tread(Irwlp,Ab(1),Ntt,1,Ntt,1,0)
+      call twrite(Irwp,Ab(1),Ntt,1,Ntt,1,0)
+      call twrite(Irwpt,Ab(1),Ntt,1,Ntt,1,0)
+C     compute the energy-weighted density matrix.
+      ipr = Print.ge.2
+      call frmw(Nbasis,Nae,Nbe,Irwc,-1,-1,Irweig,Irww,Ab(indb1),
+     &          Ab(indaa),Ab(inda),ipr,Iout)
+C
+C     optionally, turn this into a uhf run.
+      if ( Iop(14).eq.1 ) call uhftst(Nbasis,Irweig,Irwc,Irwp,Ab(1))
+C
+ 400  if ( intcmo.eq.0 ) then
+      endif
+C
+ 500  JUMP = 0
+C
+      return
+C
+      end
+@* INDEX.

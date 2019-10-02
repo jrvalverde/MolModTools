@@ -1,0 +1,281 @@
+@* cycopn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] ENERGY                                                    
+\item[INPUT:] ACURCY                                                    
+\item[INPUT:] MAXCYC                                                    
+\item[INPUT:] IDE                                                       
+\item[OUTPUT:] JCYCLE                                                    
+\item[PASSED:] IEXTP                                                     
+\item[PASSED:] NSYMOP                                                    
+\item[PASSED:] NEQBAS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CRIT    D       FA      ICOUNT  NTT2                   
+\item[Transmits as argument]  DA      DB      DD      F       FB      FF      IRWCA  
+             IRWCB   IRWEIG  IRWFA   IRWFB   IRWH    IRWPA   IRWPB  
+             IRWTM   MAXNBF  NBASIS  NTT     NTTMAX  V       VV     
+\item[Uses]  D       DA      DB      DD      F       FA      FB     
+             FF      IOP     IOUT    IRWCA   IRWCB   IRWEIG  IRWFA  
+             IRWFB   IRWH    IRWPA   IRWPB   IRWTM   MAXNBF  NAE    
+             NBASIS  NBE     NTT     NTTMAX  PSAVE   V       VV     
+             WORD                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINWT   CONOPN  DIAG    FOFOPN  ILSW    MATOUT  MATPAC 
+             SQUARE  TREAD   TWRITE                                 
+\item[Called by]   UHFOPN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine cycopn(ENERGY,ACURCY,MAXCYC,IDE,JCYCLE,IEXTP,NSYMOP,
+     &                  NEQBAS)
+      implicit none
+      double precision ACURCY , Atmchg , C , Crit , D , Da , Db , Dd , 
+     &                 ENERGY , ent , F , Fa , Fb , Ff , Filabc , pt5 , 
+     &                 V , Vv , zero
+      integer i , Ian , Icharg , Icount , IDE , idump , IEXTP , iflag , 
+     &        Ij , In , Iop , Iout , ipch , iprint , Ipunch , Irwc1 , 
+     &        Irwc2 , Irwc3 , Irwca , Irwcb
+      integer Irweig , Irwfa , Irwfb , Irwgen , Irwh , Irwibf , Irwpa , 
+     &        Irwpb , Irwps , Irwpt , Irws , Irwt , Irwtm , Irwur , j , 
+     &        JCYCLE , Jdumx , k , key , Lenibf
+      integer MAXBAS , MAXCYC , Maxnbf , Multip , n , Nae , Natoms , 
+     &        Nbasis , Nbe , Ne , NEQBAS , NSYMOP , Ntt , Ntt2 , Nttmax
+      parameter (MAXBAS=150)
+      dimension NEQBAS(MAXBAS,8)
+      integer Psave
+      character*6 Word
+C      integer psave,word
+      dimension Fa(1) , Fb(1) , Da(1) , Db(1)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /memry / D(75,75) , Dd(75) , F(75,75) , Ff(75) , V(75,75) , 
+     &                Vv(75) , Filabc(32900)
+      common /psave / Psave
+      common /word  / Word(4)
+C      common /word/word(4),iword(4)
+      common /icount/ Crit , Icount , Ntt2
+      common /io    / In , Iout , Ipunch
+      common /ind   / Ntt , Ij(127)
+      common /max502/ Maxnbf , Nttmax
+      common /gen   / Jdumx(94)
+      common /irw502/ Irwgen , Irweig , Irwca , Irwcb , Irwpa , Irwpb , 
+     &                Irwpt , Irwps , Irwfa , Irwfb , Irwur , Irws , 
+     &                Irwh , Irwt , Irwtm , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwibf , Lenibf
+      equivalence (Da(1),D(1,1)) , (Db(1),D(1,39))
+      equivalence (Fa(1),F(1,1)) , (Fb(1),F(1,39))
+      data zero/0.0D0/ , pt5/0.5D0/
+C
+C
+C
+C     iteration routine
+C     parameters as follows
+C     energy ... return with electronic energy
+C     acurcy ... convergence required on density matrix
+C     returns with actual convergence acheived
+C     maxcyc ... maximun number of iterations allowed
+C     ide ... specifies whether or not an initial guess has been taken
+C     at the density matrix
+C     0  no
+C     1  yes
+C
+C
+C=ia  common/icount/icount,crit,ntt2
+C
+C
+C
+99001 format (1x,i3)
+99002 format (' ',5x,d22.15)
+99003 format (1x,a6,28HM. O. COEFFICIENTS AT CYCLE ,i3,1H.)
+99004 format (1x,a6,24HDENSITY MATRIX AT CYCLE ,i3,1H.)
+99005 format (10(1H>),31H CONVERGENCE CRITERION NOT MET.)
+99006 format (' ',7x,17H(NON-VARIATIONAL))
+C
+      iprint = Iop(33)
+      ipch = Iop(32)
+      idump = Iop(34)
+      if ( idump.ne.0 ) iprint = 3
+C
+C
+C     perform setopn functions.
+      Crit = ACURCY
+      Icount = 0
+      Ntt2 = Ntt + Ntt
+      ipch = Iop(9)
+      JCYCLE = 1
+C     call setpn(jcycle)
+C     jump into loop for first time ... where depends on whether or
+C     not guesses at the density matrices have been specified
+      if ( IDE.eq.0 ) goto 400
+C     the core hamiltonian is read from rwtape ... file 13 ... and
+C     placed in both fa and fb
+ 100  call tread(Irwh,Fa,Nttmax,1,Ntt,1,0)
+      call tread(Irwh,Fb,Nttmax,1,Ntt,1,0)
+C     and the one electron contribution to the energy is calculated
+      k = 1
+      ENERGY = zero
+      do 200 i = 1 , Nbasis
+         do 150 j = 1 , i
+            if ( i.ne.j ) then
+               ENERGY = ENERGY + Fa(k)*Da(k) + Fb(k)*Db(k)
+            else
+C
+               ENERGY = ENERGY + pt5*(Fa(k)*Da(k)+Fb(k)*Db(k))
+            endif
+            k = k + 1
+ 150     continue
+ 200  continue
+      ent = ENERGY + ENERGY
+      if ( Psave.eq.0 ) write (Iout,99001) JCYCLE
+C
+C     form two-electron part of the fock matrices.
+      call fofopn(Nbasis,NSYMOP,NEQBAS)
+C     finish calculating the energy
+      k = 1
+      do 300 i = 1 , Nbasis
+         do 250 j = 1 , i
+            if ( i.ne.j ) then
+               ENERGY = ENERGY + Fa(k)*Da(k) + Fb(k)*Db(k)
+            else
+C
+               ENERGY = ENERGY + pt5*(Fa(k)*Da(k)+Fb(k)*Db(k))
+            endif
+            k = k + 1
+ 250     continue
+ 300  continue
+C     print it
+      if ( iflag.ne.0 ) then
+C
+         if ( Psave.eq.0 ) write (Iout,99006)
+      else
+         if ( Psave.eq.0 ) write (Iout,99002) ENERGY
+      endif
+C     form alpha and beta density density matrices independently
+C     first alpha
+C     place fb on drum ... file 17 ... for a while
+ 400  call twrite(Irwfa,Fa,Nttmax,1,Ntt,1,0)
+      call twrite(Irwfb,Fb,Nttmax,1,Ntt,1,0)
+C     expand fa into a square array f ... f is actually equivalenced
+C     to fa
+      call square(Fa,F,Maxnbf,Nbasis,0)
+C     read in the v matrix ... rwtape file 4
+      call tread(Irwtm,V,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+C     fa  (in f)  is transformed by v ... two steps
+      call matpac(V,F,D,Maxnbf,Nbasis,1)
+      call matpac(D,V,F,Maxnbf,Nbasis,3)
+C     then diagnolized
+      call diag(Nbasis,Maxnbf,F,D,Ff,Dd)
+C     eigenvalues will be saved ... to be combined with beta eigenvalues
+C     and eventually written on the drum ... file 5
+C     the eigenvectors are transformed by the v matrix
+C     and the molecular orbital coefficient matrix is formed
+      call matpac(V,D,F,Maxnbf,Nbasis,2)
+C     update rwtape with m.o. coefficients ... rwtape file 25
+      call twrite(Irwca,F,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+      if ( iprint.eq.3 ) then
+         write (Iout,99003) Word(1)
+         call matout(F,Maxnbf,Maxnbf,Nbasis,Nbasis)
+      endif
+C     the density matrix is formed from the coefficients
+      do 500 i = 1 , Nbasis
+         do 450 j = 1 , i
+            D(i,j) = zero
+            do 420 k = 1 , Nae
+               D(i,j) = D(i,j) + F(i,k)*F(j,k)
+               D(j,i) = D(i,j)
+ 420        continue
+ 450     continue
+ 500  continue
+C     write out d  (da)  on rwtape ... file 19
+      call twrite(Irwpa,D,Maxnbf,Maxnbf,Nbasis,Nbasis,1)
+      if ( iprint.eq.3 ) then
+         write (Iout,99004) Word(1)
+         call matout(D,Maxnbf,Maxnbf,Nbasis,Nbasis)
+      endif
+C     bring in fb ... rwtape file 17
+C     enter into slot marked fa ... just for convenience
+      call tread(Irwfb,Fa,Nttmax,1,Ntt,1,0)
+C     now repeat the whole damn process to form ... this time ... db
+      call square(Fa,F,Maxnbf,Nbasis,0)
+      call matpac(V,F,D,Maxnbf,Nbasis,1)
+      call matpac(D,V,F,Maxnbf,Nbasis,3)
+C     this time put eigenvalues in vv so as not to distroy alpha
+C     eigenvalues
+      call diag(Nbasis,Maxnbf,F,D,Vv,Dd)
+C     combine alpha and beta eigenvalues in fa ... and ship out on
+C     drum ... file 5
+      do 600 i = 1 , Nbasis
+         Fa(i) = Ff(i)
+         Fa(i+Nbasis) = Vv(i)
+ 600  continue
+      call twrite(Irweig,Fa,Nttmax,1,2*Nbasis,1,0)
+      call matpac(V,D,F,Maxnbf,Nbasis,2)
+C     beta m.o. coefficients to drum ... file 27
+      call twrite(Irwcb,F,Maxnbf,Maxnbf,Nbasis,Nbasis,0)
+      if ( iprint.eq.3 ) then
+         write (Iout,99003) Word(2)
+         call matout(F,Maxnbf,Maxnbf,Nbasis,Nbasis)
+      endif
+      do 700 i = 1 , Nbasis
+         do 650 j = 1 , i
+            D(i,j) = zero
+            if ( Nbe.gt.0 ) then
+               do 610 k = 1 , Nbe
+                  D(i,j) = D(i,j) + F(i,k)*F(j,k)
+ 610           continue
+            endif
+            D(j,i) = D(i,j)
+ 650     continue
+ 700  continue
+C     beta density matrix to drum ... file 21
+      call twrite(Irwpb,D,Maxnbf,Maxnbf,Nbasis,Nbasis,1)
+      if ( iprint.eq.3 ) then
+         write (Iout,99004) Word(2)
+         call matout(D,Maxnbf,Maxnbf,Nbasis,Nbasis)
+      endif
+C     read both density matrices back in ... into linear form
+      call tread(Irwpa,Da,Nttmax,1,Ntt,1,0)
+      call tread(Irwpb,Db,Nttmax,1,Ntt,1,0)
+C
+C     punch requested output.
+C
+      if ( ipch.eq.4 ) then
+         call binwt(Da,Ntt,1HP)
+         call binwt(Db,Ntt,1HP)
+         n = Nbasis*Nbasis
+         call tread(Irwca,F,n,1,n,1,0)
+         call binwt(F,n,1HC)
+         call tread(Irwcb,F,n,1,n,1,0)
+         call binwt(F,n,1HC)
+         call tread(Irweig,V,2*Nbasis,1,2*Nbasis,1,0)
+         call binwt(V,2*Nbasis,1HE)
+      endif
+      JCYCLE = JCYCLE + 1
+C     call incrpn
+C     iflag=0 => extrapolation was not performed.
+C     iflag=1 => extrapolation was performed.
+      call conopn(Nbasis,key,ACURCY,iflag,IEXTP)
+C     has convergence been met ... if so ... exit
+      if ( key.ne.0 ) then
+C     have we exceeded the maximum allowed number of cycles ... if
+C     so ... exit
+         if ( JCYCLE.le.MAXCYC ) goto 100
+C
+C     set convergence bit in ilsw.
+C
+         write (Iout,99005)
+         call ilsw(1,5,1)
+      else
+C
+         call ilsw(1,5,0)
+         JCYCLE = JCYCLE - 1
+      endif
+      return
+C
+      end
+@* INDEX.

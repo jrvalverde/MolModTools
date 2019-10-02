@@ -1,0 +1,47 @@
+@* traopn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[INPUT:] N                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CONOPN                                                 
+                                                                    
+\end{description}
+@a
+      double precision function traopn(A,B,N)
+      implicit none
+      double precision A , B , two , zero
+      integer i , j , k , l , N
+      dimension A(*) , B(*)
+      data zero/0.0D0/ , two/2.0D0/
+C
+C
+C     trace of a product of double symmetric matrices a and b stored
+C     as linear vectors
+C
+C
+C
+      traopn = zero
+      k = 0
+      do 100 l = 1 , 2
+         do 50 j = 1 , N
+            do 20 i = 1 , j
+               k = k + 1
+               traopn = traopn + two*A(k)*B(k)
+ 20         continue
+            traopn = traopn - A(k)*B(k)
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

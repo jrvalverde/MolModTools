@@ -1,0 +1,78 @@
+@* cmat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] M                                                         
+\item[INPUT:] N                                                         
+\item[INPUT:] MD                                                        
+\item[INPUT:] ND                                                        
+\item[INPUT:] CMP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CARPOL                                                 
+\item[Called by]   FIRST   OFIX    SCFDM                                  
+                                                                    
+\end{description}
+@a
+      subroutine cmat(A,M,N,MD,ND,CMP)
+      implicit none
+      double precision A , phi , r
+      integer i , il , In , Iout , Ipunch , iu , j , jlim , M , MD , N , 
+     &        ND
+      logical CMP
+      dimension A(M,N) , r(5) , phi(5)
+      common /io    / In , Iout , Ipunch
+C     ******************************************************************
+C     print output routine for complex (and real) matrices
+C     in terms of polar coordinates (complex only)
+C
+C     dec 76/rs9b
+C     ******************************************************************
+C
+C
+99001 format (6x,10(i9,3x))
+99002 format (i4,2x,10F12.7)
+99003 format (6x,5(i16,9x))
+99004 format (i4,2x,5(f14.7,f11.7))
+C     ******************************************************************
+      if ( .not.CMP ) then
+C
+C     real
+         il = 1
+ 50      iu = min0(ND,il+9)
+         write (Iout,99001) (i,i=il,iu)
+         do 100 i = 1 , MD
+            write (Iout,99002) i , (A(i,j),j=il,iu)
+ 100     continue
+         il = iu + 1
+         if ( il.le.ND ) goto 50
+      else
+C
+C     complex output
+         il = 1
+ 150     iu = min0(ND,il+4)
+         write (Iout,99003) (i,i=il,iu)
+         do 200 i = 1 , MD
+C     convert one sub-row to polar form in the temp arrays
+C     r and phi.
+            jlim = iu - il + 1
+            do 160 j = 1 , jlim
+               call carpol(A(i,j),A(i,j+N),r(j),phi(j))
+ 160        continue
+C     print one sub-row.
+            write (Iout,99004) i , (r(j),phi(j),j=1,jlim)
+ 200     continue
+         il = iu + 1
+         if ( il.le.ND ) goto 150
+         return
+      endif
+      return
+C
+      end
+@* INDEX.

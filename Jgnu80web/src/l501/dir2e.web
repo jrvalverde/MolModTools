@@ -1,0 +1,99 @@
+@* dir2e.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NSET                                                      
+\item[INPUT:] MU                                                        
+\item[INPUT:] NU                                                        
+\item[INPUT:] LAMBDA                                                    
+\item[INPUT:] SIGMA                                                     
+\item[INPUT:] GINT                                                      
+\item[UNUSED:] IOP                                                       
+\item[PASSED:] D                                                         
+\item[PASSED:] F                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  II                                                     
+\item[Uses]  II                                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GOFR                                                   
+\item[Called by]   OUT2E                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dir2e(NSET,MU,NU,LAMBDA,SIGMA,GINT,IOP,D,F)
+      implicit none
+      integer NSET , MU , NU , LAMBDA , SIGMA
+      integer IOP(*)
+      double precision GINT(3,3) , D(*) , F(*)
+      integer Ii
+      integer iset , i , j , k , l , n , iswich
+      double precision value
+C this is the direct integral handling routine called from out2e
+C  when iop(45) in overlay 3 is set non-zero.
+C it is called from the integral computing routines which are themselves
+C  called from dirclo from scfclo in l501
+      common /ia    / Ii(257)
+C  indexing list
+      do 100 iset = 1 , NSET
+C     set up correlation between mu, nu, lambda, sigma and
+C     i, j, k, l.
+         i = MU
+         if ( iset.eq.2 ) then
+C
+            j = SIGMA
+            k = NU
+            l = LAMBDA
+         elseif ( iset.eq.3 ) then
+C
+            j = LAMBDA
+            k = NU
+            l = SIGMA
+         else
+C
+            j = NU
+            k = LAMBDA
+            l = SIGMA
+         endif
+C
+C     the following algorithm  orders the indices
+C     i, j, k, l such that
+C       i >or= j, i >or= k, k >or= l,
+C       and if i=k, j >or= l.
+C
+         iswich = 0
+         if ( i.lt.j ) then
+            n = i
+            i = j
+            j = n
+            iswich = iswich + 1
+         endif
+         if ( k.lt.l ) then
+            n = k
+            k = l
+            l = n
+            iswich = iswich + 1
+         endif
+         if ( i.lt.k ) then
+         elseif ( i.eq.k ) then
+C
+            if ( j.ge.l ) goto 50
+         else
+            goto 50
+         endif
+         n = i
+         i = k
+         k = n
+         n = j
+         j = l
+         l = n
+C
+ 50      value = GINT(1,iset)
+         call gofr(D,F,i,j,k,l,Ii,value)
+ 100  continue
+      return
+      end
+@* INDEX.

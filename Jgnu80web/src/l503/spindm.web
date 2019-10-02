@@ -1,0 +1,93 @@
+@* spindm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NAE                                                       
+\item[INPUT:] NBE                                                       
+\item[PASSED:] NBASIS                                                    
+\item[OUTPUT:] SP                                                        
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    KSPIN                                                  
+\item[Transmits as argument]  IOC     IOS     IOUAB                                  
+\item[Uses]  CMP     FOUR    IOC     IOS     IOUAB   IOUT    MDIM   
+             MDSQ    ONE     PT5     ZERO                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  GSQRT   ILSW    MATMUL  TIOC                   
+\item[Called by]   SCFDM                                                  
+                                                                    
+\end{description}
+@a
+      subroutine spindm(NAE,NBE,NBASIS,SP,A,B,IDUMP)
+      implicit none
+      double precision A , amb , apb , B , Big , Four , gfloat , gsqrt , 
+     &                 One , Onept5 , pt25 , Pt5 , Small , SP , Three , 
+     &                 trace , Two , xs , Zero
+      integer i , i1 , i2 , IDUMP , Ieval , Ievals , Igeno , In , Ioc , 
+     &        Ioc0 , Iocs , Iod , Iof1p , Iofa , Ione , Ioq , Ios , 
+     &        Iouab , Ious , Iout
+      integer Ipspin , Iptot , Ipunch , j , Jmat , Ksm , Kspin , Ksw , 
+     &        Mdim , Mdsq , minprt , Mshifs , Mtt , NAE , NBASIS , NBE , 
+     &        ne , Nesk , Nest , Nest1
+      integer Nse , Nsep , Ntt
+      logical Cmp , Rhf
+      dimension A(*) , B(*)
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /rwf503/ Igeno , Ieval , Ios , Ione , Iofa(4) , Iod(4) , 
+     &                Ioc(4) , Iocs(4) , Ioc0(4) , Ioq(4) , Ious(4) , 
+     &                Jmat(4) , Iof1p(4) , Ievals , Iouab(4) , Iptot(2)
+     &                , Ipspin(2)
+      common /io    / In , Iout , Ipunch
+      data pt25/.25D0/
+C     ******************************************************************
+C     evaluation of the single determinant expectation value of
+C     the s**2 operator
+C
+C     aug 75/rs9b
+C     ******************************************************************
+C
+C
+C
+C2000 format(//20x,3hs= ,f10.4,20x,6hs**2= ,f10.4)
+99001 format (20x,3HS= ,f10.4,20x,6HS**2= ,f10.4)
+C     ******************************************************************
+      call ilsw(2,21,minprt)
+      Kspin = 1
+      ne = NAE + NBE
+C
+C     form u = t(alpha,dagger) * s * t(beta)
+      call tioc(NBASIS,2,Ios,B,1,0,IDUMP)
+      call tioc(NBASIS,2,Ioc,A,4,1,IDUMP)
+      call matmul(NBASIS,A,B,1,2,0)
+      call tioc(NBASIS,2,Ioc(3),B,4,1,IDUMP)
+      call matmul(NBASIS,A,B,0,0,0)
+      call tioc(NBASIS,1,Iouab,A,4,1,IDUMP)
+C
+C     evaluate the trace of u(dagger) * u
+      trace = Zero
+      do 100 i = 1 , NBE
+         i1 = (i-1)*Mdim
+         do 50 j = 1 , NAE
+            i2 = i1 + j
+            if ( Cmp ) trace = trace + A(i2+Mdsq)**2
+            trace = trace + A(i2)**2
+ 50      continue
+ 100  continue
+      apb = gfloat(ne)
+      amb = gfloat(NAE-NBE)
+      SP = Pt5*apb + pt25*amb**2 - trace
+      xs = -Pt5 + Pt5*gsqrt(One+Four*SP)
+      if ( minprt.eq.0 ) write (Iout,99001) xs , SP
+      return
+C
+      end
+@* INDEX.

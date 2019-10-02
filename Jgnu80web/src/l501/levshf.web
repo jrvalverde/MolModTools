@@ -1,0 +1,83 @@
+@* levshf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] FA                                                        
+\item[OUTPUT:] F                                                         
+\item[OUTPUT:] C                                                         
+\item[PASSED:] D                                                         
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] MAX                                                       
+\item[INPUT:] NOCC                                                      
+\item[INPUT:] VSHIFT                                                    
+\item[PASSED:] IRWLC                                                     
+\item[PASSED:] IRWS                                                      
+\item[PASSED:] IRWSCR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FVMUL   TREAD   TWRITE  VDAGT                          
+\item[Called by]   CYCCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine levshf(FA,F,C,D,NBASIS,MAX,NOCC,VSHIFT,IRWLC,IRWS,
+     &                  IRWSCR)
+      implicit none
+      double precision C , D , F , FA , VSHIFT
+      integer i , ij , IRWLC , IRWS , IRWSCR , j , ji , jj , MAX , 
+     &        NBASIS , NOCC , ntt
+      dimension F(*) , FA(*) , C(*) , D(*)
+      ntt = (NBASIS*(NBASIS+1))/2
+C
+C        add a constant level shift to the virtual orbitals.
+C
+C        first transform to the mo basis.
+C            fmo=c(dagger)*fa*c;  result stored in f
+      call tread(IRWLC,C,MAX,MAX,NBASIS,NBASIS,0)
+      call fvmul(NBASIS,FA,C,F,D)
+      call vdagt(NBASIS,C,F,F,D)
+C        apply the shift to the diagonal elements of symmetric f
+      do 100 j = 1 , NBASIS
+         if ( j.gt.NOCC ) then
+            jj = (j*(j+1))/2
+            F(jj) = F(jj) + VSHIFT
+         endif
+ 100  continue
+C
+C        back transform the shifted matrix to the ao representation
+C          fa(shifted)=cinverse(dagger)*fmo(shifted)*cinverse
+C          since c(dagger)*s*c = 1; cinverse=c(dagger)*s
+C          first form s(dagger)*c (equal to s*c), then transpose.
+C
+C        temporarily store fmo(shifted) in the scratch file.
+      call twrite(IRWSCR,F,ntt,1,ntt,1,0)
+C        read in s into fa storage now freed
+      call tread(IRWS,FA,ntt,1,ntt,1,0)
+C        read in coefficient matrix.
+      call tread(IRWLC,C,MAX,MAX,NBASIS,NBASIS,0)
+      call fvmul(NBASIS,FA,C,F,D)
+C        move cinverse to c and transpose.
+      do 200 i = 1 , NBASIS
+         do 150 j = 1 , NBASIS
+            ij = (j-1)*NBASIS + i
+            ji = (i-1)*NBASIS + j
+            C(ji) = F(ij)
+ 150     continue
+ 200  continue
+C        move fmo into place
+      call tread(IRWSCR,FA,ntt,1,ntt,1,0)
+      call fvmul(NBASIS,FA,C,F,D)
+      call vdagt(NBASIS,C,F,F,D)
+C        fao(shifted) is returned in fa.
+ 
+      do 300 i = 1 , ntt
+         FA(i) = F(i)
+ 300  continue
+      return
+      end
+@* INDEX.

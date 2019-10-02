@@ -1,0 +1,477 @@
+@* cycclo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] ETOTAL                                                    
+\item[OUTPUT:] EONE                                                      
+\item[INPUT:] FINAC                                                     
+\item[OUTPUT:] ACURCY                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NE                                                        
+\item[OUTPUT:] CYCLE                                                     
+\item[PASSED:] NSYMOP                                                    
+\item[PASSED:] NEQBAS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICOUNT  IFLAG   ILSHFT  KEY                            
+\item[Transmits as argument]  INHIBE  IOP3    IRWF    IRWH    IRWLC   IRWLE   IRWLP  
+             IRWS    IRWTM   LABDCK  NSQ     NTT     PRINT          
+\item[Uses]  ENGCON  IFLAG   ILSHFT  INHIBE  IOP3    IOSCL   IOUT   
+             IRWF    IRWH    IRWLC   IRWLE   IRWLP   IRWS    IRWTM  
+             KEY     LABDCK  LENGTH  MAXCYC  NCYSET  NLSHFT  NSQ    
+             NTT     PRINT   PSAVE   PUNDEN  THRESH                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINWT   CONCLO  CVU     DIAGD   DIRCLO  FOFCLO  FRMP   
+             FVMUL   GABS    ILSW    LEVSHF  LINOUT  LTOUTD  SCFTRC 
+             TREAD   TWRITE  VDAGT                                  
+\item[Called by]   RHFCLO                                                 
+                                                                    
+\end{description}
+@a
+      subroutine cycclo(A,ETOTAL,EONE,FINAC,ACURCY,NBASIS,NE,CYCLE,
+     &                  NSYMOP,NEQBAS)
+      implicit none
+      double precision A , ACURCY , EONE , eprev , ETOTAL , etwo , 
+     &                 FINAC , gabs , preduc , pt5 , scftrc , Thresh , 
+     &                 two , vshift , zero
+      integer i , Icount , ieflag , iend , Iflag , Ilshft , In , inda , 
+     &        inda1 , inda2 , indaa , indb , indb1 , indb2 , indbb , 
+     &        Iop3 , Ioscl , Iout , Ipunch , Irwc
+      integer Irwc1 , Irwc2 , Irwc3 , Irweig , Irwf , Irwgen , Irwh , 
+     &        Irwibf , Irwlc , Irwle , Irwlp , Irwp , Irwpt , Irws , 
+     &        Irwt , Irwtm , Irww , istart , Key , Labdck
+      integer Length , Lenibf , Locrho , MAXBAS , Maxcyc , NBASIS , 
+     &        Ncyset , NE , NEQBAS , Nlshft , nocc , Nsq , NSYMOP , Ntt
+      parameter (MAXBAS=150)
+      integer CYCLE , Print , Punden , Inhibe , Engcon , Psave
+      dimension A(*) , NEQBAS(MAXBAS,8)
+C
+      integer direct
+      common /iop3  / Iop3(50)
+C
+      common /ntt   / Ntt , Length , Nsq
+      common /irw501/ Irwgen , Irws , Irwh , Irwt , Irweig , Irwc , 
+     &                Irwp , Irwpt , Irwf , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwtm , Irwibf , Lenibf , Irwle , Irwlc , Irwlp , 
+     &                Irww
+      common /psave / Psave
+      common /convg / Icount , Iflag , Key
+      common /io    / In , Iout , Ipunch
+      common /scfops/ Print , Maxcyc , Punden , Locrho , Engcon , 
+     &                Inhibe , Ncyset , Ioscl , Ilshft , Nlshft
+      common /thresh/ Thresh
+      common /punlab/ Labdck(4,3)
+      data zero/0.0D0/ , pt5/0.5D0/ , two/2.0D0/
+C
+C
+C     simulated common.
+C     common/ab/a(maxdim,maxdim),aa(maxdim),b(maxdim,maxdim),bb(maxdim)
+C
+C***********************************************************************
+99001 format (6x,d22.15)
+99002 format (' M. O. COEFFICIENTS AT CYCLE ',i3,'.')
+99003 format (25H DENSITY MATRIX AT CYCLE ,i3,'.')
+99004 format (10('>'),' CONVERGENCE CRITERION NOT MET.')
+99005 format (1x,i3)
+99006 format (7x,' (NON-VARIATIONAL)')
+99007 format (' FOCK-MATRIX IN ORTHOGONAL BASIS:')
+99008 format (' EIGENVALUES OF THE FOCK MATRIX AT CYCLE ',
+     &        i3/(1x,i3,1x,d20.13))
+99009 format (' CORE-HAMILTONIAN')
+99010 format (' EIGENVECTORS FROM DIAGONALIZATION:')
+99011 format (' TRANSFORMATION MATRIX:')
+99012 format (' ',70('*')/' BEGIN CYCLE ',i3/' ',70(1H*))
+99013 format (' ',20('>'),'TERMINATED DUE TO OSCILLATING ENERGY.')
+      vshift = float(Ilshft)/1000
+      direct = Iop3(45)
+C  ensure that the value of direct is for rhfclo
+      if ( direct.ne.0 ) direct = 1
+C***********************************************************************
+C
+C
+C     ******************************************************************
+C     *  initialize the array pointers.  these always point to the     *
+C     *  first word address (fwa) of a particular array.
+C     ******************************************************************
+      inda = 1
+      inda1 = 1
+      inda2 = Ntt + 1
+      indaa = Nsq + 1
+C
+C     note ... indb also points to the integral buffer.
+      indb = Ntt + Ntt + 1
+      indb1 = indb
+      indb2 = indb + Ntt
+      indbb = 1 + NBASIS + 2*Nsq
+      eprev = zero
+      CYCLE = 0
+C     call setpn(cycle)
+      nocc = NE/2
+C
+C     ******************************************************************
+C     *  clear the array a.                                            *
+C     ******************************************************************
+      do 100 i = 1 , Length
+         A(i) = zero
+ 100  continue
+C
+C     ******************************************************************
+C     *  initialize the convergence routine.                           *
+C     ******************************************************************
+      Icount = 0
+      Iflag = 0
+      Key = 1
+C
+C     at the beginning, recover the density matrix from the rw-files.
+      call tread(Irwlp,A(inda1),Ntt,1,Ntt,1,0)
+C
+C
+C
+C
+C     ******************************************************************
+C     *  start of the current iteration.                               *
+C     ******************************************************************
+C
+C.....   a1 contains the density matrix.
+C
+C
+C     ******************************************************************
+C     *  increment the cycle counter.                                  *
+C     ******************************************************************
+C
+ 200  CYCLE = CYCLE + 1
+C     call incrpn
+      if ( Print.gt.2 ) write (Iout,99012) CYCLE
+C
+C     preserve extrapolation status of previous density matrix.
+      ieflag = Iflag
+C
+C     ******************************************************************
+C     *  fetch the core hamiltonian.                                   *
+C     ****************************************************************
+      call tread(Irwh,A(inda2),Ntt,1,Ntt,1,0)
+C
+C.....   a1 contains the density matrix,
+C        a2 contains the core hamiltonian.
+C
+C     ******************************************************************
+C     *  optionally, print the core hamiltonian, but only if cycle=1.  *
+C     *  futhermore, this is only done for print.gt.2.                 *
+C     ******************************************************************
+      if ( CYCLE.eq.1 ) then
+         if ( Print.gt.2 ) then
+            write (Iout,99009)
+            call ltoutd(NBASIS,A(inda2),1)
+         endif
+      endif
+C
+C
+C.....   a1 contains the density matrix,
+C        a2 contains the core hamiltonian,
+C
+C     ******************************************************************
+C     *  compute the one-electron contribution to the energy.         *
+C     ******************************************************************
+      EONE = scftrc(A(inda1),A(inda2),NBASIS,1)
+      if ( Psave.eq.0 ) write (Iout,99005) CYCLE
+C
+C     ******************************************************************
+C     *  form the fock-matrix.                                         *
+C     *  note that fofclo is going to use the space beyond a2          *
+C     *  as the integral buffer.                                       *
+C     *  printing of the fock-matrix is provided for in fofclo.        *
+C     ******************************************************************
+C
+C.....   a1 contains the density matrix,
+C        a2 is empty.
+C
+      if ( direct.ne.0 ) then
+         call dirclo(NBASIS,A(inda1),A(inda2),NSYMOP,NEQBAS,Iop3)
+      else
+         call fofclo(NBASIS,CYCLE,A(inda1),A(inda2),A(indb),A(indb),
+     &               Print,NSYMOP,NEQBAS)
+      endif
+C
+C.....   a1 contains the density matrix.
+C        a2 contains the fock matrix.
+C
+C
+C     ******************************************************************
+C     *  save the fock matrix for possible future use.                 *
+C     ******************************************************************
+      call twrite(Irwf,A(inda2),Ntt,1,Ntt,1,0)
+C
+C     ******************************************************************
+C     *  finish computing the electronic energy.                       *
+C     ****************************************************************
+      etwo = scftrc(A(inda1),A(inda2),NBASIS,1)
+      ETOTAL = pt5*(EONE+etwo)
+      if ( ieflag.le.0 ) then
+         if ( Psave.eq.0 ) write (Iout,99001) ETOTAL
+      else
+C
+         if ( Psave.eq.0 ) write (Iout,99006)
+      endif
+C
+C  if iopt(10) = nlshft is set, turn off level-shifting after
+C     nlshft cycles
+      if ( CYCLE.gt.Nlshft ) then
+         Ilshft = 0
+         vshift = 0.0D00
+      endif
+C
+C  apply a virtual level shifter ilshft/1000
+      if ( (CYCLE.gt.1) .and. Ilshft.ne.0 )
+     &     call levshf(A(inda2),A(inda1),A(indb),A(indbb),NBASIS,NBASIS,
+     &     nocc,vshift,Irwlc,Irws,Irwlp)
+C
+C     ******************************************************************
+C     *  get the transformation                                        *
+C     *  matrix from the rw-files.                                     *
+C     ******************************************************************
+      call tread(Irwtm,A(indb),NBASIS,NBASIS,NBASIS,NBASIS,0)
+C
+C     ******************************************************************
+C     *  optionally display the transformation matrix (first cycle).   *
+C     ******************************************************************
+C
+C.....   b contains the transformation matrix.
+C        a2 contains the fock matrix.
+C
+C
+C     ******************************************************************
+C     *  form f(twiddle).  this is done in two steps.                  *
+C     *                                                                *
+C     *  first, form f(prime)=f*v.                                     *
+C     *  v is in b,                                                    *
+C     *  f is in a2,                                                   *
+C     *  aa and bb are empty,                                          *
+C     *  the result is placed in a.                                    *
+C     ******************************************************************
+      call fvmul(NBASIS,A(inda2),A(indb),A(inda),A(indbb))
+C
+C     ******************************************************************
+C     *  second, f(twiddle)=v(dagger)*f(prime).                        *
+C     *                    =v(dagger)*(f*v).                           *
+C     *                                                                *
+C     *  v is still in a (untouched from the last call to fvmul),      *
+C     *  a contains f(prime)=f*v,                                      *
+C     *  aa and bb are still empty.                                    *
+C     *  put the result in a.                                          *
+C     ******************************************************************
+      call vdagt(NBASIS,A(indb),A(inda),A(inda1),A(indbb))
+C
+C.....   a1 contains f(twiddle).
+C        all other arrays are empty.
+C
+C     ******************************************************************
+C     *  the properly transformed fock-matrix is in a1.                *
+C     *  check for printing.
+C     ******************************************************************
+      if ( Print.ge.3 ) then
+         write (Iout,99007)
+         call ltoutd(NBASIS,A(inda1),1)
+      endif
+C
+C     ******************************************************************
+C     *  diagonalize.                                                  *
+C     *  a1 contains f(twiddle),                                       *
+C     *  b is empty,                                                   *
+C     *                                                                *
+C     *  on return,                                                    *
+C     *  b contains the eigenvectors (u),                              *
+C     *  bb contains the eigenvalues (e),                              *
+C     *  a is empty,                                                   *
+C     *  aa is empty.                                                  *
+C     ******************************************************************
+      call diagd(A(inda1),A(indb),A(indbb),NBASIS,A(indaa),A(inda2),
+     &           NBASIS,.false.)
+C
+C.....   b contains the eigenvectors.
+C        bb contains the eigenvalues.
+C
+C     ******************************************************************
+C     *  back transform to the atomic orbital basis.                   *
+C     *  we must recover the transformation matrix from the rw-files.  *
+C     ******************************************************************
+      call tread(Irwtm,A(inda),NBASIS,NBASIS,NBASIS,NBASIS,0)
+C
+C     if requested, perform debug printing.
+      if ( Print.ge.3 ) then
+         write (Iout,99010)
+         call linout(A(indb),NBASIS,1)
+         write (Iout,99011)
+         call linout(A(inda),NBASIS,1)
+      endif
+C
+C
+C.....   b contains the eigenvectors.
+C        bb contains the eigenvalues.
+C        a contains v (the transformation matrix).
+C
+C     ******************************************************************
+C     *  back transform,  c=v(dagger)*u.                               *
+C     *  v is in a,                                                    *
+C     *  u is in b,                                                    *
+C     *  put result in a.                                              *
+C     ******************************************************************
+      call cvu(NBASIS,A(inda),A(indb),A(indaa))
+C
+C
+C.....   a contains the molecular orbital coefficients.
+C        bb contains the eigenvalues.
+C
+C     ******************************************************************
+C     *  save the eigenvalues and m. o. coefficients on the            *
+C     *  appropriate rw-files.                                         *
+C     ******************************************************************
+      call twrite(Irwle,A(indbb),NBASIS,1,NBASIS,1,0)
+      call twrite(Irwlc,A(inda),NBASIS,NBASIS,NBASIS,NBASIS,0)
+C
+C
+C     ******************************************************************
+C     *  check for printing of the eigenvalues and the molecular       *
+C     *  orbital coefficients.                                         *
+C     ******************************************************************
+      if ( Print.gt.2 ) then
+         istart = indbb
+         iend = istart + NBASIS - 1
+         write (Iout,99008) CYCLE , (i,A(i),i=istart,iend)
+         write (Iout,99002) CYCLE
+         call linout(A(inda),NBASIS,1)
+      endif
+C
+C     ******************************************************************
+C     *  form the density matrix from the molecular orbital            *
+C     *  coefficients.  the density matrix is formed in symmetric      *
+C     *  storage mode by routine formp.                                *
+C     ******************************************************************
+      call frmp(NBASIS,nocc,two,A(inda),A(indb),Print)
+C
+C     ******************************************************************
+C     *  relocate the density matrix into a1.                          *
+C     ******************************************************************
+      do 300 i = 1 , Ntt
+         A(i+inda1-1) = A(i+indb-1)
+ 300  continue
+C
+C
+C     ******************************************************************
+C     *  save the newly formed density matrix.                         *
+C     ******************************************************************
+      call twrite(Irwlp,A(inda1),Ntt,1,Ntt,1,0)
+C
+C.....   a1 contains the density matrix,
+C        b is empty.
+C
+C     ******************************************************************
+C     *  check for punching of the density matrix.                     *
+C     *  also, punch the m. o.'s if requested.                         *
+C     ******************************************************************
+      if ( Punden.gt.3 ) then
+         call binwt(A(inda1),2*Ntt,Labdck(1,2))
+         call tread(Irwlc,A(indb),Nsq,1,Nsq,1,0)
+         call binwt(A(indb),2*Nsq,Labdck(1,1))
+      endif
+C
+C     ******************************************************************
+C     *  the density matrix is in a1.  all other arrays can be         *
+C     *  considered to be empty.  the routine conclo will do           *
+C     *  convergence checking.                                         *
+C     *                                                                *
+C     *  on return,                                                    *
+C     *  key=1, not converged, finac undefined,                        *
+C     *  key=0, converged (according to density matrix criterion       *
+C     *         specified by acurcy), finac contains the final         *
+C     *         convergence.                                           *
+C     ******************************************************************
+      call conclo(NBASIS,ACURCY,FINAC,A(inda1),A(inda2),Inhibe,preduc)
+C
+C
+C     ******************************************************************
+C     *  test for completion of iteration.                             *
+C     *  the following information is available:                       *
+C     *                                                                *
+C     *  1.  etotal, ieflag, eprev                                     *
+C     *  2.  iflag                                                     *
+C     *  3.  cycle, maxcyc, ncyset                                     *
+C     *                                                                *
+C     *  the first group of information tells the status of the        *
+C     *  current and previous energies; ie. their values, and          *
+C     *  whether or not the current energy derives from an ex-         *
+C     *  trapolated density matrix.                                    *
+C     *                                                                *
+C     *  the second group of information tells us the status of the    *
+C     *  current density matrix.                                       *
+C     *                                                                *
+C     *  the third group of information specifies how many iterations  *
+C     *  have been performed and whether or not the number of cycles   *
+C     *  has been defaulted.  if defaulted, the scf will not stop if   *
+C     *  either the current energy or the current density matrix       *
+C     *  is an extrapolation; rather, the scf will be permitted to go  *
+C     *  another iteration.                                            *
+C     ******************************************************************
+C
+C     test first to see if the current energy or the current
+C     density matrix is affected by extrapolation.
+      if ( Iflag+ieflag.eq.0 ) then
+C
+C     we are not affected by extrapolation.  check the type
+C     of convergence test desired.
+         if ( Engcon.le.0 ) then
+C
+C     the user has selected density matrix (rms) convergence.
+            if ( Key.eq.0 ) then
+C
+C     indicate convergence success in ilsw.
+               call ilsw(1,5,0)
+               goto 400
+            endif
+C
+C     the user has selected energy convergence.  test the
+C     current energy versus the previous energy.
+         elseif ( gabs(ETOTAL-eprev).le.Thresh ) then
+            call ilsw(1,5,0)
+            goto 400
+         endif
+C
+C     the scf has not yet converged.  test for oscillation
+C     (provided of course that we are allowed to).
+C     oscillation is defined to be etotal .ge. eprev, this
+C     test can be bypassed by setting ioscl.
+         if ( Ioscl.gt.0 ) then
+            eprev = ETOTAL
+         elseif ( ETOTAL.lt.eprev ) then
+C
+C     the energy is not oscillating, test for max-cycles.
+C     if max-cycles is not exceeded, perform another iteration.
+C     first, 'push' etotal into eprev.
+            eprev = ETOTAL
+         else
+C
+C     enter here for scf oscillation.
+            write (Iout,99013)
+            call ilsw(1,5,1)
+            goto 400
+         endif
+C
+C     enter here if either the current energy or the current
+C     density matrix is afflicted by extrapolation.
+      elseif ( Ncyset.le.0 ) then
+         goto 200
+      endif
+      if ( CYCLE.lt.Maxcyc ) goto 200
+C
+C     indicate convergence failure.
+      write (Iout,99004)
+      call ilsw(1,5,1)
+C
+C     return to caller.
+ 400  ACURCY = FINAC
+      return
+C
+      end
+@* INDEX.

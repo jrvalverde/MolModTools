@@ -1,0 +1,27 @@
+@* l502.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       NEXTOV  UHFOPN                                         
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l502(NCHAIN)
+      implicit none
+      integer jump , NCHAIN , nextov
+C
+      call uhfopn(jump)
+      NCHAIN = nextov(jump)
+      return
+C
+      end
+@* INDEX.

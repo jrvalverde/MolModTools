@@ -1,0 +1,808 @@
+@* formf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] IONE                                                      
+\item[PASSED:] IOD                                                       
+\item[PASSED:] NSYMOP                                                    
+\item[PASSED:] NEQBAS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DBASE   FA      FB      I       IA      IBASE   IFIL   
+             INTCNT  JA      NTX     SINDX                          
+\item[Transmits as argument]  CMP     DA      DB      DBUF2E  IBUF2E  KNTT1   NTT    
+\item[Uses]  CMP     DA      DB      DBASD   DBASE   DBUF2E  FA     
+             FB      I       IBASD   IBASE   IBUF2E  ICON    IFIL   
+             INTCNT  IOUT    IRESET  ISMODE  ISYM2E  ITOTAL  IUX    
+             J       K       KNTT1   KNTT2   L       MINDX   MODE   
+             MTT     NTT     NTX     NWPI    ONE     ONEPT5  P      
+             PT5     Q       R       RHF     SINDX   VALINT         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       AADD    ACLEAR  AMOVE   ASCALE  FSYMM   GABGST  IREAD  
+             IWAIT   IWIND   LABSCF  LNK1E   RAFF1C  RSETCL  RSETOP 
+             TREAD   UNPCK2  UNPCK4                                 
+\item[Called by]   FIRST                                                  
+                                                                    
+\end{description}
+@a
+      subroutine formf(NBASIS,IONE,IOD,NSYMOP,NEQBAS)
+      implicit none
+      double precision a0 , a00 , a0c , a1 , a1c , b0 , Big , Da , Db , 
+     &                 Dbuf2e , Fa , Fb , Fillab , Filscr , Four , One , 
+     &                 Onept5 , pspin , pspin2 , pt25
+      double precision Pt5 , ptotl , ptotl2 , s1 , s2 , Small , Three , 
+     &                 Two , val1 , val2 , val3 , Valint , Zero
+      integer I , i1 , Ia , Ibasd , Ibase , Ibuf2e , Icon , Ifil , 
+     &        iflst , ij , iji , ijj , ijk , In , intape , Intcnt , 
+     &        IOD , IONE , Iout , Ipunch
+      integer Iq , iqbufr , iqproc , Ireset , Ismode , Istat , Isym2e , 
+     &        Itotal , Iux , J , j1 , j2 , j3 , j4 , j5 , j6 , Ja , jq , 
+     &        K , Kntt1
+      integer Kntt2 , Ksm , Kspin , Ksw , L , Last , Limint , lq , m , 
+     &        MAXBAS , MAXBP1 , Mdim , Mdsq , Mindx , Mode , Mshifs , 
+     &        Mtt , nb1 , NBASIS , NEQBAS
+      integer Nesk , Nest , Nest1 , nfile , Nrpext , Nse , Nsep , 
+     &        NSYMOP , Ntt , Ntx , Nwiib , Nwpi
+      parameter (MAXBAS=150,MAXBP1=MAXBAS+1)
+      logical Cmp , Rhf , fast1
+      integer P , Q , R , S , Sindx
+      integer Dbase , Dbasd , dcount
+      dimension ij(MAXBP1) , Ibuf2e(6400) , Ia(2) , IOD(4)
+      dimension NEQBAS(MAXBAS,8)
+      common /const / Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /memry / Da(2485) , Db(2485) , Fa(2485) , Fb(2485) , 
+     &                Fillab(40060)
+C      common /ab/da(2485),db(2485),fa(2485),fb(2485),fillab(20060)
+      common /scr   / Dbuf2e(4760) , Filscr(872)
+      common /packed/ I , J , K , L , Valint , Ja
+      common /io    / In , Iout , Ipunch
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Isym2e
+      equivalence (I,P) , (J,Q) , (K,R) , (L,S)
+      equivalence (Sindx,L) , (Mindx,K) , (Ia(1),Valint)
+      equivalence (pspin2,pspin) , (ptotl2,ptotl)
+      equivalence (Ibuf2e(1),Dbuf2e(1))
+      data nfile/0/
+      data pt25/0.25D0/
+      data fast1/.false./
+C     ******************************************************************
+C     subroutine to form the f matrix given the previously formed
+C     d matrix and any or all labeled two electron integrals
+C
+C
+C     what this routine does, depends on a number of factors.
+C     basically, its function is dependent on the following
+C     factors:
+C      real/complex
+C      rhf/uhf
+C      raffenetti/regular integrals
+C      symmetry/no symmetry
+C
+C     to make things clear, a few comments are in order.
+C     what is desired, is to calculate the fock-matrix, or
+C     matrices if the run is either complex or open shell.
+C
+C     the basic equation is given by:
+C
+C     f(m,n) = h(m,n) +  sum  p(l,s) * (ml//ns)
+C                        l,s
+C
+C     where f is the fock matrix, p is the density matrix,
+C     and h and (ml//ns) are the one- and two-electron
+C     integrals over ao's.
+C     here, everything is written in terms of spin-orbitals.
+C
+C     it is convenient (necessary) to extract from this expression
+C     the part involving two-electron integrals, viz:
+C
+C     g(m,n) =  sum  p(l,s) * (ml//ns)
+C               l,s
+C
+C     the largest part of this routine deals with this expression.
+C     the cases are outlined below.
+C
+C     ------------------------------------------------------------------
+C     rrhf:     (real rhf)
+C     ------------------------------------------------------------------
+C
+C     g(m,n) = sum  p(l,s)*(mnls)        raffenetti storage
+C              l,s
+C
+C     g(m,n) = sum  p(l,s)*(mn/ls)       regular storage
+C              l,s
+C
+C     ------------------------------------------------------------------
+C     crhf:     (complex rhf)
+C     ------------------------------------------------------------------
+C
+C     gr(m,n) =  sum  pr(l,s) * (mnls)   rafenetti storage
+C                l,s
+C
+C     gi(m,n) =  sum  pi(l,s) * (mn/-/ls)
+C                l,s
+C
+C
+C     gr(m,n) =  sum  pr(l,s) * (mn/ls)  regular storage
+C                l,s
+C
+C     gi(m,n) =  sum  pi(l,s) * (mn/ls)
+C
+C
+C     ------------------------------------------------------------------
+C     ruhf     (real uhf)
+C     ------------------------------------------------------------------
+C
+C     gs(m,n) =  sum  pt(l,s) * (mnls)   raffenetti storage.
+C                l,s
+C
+C     gt(m,n) =  sum  ps(l,s) * (mn/+/ls)
+C                l,s
+C
+C        here, pt and ps are the total and spin density
+C        matrices, resp.  the final g-matrices can be
+C        extracted from gs and gt using the following
+C        relations:
+C
+C           ga(m,n) = gs(m,n) - pt25*gt(m,n)
+C           gb(m,n) = gs(m,n) + pt25*gt(m,n)
+C
+C     ga(m,n) = sum  pa(l,s) * (mn/ls)   regular storage
+C               l,s
+C
+C     gb(m,n) = sum  pb(l,s) * (mn/ls)
+C               l,s
+C
+C     ------------------------------------------------------------------
+C
+C     after summing up the two-electron contribution, however
+C     it's done, symmetry (if any) can be applied.
+C     this merely requires a call to routine fsymm.
+C
+C     at this point, the contribution from the core-hamiltonian
+C     is added in, and computation of the fock-matrix
+C     is complete.
+C     ******************************************************************
+C
+C
+C
+C
+C
+C     the following data statement defines the length of the
+C     'integral' unit.  see link0 for more details.
+C
+99001 format (25H1BAD INTEGRAL COUNT:  IS ,i9,5x,12H  SHOULD BE ,i9)
+C
+C     ******************************************************************
+C
+C     form address array ij
+      nb1 = NBASIS + 1
+      ij(1) = 0
+      do 100 I = 2 , nb1
+         i1 = I - 1
+         ij(I) = ij(i1) + i1
+ 100  continue
+C
+C     pre-processing of input matrices for raffenetti format.
+C
+C     perform set-up operations:
+C     1.  clear output arrays.
+C     2.  perform any raffenetti related initialization.
+C
+C     clear output arrays prior to adding in two-electron contr.
+C     do rhf case.
+      call aclear(Ntt,Fa(1))
+      if ( Cmp ) call aclear(Ntt,Fa(1+Mtt))
+      if ( .not.(Rhf) ) then
+C     do uhf case.
+         call aclear(Ntt,Fb(1))
+         if ( Cmp ) call aclear(Ntt,Fb(1+Mtt))
+      endif
+C
+C     perform any required raffenetti operations on the input
+C     density matrices.
+C     note that this step alters the input data to this
+C     routine.
+      if ( Ismode.ne.0 ) then
+         if ( Rhf ) call rsetcl(NBASIS,Da(1),Da(1+Mtt),Cmp)
+         if ( .not.Rhf ) call rsetop(NBASIS,Da(1),Db(1))
+      endif
+C
+C
+C
+C     loop over buffers of integrals.  as each buffer is read,
+C     queue the i/o request for the next, and branch to the
+C     appropriae processing code.
+      iqbufr = 1
+      iqproc = 2
+      Intcnt = 0
+      intape = Iux(2)
+      Ntx = 1
+      call iread(intape,iqbufr,Dbuf2e)
+      Ifil = 1
+ 200  call iwait(intape)
+      iqbufr = iabs(iqbufr-2) + 1
+      iqproc = iabs(iqproc-2) + 1
+      Ibase = Ibasd(iqproc)
+      Dbase = Dbasd(iqproc)
+      call labscf(Ibuf2e(Ibase),iflst)
+      if ( iflst.eq.0 ) then
+         if ( Ifil.eq.(nfile+Ntx*Icon) ) then
+            call iwind(intape)
+            Ntx = Ntx + 1
+            intape = Iux(Ntx+1)
+            call iwind(intape)
+         endif
+         call iread(intape,iqbufr,Dbuf2e)
+         Ifil = Ifil + 1
+      endif
+C
+C     branch to appropriate code, based on mode.
+      if ( Mode.eq.2 ) then
+C
+C
+C     process integrals via the raffenetti format.
+C
+C     process via raffenetti 1 format (real closed shell only).
+         if ( .not.Rhf ) call lnk1e
+         if ( Cmp ) call lnk1e
+         if ( Kntt1.gt.0 ) then
+C     use special fast routine if enabled.
+            if ( .not.fast1 ) then
+C
+               do 210 m = 1 , Kntt1
+                  Ja = Ibuf2e(m+Ibase)
+                  call unpck2
+                  Fa(I) = Fa(I) + Da(J)*Dbuf2e(m+Dbase)
+                  Fa(J) = Fa(J) + Da(I)*Dbuf2e(m+Dbase)
+ 210           continue
+               Intcnt = Intcnt + Kntt1
+            else
+               call raff1c(Fa,Da,Kntt1,Ibuf2e,Ibase,Dbase,Intcnt)
+            endif
+         endif
+      elseif ( Mode.eq.3 ) then
+         goto 300
+      elseif ( Mode.eq.4 ) then
+         goto 300
+      else
+C
+C
+C     process integrals in regular format.
+         if ( Kntt1.gt.0 ) then
+            jq = Ireset(1) + Ibase
+            lq = jq + (Kntt1-1)*Nwpi
+            do 220 m = jq , lq , Nwpi
+C     ******************************************************************
+C     ( ab i cd )
+C     ******************************************************************
+               Ja = Ibuf2e(m)
+               Ia(1) = Ibuf2e(m+1)
+               Ia(2) = Ibuf2e(m+2)
+               call unpck4
+               a00 = Valint + Valint
+               iji = ij(I)
+               ijj = ij(J)
+               ijk = ij(K)
+               j1 = iji + J
+               j2 = ijk + L
+               j3 = iji + K
+               if ( J.le.L ) then
+C
+                  j4 = ij(L) + J
+                  s1 = One
+               else
+                  j4 = ijj + L
+                  s1 = -One
+               endif
+               j5 = iji + L
+               if ( J.le.K ) then
+C
+                  j6 = ijk + J
+                  s2 = One
+               else
+                  j6 = ijj + K
+                  s2 = -One
+               endif
+               if ( Rhf ) then
+C
+                  a0 = Pt5*Valint
+                  a0c = Da(j2)*a00
+                  a1c = Da(j1)*a00
+               else
+                  a0 = Valint
+                  a0c = (Da(j2)+Db(j2))*a00
+                  a1c = (Da(j1)+Db(j1))*a00
+                  Fb(j1) = Fb(j1) + a0c
+                  Fb(j2) = Fb(j2) + a1c
+                  Fb(j3) = Fb(j3) - Db(j4)*a0
+                  Fb(j4) = Fb(j4) - Db(j3)*a0
+                  Fb(j5) = Fb(j5) - Db(j6)*a0
+                  Fb(j6) = Fb(j6) - Db(j5)*a0
+               endif
+               Fa(j1) = Fa(j1) + a0c
+               Fa(j2) = Fa(j2) + a1c
+               Fa(j3) = Fa(j3) - Da(j4)*a0
+               Fa(j4) = Fa(j4) - Da(j3)*a0
+               Fa(j5) = Fa(j5) - Da(j6)*a0
+               Fa(j6) = Fa(j6) - Da(j5)*a0
+C
+               if ( Cmp ) then
+                  j3 = j3 + Mtt
+                  j4 = j4 + Mtt
+                  j5 = j5 + Mtt
+                  j6 = j6 + Mtt
+                  a1 = s2*a0
+                  a0 = s1*a0
+                  if ( .not.(Rhf) ) then
+                     Fb(j3) = Fb(j3) - Db(j4)*a0
+                     Fb(j4) = Fb(j4) - Db(j3)*a0
+                     Fb(j5) = Fb(j5) - Db(j6)*a1
+                     Fb(j6) = Fb(j6) - Db(j5)*a1
+                  endif
+                  Fa(j3) = Fa(j3) - Da(j4)*a0
+                  Fa(j4) = Fa(j4) - Da(j3)*a0
+                  Fa(j5) = Fa(j5) - Da(j6)*a1
+                  Fa(j6) = Fa(j6) - Da(j5)*a1
+               endif
+ 220        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+C
+C
+C     process type 2 integrals.
+         if ( Kntt2.gt.0 ) then
+            lq = Ireset(2) + Ibase
+            jq = lq - (Kntt2-1)*Nwpi
+            do 260 m = jq , lq , Nwpi
+               Ja = Ibuf2e(m)
+               Ia(1) = Ibuf2e(m+1)
+               Ia(2) = Ibuf2e(m+2)
+               a00 = Valint + Valint
+               call unpck4
+               Sindx = Sindx + 1
+               if ( Sindx.eq.1 ) goto 230
+               if ( Sindx.eq.2 ) then
+C
+C     ******************************************************************
+C     ( ab i bc )
+C     ******************************************************************
+                  iji = ij(P)
+                  ijj = ij(Q)
+                  j1 = iji + Q
+                  j2 = ijj + R
+                  j3 = iji + R
+                  j4 = ijj + Q
+                  s1 = -One
+                  goto 240
+               elseif ( Sindx.eq.3 ) then
+C
+C     ******************************************************************
+C     ( ac i bc )
+C     ******************************************************************
+                  iji = ij(P)
+                  j1 = iji + Q
+                  j2 = ij(R) + Q
+                  j3 = iji + R
+                  j4 = ij(Q+1)
+                  s1 = One
+                  goto 240
+               elseif ( Sindx.eq.4 ) then
+C
+C     ******************************************************************
+C     ( ab i ab )
+C     ******************************************************************
+                  iji = ij(P)
+                  j1 = iji + Q
+                  j2 = iji + P
+                  j3 = ij(Q+1)
+                  if ( Rhf ) then
+C
+                     a1c = Onept5*Da(j1)*Valint
+                     a1 = Pt5*Valint
+                  else
+                     a0 = Da(j1)
+                     b0 = Db(j1)
+                     a0c = (a0+a0+b0)*Valint
+                     a1c = (a0+b0+b0)*Valint
+                     a1 = Valint
+                     Fb(j1) = Fb(j1) + a0c
+                     Fb(j2) = Fb(j2) - Db(j3)*a1
+                     Fb(j3) = Fb(j3) - Db(j2)*a1
+                  endif
+                  Fa(j1) = Fa(j1) + a1c
+                  Fa(j2) = Fa(j2) - Da(j3)*a1
+                  Fa(j3) = Fa(j3) - Da(j2)*a1
+C
+                  if ( Cmp ) then
+                     j1 = j1 + Mtt
+                     if ( .not.Rhf ) Fb(j1) = Fb(j1) - Db(j1)*a1
+                     Fa(j1) = Fa(j1) - Da(j1)*a1
+                  endif
+               elseif ( Sindx.eq.5 ) then
+C
+C     ******************************************************************
+C     ( aa i bc )
+C     ******************************************************************
+                  iji = ij(P)
+                  j1 = iji + P
+                  j2 = ij(Q) + R
+                  j3 = iji + Q
+                  j4 = iji + R
+                  if ( Rhf ) then
+C
+                     a0c = Da(j2)*a00
+                     a1c = Da(j1)*Valint
+                     a1 = Pt5*Valint
+                  else
+                     a0c = (Da(j2)+Db(j2))*a00
+                     a1c = (Da(j1)+Db(j1))*Valint
+                     a1 = Valint
+                     Fb(j1) = Fb(j1) + a0c
+                     Fb(j2) = Fb(j2) + a1c
+                     Fb(j3) = Fb(j3) - Db(j4)*a1
+                     Fb(j4) = Fb(j4) - Db(j3)*a1
+                  endif
+                  Fa(j1) = Fa(j1) + a0c
+                  Fa(j2) = Fa(j2) + a1c
+                  Fa(j3) = Fa(j3) - Da(j4)*a1
+                  Fa(j4) = Fa(j4) - Da(j3)*a1
+C
+                  if ( Cmp ) then
+                     j3 = j3 + Mtt
+                     j4 = j4 + Mtt
+                     if ( .not.(Rhf) ) then
+                        Fb(j3) = Fb(j3) + Db(j4)*a1
+                        Fb(j4) = Fb(j4) + Db(j3)*a1
+                     endif
+                     Fa(j3) = Fa(j3) + Da(j4)*a1
+                     Fa(j4) = Fa(j4) + Da(j3)*a1
+                  endif
+               elseif ( Sindx.eq.6 ) then
+C
+C     ******************************************************************
+C     ( ab i cc )
+C     ******************************************************************
+                  iji = ij(P)
+                  j1 = iji + Q
+                  j2 = ij(R+1)
+                  j3 = iji + R
+                  if ( Q.le.R ) then
+C
+                     j4 = ij(R) + Q
+                     s1 = One
+                  else
+                     j4 = ij(Q) + R
+                     s1 = -One
+                  endif
+                  if ( Rhf ) then
+C
+                     a0c = Da(j2)*Valint
+                     a1c = Da(j1)*a00
+                     a1 = Pt5*Valint
+                  else
+                     a0c = (Da(j2)+Db(j2))*Valint
+                     a1c = (Da(j1)+Db(j1))*a00
+                     a1 = Valint
+                     Fb(j1) = Fb(j1) + a0c
+                     Fb(j2) = Fb(j2) + a1c
+                     Fb(j3) = Fb(j3) - Db(j4)*a1
+                     Fb(j4) = Fb(j4) - Db(j3)*a1
+                  endif
+                  Fa(j1) = Fa(j1) + a0c
+                  Fa(j2) = Fa(j2) + a1c
+                  Fa(j3) = Fa(j3) - Da(j4)*a1
+                  Fa(j4) = Fa(j4) - Da(j3)*a1
+C
+                  if ( Cmp ) then
+                     j3 = j3 + Mtt
+                     j4 = j4 + Mtt
+                     a0 = s1*a1
+                     if ( .not.(Rhf) ) then
+                        Fb(j3) = Fb(j3) - Db(j4)*a0
+                        Fb(j4) = Fb(j4) - Db(j3)*a0
+                     endif
+                     Fa(j3) = Fa(j3) - Da(j4)*a0
+                     Fa(j4) = Fa(j4) - Da(j3)*a0
+                  endif
+               elseif ( Sindx.eq.8 ) then
+C
+C     ******************************************************************
+C     ( aa i aa )
+C     ******************************************************************
+                  j1 = ij(P+1)
+                  if ( .not.Rhf ) then
+C
+                     Fa(j1) = Fa(j1) + Db(j1)*Valint
+                     Fb(j1) = Fb(j1) + Da(j1)*Valint
+                  else
+                     Fa(j1) = Fa(j1) + Da(j1)*Pt5*Valint
+                  endif
+C
+               elseif ( Mindx.eq.1 ) then
+C
+C     ******************************************************************
+C     ( ab i bb )
+C     ******************************************************************
+                  j1 = ij(P) + Q
+                  j2 = ij(Q+1)
+                  if ( .not.Rhf ) then
+C
+                     Fa(j1) = Fa(j1) + Db(j2)*Valint
+                     Fa(j2) = Fa(j2) + Db(j1)*a00
+                     Fb(j1) = Fb(j1) + Da(j2)*Valint
+                     Fb(j2) = Fb(j2) + Da(j1)*a00
+                  else
+                     Fa(j1) = Fa(j1) + Da(j2)*Pt5*Valint
+                     Fa(j2) = Fa(j2) + Da(j1)*Valint
+                  endif
+               elseif ( Mindx.eq.2 ) then
+C
+C     ******************************************************************
+C     ( aa i bb )
+C     ******************************************************************
+                  iji = ij(P)
+                  j1 = iji + P
+                  j2 = ij(Q+1)
+                  j3 = iji + Q
+                  if ( Rhf ) then
+C
+                     a0c = Da(j2)*Valint
+                     a1c = Da(j1)*Valint
+                     a1 = Pt5*Valint
+                  else
+                     a0c = (Da(j2)+Db(j2))*Valint
+                     a1c = (Da(j1)+Db(j1))*Valint
+                     a1 = Valint
+                     Fb(j1) = Fb(j1) + a0c
+                     Fb(j2) = Fb(j2) + a1c
+                     Fb(j3) = Fb(j3) - Db(j3)*a1
+                  endif
+                  Fa(j1) = Fa(j1) + a0c
+                  Fa(j2) = Fa(j2) + a1c
+                  Fa(j3) = Fa(j3) - Da(j3)*a1
+C
+                  if ( Cmp ) then
+                     j3 = j3 + Mtt
+                     if ( .not.Rhf ) Fb(j3) = Fb(j3) + Db(j3)*a1
+                     Fa(j3) = Fa(j3) + Da(j3)*a1
+                  endif
+               elseif ( Mindx.eq.3 ) then
+C
+C     ******************************************************************
+C     ( aa i ab )
+C     ******************************************************************
+                  j1 = ij(P+1)
+                  j2 = ij(P) + Q
+                  if ( .not.Rhf ) then
+C
+                     Fa(j1) = Fa(j1) + Db(j2)*a00
+                     Fa(j2) = Fa(j2) + Db(j1)*Valint
+                     Fb(j1) = Fb(j1) + Da(j2)*a00
+                     Fb(j2) = Fb(j2) + Da(j1)*Valint
+                  else
+                     Fa(j1) = Fa(j1) + Da(j2)*Valint
+                     Fa(j2) = Fa(j2) + Da(j1)*Pt5*Valint
+                  endif
+               else
+                  goto 230
+               endif
+               goto 260
+C
+C     ******************************************************************
+C     ( ab i ac )
+C     ******************************************************************
+ 230           iji = ij(P)
+               ijj = ij(Q)
+               j1 = iji + Q
+               j2 = iji + R
+               j3 = iji + P
+               if ( Q.le.R ) then
+C
+                  j4 = ij(R) + Q
+               else
+                  j4 = ijj + R
+               endif
+               if ( Rhf ) then
+C
+                  a0 = Pt5*Valint
+                  a1 = Valint
+                  a0c = Da(j2)*a00
+                  a1c = Da(j1)*a00
+               else
+                  a0 = Valint
+                  a1 = a00
+                  a0c = (Da(j2)+Db(j2))*a00
+                  a1c = (Da(j1)+Db(j1))*a00
+                  Fb(j1) = Fb(j1) + a0c - Db(j2)*a0
+                  Fb(j2) = Fb(j2) + a1c - Db(j1)*a0
+                  Fb(j3) = Fb(j3) - Db(j4)*a1
+                  Fb(j4) = Fb(j4) - Db(j3)*a0
+               endif
+               Fa(j1) = Fa(j1) + a0c - Da(j2)*a0
+               Fa(j2) = Fa(j2) + a1c - Da(j1)*a0
+               Fa(j3) = Fa(j3) - Da(j4)*a1
+               Fa(j4) = Fa(j4) - Da(j3)*a0
+C
+               if ( Cmp ) then
+                  j1 = j1 + Mtt
+                  j2 = j2 + Mtt
+                  if ( .not.(Rhf) ) then
+                     Fb(j1) = Fb(j1) - Db(j2)*a0
+                     Fb(j2) = Fb(j2) - Db(j1)*a0
+                  endif
+                  Fa(j1) = Fa(j1) - Da(j2)*a0
+                  Fa(j2) = Fa(j2) - Da(j1)*a0
+               endif
+               goto 260
+ 240           if ( Rhf ) then
+C
+                  a0 = Pt5*Valint
+                  a1 = Valint
+                  a0c = Da(j2)*a00
+                  a1c = Da(j1)*a00
+               else
+                  a0 = Valint
+                  a1 = a00
+                  a0c = (Da(j2)+Db(j2))*a00
+                  a1c = (Da(j1)+Db(j1))*a00
+                  Fb(j1) = Fb(j1) + a0c - Db(j2)*a0
+                  Fb(j2) = Fb(j2) + a1c - Db(j1)*a0
+                  Fb(j3) = Fb(j3) - Db(j4)*a0
+                  Fb(j4) = Fb(j4) - Db(j3)*a1
+               endif
+               Fa(j1) = Fa(j1) + a0c - Da(j2)*a0
+               Fa(j2) = Fa(j2) + a1c - Da(j1)*a0
+               Fa(j3) = Fa(j3) - Da(j4)*a0
+               Fa(j4) = Fa(j4) - Da(j3)*a1
+C
+               if ( Cmp ) then
+                  j1 = j1 + Mtt
+                  j2 = j2 + Mtt
+                  a0 = s1*a0
+                  if ( .not.(Rhf) ) then
+                     Fb(j1) = Fb(j1) - Db(j2)*a0
+                     Fb(j2) = Fb(j2) - Db(j1)*a0
+                  endif
+                  Fa(j1) = Fa(j1) - Da(j2)*a0
+                  Fa(j2) = Fa(j2) - Da(j1)*a0
+               endif
+C
+ 260        continue
+            Intcnt = Intcnt + Kntt2
+         endif
+      endif
+      goto 400
+C
+C     raffenetti 2 and 3 formats, open shell, real rhf or complex rhf.
+ 300  dcount = 1
+      if ( Kntt1.gt.0 ) then
+         if ( .not.Rhf ) then
+C
+C     raffenetti 2 or raffenetti 3 format, open shell.
+            if ( Cmp ) call lnk1e
+            do 320 m = 1 , Kntt1
+               Ja = Ibuf2e(m+Ibase)
+               call unpck2
+               val1 = Dbuf2e(dcount+Dbase)
+               val2 = Dbuf2e(dcount+1+Dbase)
+               dcount = dcount + Ismode
+               Fa(I) = Fa(I) + Da(J)*val1
+               Fa(J) = Fa(J) + Da(I)*val1
+               Fb(I) = Fb(I) + Db(J)*val2
+               Fb(J) = Fb(J) + Db(I)*val2
+ 320        continue
+            Intcnt = Intcnt + Kntt1
+C
+C     raffenetti 2 or raffentti type 3, closed shell rhf (real orbitals)
+         elseif ( Cmp ) then
+C
+C     raffenetti 2 or 3 formats, complex closed shell.
+            if ( Ismode.ne.3 ) call lnk1e
+            do 340 m = 1 , Kntt1
+               Ja = Ibuf2e(m+Ibase)
+               call unpck2
+               val1 = Dbuf2e(dcount+Dbase)
+               val3 = Dbuf2e(dcount+2+Dbase)
+               dcount = dcount + Ismode
+               Fa(I) = Fa(I) + Da(J)*val1
+               Fa(J) = Fa(J) + Da(I)*val1
+               Fa(I+Mtt) = Fa(I+Mtt) + Da(J+Mtt)*val3
+               Fa(J+Mtt) = Fa(J+Mtt) + Da(I+Mtt)*val3
+ 340        continue
+            Intcnt = Intcnt + Kntt1
+         else
+            do 360 m = 1 , Kntt1
+               Ja = Ibuf2e(m+Ibase)
+               call unpck2
+               Fa(I) = Fa(I) + Da(J)*Dbuf2e(dcount+Dbase)
+               Fa(J) = Fa(J) + Da(I)*Dbuf2e(dcount+Dbase)
+               dcount = dcount + Ismode
+ 360        continue
+            Intcnt = Intcnt + Kntt1
+         endif
+      endif
+C
+C
+ 400  if ( iflst.le.0 ) goto 200
+      call iwind(intape)
+      if ( Intcnt.ne.Itotal ) then
+         write (Iout,99001) Intcnt , Itotal
+         call lnk1e
+      endif
+C
+C
+C     post-processing.
+C     at this point, we must perform the following steps:
+C     1.  symmetrization (if required).
+C     2.  various raffenetti cleanups:
+C         crhf ... scale second matrix by pt25.
+C         ruhf ... split ga and gb out from gs and gt.
+C     3.  add in the core hamiltonian.
+C     4.  restore various density matrices.
+C
+C            perform symmetrization of the fock matrices.
+      if ( Isym2e.ne.0 ) then
+C            do what-ever is in fa (real, and if necessary, imaginary).
+C            symmetrize the real-rhf g-matrix.
+         call fsymm(NBASIS,Fa(1),NSYMOP,NEQBAS,ij,Da(1))
+C            if necessary, do imaginary part.
+         if ( Cmp ) call fsymm(NBASIS,Fa(1+Mtt),NSYMOP,NEQBAS,ij,
+     &                         Da(1+Mtt))
+C            copy back.
+         call amove(Ntt,Da(1),Fa(1))
+         if ( Cmp ) call amove(Ntt,Da(1+Mtt),Fa(1+Mtt))
+C            coding to bypass uhf if this run is rhf.
+         if ( .not.(Rhf) ) then
+C            treat fb.
+            call fsymm(NBASIS,Fb(1),NSYMOP,NEQBAS,ij,Db(1))
+            if ( Cmp ) call fsymm(NBASIS,Fb(1+Mtt),NSYMOP,NEQBAS,ij,
+     &                            Db(1+Mtt))
+            call amove(Ntt,Db(1),Fb(1))
+            if ( Cmp ) call amove(Ntt,Db(1+Mtt),Fb(1+Mtt))
+         endif
+      endif
+C
+C     do any required raffenetti cleanups.
+      if ( Ismode.ne.0 ) then
+C     separate out rhf/uhf.
+         if ( .not.Rhf ) then
+C     uhf ... can only handle the real case here.  this requires
+C     splitting ga and gb out from gs and gt.
+            call gabgst(NBASIS,Fa,Fb)
+         else
+C     rhf ... only action required here is when run is complex.
+C     then, we must scale the second matrix by pt25.
+            if ( Cmp ) call ascale(Ntt,pt25,Fa(1+Mtt),Fa(1+Mtt))
+         endif
+      endif
+C
+C     add in the contribution from the core-hamiltonian.
+C     this matrix is picked up from the rw-files, and added
+C     to whatever is on hand.
+      call tread(IONE,Da,Ntt,1,Ntt,1,0)
+      call aadd(Ntt,Da,Fa,Fa)
+      if ( .not.Rhf ) call aadd(Ntt,Da,Fb,Fb)
+C
+C     finally, restore the density matrices.  this is required
+C     for routine first to function.
+      call tread(IOD(1),Da,Ntt,1,Ntt,1,0)
+      if ( Cmp ) call tread(IOD(2),Da(1+Mtt),Ntt,1,Ntt,1,0)
+      if ( .not.(Rhf) ) then
+         call tread(IOD(3),Db,Ntt,1,Ntt,1,0)
+         if ( Cmp ) call tread(IOD(4),Db(1+Mtt),Ntt,1,Ntt,1,0)
+      endif
+C
+C     finally done ... return to caller.
+      return
+C
+      end
+@* INDEX.

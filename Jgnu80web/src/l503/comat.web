@@ -1,0 +1,41 @@
+@* comat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[INPUT:] MDIM                                                      
+\item[INPUT:] NDIM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SCFDM                                                  
+                                                                    
+\end{description}
+@a
+      subroutine comat(A,B,MDIM,NDIM)
+      implicit none
+      double precision A , B
+      integer i , j , MDIM , NDIM
+      dimension A(MDIM,MDIM) , B(NDIM,NDIM)
+C     ******************************************************************
+C     compresses matrix a(mdim,mdim) into b(ndim,ndim)
+C     counterpart of exmat
+C
+C     dec 76/rs9b
+C     ******************************************************************
+C     ******************************************************************
+      do 100 j = 1 , NDIM
+         do 50 i = 1 , NDIM
+            B(i,j) = A(i,j)
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

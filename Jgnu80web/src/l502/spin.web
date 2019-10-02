@@ -1,0 +1,79 @@
+@* spin.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NBASIS                                                    
+\item[INPUT:] NAE                                                       
+\item[INPUT:] NBE                                                       
+\item[INPUT:] MAXNBF                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] U                                                         
+\item[PASSED:] AA                                                        
+\item[OUTPUT:] S2                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  GSQRT   MATREC  TREAD   TWRITE                 
+\item[Called by]   UHFOPN                                                 
+                                                                    
+\end{description}
+@a
+      subroutine spin(NBASIS,NAE,NBE,MAXNBF,A,U,AA,S2)
+      implicit none
+      double precision A , AA , four , gfloat , gsqrt , one , pt25 , 
+     &                 pt5 , s , S2 , sum , U , zero
+      integer i , irwca , irwcb , irws , irwur , j , MAXNBF , NAE , 
+     &        NBASIS , NBE
+      dimension A(MAXNBF,MAXNBF) , U(MAXNBF,MAXNBF) , AA(*)
+      data pt5/0.5D0/ , pt25/0.25D0/ , zero/0.0D0/ , one/1.0D0/ , 
+     &     four/4.0D0/
+      data irws/514/ , irwca/524/ , irwcb/526/ , irwur/540/
+C
+C***********************************************************************
+C     routine to compute the alpha-beta overlap matrix (molecular)
+C     and then <s**2>.
+C     this routine requires as input the following:
+C        nbasis -- the number of basis functions.
+C        nae    -- the number of alpha electrons.
+C        nbe    -- the number of beta electrons.
+C        maxnbf -- the maximum dimension.
+C        a      -- square scratch array.
+C        u      -- square scratch array.
+C        aa     -- scratch vector, at least nbasis long.
+C     the output of the routine is s2, the expectation value of s**2.
+C***********************************************************************
+C
+C
+C
+C
+C
+C     compute the alpha-beta overlap matrix.
+      call tread(irws,A,MAXNBF,MAXNBF,NBASIS,NBASIS,1)
+      call tread(irwca,U,MAXNBF,MAXNBF,NBASIS,NBASIS,0)
+      call matrec(U,A,AA,MAXNBF,NBASIS,NBASIS,NBASIS,2)
+      call tread(irwcb,A,MAXNBF,MAXNBF,NBASIS,NBASIS,0)
+      call matrec(U,A,AA,MAXNBF,NBASIS,NBASIS,NBASIS,1)
+      call twrite(irwur,U,MAXNBF,MAXNBF,NBASIS,NBASIS,0)
+C
+C     compute <s**2>.
+      sum = zero
+C     protect against empty spin spaces.
+      if ( NAE*NBE.gt.0 ) then
+         do 50 i = 1 , NAE
+            do 20 j = 1 , NBE
+               sum = sum + (U(i,j)*U(i,j))
+ 20         continue
+ 50      continue
+      endif
+C
+      S2 = pt5*gfloat(NAE+NBE) + pt25*((gfloat(NAE-NBE))**2) - sum
+      s = -pt5 + pt5*gsqrt(one+four*S2)
+C
+      return
+C
+      end
+@* INDEX.

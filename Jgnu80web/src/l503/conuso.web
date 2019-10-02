@@ -1,0 +1,192 @@
+@* conuso.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NBASIS                                                    
+\item[INPUT:] IEXP                                                      
+\item[OUTPUT:] KEY                                                       
+\item[INPUT:] IOPER                                                     
+\item[PASSED:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    A       EXTRAP  ICOUNT  KSPIN   RMS                    
+\item[Transmits as argument]  B       D1      D2      D3      IOD     IPSCR          
+\item[Uses]  A       ACURCY  B       CLASS   CMP     D1      D2     
+             D3      EXTRAP  FOUR    ICOUNT  IOD     IOUT    IPSCR  
+             KSM     KSPIN   MTT     NTT     ONE     RMS     TWO    
+             ZERO                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GFLOAT  GSQRT   ILSW    TIOC    TRACAB         
+\item[Called by]   FIRST                                                  
+                                                                    
+\end{description}
+@a
+      subroutine conuso(NBASIS,IEXP,KEY,IOPER,IDUMP)
+      implicit none
+      double precision A , a0 , a1 , a2 , a3 , Acurcy , B , Big , 
+     &                 cosphi , cospsi , den , Deriv , Energy , Fillab , 
+     &                 Four , gabs , gfloat , gsqrt , One , Onept5
+      double precision onept9 , Pt5 , pt99 , Rms , Small , t11 , t12 , 
+     &                 t13 , t22 , t23 , t33 , Three , tracab , Two , 
+     &                 xy , Zero
+      integer i , Icount , IDUMP , Ieval , Ievals , IEXP , Igeno , In , 
+     &        Ioc , Ioc0 , Iocs , Iod , Iof1p , Iofa , Ione , IOPER , 
+     &        Ioq , Ios , Iouab , Ious
+      integer Iout , Ipscr , Ipspin , Iptot , Ipunch , Jmat , KEY , 
+     &        Ksm , Kspin , Ksw , Maxcyc , Mdim , Mdsq , minprt , 
+     &        Mshifs , Mtt , NBASIS , Nes , Nesk , Nest
+      integer Nse , Nsep , Ntt
+      logical Cmp , Rhf , Class , Extrap
+      integer D1 , D2 , D3
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nes
+      common /maxdm / Mdim , Mtt , Ntt , Mdsq , Mshifs
+      common /memry / A(4970) , B(4970) , Fillab(40060)
+      common /io    / In , Iout , Ipunch
+      common /rwf503/ Igeno , Ieval , Ios , Ione , Iofa(4) , Iod(4) , 
+     &                Ioc(4) , Iocs(4) , Ioc0(4) , Ioq(4) , Ious(4) , 
+     &                Jmat(4) , Iof1p(4) , Ievals , Iouab(4) , Iptot(2)
+     &                , Ipspin(2)
+      common /cut   / Energy , Deriv , Acurcy , Rms , Maxcyc , Icount , 
+     &                Class , Extrap
+      common /pexscr/ Ipscr(4)
+      equivalence (D1,Iof1p(1)) , (D2,Jmat(1)) , (D3,Ious(1))
+      data pt99 , onept9/.99D0 , 1.9D0/
+C     ******************************************************************
+C     convergence routine for the univariate search procedures
+C
+C     coded in june 75 by rs9b
+C     ******************************************************************
+C=ia  common/cut/energy,deriv,acurcy,maxcyc,rms,icount,class,extrap
+C
+C
+C=nr  data pt995/.995d0/
+C
+99001 format (32x,d11.4)
+99002 format (' ITERATION TERMINATED: DENSITY MATRIX CONVERGES')
+99003 format (45x,'4-POINT.')
+99004 format (45x,'3-POINT.')
+C     ******************************************************************
+      call ilsw(2,21,minprt)
+      if ( IOPER.eq.2 ) then
+C
+C     ******************************************************************
+C     convergence test
+C     ******************************************************************
+C
+C
+         do 50 Kspin = 1 , Ksm
+            call tioc(NBASIS,2,Iod,A,2,1,IDUMP)
+            call tioc(NBASIS,2,Ipscr,B,2,1,IDUMP)
+            call tioc(NBASIS,1,Ipscr,A,2,1,IDUMP)
+            do 20 i = 1 , Ntt
+               if ( Cmp ) A(i+Mtt) = A(i+Mtt) - B(i+Mtt)
+               A(i) = A(i) - B(i)
+ 20         continue
+            call tioc(NBASIS,1,D1,A,2,1,IDUMP)
+ 50      continue
+         t11 = tracab(NBASIS,D1,D1)
+         Rms = gsqrt(t11)/gfloat(NBASIS)
+         if ( minprt.eq.0 ) write (Iout,99001) Rms
+         KEY = 1
+         if ( Rms.gt.Acurcy .or. Extrap ) then
+C
+C     ******************************************************************
+C     extrapolation of the p-matrix for classical procedure
+C     ******************************************************************
+C
+            Extrap = .false.
+            if ( .not.Class ) return
+            Icount = Icount + 1
+            if ( IEXP.ge.2 ) return
+            if ( Icount.ne.1 ) then
+               t12 = tracab(NBASIS,D1,D2)
+               if ( Icount.ne.2 ) then
+                  t12 = tracab(NBASIS,D1,D2)
+                  t13 = tracab(NBASIS,D1,D3)
+                  if ( Icount.gt.3 ) then
+                     cosphi = t12/gsqrt(t11*t22)
+C
+                     den = t11*t22 - t12**2
+                     a0 = (t13*t22-t12*t23)/den
+                     a1 = (t23*t11-t12*t13)/den
+                     cospsi = gsqrt((t11*a0**2+t12*Two*a0*a1+t22*a1**2)
+     &                        /t33)
+                     if ( cospsi.gt.pt99 ) then
+                        a1 = -a1/a0
+                        a0 = One/a0
+                        xy = a1**2 + Four*a0
+                        if ( xy.ge.Zero ) then
+                           xy = gabs(a1) + gsqrt(xy)
+                           if ( xy.le.onept9 ) then
+C
+C     four-point extrapolation
+                              if ( minprt.eq.0 ) write (Iout,99003)
+                              den = One - a0 - a1
+                              a3 = a0/den
+                              a2 = (a0+a1)/den
+                              do 56 Kspin = 1 , Ksm
+                                 call tioc(NBASIS,2,Iod,A,2,1,IDUMP)
+                                 call tioc(NBASIS,2,D1,B,2,1,IDUMP)
+                                 do 52 i = 1 , Ntt
+                                    if ( Cmp ) A(i+Mtt) = A(i+Mtt)
+     &                                 + a2*B(i+Mtt)
+                                    A(i) = A(i) + a2*B(i)
+ 52                              continue
+                                 call tioc(NBASIS,2,D2,B,2,1,IDUMP)
+                                 do 54 i = 1 , Ntt
+                                    if ( Cmp ) A(i+Mtt) = A(i+Mtt)
+     &                                 + a3*B(i+Mtt)
+                                    A(i) = A(i) + a3*B(i)
+ 54                              continue
+                                 call tioc(NBASIS,1,Iod,A,2,1,IDUMP)
+ 56                           continue
+                              Extrap = .true.
+                              Icount = 0
+                           endif
+                        endif
+                     endif
+                  endif
+               endif
+C
+C     shift d2 to d3
+               do 60 Kspin = 1 , Ksm
+                  call tioc(NBASIS,2,D2,A,2,1,IDUMP)
+                  call tioc(NBASIS,1,D3,A,2,1,IDUMP)
+ 60            continue
+               t33 = t22
+            endif
+         else
+            KEY = 0
+            if ( minprt.eq.0 ) write (Iout,99002)
+            return
+         endif
+      else
+C
+C     ******************************************************************
+C     initialization of the reference density matrix
+C     ******************************************************************
+C
+         KEY = 1
+         do 100 Kspin = 1 , Ksm
+            call tioc(NBASIS,2,Iod,A,2,1,IDUMP)
+            call tioc(NBASIS,1,Ipscr,A,2,1,IDUMP)
+ 100     continue
+         return
+      endif
+C
+C     shift d1 to d2
+      do 200 Kspin = 1 , Ksm
+         call tioc(NBASIS,2,D1,A,2,1,IDUMP)
+         call tioc(NBASIS,1,D2,A,2,1,IDUMP)
+ 200  continue
+      t22 = t11
+      t23 = t12
+      return
+C
+      end
+@* INDEX.

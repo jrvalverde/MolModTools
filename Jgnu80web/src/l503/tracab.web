@@ -1,0 +1,56 @@
+@* tracab.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NBASIS                                                    
+\item[PASSED:] M1                                                        
+\item[PASSED:] M2                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    KSPIN                                                  
+\item[Transmits as argument]  A       B       KSM                                    
+\item[Uses]  A       B       KSM     KSPIN   ZERO                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  MATMUL  TIOC                                   
+\item[Called by]   CONUSO                                                 
+                                                                    
+\end{description}
+@a
+      double precision function tracab(NBASIS,M1,M2)
+      implicit none
+      double precision A , B , Big , Fillab , Four , gfloat , One , 
+     &                 Onept5 , Pt5 , Small , Three , Two , Zero
+      integer idump , Ksm , Kspin , Ksw , M1 , M2 , NBASIS , Nesk , 
+     &        Nest , Nest1 , Nse , Nsep
+      logical Cmp , Rhf
+      dimension M1(*) , M2(*)
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /memry / A(4970) , B(4970) , Fillab(40060)
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+C     ******************************************************************
+C     accepts the rwf entries of two matrices, m1 and m2
+C     evaluates trace(m1*m2)
+C     form uhf, the result is divided by two
+C
+C     coded in feb 76 by rs9b
+C     ******************************************************************
+C     ******************************************************************
+      tracab = Zero
+      idump = 0
+      do 100 Kspin = 1 , Ksm
+         call tioc(NBASIS,2,M1,A,2,1,idump)
+         call tioc(NBASIS,2,M2,B,2,1,idump)
+         call matmul(NBASIS,A,B,2,0,2)
+         tracab = tracab + A(1)
+ 100  continue
+C
+C     convention: closed-shell p is standard
+      tracab = tracab/gfloat(Ksm)
+      return
+C
+      end
+@* INDEX.
