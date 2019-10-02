@@ -1,0 +1,36 @@
+@* uu0701.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWB    IRWFX   IRWPT   IRWW                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0701
+C
+C***********************************************************************
+C     block data module for link l701.
+C***********************************************************************
+C
+      implicit none
+      double precision Dummy
+      integer Id1 , Id2 , Id3 , Irwb , Irwfx , Irwpt , Irww
+      common /bd0701/ Dummy
+      common /irw701/ Irwb(2) , Irwpt , Irww , Irwfx , Id1 , Id2 , Id3
+C      common /co701/core(17806),mxcore
+C      data mxcore/17806/
+C      data core/17806*0./
+      data Irwb(1) , Irwb(2) , Irwpt , Irww , Irwfx/506 , 1481 , 532 , 
+     &     571 , 521/
+C
+C     common to define rw-file locations (and where constant, the
+C     lengths).
+C
+C
+      end
+@* INDEX.

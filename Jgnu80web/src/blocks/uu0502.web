@@ -1,0 +1,41 @@
+@* uu0502.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWC1   IRWC2   IRWC3   IRWCA   IRWCB   IRWEIG  IRWFA  
+             IRWFB   IRWGEN  IRWH    IRWIBF  IRWPA   IRWPB   IRWPS  
+             IRWPT   IRWS    IRWT    IRWTM   IRWUR   LENIBF  MAXNBF 
+             NTTMAX  WORD                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0502
+      implicit none
+      double precision Dummy
+      integer Irwc1 , Irwc2 , Irwc3 , Irwca , Irwcb , Irweig , Irwfa , 
+     &        Irwfb , Irwgen , Irwh , Irwibf , Irwpa , Irwpb , Irwps , 
+     &        Irwpt , Irws , Irwt , Irwtm , Irwur , Lenibf
+      integer Maxnbf , Nttmax
+      character*6 Word
+      common /bd0502/ Dummy
+      common /word  / Word(4)
+      common /max502/ Maxnbf , Nttmax
+      common /irw502/ Irwgen , Irweig , Irwca , Irwcb , Irwpa , Irwpb , 
+     &                Irwpt , Irwps , Irwfa , Irwfb , Irwur , Irws , 
+     &                Irwh , Irwt , Irwtm , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwibf , Lenibf
+      data Maxnbf/75/ , Nttmax/2850/
+      data Irwibf/508/ , Lenibf/15/
+      data Word/6HALPHA- , 6H BETA- , 6HTOTAL- , 6H SPIN-/
+      data Irwgen/501/ , Irweig/522/ , Irwca/524/ , Irwcb/526/ , 
+     &     Irwpa/528/ , Irwpb/530/ , Irwpt/532/ , Irwps/534/ , 
+     &     Irwfa/536/ , Irwfb/538/ , Irwur/540/ , Irws/514/ , 
+     &     Irwh/515/ , Irwt/516/ , Irwtm/2555/ , Irwc1/2551/ , 
+     &     Irwc2/2552/ , Irwc3/2553/
+      end
+@* INDEX.

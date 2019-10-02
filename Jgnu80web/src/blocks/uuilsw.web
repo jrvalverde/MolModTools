@@ -1,0 +1,57 @@
+@* uuilsw.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    BASIS   BNREAD  CONST   CONVER  D5D6    F7F10   GUESS  
+             IFARCH  IFAU    IFDON1  IFDON2  IFFON1  IFFON2  IFFON3 
+             IFFP    IFFPOL  IFGRD   IFPONH  IFRC    NOSYM   OPCLO  
+             POLAR   PRTOFF  PSAVE   STABIL  SYMM                   
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uuilsw
+      implicit none
+      integer Basis , Bnread , Const , Conver , D5d6 , F7f10 , Guess , 
+     &        Ifarch , Ifau , Ifdon1 , Ifdon2 , Iffon1 , Iffon2 , 
+     &        Iffon3 , Iffp , Iffpol , Ifgrd , Ifponh , Ifrc , Nosym
+      integer Opclo , Polar , Prtoff , Psave , Stabil , Symm
+      common /il    / Const(2) , D5d6(2) , Basis(2) , Polar(2) , 
+     &                Conver(2) , Stabil(2) , Symm(2) , Guess(2) , 
+     &                Bnread(2) , Ifponh(2) , Ifdon1(2) , Ifdon2(2) , 
+     &                Iffon1(2) , Iffon2(2) , Iffon3(2) , F7f10(2) , 
+     &                Iffpol(2) , Ifau(2) , Iffp(2) , Prtoff(2) , 
+     &                Psave(2) , Opclo(2) , Ifgrd(2) , Ifrc(2) , 
+     &                Ifarch(2) , Nosym(2)
+      data Const/3 , 0/
+      data D5d6/4 , 2/
+      data Basis/56 , 3/
+      data Polar/448 , 6/
+      data Conver/512 , 9/
+      data Stabil/1024 , 10/
+      data Symm/2048 , 11/
+      data Guess/4096 , 12/
+      data Bnread/16384 , 14/
+      data Ifponh/64 , 6/
+      data Ifdon1/128 , 7/
+      data Ifdon2/256 , 8/
+      data Iffon1/32768 , 15/
+      data Iffon2/65536 , 16/
+      data Iffon3/131072 , 17/
+      data F7f10/262144 , 18/
+      data Iffpol/229376 , 15/
+      data Ifau/8192 , 13/
+      data Iffp/524288 , 19/
+      data Prtoff/1048576 , 20/
+      data Psave/2097152 , 21/
+      data Opclo/4194304 , 22/
+      data Ifgrd/8388608 , 23/
+      data Ifrc/16777216 , 24/
+      data Ifarch/33554432 , 25/
+      data Nosym/201326592 , 26/
+      end
+@* INDEX.

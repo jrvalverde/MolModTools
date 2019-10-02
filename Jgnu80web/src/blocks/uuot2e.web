@@ -1,0 +1,22 @@
+@* uuot2e.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWIBF  IRWICB  LENIBF                                 
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uuot2e
+      implicit none
+      integer Irwibf , Irwicb , Lenibf
+      common /irwo2e/ Irwicb , Irwibf , Lenibf
+      data Irwicb/509/ , Irwibf/508/
+      data Lenibf/15/
+C for out2e
+      end
+@* INDEX.

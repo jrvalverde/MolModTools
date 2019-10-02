@@ -1,0 +1,51 @@
+@* uu0001.
+\{end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DIRTAB  FIRST   JMPTAB  OPTAB   OVTAB   SEGTAB         
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0001
+      implicit none
+      integer Dirtab , Dummy , First , Jmptab , Optab , Ovtab , Segtab
+C for croute
+      common /bd0001/ Dummy
+      common /crtab / First(32) , Dirtab(28) , Ovtab(13) , Optab(35) , 
+     &                Segtab(29) , Jmptab(21)
+C ----------------------------------------------------------------------
+C                    ***** qparse table *****
+      data First/'TOP' , -1 , '#' , 'TOP' , 0 , 0 , 6 , 'NONS' , 'TD' , 
+     &     'TOP' , 0 , 0 , 1 , 'N' , 'TOP' , 0 , 0 , 1 , 'P' , 'TOP' , 
+     &     0 , 0 , 1 , 'F' , 'TOP' , 0 , 0 , 'NUL' , 0 , 0 , 0 , 'EOS'/
+C                    state to skip past  \# nonstd.
+      data Dirtab/'DIR' , -1 , '(' , 0 , 0 , 0 , 'EOL' , 'EXI' , 1 , 
+     &     -1 , 'NUL' , 'OV' , 0 , 0 , 'EOS' , 0 , 'I10' , 0 , 2 , 0 , 
+     &     'EOS' , 0 , -1 , ')' , 'RET' , 1 , 1 , 'EOS'/
+C                    state to deal with alternate directory.
+      data Ovtab/'OV' , 'I10' , 0 , 2 , 0 , 'EOS' , 0 , -1 , '/' , 
+     &     'RET' , 1 , 2 , 'EOS'/
+C                    state to get overlay number.
+      data Optab/'OP' , -1 , '/' , 'SEG' , 0 , 0 , 'I10' , 0 , 3 , 0 , 
+     &     -1 , ',' , 'OP' , 0 , 0 , 'EOS' , 0 , -1 , '=' , 0 , 1 , 3 , 
+     &     'EOS' , 0 , 'I10' , 'RET' , 2 , 0 , 'EOS' , 0 , 'NUL' , 
+     &     'OP' , 0 , 0 , 'EOS'/
+C                    state to deal with options.
+      data Segtab/'SEG' , 'I10' , 0 , 2 , 0 , 'EOS' , 0 , 'NUL' , 
+     &     'RET' , 1 , 4 , 'EOS' , 0 , -1 , '(' , 'J' , 0 , 0 , -1 , 
+     &     ';' , 'DIR' , 0 , 0 , -1 , ',' , 'SEG' , 0 , 0 , 'EOS'/
+C                    state to get link numbers.
+      data Jmptab/'J' , 'I10' , 0 , 2 , 0 , 'EOS' , 0 , -1 , ')' , 
+     &     'RET' , 1 , 5 , 'EOS' , 0 , -1 , ';' , 'DIR' , 0 , 0 , 
+     &     'EOS' , 'END'/
+C
+C                    state to get 'jump' spec.  "(" has already
+C                    been read.
+C
+      end
+@* INDEX.

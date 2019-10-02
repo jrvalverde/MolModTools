@@ -1,0 +1,32 @@
+@* uu0702.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWB    IRWFX   IRWPA   IRWPB   IRWPT   IRWPTI  IRWSYM 
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0702
+C
+C***********************************************************************
+C     block data module for link l702.
+C***********************************************************************
+      implicit none
+      double precision Dummy
+      integer Irwb , Irwfx , Irwpa , Irwpb , Irwpt , Irwpti , Irwsym
+      common /bd0702/ Dummy
+      common /irw702/ Irwb(2) , Irwpt , Irwpa , Irwpb , Irwpti , Irwfx , 
+     &                Irwsym
+C      common /co702/core(16557),mxcore
+      data Irwb(1) , Irwb(2) , Irwpt , Irwpa , Irwpb , Irwpti , Irwfx , 
+     &     Irwsym/506 , 1481 , 532 , 528 , 530 , 533 , 521 , 551/
+C      data mxcore/16557/
+C      data core/16557*0./
+C
+      end
+@* INDEX.

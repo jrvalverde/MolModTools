@@ -1,0 +1,46 @@
+@* uu0501.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWC    IRWC1   IRWC2   IRWC3   IRWEIG  IRWF    IRWGEN 
+             IRWH    IRWIBF  IRWLC   IRWLE   IRWLP   IRWP    IRWPT  
+             IRWS    IRWT    IRWTM   IRWW    ISYMM   LABDCK  NEQ    
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0501
+C
+C***********************************************************************
+C     block data module for link 501.
+C***********************************************************************
+C
+C
+      implicit none
+      double precision Dummy
+      integer Irwc , Irwc1 , Irwc2 , Irwc3 , Irweig , Irwf , Irwgen , 
+     &        Irwh , Irwibf , Irwlc , Irwle , Irwlp , Irwp , Irwpt , 
+     &        Irws , Irwt , Irwtm , Irww , Isymm , Labdck
+      integer Neq
+      common /bd0501/ Dummy
+      common /irw501/ Irwgen , Irws , Irwh , Irwt , Irweig , Irwc , 
+     &                Irwp , Irwpt , Irwf , Irwc1 , Irwc2 , Irwc3 , 
+     &                Irwtm , Irwibf(2) , Irwle , Irwlc , Irwlp , Irww
+      common /punlab/ Labdck(4,3)
+      common /isyrwf/ Isymm , Neq
+      data Irwgen/501/ , Irws/514/ , Irwh/515/ , Irwt/516/ , 
+     &     Irweig/522/ , Irwc/524/
+      data Irwp/528/ , Irwpt/532/ , Irwf/536/
+      data Irwc1/2551/ , Irwc2/2552/ , Irwc3/2553/ , Irwtm/2555/
+      data Irwle/2556/ , Irwlc/2557/ , Irwlp/2558/ , Irww/571/
+      data Irwibf/508 , 15/
+      data Labdck/'ALPH' , 'A MO' , ' COE' , 'FS  ' , 'ALPH' , 'A DE' , 
+     &     'NSIT' , 'Y   ' , 'EIGE' , 'NVAL' , 'UES ' , '    '/
+      data Isymm/551/ , Neq/565/
+C
+      end
+@* INDEX.

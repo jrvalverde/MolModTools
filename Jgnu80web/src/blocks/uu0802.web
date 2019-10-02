@@ -1,0 +1,27 @@
+@* uu0802.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    MAXWS   MINWS   MOREWS  REGWS                          
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0802
+      implicit none
+      double precision Dummy
+      integer Maxws , Minws , Morews
+      integer Regws
+      common /bd0802/ Dummy
+      common /mem802/ Minws , Regws , Maxws , Morews
+      data Minws/256/
+      data Regws/400/
+      data Maxws/512/
+      data Morews/600/
+C
+      end
+@* INDEX.

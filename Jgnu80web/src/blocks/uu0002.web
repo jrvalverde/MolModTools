@@ -1,0 +1,40 @@
+@* uu0002.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    RESULT                                                 
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0002
+C  this segment initialises all the possible results of a
+C  parse. at the moment there are only 48 but allowance is
+C  made for 100
+      implicit none
+      integer Cnoe , Coord , Direct , Dummy , Grdsym , Ialt , Ibas1 , 
+     &        Ibas2 , Ibas3 , Ibas4 , Icmplx , Id2e , Ifau , Ifrad , 
+     &        Iges , Intsym , Ioptyp , Iprc1 , Iprc2 , Iprc3
+      integer Iprc4 , Ipseud , Iraff , Iscfdm , Itest , Its , Itype , 
+     &        Ndchg , Noextr , Nondef , Nopop , Nostd , Nosym , Optcyc , 
+     &        Prtges , Result , Rpac , Savbas , Savfc , Savmo
+      integer Scfcyc , Stbint , Stbopt , Stbout , Stbrxt , Stbsym , 
+     &        Stccxt , Stronl , Synch , Units , Vshift
+      dimension Result(100)
+      common /ertgen/ Itype , Ibas1 , Ibas2 , Ibas3 , Ibas4 , Iprc1 , 
+     &                Iprc2 , Iprc3 , Iprc4 , Iges , Savfc , Savbas , 
+     &                Savmo , Ialt , Iscfdm , Its , Ipseud , Noextr , 
+     &                Iraff , Nopop , Itest , Synch , Nosym , Scfcyc , 
+     &                Nostd , Stbsym , Stbopt , Stbout , Stbint , 
+     &                Stbrxt , Stccxt , Prtges , Icmplx , Ioptyp , 
+     &                Id2e , Intsym , Grdsym , Ifau , Ifrad , Units , 
+     &                Optcyc , Coord , Stronl , Nondef , Ndchg , Cnoe , 
+     &                Rpac , Vshift , Direct , Dummy(51)
+      equivalence (Itype,Result(1))
+      data Result/100*0/
+      end
+@* INDEX.

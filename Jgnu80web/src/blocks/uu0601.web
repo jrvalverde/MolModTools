@@ -1,0 +1,43 @@
+@* uu0601.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOLBL   IRWCA   IRWCB   IRWEIG  IRWGEN  IRWPA   IRWPB  
+             IRWPT   IRWS    IRWSC1  IRWSCR  IRWX    IRWY    IRWZ   
+             MDIM    NAMAX                                          
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0601
+C
+C***********************************************************************
+C     block data module for l601.
+C***********************************************************************
+C
+C
+      implicit none
+      double precision Dummy
+      integer Iolbl , Irwca , Irwcb , Irweig , Irwgen , Irwpa , Irwpb , 
+     &        Irwpt , Irws , Irwsc1 , Irwscr , Irwx , Irwy , Irwz , 
+     &        Mdim , Namax
+      common /bd0601/ Dummy
+      common /md601 / Mdim , Namax
+      common /irw601/ Irweig , Irwca , Irwcb , Irwpa , Irwpb , Irws , 
+     &                Iolbl , Irwx , Irwy , Irwz , Irwpt , Irwgen , 
+     &                Irwscr , Irwsc1
+      data Irweig/522/ , Irwca/524/ , Irwcb/526/ , Irwpa/528/ , 
+     &     Irwpb/530/ , Irws/514/ , Irwx/518/ , Irwy/519/ , Irwz/520/ , 
+     &     Irwpt/532/ , Iolbl/502/
+      data Irwgen/501/ , Irwscr/2551/ , Irwsc1/2552/
+      data Mdim/150/ , Namax/100/
+C     bd0601
+C
+C
+C
+      end
+@* INDEX.

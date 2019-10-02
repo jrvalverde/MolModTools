@@ -1,0 +1,43 @@
+@* uu0311.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IRWB    IRWFM   IRWIBF  IRWICB  IVEC    JVEC    KVEC   
+             LENIBF  LVEC                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0311
+      implicit none
+      double precision Dummy
+      integer Irwb , Irwfm , Irwibf , Irwicb , Ivec , Jvec , Kvec , 
+     &        Lenibf , Lvec
+      common /bd0311/ Dummy
+      common /irw311/ Irwb , Irwfm , Irwicb , Irwibf , Lenibf
+      common /idat  / Ivec(16,3) , Jvec(16,3) , Kvec(16,3) , Lvec(16,3)
+      data Irwb/506/ , Irwfm/503/ , Irwicb/509/
+      data Ivec/1 , 1 , 1 , 1 , 3 , 1 , 1 , 1 , 3 , 2 , 2 , 2 , 3 , 3 , 
+     &     4 , 1 , 1 , 2 , 1 , 1 , 1 , 1 , 1 , 1 , 2 , 2 , 4 , 2 , 4 , 
+     &     3 , 4 , 1 , 1 , 1 , 2 , 1 , 1 , 1 , 1 , 1 , 2 , 3 , 2 , 2 , 
+     &     3 , 3 , 4 , 1/
+      data Jvec/2 , 2 , 2 , 2 , 4 , 2 , 2 , 2 , 4 , 1 , 1 , 1 , 4 , 4 , 
+     &     3 , 2 , 4 , 3 , 4 , 4 , 4 , 4 , 4 , 4 , 3 , 3 , 1 , 3 , 1 , 
+     &     2 , 1 , 4 , 3 , 3 , 4 , 3 , 3 , 3 , 3 , 3 , 4 , 1 , 4 , 4 , 
+     &     1 , 1 , 2 , 3/
+      data Kvec/3 , 3 , 4 , 3 , 1 , 3 , 4 , 3 , 2 , 3 , 4 , 3 , 1 , 1 , 
+     &     1 , 3 , 2 , 1 , 2 , 2 , 3 , 3 , 2 , 2 , 4 , 1 , 2 , 1 , 3 , 
+     &     1 , 2 , 2 , 2 , 2 , 1 , 2 , 4 , 2 , 4 , 2 , 3 , 2 , 1 , 1 , 
+     &     4 , 2 , 1 , 2/
+      data Lvec/4 , 4 , 3 , 4 , 2 , 4 , 3 , 4 , 1 , 4 , 3 , 4 , 2 , 2 , 
+     &     2 , 4 , 3 , 4 , 3 , 3 , 2 , 2 , 3 , 3 , 1 , 4 , 3 , 4 , 2 , 
+     &     4 , 3 , 3 , 4 , 4 , 3 , 4 , 2 , 4 , 2 , 4 , 1 , 4 , 3 , 3 , 
+     &     2 , 4 , 3 , 4/
+      data Irwibf/508/ , Lenibf/15/
+C     data bij subr shell,l311
+      end
+@* INDEX.

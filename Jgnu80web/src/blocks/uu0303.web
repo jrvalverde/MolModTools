@@ -1,0 +1,29 @@
+@* uu0303.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    INDJX   INDJY   INDJZ   MDIM                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0303
+      implicit none
+      integer Indix , Indiy , Indiz , Indjx , Indjy , Indjz , Mdim
+      common /mdim  / Mdim
+      common /inds  / Indjx(20) , Indjy(20) , Indjz(20) , Indix(20) , 
+     &                Indiy(20) , Indiz(20)
+      data Mdim/150/
+      data Indjx/1 , 2 , 1 , 1 , 3 , 1 , 1 , 2 , 2 , 1 , 4 , 1 , 1 , 2 , 
+     &     3 , 3 , 2 , 1 , 1 , 2/
+      data Indjy/1 , 1 , 2 , 1 , 1 , 3 , 1 , 2 , 1 , 2 , 1 , 4 , 1 , 3 , 
+     &     2 , 1 , 1 , 2 , 3 , 2/
+      data Indjz/1 , 1 , 1 , 2 , 1 , 1 , 3 , 1 , 2 , 2 , 1 , 1 , 4 , 1 , 
+     &     1 , 2 , 3 , 3 , 2 , 2/
+C
+      end
+@* INDEX.

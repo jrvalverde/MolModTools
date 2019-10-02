@@ -1,0 +1,79 @@
+@* uucids.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICIVAR  IEXTRP  IGENO   ILINCC  INFORB  IW1SAV  IW2SAV 
+             LA0     LANORM  LCCD    LCISD4  LCIVAR  LDQ4    LECID  
+             LECIDS  LEHF    LENRGY  LEXTRP  LIGEN   LISD    LLCCD  
+             LLCCD4  LLINCC  LMP2    LMP3    LNFORB  LSCC1   LSDQ4  
+             LSDTQ4  LVAR1   MDIM                                   
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uucids
+      implicit none
+      double precision Dummy
+      integer Icivar , Iextrp , Igeno , Ilincc , Inforb , Iw1sav , 
+     &        Iw2sav , La0 , Lanorm , Lccd , Lcisd4 , Lcivar , Ldq4 , 
+     &        Lecid , Lecids , Lehf , Lenrgy , Lextrp , Ligen , Lisd
+      integer Llccd , Llccd4 , Llincc , Lmp2 , Lmp3 , Lnforb , Lscc1 , 
+     &        Lsdq4 , Lsdtq4 , Lvar1 , Mdim
+      common /bdcids/ Dummy
+      common /mdmax / Mdim
+      common /locgen/ Lehf , Lmp2 , Lmp3 , Ldq4 , Lsdq4 , Lsdtq4 , 
+     &                Lecid , Lecids , Lscc1 , Lccd , Llccd , Lvar1 , 
+     &                Lcisd4 , Llccd4 , Lenrgy , Lanorm , La0 , Lisd
+      common /rwfp  / Igeno , Ligen , Inforb , Lnforb , Icivar , 
+     &                Lcivar , Iextrp , Lextrp
+      common /loclin/ Ilincc , Llincc
+      common /wsav  / Iw1sav , Iw2sav
+      data Mdim/80/
+C  mdv (and v) are set in bd0901
+      data Igeno , Ligen/501 , 47/
+      data Inforb , Lnforb/545 , 14/
+      data Icivar , Lcivar/601 , 12/
+      data Iextrp , Lextrp/602 , 5/
+      data Ilincc , Llincc/603 , 52/
+      data Lehf , Lmp2 , Lmp3 , Ldq4 , Lsdq4 , Lsdtq4/32 , 33 , 34 , 
+     &     38 , 39 , 35/
+      data Lecid , Lecids , Lscc1 , Lccd , Llccd/36 , 37 , 13 , 40 , 12/
+      data Lvar1 , Lcisd4 , Llccd4 , Lenrgy/11 , 18 , 17 , 43/
+      data Lanorm , La0 , Lisd/42 , 47 , 6/
+      data Iw1sav , Iw2sav/101 , 102/
+C
+C     for correlation methods, links 909 - 913.
+C
+C     common/v/v(20000),mdv
+C   this is set in bd0901 it may need reinstating after splitting
+C     common/locibf/irwibf,lenibf
+C this is set in bd0802
+C     common/nobuc/nobuc
+C  this is set in bd0901
+C
+C     max. bufferlength and dimension (nbasis)
+C     data mdv,mdim/20000,80/
+C
+C
+C     rwf  \# and length of /gen/, /orb/, /civar/ and /extrap/.
+C
+C     locations of output variables in common/gen/
+C
+C     data concerning integral storage
+C     data irwibf,lenibf/8,15/
+C   see above for this 'data'
+C
+C     the number of the buckets where the w vector is saved
+C     in a ci derivative calculation.
+C
+C     the number of permanent buckets which are currently used.
+C     data nobuc/31/
+C see above for location of this initialisation
+C
+C
+      end
+@* INDEX.

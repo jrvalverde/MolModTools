@@ -1,0 +1,21 @@
+@* uu0312.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    F42     HALF    ONE     TEN     TWO     ZERO           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0312
+      implicit none
+      double precision F42 , Half , One , Ten , Two , Zero
+      common /up0008/ Half , One , Two , Ten , F42 , Zero
+      data Half/0.5D0/ , One/1.0D0/ , Two/2.0D0/ , Ten/10.0D0/ , 
+     &     F42/42.0D0/ , Zero/0.0D0/
+      end
+@* INDEX.

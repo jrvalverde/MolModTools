@@ -1,0 +1,45 @@
+@* uu0803.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IJLS    IREGWS  MAXWS   MINWS   MOREWS                 
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0803
+      implicit none
+      double precision Dummy
+      integer Ijls , Iregws , Maxws , Minws , Morews
+      common /bd0803/ Dummy
+      common /rwfscr/ Ijls
+      common /mem803/ Minws , Iregws , Maxws , Morews
+      data Ijls/2551/
+      data Minws , Iregws , Maxws , Morews/256 , 400 , 512 , 600/
+C     bd0803
+C
+C     for tropen
+C
+C     common/comorb/inforb,lnforb
+C     common/locibf/irwibf,lenibf
+C   see bd0802 for this initialisation - it may have to be
+C        re-instated
+C
+C     rwf and length for common/orb/
+C     data inforb,lnforb/45,14/
+C   see above for this 'data'
+C
+C     scratch rwf for partially trsf. integrals (moi,mok,j,l)
+C
+C     data concerning integral storage
+C     data irwibf,lenibf/8,15/
+C   see above for this 'data'
+C
+C     define memory limits.
+C
+      end
+@* INDEX.

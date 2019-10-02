@@ -1,0 +1,40 @@
+@* uu0716.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    EX      FFX     FX      FXYZ    IDRV1   IRWIBF  IRWPA  
+             IRWPB   IRWPT   IRWW    LENIBF                         
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0716
+C
+C***********************************************************************
+C     block data module for link 716.
+C***********************************************************************
+C
+      implicit none
+      double precision Dummy , Ex , Ffx , Fx , Fxyz
+      integer Idrv1 , Irwibf , Irwpa , Irwpb , Irwpt , Irww , Lenibf
+      common /bd0716/ Dummy
+      common /irw716/ Irww , Irwpt , Idrv1 , Irwpa , Irwpb
+      common /irwibf/ Irwibf , Lenibf
+C      common /co716/core(15000),mxcore
+      common /fxyz  / Fxyz(105)
+      common /force / Ex , Fx(105) , Ffx(5565)
+C      data mxcore/15000/
+C      data core/15000*0./
+      data Irww , Irwpt , Idrv1 , Irwpa , Irwpb/571 , 532 , 100 , 528 , 
+     &     530/
+      data Irwibf , Lenibf/513 , 15/
+      data Fxyz/105*0./
+      data Ex/0./ , Fx/105*0./ , Ffx/5565*0./
+C
+C
+      end
+@* INDEX.

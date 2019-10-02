@@ -1,0 +1,98 @@
+@* uu0503.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    BIG     FOUR    IEVAL   IEVALS  IGENO   IOC     IOC0   
+             IOCS    IOD     IOF1P   IOFA    IONE    IOQ     IOS    
+             IOUAB   IOUS    IPSCR   IPSPIN  IPTOT   IRWIBF  ISYMM  
+             JMAT    KSW     LEHF    LENIBF  LIGEN   LILSW   LIPCW  
+             LOCAV   LREP    LRMSD   LS2     LTAU    LTEN    LVIR   
+             NEQ     ONE     ONEPT5  PT5     SMALL   THREE   TWO    
+             ZERO                                                   
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0503
+C
+C     ******************************************************************
+C     block data module for scfdm (link 503)
+C     ******************************************************************
+C
+C     ******************************************************************
+      implicit none
+      double precision Big , Dummy , Four , One , Onept5 , Pt5 , Small , 
+     &                 Three , Two , Zero
+      integer Ieval , Ievals , Igeno , Ioc , Ioc0 , Iocs , Iod , Iof1p , 
+     &        Iofa , Ione , Ioq , Ios , Iouab , Ious , Ipscr , Ipspin , 
+     &        Iptot , Irwibf , Isymm , Jmat
+      integer Ksm , Kspin , Ksw , Lehf , Lenibf , Ligen , Lilsw , 
+     &        Lipcw , Locav , Lrep , Lrmsd , Ls2 , Ltau , Lten , Lvir , 
+     &        Neq , Nesk , Nest , Nest1 , Nse
+      integer Nsep
+      logical Cmp , Rhf
+      common /bd0503/ Dummy
+      common /scfcon/ Cmp , Rhf , Ksm , Kspin , Ksw(2) , Nesk(2) , Nse , 
+     &                Nsep , Nest , Nest1
+      common /memlng/ Locav
+      common /con503/ Zero , Pt5 , One , Onept5 , Two , Three , Four , 
+     &                Big , Small
+      common /rwf503/ Igeno , Ieval , Ios , Ione , Iofa(4) , Iod(4) , 
+     &                Ioc(4) , Iocs(4) , Ioc0(4) , Ioq(4) , Ious(4) , 
+     &                Jmat(4) , Iof1p(4) , Ievals , Iouab(4) , Iptot(2)
+     &                , Ipspin(2)
+      common /lge503/ Lilsw , Lipcw , Ltau , Lehf , Lvir , Lrep , Lten , 
+     &                Ls2 , Ligen , Lrmsd
+      common /pexscr/ Ipscr(4)
+      common /locibf/ Irwibf , Lenibf
+      common /isy503/ Isymm , Neq
+C
+C     dimension of one matrix array (a or b)
+C
+      data Locav/4970/
+      data Zero , Pt5 , One , Onept5 , Two , Three , Four , Big , 
+     &     Small/0.D0 , .5D0 , 1.D0 , 1.5D0 , 2.D0 , 3.D0 , 4.D0 , 
+     &     1.D36 , 1.D-36/
+      data Ksw/'ALPH' , 'BETA'/
+      data Lilsw , Lipcw , Ltau , Lehf , Lvir , Lrep , Lten , Ls2/2 , 
+     &     3 , 31 , 32 , 40 , 41 , 43 , 44/
+      data Lrmsd/23/
+C
+C     read-write-files (rwf)
+C
+      data Igeno , Ieval , Ios , Ione , Ievals/501 , 522 , 514 , 515 , 
+     &     523/
+      data Iptot/532 , 533/
+      data Ipspin/534 , 535/
+      data Iouab/540 , 541 , 540 , 541/
+      data Iofa/536 , 537 , 538 , 539/
+      data Iod/528 , 529 , 530 , 531/
+      data Ioc/524 , 525 , 526 , 527/
+      data Ipscr/532 , 533 , 534 , 535/
+      data Iocs/554 , 555 , 556 , 557/
+      data Ioc0/2556 , 2557 , 2558 , 2559/
+      data Ioq/2560 , 2561 , 2562 , 2563/
+      data Ious/2564 , 2565 , 2566 , 2567/
+      data Jmat/2568 , 2569 , 2570 , 2571/
+      data Iof1p/2572 , 2573 , 2574 , 2575/
+      data Ligen/47/
+      data Irwibf/508/ , Lenibf/15/
+      data Isymm , Neq/551 , 565/
+C     for scfdm
+C
+C
+C
+C     rel. locations of nucl. rep., tot. energy, s**2, tau in /gen/
+C     length of common/gen/.
+C
+C     location and length of integral buffer format file.
+C
+C     location of symmetry information for two-electron integral
+C     evaluation.
+C
+      end
+@* INDEX.

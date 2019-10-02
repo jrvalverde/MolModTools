@@ -1,0 +1,29 @@
+@* uuqpar.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    MAXDEP  MAXLEN  QPABRV  QPAMBG  QPDPTH  QPEND   QPERR  
+             QPEXIT  QPFAIL  QPOK    QPRECR  QPRET                  
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uuqpar
+      implicit none
+      integer Maxdep , Maxlen , Qpabrv , Qpambg , Qpdpth , Qpend , 
+     &        Qperr , Qpexit , Qpfail , Qpok , Qprecr , Qpret , Stack
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxlen
+      data Qpok/0/ , Qpret/1/ , Qpfail/ - 1/ , Qpambg/ - 2/ , 
+     &     Qperr/ - 3/ , Qpexit/ - 10/ , Qpabrv/ - 11/ , Qpend/ - 13/ , 
+     &     Qprecr/23/ , Qpdpth/0/ , Maxdep/10/ , Maxlen/64/
+C for the parsing routines.
+C
+C
+      end
+@* INDEX.

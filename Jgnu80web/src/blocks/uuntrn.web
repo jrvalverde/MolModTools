@@ -1,0 +1,25 @@
+@* uuntrn.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IO      NUNITS  PRINT   SYNCS   UNITS   WAIT           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uuntrn
+      implicit none
+      integer Idum , Io , Maxpos , Nunits , Units
+      real Wait
+      logical Print , Syncs
+      common /ntr   / Wait(3,4) , Io(3,4) , Units(4) , Nunits , 
+     &                Maxpos(4) , Print(4) , Syncs(4) , Idum
+      data Nunits/0/ , Units/ - 1 , -1 , -1 , -1/ , Wait/12*0./ , 
+     &     Io/12*0/
+      data Print , Syncs/8*.false./
+      end
+@* INDEX.

@@ -1,0 +1,44 @@
+@* uu0003.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOP     IVA     NCA     NEXT    NOC                    
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0003
+      implicit none
+      integer Iop , Iva , Nca , Next , Noc
+      dimension Nca(10)
+      dimension Noc(22)
+      dimension Iop(26)
+      dimension Iva(13)
+      dimension Next(21)
+      common /option/ Nca , Noc , Iop , Iva , Next
+C                       state for getting the link number
+      data Nca/'NCA' , 'I10' , 'NOC' , 1 , 0 , 'EOL' , 'EXI' , 0 , 0 , 
+     &     'EOS'/
+C                       state to get the occurence of the link
+      data Noc/'NOC' , -1 , '(' , 'NOC2' , 0 , 0 , 'NUL' , 'IOP' , 0 , 
+     &     0 , 'EOS' , 'NOC2' , -1 , '*' , 'IOP' , 5 , 1 , 'I10' , 
+     &     'IOP' , 2 , 0 , 'EOS'/
+C                       state to get the value of the option
+      data Iop/'IOP' , -1 , ':' , 'IOP' , 0 , 0 , -1 , '/' , 'IOP' , 0 , 
+     &     0 , -1 , ',' , 'IOP' , 0 , 0 , -1 , ')' , 'IOP' , 0 , 0 , 
+     &     'I10' , 'IVA' , 3 , 0 , 'EOS'/
+C                       state to get the option number
+      data Iva/'IVA' , -1 , '=' , 'IVA2' , 0 , 0 , 'EOS' , 'IVA2' , 
+     &     'I10' , 'RET' , 4 , 0 , 'EOS'/
+C                       determine what to do next
+      data Next/'NEXT' , 'EOL' , 'EXI' , 0 , 0 , -1 , ';' , 'RET' , 5 , 
+     &     2 , 'NUL' , 'IOP' , 0 , 0 , 'EOS' , 'JUMP' , 'NUL' , 'NCA' , 
+     &     0 , 0 , 'EOS'/
+C for nondf
+C
+      end
+@* INDEX.

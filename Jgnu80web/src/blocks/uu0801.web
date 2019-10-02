@@ -1,0 +1,47 @@
+@* uu0801.
+ \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IEVAL   IEVALF  INFORB  IOAB    IOC     IOUAB   ISPECT 
+             LNFORB  MAXBUC                                         
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      blockdata uu0801
+      implicit none
+      integer Ieval , Ievalf , Inforb , Ioab , Ioc , Iouab , Ispect , 
+     &        Lnforb , Loab , Lspect , Maxbuc , Noa , Noa2 , Noa3 , 
+     &        Noaob , Noava , Noavb , Nob , Nob2 , Nob3
+      integer Nobva , Nobvb , Novaa , Novab , Novbb , Nrorb , Nva , 
+     &        Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /comorb/ Inforb , Lnforb
+      common /scfrwf/ Ievalf , Iouab , Ioc(2)
+C
+C     max. number of buckets
+C
+      data Maxbuc/50/
+C
+C     rwf for m.o.coefficients, eigenvalues, and alpha-beta overlap
+C
+      data Ispect , Ieval , Ioab/548 , 547 , 549/
+C
+C     rwf  \# and length of common/orb/
+C
+      data Inforb , Lnforb/545 , 14/
+C
+C     rwf  \# for scf-information used in post scf-routines
+C
+      data Ievalf , Iouab , Ioc/522 , 540 , 524 , 526/
+C
+      end
+@* INDEX.
