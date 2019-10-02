@@ -1,0 +1,132 @@
+@* expand.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V       ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LSEXA   TRACK                                  
+\item[Called by]   CIDENS  DD3                                            
+                                                                    
+\end{description}
+@a
+      subroutine expand(IBUC1,IBUC2,NO,NV)
+      implicit none
+      double precision F42 , Four , Half , One , Onept5 , Ten , Three , 
+     &                 Two , V , Zero
+      integer i , IBUC1 , IBUC2 , icore , ii , ij , imj , In , ind1 , 
+     &        ind2 , indi , indj , indrd , Iout , Ipunch , isave , ist , 
+     &        j , kount , ktimes
+      integer leng , Mdv , NO , NV , nv2 , nv3
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /io    / In , Iout , Ipunch
+C
+C     ******************************************************************
+C
+C     expands matrix with i.lt.j,a.lt.b to all i,j,a,b
+C     no is the dimension of i or j, nv the dimension of a or b.
+C
+C     jul/79 krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('EXPAND')
+C
+      if ( NO.gt.0 .and. NV.gt.0 ) then
+         nv2 = NV*NV
+         nv3 = NV*(NV-1)/2
+         call fileio(1,-IBUC2,0,0,0)
+         icore = 0
+         kount = 0
+C
+         do 50 ii = 1 , NO
+            indi = (ii-1)*(2*NO-ii)/2
+C
+            do 20 ij = 1 , NO
+               indj = (ij-1)*(2*NO-ij)/2
+               isave = icore
+               icore = icore + nv2
+               if ( icore.gt.Mdv ) then
+C
+                  leng = isave
+                  call fileio(1,IBUC2,leng,V,0)
+                  icore = nv2
+                  isave = 0
+               endif
+C
+               imj = ii - ij
+               if ( imj.lt.0 ) then
+C
+C     check to see if the input is contiguous.
+                  if ( ij.lt.NO .and. (icore+nv2).le.Mdv ) then
+C
+                     kount = kount + 1
+                  else
+                     if ( nv3.gt.0 ) then
+                        ktimes = kount*nv3
+                        indrd = (indi+ij-ii-1)*nv3 - ktimes
+                        leng = nv3 + ktimes
+                        call fileio(2,-IBUC1,leng,V(isave-ktimes+1),
+     &                              indrd)
+                     endif
+C
+C     relocate in core and expand a.lt.b to all ab
+                     ind1 = isave - kount*nv2
+                     ind2 = isave - kount*nv3
+                     if ( kount.gt.0 ) then
+                        do 4 i = 1 , kount
+                           if ( nv3.gt.0 ) then
+                              do 2 j = 1 , nv3
+                                 V(ind1+j) = V(ind2+j)
+ 2                            continue
+                           endif
+                           call lsexa(V(ind1+1),NV)
+                           ind1 = ind1 + nv2
+                           ind2 = ind2 + nv3
+ 4                      continue
+                     endif
+                     call lsexa(V(ind1+1),NV)
+                     kount = 0
+                  endif
+               elseif ( imj.eq.0 ) then
+C
+                  ist = isave + 1
+                  do 5 i = ist , icore
+                     V(i) = Zero
+ 5                continue
+               else
+C
+                  if ( nv3.gt.0 ) then
+                     indrd = (indj+ii-ij-1)*nv3
+                     leng = nv3
+                     call fileio(2,-IBUC1,leng,V(isave+1),indrd)
+                  endif
+                  call lsexa(V(isave+1),NV)
+                  ist = isave + 1
+                  do 10 i = ist , icore
+                     V(i) = -V(i)
+ 10               continue
+               endif
+C
+ 20         continue
+ 50      continue
+C
+         leng = icore
+         call fileio(1,IBUC2,leng,V,0)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

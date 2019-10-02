@@ -1,0 +1,141 @@
+@* vewb.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUCA                                                     
+\item[INPUT:] IBUCB                                                     
+\item[INPUT:] DE                                                        
+\item[INPUT:] EVA                                                       
+\item[INPUT:] EVB                                                       
+\item[INPUT:] IOPT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     NOA     NOAOB   NOB     NOVAB   NVA     NVAVB  
+             NVB     V       ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   TEWB                                                   
+                                                                    
+\end{description}
+@a
+      double precision function vewb(IBUCA,IBUCB,DE,EVA,EVB,IOPT)
+      implicit none
+      double precision a0 , DE , eabij , eaij , eij , EVA , EVB , F42 , 
+     &                 Four , Half , One , Onept5 , Ten , Three , Two , 
+     &                 V , Zero
+      integer i , ia , ib , IBUCA , IBUCB , Ieval , ii , ij , ind , 
+     &        Ioab , IOPT , Ispect , kij , left , leng , lij , Loab , 
+     &        Lspect , Maxbuc , Mdv
+      integer mij , nij , Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , 
+     &        Nob , Nob2 , Nob3 , Nobva , Nobvb , Novaa , Novab , 
+     &        Novbb , nrij , Nrorb , nruns , Nva
+      integer Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      dimension EVA(*) , EVB(*)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+C
+C     ******************************************************************
+C1vewb
+C
+C     iopt=1, forms
+C     v(s) = a(s) * (de-ea-eb+ei+ej)
+C     iopt=2, forms
+C     v(s) = a(s) / (de-ea-eb+ei+ej)
+C     the value of the function is:
+C     vewb = sum  a(s) * v(s)
+C            s>0
+C
+C     ibuca contains the a vector
+C     ibucb contains v upon return
+C     if ibucb=0, the output bucket is not written
+C     eva and evb contain the one-electron energies for alpha- and
+C     beta spinspaces, resp.
+C
+C     april 77/seeger
+C
+C     ******************************************************************
+C
+C
+C
+      call track('VEWB  ')
+C
+      vewb = Zero
+      if ( Novab.gt.0 ) then
+C
+         nrij = Mdv/Nvavb
+         nruns = Noaob/nrij
+         if ( mod(Noaob,nrij).ne.0 ) nruns = nruns + 1
+         left = Noaob
+         call fileio(2,-IBUCA,0,0,0)
+         if ( IBUCB.gt.0 ) call fileio(1,-IBUCB,0,0,0)
+         mij = 1
+         lij = 0
+C
+         do 50 i = 1 , nruns
+            nij = min0(left,nrij)
+            left = left - nij
+            leng = nij*Nvavb
+            call fileio(2,IBUCA,leng,V,0)
+C
+            ind = 0
+            kij = 0
+            lij = lij + nij
+            do 20 ii = 1 , Noa
+               do 10 ij = 1 , Nob
+                  kij = kij + 1
+                  if ( kij.le.lij ) then
+                     if ( kij.ge.mij ) then
+C     eij=de+eva(ii)+evb(ij)
+                        eij = (DE) + EVA(ii) + EVB(ij)
+                        if ( IOPT.eq.2 ) then
+C
+                           do 4 ia = 1 , Nva
+                              eaij = eij - EVA(ia+Noa)
+                              do 2 ib = 1 , Nvb
+                                 ind = ind + 1
+C     eabij=eaij-evb(ib+nob)
+                                 eabij = (eaij-EVB(ib+Nob))
+                                 a0 = V(ind)/eabij
+                                 vewb = vewb + a0*V(ind)
+                                 V(ind) = a0
+ 2                            continue
+ 4                         continue
+                        else
+C
+                           do 8 ia = 1 , Nva
+                              eaij = eij - EVA(ia+Noa)
+                              do 6 ib = 1 , Nvb
+                                 ind = ind + 1
+C     eabij=eaij-evb(ib+nob)
+                                 eabij = (eaij-EVB(ib+Nob))
+                                 a0 = V(ind)*eabij
+                                 vewb = vewb + a0*V(ind)
+                                 V(ind) = a0
+ 6                            continue
+ 8                         continue
+                        endif
+                     endif
+                  endif
+ 10            continue
+ 20         continue
+C
+C     output
+            if ( IBUCB.gt.0 ) call fileio(1,IBUCB,leng,V,0)
+C
+            mij = mij + nij
+ 50      continue
+      endif
+C
+      return
+C
+      end
+@* INDEX.

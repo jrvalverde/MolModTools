@@ -1,0 +1,183 @@
+@* matca1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NIJ                                                       
+\item[INPUT:] NKL                                                       
+\item[INPUT:] NMN                                                       
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] IBUC3                                                     
+\item[INPUT:] ISIGN                                                     
+\item[INPUT:] IOPT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V       ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LNK1E   TRACK                                  
+\item[Called by]   DD3                                                    
+                                                                    
+\end{description}
+@a
+      subroutine matca1(NIJ,NKL,NMN,IBUC1,IBUC2,IBUC3,ISIGN,IOPT)
+      implicit none
+      double precision F42 , Four , Half , One , Onept5 , Ten , Three , 
+     &                 thresh , Two , V , Zero
+      integer i , IBUC1 , IBUC2 , IBUC3 , ibucfl , ij , ind1 , ind2 , 
+     &        ind2s , ind3 , ind3s , indfl , IOPT , iopt1 , ISIGN , 
+     &        iv1 , iv2 , iv21 , iv3 , iv31
+      integer kl , klbloc , klleft , leng , max1 , max2 , max3 , Mdv , 
+     &        mdv3 , mdvlft , mn , mnbloc , mnind , mnleft , nfull , 
+     &        nfull1 , nfull2 , nfull3 , NIJ , nijkl
+      integer nijmn , NKL , nklmn , NMN , nsum
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      data thresh/1.D-8/
+C
+C     ******************************************************************
+C
+C     accepts nkl*nij matrix a from ibuc1
+C     accepts nmn*nij matrix b from ibuc2
+C     forms   nkl*nmn matrix c in ibuc3
+C          c(kl,mn) = sum (ij) a(ij,kl)*b(ij,mn)
+C
+C     isign ... .gt.0: sums positive
+C               .lt.0: sums negative
+C
+C     iopt ... 0: c is initialized
+C              1: c is added to the previously calculated c
+C
+C     this routine checks for zeroes in ibuc1.
+C
+C     sept,77  krishnan
+C
+C     ******************************************************************
+C
+C
+C
+      call track('MATCA1')
+C
+      if ( NIJ*NKL*NMN.le.0 ) return
+C
+      iopt1 = IOPT + 1
+      mdv3 = Mdv/3
+      ibucfl = 0
+      nijkl = NIJ*NKL
+      nijmn = NIJ*NMN
+      nklmn = NKL*NMN
+      nsum = nijkl + nijmn + nklmn
+      mdvlft = Mdv
+      max2 = float(nijmn)*float(mdvlft)/float(nsum)
+      if ( max2.lt.NIJ ) max2 = NIJ
+      if ( nijmn.le.mdv3 ) max2 = nijmn
+      mdvlft = mdvlft - max2
+      nsum = nsum - nijmn
+      max1 = float(nijkl)*float(mdvlft)/float(nsum)
+      if ( max1.lt.NIJ ) max1 = NIJ
+      max3 = Mdv - max1 - max2
+      if ( max3.lt.NMN ) then
+         max3 = NMN
+         max2 = Mdv - max1 - max3
+         if ( max2.lt.NIJ ) then
+            max2 = NIJ
+            max1 = Mdv - max2 - max3
+            if ( max1.lt.NIJ ) call lnk1e
+         endif
+      endif
+      if ( max2.ge.nijmn ) ibucfl = 1
+C
+      iv1 = 0
+      iv2 = max1
+      iv3 = max1 + max2
+      iv21 = iv2 + 1
+      iv31 = iv3 + 1
+      nfull1 = max1/NIJ
+      nfull2 = max2/NIJ
+      nfull3 = max3/NMN
+      nfull = min0(nfull1,nfull3)
+C
+C     start read,write operations.
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(2,-IBUC3,0,0,0)
+      call fileio(1,-IBUC3,0,0,0)
+      klleft = NKL
+C
+      indfl = 0
+ 100  klbloc = min0(klleft,nfull)
+      klleft = klleft - klbloc
+      leng = klbloc*NIJ
+      call fileio(2,IBUC1,leng,V,0)
+      leng = klbloc*NMN
+      if ( iopt1.eq.2 ) then
+C
+         call fileio(2,IBUC3,leng,V(iv31),0)
+      else
+C
+         do 150 i = 1 , leng
+            V(iv3+i) = Zero
+ 150     continue
+      endif
+C
+      mnleft = NMN
+      mnind = 0
+      call fileio(2,-IBUC2,0,0,0)
+ 200  mnbloc = min0(mnleft,nfull2)
+      mnleft = mnleft - mnbloc
+      leng = mnbloc*NIJ
+      if ( ibucfl.eq.0 .or. indfl.eq.0 )
+     &     call fileio(2,IBUC2,leng,V(iv21),0)
+      indfl = 1
+C
+C     form product in v3.
+      ind1 = 0
+      ind3s = iv3 + mnind
+      if ( ISIGN.lt.0 ) then
+C
+         do 250 kl = 1 , klbloc
+            ind3 = ind3s
+            ind2s = iv2 + 1
+            do 220 ij = 1 , NIJ
+               ind1 = ind1 + 1
+               if ( dabs(V(ind1)).ge.thresh ) then
+                  ind2 = ind2s
+                  do 205 mn = 1 , mnbloc
+                     V(ind3+mn) = V(ind3+mn) - V(ind1)*V(ind2)
+                     ind2 = ind2 + NIJ
+ 205              continue
+               endif
+               ind2s = ind2s + 1
+ 220        continue
+            ind3s = ind3s + NMN
+ 250     continue
+      else
+         do 300 kl = 1 , klbloc
+            ind3 = ind3s
+            ind2s = iv2 + 1
+            do 260 ij = 1 , NIJ
+               ind1 = ind1 + 1
+               if ( dabs(V(ind1)).ge.thresh ) then
+                  ind2 = ind2s
+                  do 255 mn = 1 , mnbloc
+                     V(ind3+mn) = V(ind3+mn) + V(ind1)*V(ind2)
+                     ind2 = ind2 + NIJ
+ 255              continue
+               endif
+               ind2s = ind2s + 1
+ 260        continue
+            ind3s = ind3s + NMN
+ 300     continue
+      endif
+C
+      mnind = mnind + mnbloc
+      if ( mnleft.gt.0 ) goto 200
+      leng = klbloc*NMN
+      call fileio(1,IBUC3,leng,V(iv31),0)
+      if ( klleft.gt.0 ) goto 100
+      return
+C
+      end
+@* INDEX.

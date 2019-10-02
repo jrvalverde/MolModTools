@@ -1,0 +1,122 @@
+@* expijw.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NDIM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     NOA     V                                      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine expijw(IBUC1,IBUC2,NDIM)
+      implicit none
+      double precision a0 , F42 , Four , Half , One , Onept5 , Ten , 
+     &                 Three , Two , V , Zero
+      integer ia , ia1 , ib , IBUC1 , IBUC2 , icore , Ieval , ii , ij , 
+     &        imj , In , ind1 , ind2 , indi , indj , indrd , Ioab , 
+     &        Iout , Ipunch , isave
+      integer Ispect , kount , ktimes , leng , Loab , Lspect , Maxbuc , 
+     &        Mdv , NDIM , no , Noa , Noa2 , Noa3 , Noaob , Noava , 
+     &        Noavb , Nob , Nob2 , Nob3 , Nobva
+      integer Nobvb , Novaa , Novab , Novbb , Nrorb , ntimes , Nva , 
+     &        Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      common /v     / V(20000) , Mdv
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /io    / In , Iout , Ipunch
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+C
+C     ******************************************************************
+C
+C     only for closed shell (alpha-beta) case.
+C     accepts w-bucket(antisymmetric with respect to interchange
+C     of suffix-pairs) for i.le.j, all ab
+C     in sequence i,j,a,b from ibuc1
+C     and expands to all i,j, all a,b in ibuc2 in the same sequence.
+C     ndim is the dimension of a(or b)
+C
+C     june 79/ krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('EXPIJW')
+C
+      no = Noa
+      ntimes = NDIM*NDIM
+      if ( no.gt.0 .and. ntimes.gt.0 ) then
+         call fileio(1,-IBUC2,0,0,0)
+         icore = 0
+         kount = 0
+C
+         do 50 ii = 1 , no
+            indi = (ii-1)*(2*no-ii+2)/2
+C
+            do 20 ij = 1 , no
+               indj = (ij-1)*(2*no-ij+2)/2
+               isave = icore
+               icore = icore + ntimes
+               if ( icore.gt.Mdv ) then
+C
+                  leng = isave
+                  call fileio(1,IBUC2,leng,V,0)
+                  icore = ntimes
+                  isave = 0
+               endif
+C
+               imj = ii - ij
+               if ( imj.gt.0 ) then
+C
+                  indrd = (indj+ii-ij)*ntimes
+                  leng = ntimes
+                  call fileio(2,-IBUC1,leng,V(isave+1),indrd)
+C
+C     transpose for i.gt.j
+                  do 5 ia = 2 , NDIM
+                     ia1 = ia - 1
+                     do 2 ib = 1 , ia1
+                        ind1 = isave + (ia-1)*NDIM + ib
+                        ind2 = isave + (ib-1)*NDIM + ia
+                        a0 = V(ind1)
+                        V(ind1) = V(ind2)
+                        V(ind2) = a0
+ 2                   continue
+ 5                continue
+C
+C     check to see if the input is contiguous.
+               elseif ( ij.lt.no .and. (icore+ntimes).le.Mdv ) then
+C
+                  kount = kount + 1
+               else
+                  ktimes = kount*ntimes
+                  indrd = (indi+ij-ii)*ntimes - ktimes
+                  leng = ntimes + ktimes
+                  call fileio(2,-IBUC1,leng,V(isave-ktimes+1),indrd)
+                  kount = 0
+               endif
+C
+C
+ 20         continue
+ 50      continue
+C
+         leng = icore
+         call fileio(1,IBUC2,leng,V,0)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

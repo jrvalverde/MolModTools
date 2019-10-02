@@ -1,0 +1,36 @@
+@* conddf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUCK                                                     
+\item[PASSED:] LNG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TQUERY                                         
+\item[Called by]   CIDS1   DOUBAR                                         
+                                                                    
+\end{description}
+@a
+      subroutine conddf(IBUCK,LNG)
+      implicit none
+      integer IBUCK , leng , LNG
+C
+C     ******************************************************************
+C
+C     defines bucket 'ibuck' provided it is not already initialized
+C
+C     march 77/seeger
+C
+C     ******************************************************************
+      call tquery(IBUCK,leng)
+      if ( leng.eq.0 ) call fileio(0,IBUCK,LNG)
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,114 @@
+@* expsym.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LNK1E   LSEXS   TRACK                          
+\item[Called by]   DD2     DOUBAR  EXCHN4  PFORM                          
+                                                                    
+\end{description}
+@a
+      subroutine expsym(N,IBUC1,IBUC2)
+      implicit none
+      integer i , IBUC1 , IBUC2 , if , il , ilp , ind1 , ind2 , ip , j , 
+     &        jndex , leng , lnnext , max , max1 , Mdv , N , n2 , n3
+      double precision V
+      common /v     / V(20000) , Mdv
+C
+C************************************************************
+C1expsym
+C     subroutine expsym (n,ibuc1,ibuc2)
+C     accepts symmetric matrix from ibuc1 with i.le.j
+C     writes full matrix (n*n) onto ibuc2
+C     max is maximum block that can be handled
+C
+C     oct/76
+C
+C************************************************************
+C
+C
+      call track('EXPSYM')
+C
+      if ( N.le.0 ) return
+      n3 = N*(N+1)/2
+      n2 = N*N
+      if ( n2.gt.Mdv ) then
+C
+         max = Mdv - N
+         max1 = max + 1
+         call fileio(2,-IBUC1,0,0,0)
+         il = 0
+      else
+         leng = n3
+         call fileio(2,-IBUC1,0,0,0)
+         call fileio(2,IBUC1,leng,V,0)
+         call lsexs(V,N)
+         leng = n2
+         call fileio(1,-IBUC2,0,0,0)
+         call fileio(1,IBUC2,leng,V,0)
+         goto 400
+      endif
+ 100  if = il + 1
+      i = if
+      leng = N - i + 1
+ 200  lnnext = leng + N - i
+      if ( lnnext.gt.max .or. i.eq.N ) then
+C
+         if ( i.eq.0 ) call lnk1e
+         il = i
+         call fileio(2,IBUC1,leng,V,0)
+C     start write operations
+         leng = N - if + 1
+         do 250 i = if , il
+            ind1 = i - N
+            ind2 = max
+            do 220 j = if , i
+               ind1 = ind1 + N - j + 1
+               ind2 = ind2 + 1
+               V(ind2) = V(ind1)
+ 220        continue
+            if ( i.ne.N ) then
+               ip = i + 1
+               do 230 j = ip , N
+                  ind1 = ind1 + 1
+                  ind2 = ind2 + 1
+                  V(ind2) = V(ind1)
+ 230           continue
+            endif
+            jndex = N*(i-1) + if - 1
+            call fileio(1,-IBUC2,leng,V(max1),jndex)
+            if ( i.eq.N ) goto 400
+ 250     continue
+         ilp = il + 1
+         leng = il - if + 1
+         do 300 i = ilp , N
+            ind1 = i - N
+            ind2 = max
+            do 260 j = if , il
+               ind1 = ind1 + N - j + 1
+               ind2 = ind2 + 1
+               V(ind2) = V(ind1)
+ 260        continue
+            jndex = N*(i-1) + if - 1
+            call fileio(1,-IBUC2,leng,V(max1),jndex)
+ 300     continue
+         if ( il.lt.N ) goto 100
+      else
+         i = i + 1
+         leng = lnnext
+         goto 200
+      endif
+C
+ 400  return
+C
+      end
+@* INDEX.

@@ -1,0 +1,74 @@
+@* comijw.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NDIM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  V                                                      
+\item[Uses]  NOA     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine comijw(IBUC1,IBUC2,NDIM)
+      implicit none
+      integer i , IBUC1 , IBUC2 , Ieval , ij , ij1 , index , Ioab , 
+     &        Ispect , j , leng , Loab , Lspect , Maxbuc , Mdv , NDIM , 
+     &        Noa , Noa2 , Noa3 , Noaob
+      integer Noava , Noavb , Nob , Nob2 , Nob3 , Nobva , Nobvb , 
+     &        Novaa , Novab , Novbb , Nrorb , nsq , nsqa , Nva , Nva2 , 
+     &        Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      double precision V
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(20000) , Mdv
+      equivalence (nsq,leng)
+C
+C     ******************************************************************
+C1comijw
+C     subroutine comijw(ibuc1,ibuc2,ndim)
+C     accepts a(i,j,k,l), all i,j,k,l from ibuc1
+C     compresses it to i.le.j, all k,l
+C     ndim is dimension of k,l.  i and j are over occupied space
+C     counterpart of this routine is expijw
+C
+C     dec 76/seeger
+C
+C     ******************************************************************
+C
+C
+      call track('COMIJW')
+      if ( NDIM.eq.0 .or. Noa.eq.0 ) return
+C
+      nsq = NDIM**2
+      nsqa = nsq*(Noa+1)
+      call fileio(1,-IBUC2,0,0,0)
+      leng = nsq
+      ij1 = 0
+C
+      do 100 i = 1 , Noa
+         ij = ij1
+         do 50 j = i , Noa
+            index = ij
+            call fileio(2,-IBUC1,leng,V,index)
+            call fileio(1,IBUC2,leng,V,0)
+            ij = ij + nsq
+ 50      continue
+         ij1 = ij1 + nsqa
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

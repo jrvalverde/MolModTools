@@ -1,0 +1,76 @@
+@* expabs.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NTIMES                                                    
+\item[INPUT:] NV                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LSEXS   TRACK                                  
+\item[Called by]   EXCHN6                                                 
+                                                                    
+\end{description}
+@a
+      subroutine expabs(IBUC1,IBUC2,NTIMES,NV)
+      implicit none
+      integer i , IBUC1 , IBUC2 , ind , ind1 , ind2 , j , l2 , l3 , 
+     &        leng , leng2 , Mdv , nocore , noleft , nomax , NTIMES , NV
+      double precision V
+      common /v     / V(20000) , Mdv
+C
+C     ******************************************************************
+C1expabs
+C
+C     subroutine expabs(ibuc1,ibuc2,ntimes,nv)
+C     accepts a(ij,a,b) for ij,a.le.b from ibuc1
+C     expands to all ij,all a,b and writes in ibuc2
+C     ntimes .. dimension of ij
+C     nv .. dimension of a,b
+C
+C     sept/78 krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('EXPABS')
+C
+      if ( NTIMES.le.0 ) return
+      l2 = NV*(NV+1)/2
+      l3 = NV*NV
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+C
+      nomax = Mdv/l3
+      noleft = NTIMES
+ 100  nocore = min0(noleft,nomax)
+      noleft = noleft - nocore
+      leng = nocore*l2
+      leng2 = nocore*l3
+      ind = leng2 - leng + 1
+      call fileio(2,IBUC1,leng,V(ind),0)
+      ind1 = ind - 1
+      ind2 = 0
+C
+      do 200 i = 1 , nocore
+         do 150 j = 1 , l2
+            V(ind2+j) = V(ind1+j)
+ 150     continue
+         call lsexs(V(ind2+1),NV)
+         ind2 = ind2 + l3
+         ind1 = ind1 + l2
+ 200  continue
+      leng = leng2
+      call fileio(1,IBUC2,leng,V,0)
+      if ( noleft.gt.0 ) goto 100
+C
+      return
+C
+      end
+@* INDEX.

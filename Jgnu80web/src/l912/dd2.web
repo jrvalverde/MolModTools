@@ -1,0 +1,112 @@
+@* dd2.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IAD2    IDB6    ISCR1   ISCR2   IWD2    NOA     NOAOB  
+             NOB     NVAVB                                          
+\item[Uses]  IAD1    IAD2    IAD3    IDB4    IDB6    IDB9    IOPCL  
+             ISCR1   ISCR2   IWD1    IWD2    IWD3    MDV     NOA    
+             NOA3    NOAOB   NOB     NOB3    NVA     NVA3    NVAVB  
+             NVB     NVB3                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DEFBUC  EXP78   EXPSYM  FILEIO  MATCA2  MATTRN  TRACK  
+\item[Called by]   CIDS4                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dd2
+      implicit none
+      double precision Cmo , E , F42 , Filmoc , Four , Half , One , 
+     &                 Onept5 , Ten , Three , Two , V1 , V2 , Zero
+      integer iaabb , Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , ibuc1 , ibuc2 , 
+     &        ibuc3 , Idb1 , Idb10 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , 
+     &        Idb7 , Idb8 , Idb9 , Idmm
+      integer iend , Ieval , Ioab , Iopcl , Iscr1 , Iscr2 , Iscr3 , 
+     &        Iscr4 , Iscr5 , Iscr6 , Iscrd , Ispect , ispin , Iwd1 , 
+     &        Iwd2 , Iwd3 , Iws1 , Iws2 , length , Loab
+      integer Lspect , Maxbuc , Mdv , mdv2 , n , n1 , n2 , no , Noa , 
+     &        Noa2 , Noa3 , Noaob , Noava , Noavb , Nob , Nob2 , Nob3 , 
+     &        Nobva , Nobvb , Novaa
+      integer Novab , Novbb , Nrorb , nv , Nva , Nva2 , Nva3 , Nvavb , 
+     &        Nvb , Nvb2 , Nvb3
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V1(10000) , V2(10000) , Mdv
+      common /moc   / Cmo(6225) , E(175) , Filmoc(6400)
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /bucknr/ Idb1 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , 
+     &                Idb8 , Idb9 , Idb10 , Idmm(11) , Iad1 , Iad2 , 
+     &                Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , Iwd3 , Iws1 , 
+     &                Iws2 , Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , 
+     &                Iscr6 , Iscrd(13)
+      common /constr/ Iopcl
+C
+C     ******************************************************************
+C
+C     dd2 evaluates the contraction of the (ij//kl) part of v with a
+C
+C     august 76/krishnan
+C
+C     ****************************************************************
+C
+C
+      call track('DD2   ')
+C
+      mdv2 = Mdv/2
+      no = max0(Noa,Nob)
+      nv = max0(Nva,Nvb)
+      length = (max0(no,nv)*no)**2
+      call defbuc(Iscr1,length)
+      call defbuc(Iscr2,length)
+C
+C     alpha-alpha and beta-beta contributions
+C     skip this for closed shell.
+      if ( Iopcl.ne.0 ) then
+         iend = Iopcl + 1
+         ispin = 1
+         do 50 iaabb = 1 , iend
+            if ( iaabb.le.1 ) then
+               n1 = Noa3
+               n2 = Nva3
+               n = Noa
+               ibuc1 = Iad1
+               ibuc2 = Idb4
+               ibuc3 = Iwd1
+            else
+C
+               n1 = Nob3
+               n2 = Nvb3
+               n = Nob
+               ibuc1 = Iad3
+               ibuc2 = Idb9
+               ibuc3 = Iwd3
+            endif
+            if ( n1.ne.0 .and. n2.ne.0 ) then
+               call expsym(n1,ibuc2,Iscr2)
+               call matca2(n1,n1,n2,Iscr2,ibuc1,ibuc3,+1,1)
+            endif
+            ispin = 3
+ 50      continue
+      endif
+C
+C     alpha-beta contributions
+      ispin = 2
+      if ( Noaob.ne.0 .and. Nvavb.ne.0 ) then
+         call exp78(Noa,Nob,Idb6,Iscr1)
+         call mattrn(Noa,Noa,Nob,Nob,2,Iscr1,Iscr2,mdv2)
+         call matca2(Noaob,Noaob,Nvavb,Iscr2,Iad2,Iwd2,+1,1)
+      endif
+C
+C     release routine volatile buckets.
+      call fileio(6,0,0,0,0)
+C
+      return
+C
+      end
+@* INDEX.

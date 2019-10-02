@@ -1,0 +1,112 @@
+@* aaclos.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   CIDS3   CIDS4   DD1SD4                                 
+                                                                    
+\end{description}
+@a
+      subroutine aaclos(IBUC1,IBUC2,NO,NV)
+      implicit none
+      integer i , i1 , ia , iap , ib , IBUC1 , IBUC2 , il , ind , ind1 , 
+     &        ind2 , ind3 , ind4 , ip , ips , iu , j , leng , Mdv , 
+     &        ncore
+      integer ncount , nl , nleft , NO , no2 , nom , NV , nv2 , nv3 , 
+     &        nvm
+      double precision V
+      common /v     / V(20000) , Mdv
+C
+C     ******************************************************************
+C
+C     only for closed shell
+C     forms the w bucket for alpha,alpha case,
+C     from the w bucket for alpha,beta case
+C     w(i,j,a,b) = w(i,j,a,b) - w(i,j,b,a)
+C     a,a          a,b          a,b
+C     this is done for i.lt.j, a.lt.b
+C
+C     ibuc1 contains the input bucket, i.e. alpha,beta
+C     ibuc2 contains the output bucket, i.e. alpha,alpha
+C     no ..... dimension of i(or j)
+C     nv ..... dimension of a(or b)
+C
+C     february 77/ krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('AACLOS')
+C
+      nom = NO - 1
+      nvm = NV - 1
+      if ( (nom.le.0) .or. (nvm.le.0) ) return
+      no2 = NO*NO
+      nleft = no2
+      nv2 = NV*NV
+      nv3 = NV*(NV-1)/2
+      ncore = Mdv/nv2
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+      il = 0
+      iu = 0
+      ips = 1
+      ncount = -1
+C
+      do 100 i = 1 , nom
+         i1 = i + 1
+         ip = ips
+         do 50 j = i1 , NO
+            ip = ip + 1
+            if ( ip.lt.il .or. ip.gt.iu ) then
+               ncount = ncount + 1
+               if ( ncount.gt.0 ) then
+                  leng = ind1
+                  call fileio(1,IBUC2,leng,V,0)
+                  ncount = 0
+               endif
+ 10            nl = min0(nleft,ncore)
+               nleft = nleft - nl
+               il = iu + 1
+               iu = iu + nl
+               leng = nl*nv2
+               call fileio(2,IBUC1,leng,V,0)
+               if ( ip.gt.iu ) goto 10
+               ind1 = 0
+            endif
+            ind2 = (ip-il)*nv2
+            ind = ind2
+            ind3 = ind2
+            ind4 = ind2
+            do 40 ia = 1 , nvm
+               iap = ia + 1
+               ind = ind + NV
+               ind4 = ind
+               do 20 ib = iap , NV
+                  ind1 = ind1 + 1
+                  V(ind1) = V(ind3+ib) - V(ind4+ia)
+                  ind4 = ind4 + NV
+ 20            continue
+               ind3 = ind3 + NV
+ 40         continue
+ 50      continue
+         ips = ips + NO + 1
+ 100  continue
+      leng = ind1
+      call fileio(1,IBUC2,leng,V,0)
+C
+      return
+C
+      end
+@* INDEX.

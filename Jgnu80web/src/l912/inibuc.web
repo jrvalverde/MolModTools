@@ -1,0 +1,56 @@
+@* inibuc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUCK                                                     
+\item[INPUT:] LNG                                                       
+\item[INPUT:] VALUE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   CIDS1   CIDS2                                          
+                                                                    
+\end{description}
+@a
+      subroutine inibuc(IBUCK,LNG,VALUE)
+      implicit none
+      integer i , IBUCK , left , leng , LNG , m , Mdv , n , nr
+      double precision V , VALUE
+      common /v     / V(20000) , Mdv
+C
+C     ******************************************************************
+C
+C     initialize bucket 'ibuck' (of length 'lng') with 'value'
+C
+C     feb 77/seeger
+C
+C     ******************************************************************
+C
+C
+      call track('INIBUC')
+C
+      if ( LNG.le.0 ) return
+C
+      nr = LNG/Mdv
+      left = LNG
+      if ( mod(LNG,Mdv).ne.0 ) nr = nr + 1
+      m = min0(Mdv,LNG)
+      do 100 i = 1 , m
+         V(i) = VALUE
+ 100  continue
+C
+      call fileio(1,-IBUCK,0,0,0)
+      do 200 n = 1 , nr
+         leng = min0(left,Mdv)
+         left = left - leng
+         call fileio(1,IBUCK,leng,V,0)
+ 200  continue
+      return
+C
+      end
+@* INDEX.

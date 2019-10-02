@@ -1,0 +1,91 @@
+@* expol.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    A00     A0OLD   DE1     DEP     INR     Q1      QEP    
+\item[Uses]  A00     A0OLD   A0S     DE1     DEP     INR     IOUT   
+             IPRINT  ONE     Q1      QEP                            
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TRACK                                                  
+\item[Called by]   GETA                                                   
+                                                                    
+\end{description}
+@a
+      subroutine expol
+      implicit none
+      double precision A00 , A0old , A0s , Anorm , Cuts , d1 , d2 , d3 , 
+     &                 De1 , Dehf , Delmax , Den , Dep , Energy , F42 , 
+     &                 Four , Half , One , Onept5 , Q1
+      double precision qe , Qep , small , Ten , Three , threxp , Two , 
+     &                 W0 , Zero
+      integer Idummy , Iflag , In , Inr , Iout , Ipcyc , Iprint , 
+     &        Ipunch , Isd , Maxit , Niter , Norm
+C==  toegevoegd
+      logical Davail , Savail
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /io    / In , Iout , Ipunch
+      common /wtoa  / De1 , Q1 , A0s
+      common /extrap/ Dep(2) , Qep , A0old , Inr , Idummy
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+      common /print / Iprint
+      data threxp/.10D0/ , small/1.D-4/
+C
+C
+C     ******************************************************************
+C1expol
+C     subroutine expol
+C     this routine performs an extrapolation on de, provided the
+C     sequence of the de's is exponential'enough' (threxp)
+C     the coefficient 1/(1-q), where q=(d3-d2)/(d2-d1) is passed as
+C     argument for use in extrapolating the a-vecotrs
+C     de1 is the extrapolated de. it is used for forming the a-vectors.
+C
+C     sept 76/seeger
+C
+C     ******************************************************************
+C
+C
+C
+99001 format (' 1/(1-Q)=',d17.8,8x,'DE(EXT)=',d22.8)
+99002 format (' EXTRAPOLATION PERFORMED')
+C
+      call track('EXPOL ')
+C
+      Inr = Inr + 1
+      Q1 = One
+      d2 = Dep(2)
+      d3 = De1
+      if ( (Inr.ge.3) .and. (dabs(De1).ge.small) ) then
+         d1 = Dep(1)
+C
+C     for a geometrical series, q should be constant
+C     perform geometrical extrapolation, provided q remains constant
+C     'enough' (threxp)
+C     extrapolate different iteration schemes appropriately
+         qe = (d3-d2)/(d2-d1)
+         if ( dabs(qe-Qep).le.threxp ) then
+            Q1 = One/(One-qe)
+            De1 = d2 + Q1*(d3-d2)
+            Inr = 0
+            write (Iout,99002)
+            if ( Iprint.gt.0 ) write (Iout,99001) Q1 , De1
+C
+C     extrapolate a(0)
+            A00 = Q1*(A00-A0old) + A0old
+         endif
+C
+         Qep = qe
+      endif
+C
+      Dep(1) = d2
+      Dep(2) = d3
+      A0old = A0s
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,91 @@
+@* santab.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine santab(IBUC1,IBUC2,NO,NV)
+      implicit none
+      integer i , IBUC1 , IBUC2 , ind , ind1 , ind2 , j , jp , k , 
+     &        leng , Mdv , mdv2 , mdv21 , mm , ncore , nleft , nmax , 
+     &        NO , no3 , NV
+      integer nv1 , nv2 , nv3
+      double precision V
+      common /v     / V(20000) , Mdv
+C
+C     ******************************************************************
+C1santab
+C
+C     accepts matrix(ijab) with i.lt.j, all a,b from ibuc1
+C     and forms (ijab)-(ijba) for i.lt.j, a.lt.b in ibuc2
+C     no .. dimension of i,j
+C     nv .. dimension of a,b
+C
+C     oct/76 krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('SANTAB')
+C
+      mdv2 = Mdv/2
+      mdv21 = mdv2 + 1
+      no3 = NO*(NO-1)/2
+      nv3 = NV*(NV-1)/2
+      nv2 = NV*NV
+      nv1 = NV - 1
+      if ( no3.le.0 .or. nv3.le.0 ) return
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+C
+      nleft = no3
+      nmax = mdv2/nv2
+ 100  ncore = min0(nleft,nmax)
+      nleft = nleft - ncore
+C
+C     input from ibuc1
+      leng = nv2*ncore
+      call fileio(2,IBUC1,leng,V,0)
+C
+      mm = mdv2
+      do 200 i = 1 , ncore
+         ind1 = (i-1)*nv2
+         ind = ind1
+C
+         do 150 j = 1 , nv1
+            jp = j + 1
+            ind = ind + NV
+            ind2 = ind
+            do 120 k = jp , NV
+               mm = mm + 1
+               V(mm) = V(ind1+k) - V(ind2+j)
+               ind2 = ind2 + NV
+ 120        continue
+            ind1 = ind1 + NV
+ 150     continue
+ 200  continue
+C
+C     output to ibuc2
+      leng = nv3*ncore
+      call fileio(1,IBUC2,leng,V(mdv21),0)
+C
+      if ( nleft.gt.0 ) goto 100
+C
+      return
+C
+      end
+@* INDEX.

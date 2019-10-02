@@ -1,0 +1,106 @@
+@* tstarb.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] CA                                                        
+\item[PASSED:] CB                                                        
+\item[PASSED:] S                                                         
+\item[INPUT:] INITW                                                     
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  V                                                      
+\item[Uses]  IOPCL   MDV     NOA     NOA2    NOAOB   NOB     NVA    
+             NVAVB   NVB     V                                      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CTWC2   FILEIO  TRACK                                  
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine tstarb(IBUC1,IBUC2,CA,CB,S,INITW,NBASIS)
+      implicit none
+      double precision CA , CB , S , V
+      integer i , IBUC1 , IBUC2 , Ieval , Ioab , Iopcl , Ispect , 
+     &        lbloc , leftb , leftwi , leftwo , leng , Loab , Lspect , 
+     &        Maxbuc , Mdv , mdv11 , NBASIS , nbloc , nbsq
+      integer Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , Nob , Nob2 , 
+     &        Nob3 , Nobva , Nobvb , Novaa , Novab , Novbb , nr , 
+     &        Nrorb , Nva , Nva2 , Nva3 , Nvavb
+      integer Nvb , Nvb2 , Nvb3 , nwi , nwo
+      dimension CA(*) , CB(*) , S(*)
+      logical INITW
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(20000) , Mdv
+      common /constr/ Iopcl
+C
+C     ******************************************************************
+C1tstarb
+C
+C     performs the following transformation:
+C     w(i,j,a,b) =  sum  ca(mu,a) * cb(nu,b) * w'(i,j,mu,nu)
+C                  mu,nu
+C     for rhf, noa*(noa+1)/2 ij-pairs are transformed only (assuming
+C     that there are so many not transformed blocks present)
+C
+C     w' is taken from ibuc1
+C     w is written on ibuc2
+C     ca and cb are assumend to be in core
+C     s is a scratch array of min. length nbasis
+C     initw false: w is initialized
+C     else:        w is incremented
+C     treats the spincase ab
+C
+C     dec 76/seeger
+C
+C     ******************************************************************
+C
+C
+      call track('TSTARB')
+C
+      if ( Noa.le.0 .or. Nob.le.0 .or. Nva.le.0 .or. Nvb.le.0 ) return
+C
+C     compute allocations in v
+      nbsq = NBASIS**2
+      leftb = Noaob
+      if ( Iopcl.eq.0 ) leftb = Noa2
+      leftwi = leftb*nbsq
+      leftwo = leftb*Nvavb
+      nbloc = Mdv/(Nvavb+nbsq)
+      nwi = nbloc*nbsq
+      nwo = nbloc*Nvavb
+      nr = leftb/nbloc
+      if ( mod(leftb,nbloc).ne.0 ) nr = nr + 1
+      mdv11 = nwi + 1
+C
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(2,-IBUC2,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+C
+C     loop over core-loads
+      do 100 i = 1 , nr
+         leng = min0(leftwi,nwi)
+         leftwi = leftwi - leng
+         call fileio(2,IBUC1,leng,V,0)
+         lbloc = min0(leftb,nbloc)
+         leftb = leftb - lbloc
+         leng = min0(leftwo,nwo)
+         leftwo = leftwo - leng
+         if ( INITW ) call fileio(2,IBUC2,leng,V(mdv11),0)
+         call ctwc2(V(mdv11),CA,CB,V,lbloc,S,INITW,NBASIS)
+         call fileio(1,IBUC2,leng,V(mdv11),0)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

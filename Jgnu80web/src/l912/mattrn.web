@@ -1,0 +1,236 @@
+@* mattrn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NI                                                        
+\item[INPUT:] NJ                                                        
+\item[INPUT:] NK                                                        
+\item[INPUT:] NL                                                        
+\item[INPUT:] ISWITC                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[INPUT:] MAX                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V2                                                     
+\item[Transmits as argument]  V1                                                     
+\item[Uses]  V1      V2                                             
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  LNK1E   TRACK                                  
+\item[Called by]   CIDENS  DD2     DD3     DOUBAR  EXCHN4  EXCHN5  EXCHN6 
+             GETA    NORMDS  PRINTP                                 
+                                                                    
+\end{description}
+@a
+      subroutine mattrn(NI,NJ,NK,NL,ISWITC,IBUC1,IBUC2,MAX)
+      implicit none
+      integer i , i1 , i2 , iblock , IBUC1 , IBUC2 , ileft , ind1 , 
+     &        index , indexs , indn3 , ISWITC , j , j1 , jblock , jend , 
+     &        jleft , jmin , jndex , jndexs
+      integer k , k1 , k2 , kblock , kend , kenjen , kleft , kmin , l , 
+     &        l1 , l2 , leng , lj , lk , ll , MAX , Mdv , NI , nifull , 
+     &        NJ
+      integer njfull , njk , njkl , njl , NK , nkfull , nkl , NL , 
+     &        nljend , nlkend , nltot
+      double precision V1 , V2
+      common /v     / V1(10000) , V2(10000) , Mdv
+C
+C***********************************************************************
+C1mattrn
+C
+C     accepts matrix a(ijkl) from ibuc1
+C     iswitc=1 changes suffix order to ilkj
+C     iswitc=2 changes suffix order to ikjl
+C     iswitc=3 changes suffix order to ijlk
+C     iswitc=4 changes suffix order to iljk
+C     iswitc=5 changes suffix order to iklj
+C     puts result in ibuc2
+C     max is the maximum block available.
+C
+C     this version tries to optimize the no. of io requests.
+C
+C     sept/77  krishnan
+C
+C***********************************************************************
+C
+C
+      call track('MATTRN')
+C
+      if ( NI*NJ*NK*NL.le.0 ) return
+      nkl = NK*NL
+      njl = NJ*NL
+      njk = NJ*NK
+      njkl = NJ*nkl
+      njfull = MAX/nkl
+      nkfull = MAX/njl
+      nifull = MAX/njkl
+      indn3 = 1
+      if ( njkl.le.MAX ) indn3 = 2
+      if ( njfull.le.0 .and. nkfull.le.0 ) call lnk1e
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+C
+C     read one block
+C
+      ileft = NI
+ 100  indexs = (NI-ileft)*njkl
+      jndexs = (NI-ileft)*njkl
+      jmin = NJ
+      kmin = NK
+      jend = NJ
+      kend = NK
+      iblock = 1
+      if ( indn3.eq.2 ) then
+C
+         iblock = min0(ileft,nifull)
+         leng = iblock*njkl
+         call fileio(2,IBUC1,leng,V1,0)
+         goto 600
+      else
+C
+         if ( ISWITC.eq.1 .or. ISWITC.eq.5 ) then
+         elseif ( ISWITC.eq.3 .or. ISWITC.eq.4 ) then
+            goto 400
+C
+         elseif ( NJ.ge.NK ) then
+            goto 400
+         endif
+C
+         kleft = NK
+         kmin = 0
+      endif
+ 200  kblock = min0(kleft,nkfull)
+      kleft = kleft - kblock
+      leng = kblock*NL
+      kend = kblock
+      i1 = indexs + kmin*NL
+      i2 = 1
+      do 300 j = 1 , NJ
+         index = i1
+         call fileio(2,-IBUC1,leng,V1(i2),index)
+         i1 = i1 + nkl
+         i2 = i2 + leng
+ 300  continue
+      goto 600
+C
+ 400  jleft = NJ
+      jmin = 0
+ 500  jblock = min0(jleft,njfull)
+      jleft = jleft - jblock
+      leng = jblock*nkl
+      call fileio(2,IBUC1,leng,V1,0)
+      jend = jblock
+C
+ 600  nljend = NL*jend
+      nlkend = NL*kend
+      kenjen = kend*jend
+      nltot = kenjen*NL
+C
+C     transpose to the required order
+C
+      if ( ISWITC.eq.2 ) then
+C
+         lj = NL
+         lk = nljend
+         ll = 1
+      elseif ( ISWITC.eq.3 ) then
+C
+         lj = nlkend
+         lk = 1
+         ll = kend
+      elseif ( ISWITC.eq.4 ) then
+C
+         lj = kend
+         lk = 1
+         ll = kenjen
+      elseif ( ISWITC.eq.5 ) then
+C
+         lj = 1
+         lk = nljend
+         ll = jend
+      else
+C
+         lj = 1
+         lk = jend
+         ll = kenjen
+      endif
+C
+      ind1 = 1
+      i1 = 1
+      do 700 i = 1 , iblock
+         j1 = i1
+         do 650 j = 1 , jend
+            k1 = j1
+            do 620 k = 1 , kend
+               l1 = k1
+               do 610 l = 1 , NL
+                  V2(l1) = V1(ind1)
+                  ind1 = ind1 + 1
+                  l1 = l1 + ll
+ 610           continue
+               k1 = k1 + lk
+ 620        continue
+            j1 = j1 + lj
+ 650     continue
+         i1 = i1 + njkl
+ 700  continue
+C
+C     write transposed block on ibuc2
+C
+      if ( indn3.eq.2 ) then
+C
+         leng = iblock*njkl
+         call fileio(1,IBUC2,leng,V2,0)
+         goto 1000
+      else
+C
+         if ( ISWITC.eq.2 ) then
+C
+            if ( NJ.ge.NK ) then
+               k1 = jndexs + jmin*NL
+               k2 = 1
+               leng = nljend
+               do 710 k = 1 , NK
+                  jndex = k1
+                  call fileio(1,-IBUC2,leng,V2(k2),jndex)
+                  k1 = k1 + njl
+                  k2 = k2 + leng
+ 710           continue
+               goto 900
+            endif
+         elseif ( ISWITC.ne.3 .and. ISWITC.ne.5 ) then
+C
+            l1 = jndexs + jmin*kmin
+            l2 = 1
+            leng = kenjen
+            do 720 l = 1 , NL
+               jndex = l1
+               call fileio(1,-IBUC2,leng,V2(l2),jndex)
+               l1 = l1 + njk
+               l2 = l2 + leng
+ 720        continue
+            goto 800
+         endif
+C
+         leng = kenjen*NL
+         call fileio(1,IBUC2,leng,V2,0)
+      endif
+ 800  if ( ISWITC.ne.3 .and. ISWITC.ne.4 ) then
+C
+         kmin = kmin + kblock
+         if ( kleft.le.0 ) goto 1000
+         goto 200
+      endif
+C
+ 900  jmin = jmin + jblock
+      if ( jleft.gt.0 ) goto 500
+C
+ 1000 ileft = ileft - iblock
+      if ( ileft.gt.0 ) goto 100
+C
+      return
+C
+      end
+@* INDEX.
