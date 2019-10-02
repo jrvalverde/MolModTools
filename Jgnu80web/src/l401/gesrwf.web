@@ -1,0 +1,90 @@
+@* gesrwf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOCMAT  IODMAT  IODTOT  IOEIG   IOSYM                  
+\item[Uses]  ICMP    IDUMP   IOCMAT  IODMAT  IODTOT  IOEIG   IOSYM  
+             IOUT    IUHF                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TWRITE                                                 
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine gesrwf(A,NBASIS)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A
+      integer I56d , Ialt , Ibasis , Iblock , Icmp , Icmplt , Idgn , 
+     &        Idon1 , Idon2 , Idump , Iguess , Imix , In , Iobas , 
+     &        Iocmat , Iocore , Iodmat , Iodtot , Iodum , Ioeig
+      integer Iogues , Iominc , Iomins , Iominv , Ioproj , Iorthg , 
+     &        Ioscr1 , Iosmat , Iosvec , Iosym , Ioteig , Iout , 
+     &        Iovmat , Ipolh , Iprint , Iproj , Ipunch , Iscale , 
+     &        Ismear , Itst
+      integer Iuhf , NBASIS , nsq , ntt
+      dimension A(*)
+      common /ops401/ Iguess , Iproj , Iuhf , Icmp , Ialt , Imix , 
+     &                Idgn , Iscale , Ismear , Iblock , Icmplt , Itst , 
+     &                Ibasis , Ipolh , Idon1 , Idon2 , Iprint , Idump , 
+     &                I56d
+      common /rwf401/ Iosmat , Iodmat , Iocmat , Iovmat , Iocore , 
+     &                Iobas , Iodum , Iominc , Iomins , Iominv , 
+     &                Iodtot , Ioeig , Iogues , Iosym , Ioproj , 
+     &                Iosvec , Ioscr1 , Iorthg , Ioteig
+      common /io    / In , Iout , Ipunch
+C          this subroutine contains the data statements for the
+C     read-write file numbers in common/rwf401/.  it also initializes
+C     non-volatile files written in this overlay.
+C ----------------------------------------------------------------------
+C
+C     data iosmat/514/,iodmat/528/,iocmat/524/,
+C    $     iovmat/2551/,iocore/515/,
+C    $     iobas/506/,iodum/2574/,iominc/2552/,
+C    $     iomins/2553/,iominv/2554/,
+C    $     iodtot/532/,ioeig/522/,iogues/2555/,
+C    $     iosym/523/,ioproj/2556/,
+C    $     iosvec/2557/,ioscr1/2558/
+C     data iorthg/2559/,ioteig/2560/
+C
+99001 format ('  GESRWF')
+C
+      if ( Idump.ne.0 ) write (Iout,99001)
+      nsq = NBASIS*NBASIS
+      ntt = NBASIS*(NBASIS+1)/2
+C
+      call twrite(Iocmat,A,nsq,1,nsq,1,0)
+      call twrite(Iodmat,A,ntt,1,ntt,1,0)
+      call twrite(Iodtot,A,ntt,1,ntt,1,0)
+C
+      if ( Iuhf.eq.0 ) then
+C
+         call twrite(Ioeig,A,NBASIS,1,NBASIS,1,0)
+         call twrite(Iosym,A,NBASIS,1,NBASIS,1,0)
+         if ( Icmp.ne.1 ) goto 100
+      else
+         call twrite(Ioeig,A,NBASIS*2,1,NBASIS*2,1,0)
+         call twrite(Iosym,A,2*NBASIS,1,2*NBASIS,1,0)
+         call twrite(Iocmat+2,A,nsq,1,nsq,1,0)
+         call twrite(Iodmat+2,A,ntt,1,ntt,1,0)
+C
+         if ( Icmp.eq.0 ) goto 100
+         call twrite(Iocmat+3,A,nsq,1,nsq,1,0)
+         call twrite(Iodmat+3,A,ntt,1,ntt,1,0)
+      endif
+C
+      call twrite(Iocmat+1,A,nsq,1,nsq,1,0)
+      call twrite(Iodmat+1,A,ntt,1,ntt,1,0)
+      call twrite(Iodtot+1,A,ntt,1,ntt,1,0)
+C
+ 100  return
+C
+      end
+@* INDEX.

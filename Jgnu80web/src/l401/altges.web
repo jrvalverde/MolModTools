@@ -1,0 +1,124 @@
+@* altges.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] AA                                                        
+\item[INPUT:] NB                                                        
+\item[INPUT:] INC                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IALTBF  IOUT    LABEL                                  
+\item[Uses]  IALTBF  IOUT    LABEL                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FFERR   FFGET   FFREAD  FFSET   IORD    LNK1E   PUTB   
+             PUTDEL  PUTI    STROUT  TREAD   TWRITE                 
+\item[Called by]   DENSTY                                                 
+                                                                    
+\end{description}
+@a
+      subroutine altges(A,AA,NB,INC)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , AA , temp , x
+      integer i , ia1 , Ialtbf , ieof , if1 , In , INC , iord , Iout , 
+     &        Ipunch , Irtcrd , irwlbl , Ititle , j , k , Label , len , 
+     &        lrwlbl , nalt , NB
+      integer ntmp
+      dimension A(NB,NB) , AA(NB)
+      integer tmpbuf(24)
+      common /label / Label(1000) , Ititle(100) , Irtcrd(100)
+      common /io    / In , Iout , Ipunch
+      equivalence (Ialtbf,Irtcrd(89))
+      data irwlbl/502/ , lrwlbl/600/
+C          a routine to deal with orbital switching.  reads from
+C     input the pairs of orbitals to be switched, and does it.  it
+C     also keeps up with what switching has been done, and writes
+C     it to an rwf so it can be archived.  the calling arguments
+C     are:
+C
+C     a ... the mo coef array.  this should be present on input, and
+C          is returned with the switched orbitals.
+C     aa ... eigenvalues.  these, too, should be supplied as input,
+C          and are switched by this routine.
+C     nb ... the array dimensions.  vectors of length "nb" are
+C          switched in "a".
+C     inc ... a flag indicating whether alpha or beta is being
+C          switched.  this is just used to decide when to
+C          do initialization.
+C          0/2 ----> alpha/beta
+C ----------------------------------------------------------------------
+C
+99001 format (55H UNEXPECTED END-OF-FILE WHILE READING ORBITAL SWITCHES.
+     &        )
+99002 format (28H PAIRS OF ORBITALS SWITCHED:)
+C
+C***JR***
+C   There is something odd here: nalt is only initialized if INC is 0
+C   Methinks something's amiss here. nalt is used in calls to 
+C   putb and putdel. PUTB does nothing with it, only passes it to puticr
+C   which packs the char in an int modifying the index in passing. ALTGES
+C   relies in this change to keep track of current string position, but
+C   on some machine/compiler combinations, NALT value is modified between
+C   ALTGES invocations (while other variables (e.g. k) are not.
+C   This points to a possible buffer overflow somewhere in the code. It
+C   may be an off-by-one or an alignment error explaining why some compilers
+C   or machines work and others don't (e.g. i86+g77 fails, i64+g77 works,
+C   i86+Sun works).
+C   For the time being this fixes the problem, but the bug should be
+C   detected!
+C   Note that calculation results do not seem affected by this change.
+      nalt = INC
+C***JR***
+      ntmp = 0
+      if ( INC.eq.0 ) then
+         nalt = 0
+         call tread(irwlbl,Label,lrwlbl,1,lrwlbl,1,0)
+         call ffset(0)
+      endif
+C
+ 100  call ffread(ieof)
+      if ( ieof.ne.0 ) write (Iout,99001)
+      if ( ieof.ne.0 ) call lnk1e
+C
+C                  get the input changes.
+      ia1 = 0
+      call ffget(tmpbuf,len,i,x,if1)
+      if ( if1.ne.iord('END') ) then
+         if ( if1.ne.iord('INT') ) call fferr('INT',if1)
+         call ffget(tmpbuf,len,j,x,if1)
+         if ( if1.ne.iord('INT') ) call fferr('INT',if1)
+C
+C                  stuff the input into the buffer for archiver.
+         call puti(i,tmpbuf,ntmp)
+         call puti(j,tmpbuf,ntmp)
+         call putdel(2,tmpbuf,ntmp)
+C
+C                  switch the orbitals and eigenvalues.
+         do 150 k = 1 , NB
+            temp = A(k,i)
+            A(k,i) = A(k,j)
+            A(k,j) = temp
+ 150     continue
+         temp = AA(i)
+         AA(i) = AA(j)
+         AA(j) = temp
+         goto 100
+      endif
+C
+C                  that's the end of the section.  write to output,
+C                  and append to the right place in /label/.
+      write (Iout,99002)
+      if ( ntmp.ge.2 ) call strout(Iout,tmpbuf,ntmp-1,1)
+      if ( ntmp.ge.1 ) call putb(tmpbuf,ntmp,Ialtbf,nalt)
+      call putdel(3,Ialtbf,nalt)
+C
+C                  write out /label/.
+      call twrite(irwlbl,Label,lrwlbl,1,lrwlbl,1,0)
+      return
+C
+      end
+@* INDEX.

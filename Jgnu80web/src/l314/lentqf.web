@@ -1,0 +1,58 @@
+@* lentqf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ISH                                                       
+\item[OUTPUT:] ISTM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  LBOUND  SHELLC  SHELLT  UBOUND                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      integer function lentqf(ISH,ISTM)
+      implicit none
+      double precision C1 , C2 , C3 , Exx , X , Y , Z
+      integer ISH , ISTM , Jan , lamax , Lbound , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , N10ord , N5ord , N6ord , 
+     &        N7ord , Nordr , Nshell
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      integer sconap
+      integer Ubound , Ulpure
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+C
+C***********************************************************************
+C     function to compute the length contribution to lentq for
+C     the shell ish.  this value is computed from examining /b/
+C     and /order/.
+C***********************************************************************
+C
+C
+C     get the shell constraint.
+      sconap = Shellc(ISH) + 1
+C     get lamax.
+      lamax = Shellt(ISH) + 1
+C     compute the range contribution.
+      lentqf = Ubound(lamax) - Lbound(lamax,sconap) + 1
+C     compute the start minus one for dfoutn.
+      ISTM = Lbound(lamax,sconap) - 1
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

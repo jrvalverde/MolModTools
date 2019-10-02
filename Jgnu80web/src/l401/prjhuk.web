@@ -1,0 +1,90 @@
+@* prjhuk.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] AA                                                        
+\item[PASSED:] BB                                                        
+\item[PASSED:] ENEG                                                      
+\item[PASSED:] SCR                                                       
+\item[PASSED:] NB                                                        
+\item[PASSED:] IAN                                                       
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] C                                                         
+\item[INPUT:] IPRINT                                                    
+\item[PASSED:] MB                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    B2                                                     
+\item[Transmits as argument]  B1      IOBAS   IOMINS  IOMINV                         
+\item[Uses]  B1      IOBAS   IOMINS  IOMINV  IOUT                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FRMPRJ  GESPRT  HUKGES  MINBAS  OVLP    PROJEC  ROOTMT 
+             TREAD   TWRITE                                         
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine prjhuk(A,B,AA,BB,ENEG,SCR,NB,IAN,NATOMS,C,IPRINT,MB)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , AA , B , B1 , B2 , BB , C , ENEG , SCR
+      integer i , IAN , In , Iobas , Iocmat , Iocore , Iodmat , Iodtot , 
+     &        Iodum , Ioeig , Iogues , Iominc , Iomins , Iominv , 
+     &        Ioproj , Iorthg , Ioscr1 , Iosmat , Iosvec , Iosym
+      integer Ioteig , Iout , Iovmat , IPRINT , Ipunch , LENB , MAXSHL , 
+     &        MB , NATOMS , NB
+      dimension A(*) , B(*) , AA(*) , BB(*) , SCR(*) , IAN(*) , C(*) , 
+     &          ENEG(*)
+      parameter (MAXSHL=100,LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / B1(LENB)
+      common /io    / In , Iout , Ipunch
+      common /b2    / B2(LENB)
+      common /rwf401/ Iosmat , Iodmat , Iocmat , Iovmat , Iocore , 
+     &                Iobas , Iodum , Iominc , Iomins , Iominv , 
+     &                Iodtot , Ioeig , Iogues , Iosym , Ioproj , 
+     &                Iosvec , Ioscr1 , Iorthg , Ioteig
+C          a routine to perform a projected huckel guess.  on
+C     return, the mo coefficients are in the array "a".  "b" is
+C      an "nb x nb" array used for scratch, and "aa", "bb", and "scr"
+C     are scratch vectors of length "nb".  "nb" is the number of basis
+C     functions.  "ian" is an integer vector of length "natoms",
+C     containing the atomic numbers of the atoms.  "natoms" is the
+C     number of atoms, and "c" is the array of atomic coordinates,
+C     dimensioned "c(natoms,3)".
+C ----------------------------------------------------------------------
+C
+C
+99001 format (' PROJECTED HUCKEL GUESS.')
+C                              first, form the minimal basis overlap.
+      write (Iout,99001)
+      call minbas(MB,NATOMS,IAN,C)
+      do 100 i = 1 , LENB
+         B2(i) = B1(i)
+ 100  continue
+      call ovlp(B,MB,MB,NB,IPRINT)
+      call twrite(Iomins,B,NB,NB,MB,MB,1)
+      if ( IPRINT.gt.1 ) call gesprt(2,B,0,NB,NB,MB)
+C
+C                              now, the minimal basis transformation.
+      call rootmt(B,A,BB,AA,NB,MB,1)
+      call twrite(Iominv,B,NB,NB,MB,MB,0)
+      if ( IPRINT.gt.1 ) call gesprt(3,B,0,NB,NB,MB)
+C
+C                              form the projection matrix.
+      call tread(Iobas,B1,LENB,1,LENB,1,0)
+      call frmprj(A,B,AA,NB,NB,MB,IPRINT,1)
+C
+C                              do a huckel guess in the minimal basis.
+      call hukges(A,B,AA,BB,ENEG,NB,MB,Iominv,Iomins,IAN,NATOMS,0,0,0,0,
+     &            0)
+C
+C                              do the projection.
+      call projec(A,B,AA,BB,SCR,NB,NB,MB,1)
+      return
+C
+      end
+@* INDEX.

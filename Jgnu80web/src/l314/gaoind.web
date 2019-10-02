@@ -1,0 +1,103 @@
+@* gaoind.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IFAO    JEND    KEND    LEND    LIMXYZ                 
+\item[Transmits as argument]  INDAO                                                  
+\item[Uses]  IEND    IMJ     IMKJML  INDAO   INDIX   INDIY   INDIZ  
+             INDJX   INDJY   INDJZ   INDKX   INDKY   INDKZ   INDLX  
+             INDLY   INDLZ   ISTART  JEND    JSTART  KEND    KML    
+             KSTART  LDMAX   LEND    LIMXYZ  LSTART  MAXXYZ  UBOUND 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IPT123                                                 
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      subroutine gaoind(IOP)
+      implicit none
+      integer i , Idmp , Idump , Iend , Ifao , Ifcont , Imj , Imk , 
+     &        Imkjml , ind , Indao , Indix , Indiy , Indiz , Indjx , 
+     &        Indjy , Indjz , Indkx , Indky , Indkz
+      integer Indlx , Indly , Indlz , Irange , Istart , ix , iy , iz , 
+     &        j , Jend , Jml , Jrange , Jstart , jx , jy , jz , k , 
+     &        Kend , Kml , Krange
+      integer Kstart , kx , ky , kz , l , Lamax , Lbmax , Lbound , 
+     &        Lcmax , Ldmax , Lend , Lentq , Limxyz , Lpmax , Lpqmax , 
+     &        Lqmax , Lrange , Lstart , lx , ly
+      integer lz , Maxxyz , N10ord , N5ord , N6ord , N7ord , Nordr , 
+     &        Numdf
+      integer Ubound , Ulpure
+      integer IOP(*)
+      common /dump  / Idmp , Idump
+C      common /iop/iop(50)
+      common /indxyz/ Indix(20) , Indiy(20) , Indiz(20) , Indjx(20) , 
+     &                Indjy(20) , Indjz(20) , Indkx(20) , Indky(20) , 
+     &                Indkz(20) , Indlx(20) , Indly(20) , Indlz(20)
+      common /aoinds/ Ifcont , Limxyz , Maxxyz , Ifao , Indao(1296)
+      common /limit / Imj , Imk , Jml , Kml , Imkjml , Istart , Jstart , 
+     &                Kstart , Lstart , Iend , Jend , Kend , Lend , 
+     &                Irange , Jrange , Krange , Lrange , Lentq , Numdf
+      common /max   / Lamax , Lbmax , Lcmax , Ldmax , Lpmax , Lqmax , 
+     &                Lpqmax
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+C
+C***********************************************************************
+C     routine to pre-compute the indexing pattern for the atomic
+C     orbital summation step.  the indices are computed and stored
+C     as bytes in indao.  assembler routine ipt123 is used to pack
+C     the indices into indao.
+C***********************************************************************
+C
+C
+C
+      Ifao = 1
+      if ( IOP(12).ne.0 ) Ifao = 0
+      Limxyz = 0
+      ind = 0
+      do 100 i = Istart , Iend
+         ix = Indix(i)
+         iy = Indiy(i)
+         iz = Indiz(i)
+C
+         if ( Imj.eq.0 ) Jend = i
+         if ( Imkjml.eq.0 ) Kend = i
+C
+         do 50 j = Jstart , Jend
+            jx = Indjx(j) + ix
+            jy = Indjy(j) + iy
+            jz = Indjz(j) + iz
+C
+            do 20 k = Kstart , Kend
+               kx = Indkx(k) + jx
+               ky = Indky(k) + jy
+               kz = Indkz(k) + jz
+C
+               Lend = Ubound(Ldmax)
+               if ( Kml.eq.0 ) Lend = k
+               if ( Imkjml.eq.0 .and. i.eq.k ) Lend = j
+C
+               do 10 l = Lstart , Lend
+                  Limxyz = Limxyz + 1
+                  if ( Limxyz.gt.Maxxyz ) goto 200
+                  lx = Indlx(l) + kx
+                  ly = Indly(l) + ky
+                  lz = Indlz(l) + kz
+                  call ipt123(ind,lx,ly,lz,Indao)
+ 10            continue
+ 20         continue
+ 50      continue
+ 100  continue
+      Ifao = 1
+      if ( IOP(12).ne.0 ) Ifao = 0
+C
+ 200  return
+C
+      end
+@* INDEX.

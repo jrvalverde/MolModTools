@@ -1,0 +1,159 @@
+@* complt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] AR                                                        
+\item[OUTPUT:] AI                                                        
+\item[INPUT:] B                                                         
+\item[OUTPUT:] AA                                                        
+\item[OUTPUT:] BB                                                        
+\item[OUTPUT:] CC                                                        
+\item[INPUT:] MDIM                                                      
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NVEC                                                      
+\item[INPUT:] NORTH                                                     
+\item[INPUT:] ICMP                                                      
+\item[INPUT:] ICMPLT                                                    
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GDOT    GNORM                                          
+\item[Called by]   PROJEC                                                 
+                                                                    
+\end{description}
+@a
+      subroutine complt(AR,AI,B,AA,BB,CC,MDIM,NBASIS,NVEC,NORTH,ICMP,
+     &                  ICMPLT,IDUMP)
+      implicit none
+      double precision AA , AI , AR , B , BB , big , CC , doti , 
+     &                 dotmin , dotr , sumdot , veci , vecr , zero
+      integer i , ICMP , ICMPLT , IDUMP , im1 , In , Iout , Ipunch , 
+     &        ivec , j , jb , jbmin , jvec , k , lim , MDIM , NBASIS , 
+     &        NORTH , nstart , NVEC
+      dimension AR(MDIM,MDIM) , AI(MDIM,MDIM) , B(MDIM,MDIM)
+      dimension AA(MDIM) , BB(MDIM) , CC(MDIM)
+      common /io    / In , Iout , Ipunch
+      data big/1.0D10/
+      data zero/0.0D0/
+C
+C    *******************************************************************
+C
+C          this subroutine normalizes, orthogonalizes, and completes
+C     the mo coefficient matrix.  the real mo coefs are in ar, the
+C     imaginary coefs are in ai, and the vectors used to complete the
+C     coefs are in b.  aa, bb, and cc are scratch vectors.  mdim is
+C     the dimension of the matrices, and nvec is the number of
+C     vectors provided.  the routine also uses the values of icmplt
+C     and icmp in common/ops401/.
+C
+C    *******************************************************************
+C
+C
+C
+C
+      if ( IDUMP.ne.0 ) write (Iout,99001)
+C
+99001 format ('  ORTHGS')
+C
+C     normalize and orthogonalize the vectors provided.
+      if ( NVEC.ne.NORTH ) then
+         if ( NORTH.le.1 ) call gnorm(AR(1,1),AI(1,1),ICMP,NBASIS)
+         lim = max(NORTH,2)
+C
+         do 100 i = lim , NVEC
+C
+            do 20 j = 1 , NBASIS
+               AA(j) = zero
+               BB(j) = zero
+ 20         continue
+C
+            im1 = i - 1
+            do 40 j = 1 , im1
+               call gdot(AR(1,i),AI(1,i),AR(1,j),AI(1,j),dotr,doti,ICMP,
+     &                   NBASIS)
+C
+               do 30 k = 1 , NBASIS
+                  vecr = AR(k,j)
+                  veci = AI(k,j)
+                  AA(k) = AA(k) + dotr*vecr
+                  if ( ICMP.ne.0 ) then
+                     AA(k) = AA(k) - doti*veci
+                     BB(k) = BB(k) + dotr*veci + doti*vecr
+                  endif
+ 30            continue
+ 40         continue
+C
+            do 60 j = 1 , NBASIS
+               AR(j,i) = AR(j,i) - AA(j)
+               if ( ICMP.ne.0 ) AI(j,i) = AI(j,i) - BB(j)
+ 60         continue
+            call gnorm(AR(1,i),AI(1,i),ICMP,NBASIS)
+ 100     continue
+      endif
+C
+C     complete the remaining vectors.
+C
+      if ( ICMPLT.eq.0 ) return
+      nstart = NVEC + 1
+      if ( nstart.gt.NBASIS ) return
+C
+C     the vector cc is used as the imiginary part of b in calls to gdot.
+      do 200 i = 1 , NBASIS
+         CC(i) = zero
+ 200  continue
+C
+      do 500 ivec = nstart , NBASIS
+         dotmin = big
+         jvec = ivec - 1
+C
+         do 250 jb = 1 , NBASIS
+            sumdot = zero
+C
+            do 220 j = 1 , jvec
+               call gdot(AR(1,j),AI(1,j),B(1,jb),CC,dotr,doti,ICMP,
+     &                   NBASIS)
+               sumdot = sumdot + dotr*dotr + doti*doti
+ 220        continue
+            if ( sumdot.le.dotmin ) then
+               dotmin = sumdot
+               jbmin = jb
+            endif
+ 250     continue
+C
+         do 300 i = 1 , NBASIS
+            AR(i,ivec) = B(i,jbmin)
+            if ( ICMP.eq.1 ) AI(i,ivec) = zero
+            AA(i) = zero
+            BB(i) = zero
+ 300     continue
+C
+         do 350 j = 1 , jvec
+            call gdot(AR(1,j),AI(1,j),AR(1,ivec),AI(1,ivec),dotr,doti,
+     &                ICMP,NBASIS)
+C
+            do 320 k = 1 , NBASIS
+               vecr = AR(k,j)
+               veci = AI(k,j)
+               AA(k) = AA(k) + dotr*vecr
+               if ( ICMP.ne.0 ) then
+                  AA(k) = AA(k) - doti*veci
+                  BB(k) = BB(k) + dotr*veci + doti*vecr
+               endif
+ 320        continue
+ 350     continue
+C
+         do 400 k = 1 , NBASIS
+            AR(k,ivec) = AR(k,ivec) - AA(k)
+            if ( ICMP.ne.0 ) AI(k,ivec) = AI(k,ivec) - BB(k)
+ 400     continue
+         call gnorm(AR(1,ivec),AI(1,ivec),ICMP,NBASIS)
+ 500  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,141 @@
+@* qinf.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    EQ      EQSAV   EXPARG  KGAUSS  KLCUTQ  KLIND   LGAUSS 
+             QEXP    QTEST   QXPSAV  QXSAV   QYSAV   QZSAV          
+\item[Transmits as argument]  C1      C2      C3      C4                             
+\item[Uses]  C1      C2      C3      C4      EQ      EXPARG  EXX    
+             KGAUSS  KGBEG   KGDF    KGEND   KLIND   KTYPE   LGAUSS 
+             LGBEG   LGDF    LGEND   LTYPE   ONE     PQCUT1  PQCUT2 
+             PQCUT3  QEXP    QTEST   RCDSQ   XC      XD      YC     
+             YD      ZC      ZD      ZERO                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GEXP    GMAX1                                  
+\item[Called by]   DPHNIX  PHOENI                                         
+                                                                    
+\end{description}
+@a
+      subroutine qinf
+C2qinf
+      implicit none
+      double precision absc , C1 , C2 , C3 , C4 , cmaxk , cmaxl , cs , 
+     &                 Cutint , ds , Ep , Ep2i , Eq , eqi , Eqsav , 
+     &                 Exparg , Exx , gabs , gexp , gmax1
+      integer Igauss , Igbeg , Igdf , Igend , Itype , Jan , Jgauss , 
+     &        Jgbeg , Jgdf , Jgend , Jtype , Kgauss , Kgbeg , Kgdf , 
+     &        Kgend , Klcutq , Klind , knddf , Ktype , Lgauss
+      integer Lgbeg , Lgdf , Lgend , lnddf , Ltype , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , Nshell
+      double precision One , Pexp , Pqcut1 , Pqcut2 , Pqcut3 , Ptest , 
+     &                 Qexp , Qtest , Qxpsav , Qxsav , Qysav , Qzsav , 
+     &                 Rabsq , Rcdsq , X , Xa , Xb , Xc , Xd , Xint
+      double precision Y , Ya , Yb , Yc , Yd , Z , Za , Zb , Zc , Zd , 
+     &                 Zero
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      common /coord / Xa , Ya , Za , Xb , Yb , Zb , Rabsq , Xc , Yc , 
+     &                Zc , Xd , Yd , Zd , Rcdsq
+      common /gcloop/ Igauss , Igbeg , Igend , Igdf , Jgauss , Jgbeg , 
+     &                Jgend , Jgdf , Kgauss , Kgbeg , Kgend , Kgdf , 
+     &                Lgauss , Lgbeg , Lgend , Lgdf
+      common /qinfo / Eqsav(100) , Qxsav(100) , Qysav(100) , Qzsav(100)
+     &                , Qxpsav(100) , Exparg , Ptest , Pexp , Ep , Eq , 
+     &                Ep2i , Klind , Klcutq(100)
+      common /dfcuts/ Pqcut1 , Pqcut2 , Pqcut3 , Cutint
+      common /stypes/ Itype , Jtype , Ktype , Ltype
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /int   / Zero , Xint(12)
+      equivalence (Ptest,Qtest) , (Pexp,Qexp)
+      equivalence (One,Xint(1))
+C
+C***********************************************************************
+C     routine to perform preliminary q-loop.  here, all
+C     possible q-loop variables that require computing, that are
+C     independent of p-loop results, are obtained and stored into common
+C     qinfo.
+C***********************************************************************
+C
+C
+C     subroutine to perform preliminary q-loop.
+C
+C
+      Klind = 0
+      do 100 Kgauss = Kgbeg , Kgend
+         cs = Exx(Kgauss)
+C     determine the maximum coefficient at k.
+         cmaxk = gabs(C1(Kgauss))
+         if ( Ktype.gt.0 ) then
+            absc = gabs(C2(Kgauss))
+            cmaxk = gmax1(cmaxk,absc)
+            if ( Ktype.gt.1 ) then
+               knddf = Kgdf + (Kgauss-Kgbeg)
+               absc = gabs(C3(knddf))
+               cmaxk = gmax1(cmaxk,absc)
+               if ( Ktype.gt.2 ) then
+                  absc = gabs(C4(knddf))
+                  cmaxk = gmax1(cmaxk,absc)
+               endif
+            endif
+         endif
+C
+         do 50 Lgauss = Lgbeg , Lgend
+            ds = Exx(Lgauss)
+C     determine the maximum coefficient at l.
+            cmaxl = gabs(C1(Lgauss))
+            if ( Ltype.gt.0 ) then
+               absc = gabs(C2(Lgauss))
+               cmaxl = gmax1(cmaxl,absc)
+               if ( Ltype.gt.1 ) then
+                  lnddf = Lgdf + (Lgauss-Lgbeg)
+                  absc = gabs(C3(lnddf))
+                  cmaxl = gmax1(cmaxl,absc)
+                  if ( Ltype.gt.2 ) then
+                     absc = gabs(C4(lnddf))
+                     cmaxl = gmax1(cmaxl,absc)
+                  endif
+               endif
+            endif
+C
+            Klind = Klind + 1
+C     compute saved quantities.
+            Eq = cs + ds
+            eqi = One/Eq
+            Eqsav(Klind) = Eq
+            Qxsav(Klind) = (cs*Xc+ds*Xd)*eqi
+            Qysav(Klind) = (cs*Yc+ds*Yd)*eqi
+            Qzsav(Klind) = (cs*Zc+ds*Zd)*eqi
+            Exparg = cs*ds*Rcdsq*eqi
+            if ( Exparg.le.Pqcut3 ) then
+C
+               Qexp = gexp(-Exparg)
+               Qxpsav(Klind) = Qexp
+               Qtest = cmaxk*cmaxl*Qexp
+               if ( Qtest.ge.Pqcut1 ) then
+                  Klcutq(Klind) = 0
+C
+               elseif ( Qtest.lt.Pqcut2 ) then
+                  Klcutq(Klind) = 2
+               else
+C
+                  Klcutq(Klind) = 1
+               endif
+            else
+               Qxpsav(Klind) = Zero
+               Klcutq(Klind) = 2
+            endif
+ 50      continue
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

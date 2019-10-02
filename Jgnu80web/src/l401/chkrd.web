@@ -1,0 +1,119 @@
+@* chkrd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] NB                                                        
+\item[OUTPUT:] MB                                                        
+\item[OUTPUT:] IFCP                                                      
+\item[OUTPUT:] JPRJ                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  B       B2      IOBAS                                  
+\item[Uses]  B       B2      IOBAS   IPROJ                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINRD   GESERR  TREAD                                  
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine chkrd(A,NB,MB,IFCP,JPRJ)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , B , B2
+      integer i , I56d , Ialt , Ibasis , Iblock , Icmp , Icmplt , Idgn , 
+     &        Idon1 , Idon2 , Idump , IFCP , Iguess , Imix , Iobas , 
+     &        Iocmat , Iocore , Iodmat , Iodtot , Iodum
+      integer Ioeig , Iogues , Iominc , Iomins , Iominv , Ioproj , 
+     &        Iorthg , Ioscr1 , Iosmat , Iosvec , Iosym , Ioteig , 
+     &        Iovmat , Ipolh , Iprint , Iproj , Iscale , Ismear , 
+     &        ititle , Itst
+      integer Iuhf , JPRJ , LENB , MAXSHL , MB , mbasb , mbasc , mbasd , 
+     &        NB , nwrdb , nwrdc , nwrdd
+      integer jbasis(4) , jalpha(4) , jadens(4)
+      dimension ititle(20)
+      dimension A(*)
+      parameter (MAXSHL=100,LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / B(LENB)
+      common /b2    / B2(LENB)
+      common /ops401/ Iguess , Iproj , Iuhf , Icmp , Ialt , Imix , 
+     &                Idgn , Iscale , Ismear , Iblock , Icmplt , Itst , 
+     &                Ibasis , Ipolh , Idon1 , Idon2 , Iprint , Idump , 
+     &                I56d
+      common /rwf401/ Iosmat , Iodmat , Iocmat , Iovmat , Iocore , 
+     &                Iobas , Iodum , Iominc , Iomins , Iominv , 
+     &                Iodtot , Ioeig , Iogues , Iosym , Ioproj , 
+     &                Iosvec , Ioscr1 , Iorthg , Ioteig
+C            this routine is called iff an initial guess is to be read
+C      in.  it scans through the supplied data and decides what kind
+C      of guess is to be done (read, project, mo coefs, density, etc.).
+C      "a" is just some scratch space which is big enough to hold the
+C      input data, and "nb" is the size of the guess which is to be
+C      produced.  the remaining arguments are set and returned by this
+C      routine:
+C            mb ..... the size of the input guess.
+C            ifcp ... the type of input guess.
+C                1 ... mo coefficients.
+C                2 ... density matrix.
+C            jprj ... type of projection to perform.
+C                0 ... none.
+C                1 ... minimal basis.
+C                2 ... basis is supplied as input.
+C ----------------------------------------------------------------------
+C
+C                              see if the basis set is there.
+      data jbasis/'BASI' , 'S   ' , '    ' , '    '/
+      data jalpha/'ALPH' , 'A MO' , ' COE' , 'FS  '/
+      data jadens/'ALPH' , 'A DE' , 'NSIT' , 'Y   '/
+      JPRJ = 0
+      call binrd(B2,ititle,jbasis,nwrdb,mbasb)
+      if ( nwrdb.ne.0 ) then
+C
+C                  is it the same as the current basis
+         call tread(Iobas,B,LENB,1,LENB,1,0)
+         do 50 i = 1 , LENB
+            if ( B(i).ne.B2(i) ) goto 100
+ 50      continue
+C
+C                  bases are identical.  don't project unless
+C                  explicitly requested.
+         JPRJ = 0
+         if ( Iproj.eq.2 ) JPRJ = 2
+      endif
+      goto 200
+C
+C                  bases are different.  will need to project.
+ 100  JPRJ = 2
+C
+C                        see if mo coefs are there.
+ 200  call binrd(A,ititle,jalpha,nwrdc,mbasc)
+      if ( nwrdc.eq.0 ) then
+C
+C                        if mo's are not there, how about the density
+         call binrd(A,ititle,jadens,nwrdd,mbasd)
+C
+C                  if not, then something's wrong.
+         if ( nwrdd.eq.0 ) call geserr(1)
+         IFCP = 2
+         MB = mbasd
+      else
+C
+C                  yep.  set appropriate flags.
+         IFCP = 1
+         MB = mbasc
+      endif
+C
+C                        check for some errors, and decide what
+C                        kind of projection is called for here.
+      if ( MB.ne.NB .and. JPRJ.eq.0 ) JPRJ = 1
+      if ( Iproj.eq.3 ) JPRJ = 0
+      if ( MB.ne.NB .and. JPRJ.eq.0 ) call geserr(2)
+      if ( JPRJ.eq.2 .and. MB.ne.mbasb ) call geserr(5)
+C
+      return
+C
+      end
+@* INDEX.

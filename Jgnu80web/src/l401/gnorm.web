@@ -1,0 +1,51 @@
+@* gnorm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] AR                                                        
+\item[OUTPUT:] AI                                                        
+\item[INPUT:] ICMP                                                      
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   COMPLT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine gnorm(AR,AI,ICMP,NBASIS)
+      implicit none
+      double precision AI , AR , br , gsqrt , one , zero
+      integer i , ICMP , NBASIS
+C    *******************************************************************
+      dimension AR(NBASIS) , AI(NBASIS)
+      data one/1.0D0/ , zero/0.0D0/
+C
+C          this subroutine normalizes the vector a.  the real and
+C     imaginary parts of a are in ar and ai, respectively.  icmp should
+C     be 0 for real, or 1 for complex.
+C
+C    *******************************************************************
+C
+C
+      br = zero
+      do 100 i = 1 , NBASIS
+         br = br + AR(i)*AR(i)
+         if ( ICMP.ne.0 ) br = br + AI(i)*AI(i)
+ 100  continue
+C
+      br = one/gsqrt(br)
+C
+      do 200 i = 1 , NBASIS
+         AR(i) = AR(i)*br
+         if ( ICMP.ne.0 ) AI(i) = AI(i)*br
+ 200  continue
+      return
+C
+      end
+@* INDEX.

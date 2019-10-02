@@ -1,0 +1,52 @@
+@* dfcut.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    PQCUT1  PQCUT2  PQCUT3                                 
+\item[Uses]  IDUMP   PQCUT1  PQCUT2  PQCUT3                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      subroutine dfcut(IOP)
+      implicit none
+      double precision Fillct , Pqcut1 , Pqcut2 , Pqcut3 , Ten , Xint , 
+     &                 Zero
+      integer Idmp , Idump
+      integer IOP(*)
+      common /dump  / Idmp , Idump
+C      common /iop/iop(50)
+      common /dfcuts/ Pqcut1 , Pqcut2 , Pqcut3 , Fillct
+      common /int   / Zero , Xint(12)
+      equivalence (Ten,Xint(10))
+C
+C***********************************************************************
+C     routine to establish critical cut-offs for the phoenix package.
+C     all cut-offs are incorporated into this routine.
+C***********************************************************************
+C
+99001 format (3D20.10)
+99002 format (8H PQCUTS:,3D20.10)
+C
+      if ( IOP(29).ne.0 ) then
+C
+         read (5,99001) Pqcut1 , Pqcut2 , Pqcut3
+         if ( Idump.eq.11 ) write (6,99002) Pqcut1 , Pqcut2 , Pqcut3
+      else
+         Pqcut1 = 1.0D-10
+         Pqcut2 = 1.0D-20
+         Pqcut3 = 42.0D0
+      endif
+C
+C
+      return
+C
+      end
+@* INDEX.

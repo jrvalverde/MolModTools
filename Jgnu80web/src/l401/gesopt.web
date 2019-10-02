@@ -1,0 +1,188 @@
+@* gesopt.
+
+\begin{verbatim}
+This subroutine sets up the options for the initial guess.
+these options are stored in common/ops401/ for use by other
+subroutines.
+
+     internal use of some of the values in /ops401/:
+
+     iguess   1 ... proj huckel.
+              2 ... huckel.
+              3 ... core guess.
+              4 ... read guess.
+              5 ... re-orthonormalize only.
+
+     iproj    1 ... default.
+              2 ... force projection.
+              3 ... suppress projection.
+
+     iuhf     0/1 ... closed/open.
+
+     icmp     0/1 ... real/complex.
+
+     ialt     1 ... no alteration.
+              2 ... read pairs.
+              3 ... read occ.
+
+     imix     0/1 ... default/read.
+\end{verbatim}
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    I56D    IALT    IBASIS  ICMP    ICMPLT  IDON1   IDON2  
+             IDUMP   IGUESS  IMIX    IPOLH   IPRINT  IPROJ   ISCALE 
+             ITST    IUHF    JDUMP                                  
+\item[Uses]  I56D    IALT    IBASIS  ICMPLT  IDON1   IDON2   IDUMP  
+             IGUESS  IOP     IOPDMP  IOUT    IPOLH   IPROJ   ISCALE 
+             IUHF                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GESERR  GFLOAT  ILSW    LNK1E                          
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine gesopt
+      implicit none
+      double precision gfloat , pt4375 , pt875 , scale
+      integer i , I56d , Ialt , Ibasis , Iblock , Icmp , Icmplt , 
+     &        iconst , Idgn , Idon1 , Idon2 , Idump , Iguess , ii , 
+     &        Imix , In , Iop , Iopdmp , Iout , iphf
+      integer Ipolh , Iprint , Iproj , Ipunch , ipurdf , ipurf , 
+     &        Iscale , Ismear , Itst , Iuhf , Jdump , Jjdump , maxop
+      dimension Iopdmp(19)
+      common /iop   / Iop(50)
+      common /ops401/ Iguess , Iproj , Iuhf , Icmp , Ialt , Imix , 
+     &                Idgn , Iscale , Ismear , Iblock , Icmplt , Itst , 
+     &                Ibasis , Ipolh , Idon1 , Idon2 , Iprint , Idump , 
+     &                I56d
+      common /dump  / Jdump , Jjdump
+      common /io    / In , Iout , Ipunch
+      equivalence (Iopdmp(1),Iguess)
+      data pt875/0.875D0/
+      data pt4375/0.4375D0/
+      data maxop/19/
+C
+99001 format ('  IOP(',i2,') OUT OF RANGE.')
+99002 format ('  /OPS401/:',25I4)
+C
+      Iguess = Iop(5)
+      Iproj = Iop(6) + 1
+      iconst = Iop(7) - 1
+      Ialt = Iop(8)
+      iphf = Iop(9)
+      Imix = Iop(10)
+      Iscale = Iop(12)
+      Icmplt = Iop(16)
+      Itst = Iop(18)
+      Ibasis = Iop(22) - 1
+      ipurdf = Iop(23) - 1
+      Ipolh = Iop(24) - 1
+      Idon1 = Iop(25) - 1
+      Idon2 = Iop(26) - 1
+      Iprint = Iop(33)
+      Idump = Iop(34)
+      Jdump = Idump
+C
+      if ( Idump.ne.0 ) Iprint = 2
+      I56d = 0
+C
+      if ( ipurdf.ge.0 ) then
+C
+         I56d = mod(ipurdf,2)
+         ipurf = ipurdf/2
+         call ilsw(1,2,I56d)
+         call ilsw(1,16,ipurf)
+      else
+         call ilsw(2,2,I56d)
+         call ilsw(2,16,ipurf)
+      endif
+C
+      if ( Ibasis.ge.0 ) then
+C
+         call ilsw(1,3,Ibasis)
+      else
+         call ilsw(2,3,Ibasis)
+      endif
+      if ( Ipolh.ge.0 ) then
+C
+         call ilsw(1,10,Ipolh)
+      else
+         call ilsw(2,10,Ipolh)
+      endif
+      if ( Idon1.ge.0 ) then
+C
+         call ilsw(1,11,Idon1)
+      else
+         call ilsw(2,11,Idon1)
+      endif
+      if ( Idon2.ge.0 ) then
+C
+         call ilsw(1,12,Idon2)
+      else
+         call ilsw(2,12,Idon2)
+      endif
+C
+C     internal use of iguess:
+C     1 ... projected huckel.
+C     2 ... huckel guess.
+C     3 ... core guess.
+C     4 ... read from cards.
+C     5 ... only renormalize and reorthogonalize.
+C
+      if ( Iguess.eq.0 ) then
+C
+         Iguess = 1
+         if ( Ibasis.eq.0 ) Iguess = 2
+         if ( (Ipolh+Idon1+Idon2).ne.0 ) Iguess = 1
+      else
+         i = Iguess
+         if ( i.eq.1 ) Iguess = 4
+         if ( i.eq.2 ) Iguess = 3
+         if ( i.eq.3 ) Iguess = 2
+         if ( i.eq.4 ) Iguess = 1
+      endif
+C
+      if ( iconst.lt.0 ) then
+C                  use ilsw for both r/u and complex.
+         call ilsw(2,1,iconst)
+C
+      elseif ( iconst.ne.4 ) then
+C                  ilsw is to be over-written.
+         call ilsw(1,1,iconst)
+      else
+C                  use ilsw for r/u only. guess is complex.
+         call ilsw(2,1,Iuhf)
+         Icmp = 1
+         iconst = 2 + Iuhf
+         call ilsw(1,1,iconst)
+         goto 100
+      endif
+      Iuhf = mod(iconst,2)
+      Icmp = iconst/2
+C
+ 100  scale = pt875
+      if ( Iscale.ne.0 ) scale = pt4375*gfloat(Iscale)
+C
+      if ( Ialt.eq.2 .and. iphf.eq.1 ) call geserr(4)
+C
+      Ialt = Ialt + 1
+      if ( Ialt.gt.2 ) then
+         i = 8
+         write (Iout,99001) i
+         call lnk1e
+      endif
+      if ( Iproj.gt.3 ) then
+         i = 6
+         write (Iout,99001) i
+         call lnk1e
+      endif
+      Icmplt = 1 - Icmplt
+      if ( Idump.ne.0 ) write (Iout,99002) (Iopdmp(ii),ii=1,maxop)
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,139 @@
+@* mtget.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ISH                                                       
+\item[INPUT:] JSH                                                       
+\item[INPUT:] KSH                                                       
+\item[INPUT:] LSH                                                       
+\item[OUTPUT:] ISHP                                                      
+\item[OUTPUT:] JSHP                                                      
+\item[OUTPUT:] KSHP                                                      
+\item[OUTPUT:] LSHP                                                      
+\item[OUTPUT:] NSET                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      integer function mtget(ISH,JSH,KSH,LSH,ISHP,JSHP,KSHP,LSHP,NSET)
+      implicit none
+      integer iab , ibc , icd , ISH , ISHP , JSH , JSHP , KSH , KSHP , 
+     &        LSH , LSHP , mtype , NSET , nsetd
+      dimension nsetd(8)
+      data nsetd/3 , 2 , 2 , 1 , 2 , 2 , 1 , 1/
+C
+C***********************************************************************
+C
+C     fortran function that given the raw shell indices ish,... etc,
+C     produces the correctly ordered set ishp,... etc, the number
+C     of distinct sets, nset, and mtype, the master type index.
+C
+C    the following table defines mtype:
+C
+C   ===========================================================
+C   mtype   description   \# of sets  copy type  secondary  shell
+C                                                switch    dups
+C   ===========================================================
+C     1     all distinct    3          ---         --       --
+C     2     c=d only        2          3=2         no       2
+C     3     b=c only        2          3=1         no       2
+C     4     b=c=d only      1          3=2=1       no       2
+C     5     a=b only        2          3=2         yes      2
+C     6     a=b, c=d only   2          3=2         no       3,4
+C     7     a=b=c only      1          3=2=1       yes      2
+C     8     a=b=c=d         1          3=2=1       no       5
+C   ===========================================================
+C
+C
+C     the shell duplicate types are contained in the following table.
+C
+C     ====================
+C     type     description
+C     ====================
+C      1       a=b only
+C      2       c=d only
+C      3       a=b and c=d only
+C      4       a=c and b=d only
+C      5       a=b=c=d
+C     ====================
+C
+C     the following table lists the resultant order of all three
+C     sets after any preliminary sets for the legal values of
+C     mtype.
+C
+C     ===============================
+C     mtype      final order
+C     -------------------------------
+C              set1    set2    set3
+C     ===============================
+C       1     (ab,cd) (ad,bc) (ac,bd)
+C       2     (ab,cc) (ac,bc) (ac,bc)
+C       3     (ab,bd) (ad,bb) (ab,bd)
+C       4     (ab,bb) (ab,bb) (ab,bb)
+C       5     (dc,aa) (da,ca) (da,ca)
+C       6     (aa,cc) (ac,ac) (ac,ac)
+C       7     (da,aa) (da,aa) (da,aa)
+C       8     (aa,aa) (aa,aa) (aa,aa)
+C     ===============================
+C
+C
+C      in the above tables, a,... etc refer to centers.
+C
+C***********************************************************************
+C
+C     the following statements map mtype into the number of sets.
+C
+C
+C     determine mtype.
+      iab = 0
+      if ( ISH.eq.JSH ) iab = 4
+      ibc = 0
+      if ( JSH.eq.KSH ) ibc = 2
+      icd = 0
+      if ( KSH.eq.LSH ) icd = 1
+      mtype = iab + ibc + icd + 1
+C
+C     from mtype, get nset.
+      NSET = nsetd(mtype)
+C
+C     process preliminary switches.
+C     the condition under which preliminary switches is made is
+C     ish=jsh, ksh.ne.lsh.
+C     here, make use of mtype with a computed goto.
+      ISHP = ISH
+      JSHP = JSH
+      KSHP = KSH
+      LSHP = LSH
+      if ( mtype.eq.1 ) then
+      elseif ( mtype.eq.2 ) then
+      elseif ( mtype.eq.3 ) then
+      elseif ( mtype.eq.4 ) then
+      elseif ( mtype.eq.5 ) then
+         goto 100
+      elseif ( mtype.eq.6 ) then
+      elseif ( mtype.ne.8 ) then
+         goto 100
+      endif
+      goto 200
+C     for mtype = 5 or 7 perform preliminary switch.
+C     note that we switch not only (i,j) with (j,l), but we also
+C     permute within the pairs.
+ 100  ISHP = LSH
+      JSHP = KSH
+      KSHP = JSH
+      LSHP = ISH
+C
+C     initialization is complete, return to caller.
+ 200  mtget = mtype
+      return
+C
+      end
+@* INDEX.

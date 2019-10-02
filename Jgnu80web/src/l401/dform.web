@@ -1,0 +1,55 @@
+@* dform.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[INPUT:] MD                                                        
+\item[INPUT:] NB                                                        
+\item[INPUT:] NE                                                        
+\item[INPUT:] X                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DENSTY  GETGES                                         
+                                                                    
+\end{description}
+@a
+      subroutine dform(A,B,MD,NB,NE,X)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , B , X , zero
+      integer i , j , k , MD , NB , NE
+      dimension A(MD,MD) , B(MD,MD)
+      data zero/0.0D0/
+C          a routine to form a density matrix from mo coefs.  the
+C     arguments are:
+C
+C     a, b ... two matrices dimensioned to (md,md).  on input,
+C          "a" should contain the mo coefs, and the density matrix
+C          is returned in "b".
+C     md ... the dimensions of "a" and "b".  thie may or may not be
+C          the same as "nb".
+C     nb ... the number of basis functions.
+C     ne ... the number of occupied orbitals.
+C     x ... this should be 1.0 for uhf, and 2.0 for rhf.
+C ----------------------------------------------------------------------
+C
+C
+      do 100 i = 1 , NB
+         do 50 j = 1 , NB
+            B(i,j) = zero
+            do 20 k = 1 , NE
+               B(i,j) = B(i,j) + X*A(j,k)*A(i,k)
+ 20         continue
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

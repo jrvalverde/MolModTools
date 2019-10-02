@@ -1,0 +1,97 @@
+@* aosumf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] INTC                                                      
+\item[OUTPUT:] TQ                                                        
+\item[INPUT:] XIP                                                       
+\item[INPUT:] YIP                                                       
+\item[INPUT:] ZIP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    JEND    KEND    LEND                                   
+\item[Uses]  IEND    IMJ     IMKJML  INDIX   INDIY   INDIZ   INDJX  
+             INDJY   INDJZ   INDKX   INDKY   INDKZ   INDLX   INDLY  
+             INDLZ   ISTART  JEND    JSTART  KEND    KML     KSTART 
+             LDMAX   LEND    LSTART  UBOUND                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      subroutine aosumf(INTC,TQ,XIP,YIP,ZIP)
+      implicit none
+      integer i , Idmp , Idump , Iend , Imj , Imk , Imkjml , Indix , 
+     &        Indiy , Indiz , Indjx , Indjy , Indjz , Indkx , Indky , 
+     &        Indkz , Indlx , Indly , Indlz , INTC
+      integer Irange , Istart , ix , iy , iz , j , Jend , Jml , Jrange , 
+     &        Jstart , jx , jy , jz , k , Kend , Kml , Krange , Kstart , 
+     &        kx , ky
+      integer kz , l , Lamax , Lbmax , Lbound , Lcmax , Ldmax , Lend , 
+     &        Lentq , Lpmax , Lpqmax , Lqmax , Lrange , Lstart , lx , 
+     &        ly , lz , N10ord , N5ord , N6ord
+      integer N7ord , Nordr , Numdf
+      double precision TQ , XIP , YIP , ZIP
+      integer Ubound , Ulpure
+      dimension TQ(*) , XIP(*) , YIP(*) , ZIP(*)
+      common /dump  / Idmp , Idump
+      common /limit / Imj , Imk , Jml , Kml , Imkjml , Istart , Jstart , 
+     &                Kstart , Lstart , Iend , Jend , Kend , Lend , 
+     &                Irange , Jrange , Krange , Lrange , Lentq , Numdf
+      common /indxyz/ Indix(20) , Indiy(20) , Indiz(20) , Indjx(20) , 
+     &                Indjy(20) , Indjz(20) , Indkx(20) , Indky(20) , 
+     &                Indkz(20) , Indlx(20) , Indly(20) , Indlz(20)
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+      common /max   / Lamax , Lbmax , Lcmax , Ldmax , Lpmax , Lqmax , 
+     &                Lpqmax
+C
+C***********************************************************************
+C     fortran routine to sum up the a. o. integrals over primitive
+C     gaussians from the two-dimensional integrals produced by
+C     getip2.  this routine is slow but sure.  the faster machine
+C     language version, aoloop, should be used if possible.
+C***********************************************************************
+C
+C
+C
+      INTC = 0
+      do 100 i = Istart , Iend
+         if ( Imj.eq.0 ) Jend = i
+         if ( Imkjml.eq.0 ) Kend = i
+         ix = Indix(i)
+         iy = Indiy(i)
+         iz = Indiz(i)
+C
+         do 50 j = Jstart , Jend
+            jx = Indjx(j) + ix
+            jy = Indjy(j) + iy
+            jz = Indjz(j) + iz
+C
+            do 20 k = Kstart , Kend
+               Lend = Ubound(Ldmax)
+               if ( Kml.eq.0 ) Lend = k
+               if ( Imkjml+iabs(i-k).eq.0 ) Lend = j
+               kx = Indkx(k) + jx
+               ky = Indky(k) + jy
+               kz = Indkz(k) + jz
+C
+               do 10 l = Lstart , Lend
+                  INTC = INTC + 1
+                  lx = Indlx(l) + kx
+                  ly = Indly(l) + ky
+                  lz = Indlz(l) + kz
+                  TQ(INTC) = TQ(INTC) + (XIP(lx)*YIP(ly)*ZIP(lz))
+ 10            continue
+ 20         continue
+ 50      continue
+ 100  continue
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

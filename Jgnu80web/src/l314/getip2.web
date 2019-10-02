@@ -1,0 +1,72 @@
+@* getip2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] VALIP                                                     
+\item[INPUT:] X                                                         
+\item[INPUT:] CONST                                                     
+\item[PASSED:] CCP                                                       
+\item[PASSED:] CCQ                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    G                                                      
+\item[Uses]  G       LPQMAX  RHOT2   XINT                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TWOD2C  TWOD3C  TWOD4C                                 
+\item[Called by]   DPHNIX  PHOENI                                         
+                                                                    
+\end{description}
+@a
+      subroutine getip2(VALIP,X,CONST,CCP,CCQ)
+      implicit none
+      double precision CCP , CCQ , CONST , G , Rhot2 , Vali2p , Vali3p , 
+     &                 VALIP , X , Xint , Zero
+      integer Idmp , Idump , iv , Lamax , Lbmax , Lcmax , Ldmax , 
+     &        Lpmax , Lpqmax , Lqmax
+      dimension VALIP(*) , CCP(*) , CCQ(*)
+      common /int2d / G(13) , Vali2p(49) , Vali3p(112)
+      common /max   / Lamax , Lbmax , Lcmax , Ldmax , Lpmax , Lqmax , 
+     &                Lpqmax
+      common /int   / Zero , Xint(12)
+      common /rhot2 / Rhot2
+      common /dump  / Idmp , Idump
+C
+C***********************************************************************
+C     routine to obtain two-dimensional integrals.
+C     called for x, y, and z.  the only work done here is to compute
+C     the g's, the raw hermite recursion forms.
+C***********************************************************************
+C
+C     fill g(iv).  note indices incremented by 1
+      G(1) = CONST
+      VALIP(1) = G(1)
+      if ( Lpqmax.gt.1 ) then
+C     note that rhot2=2*rho*t**2.
+         G(2) = Rhot2*X*G(1)
+C warning lines=20 needed for 4-31g* on h2o when printing:
+C      if (idump.eq.12) write(6,500) g(1),g(2),x,rhot2,lpqmax
+C500   format(' getip2: g(1),g(2),x,rhot2,lpqmax= ',4g20.5,i10)
+         if ( Lpqmax.lt.2 ) goto 100
+         if ( Lpqmax.ne.2 ) then
+            do 20 iv = 3 , Lpqmax
+               G(iv) = Rhot2*(X*G(iv-1)-Xint(iv-2)*G(iv-2))
+C      if (idump.eq.12) write(6,510) iv,g(iv),xint(iv-2)
+C510   format('   "     iv, g(iv),xint(iv-2)    = ',i10,2g20.5)
+ 20         continue
+         endif
+C     find two-center integrals
+C     in this section the index iv is incremented by 2
+         call twod2c
+C
+C     form 2-dimensional 3-center integrals
+         call twod3c(CCQ)
+C
+C     form 2-dimensional 4-center integrals
+         call twod4c(CCP,VALIP)
+      endif
+ 100  return
+C
+      end
+@* INDEX.

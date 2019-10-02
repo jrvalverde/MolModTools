@@ -1,0 +1,121 @@
+@* densty.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] AA                                                        
+\item[PASSED:] BB                                                        
+\item[INPUT:] NB                                                        
+\item[INPUT:] NAE                                                       
+\item[INPUT:] NBE                                                       
+\item[PASSED:] MB                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOEIG   IOGUES  IOTEIG                                 
+\item[Uses]  IALT    ICMP    IOCMAT  IODMAT  IOEIG   IOGUES  IOTEIG 
+             IPRINT  IUHF                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ALTGES  CMPDEN  DFORM   GESPRT  TREAD   TWREIG  TWRITE 
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine densty(A,B,AA,BB,NB,NAE,NBE,MB)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , AA , B , BB , one , two , x
+      integer I56d , Ialt , Ibasis , Iblock , Icmp , Icmplt , Idgn , 
+     &        Idon1 , Idon2 , Idump , Iguess , Imix , In , inc , Iobas , 
+     &        Iocmat , Iocore , Iodmat , Iodtot , Iodum
+      integer Ioeig , Iogues , Iominc , Iomins , Iominv , Ioproj , 
+     &        Iorthg , Ioscr1 , Iosmat , Iosvec , Iosym , Ioteig , 
+     &        Iout , Iovmat , Ipolh , Iprint , Iproj , Ipunch , Iscale , 
+     &        Ismear
+      integer Itst , Iuhf , MB , NAE , NB , NBE , ne , nsq , ntt
+      dimension A(NB,NB) , B(NB,NB) , AA(NB) , BB(NB)
+      common /rwf401/ Iosmat , Iodmat , Iocmat , Iovmat , Iocore , 
+     &                Iobas , Iodum , Iominc , Iomins , Iominv , 
+     &                Iodtot , Ioeig , Iogues , Iosym , Ioproj , 
+     &                Iosvec , Ioscr1 , Iorthg , Ioteig
+      common /ops401/ Iguess , Iproj , Iuhf , Icmp , Ialt , Imix , 
+     &                Idgn , Iscale , Ismear , Iblock , Icmplt , Itst , 
+     &                Ibasis , Ipolh , Idon1 , Idon2 , Iprint , Idump , 
+     &                I56d
+      common /io    / In , Iout , Ipunch
+      data one/1.0D0/ , two/2.0D0/
+C          a routine to take mo coefs (in "a" on input), and
+C     produce the output initial guess.  the mo coefs have been
+C     produced at this point, and this routine worries about
+C     switching orbitals, mixing them to make complex orbitals, and
+C     forming the density matrix.  the calling arguments are:
+C
+C     a, b ... two matrices dimensioned to (nb,nb).  on input, the
+C          mo coefs must be supplied in "a".
+C     aa, bb ... two vectors of length "nb".  on input, "aa" must
+C          contain the eigenvectors.
+C     nb ... the number fo basis functions.
+C     nae, nbe ... the number of electrons of alpha and beta spins,
+C          respectively.  the routine looks at /ops401/ to
+C          decide whether the guess should be rhf or uhf.
+C     mb ... the number of orbitals actually formed.
+C ----------------------------------------------------------------------
+C
+C
+C
+C
+C
+C                        initialize some stuff.
+      inc = 0
+      ne = NAE
+      ntt = NB*(NB+1)/2
+      nsq = NB*NB
+      x = one
+      if ( Iuhf.ne.1 ) x = two
+C
+C            save guess in case it's needed later.
+      if ( Iuhf.eq.1 ) call twrite(Iogues,A,nsq,1,nsq,1,0)
+      if ( Iuhf.eq.1 ) call twrite(Ioteig,AA,NB,1,NB,1,0)
+C
+C            print if necessary.
+ 100  if ( Iprint.ge.2 ) call gesprt(9,A,4,NB,NB,MB)
+C
+C            deal with configuration switches.
+      write(*,*)
+      if ( Ialt.eq.2 ) call altges(A,AA,NB,inc)
+      write(*,*)
+C
+C            write out the eigenvalues.
+      call twreig(AA,B,NB,inc,Ioeig)
+C
+C            for complex, the routine "cmpden" deals with the mixing
+C            and with forming and writing the guess.
+      if ( Icmp.eq.0 ) then
+C
+C            write out the mo's.
+         call twrite(Iocmat+inc,A,nsq,1,nsq,1,0)
+         if ( Iprint.ne.0 ) call gesprt(9,A,inc,NB,NB,MB)
+C
+C            form, write, and print density matrix.
+         call dform(A,B,NB,NB,ne,x)
+         call twrite(Iodmat+inc,B,NB,NB,NB,NB,1)
+         if ( Iprint.ge.2 ) call gesprt(8,B,inc,NB,NB,NB)
+C
+         if ( inc.ne.0 ) return
+      else
+         call cmpden(A,B,AA,BB,NB,NB,x,inc,ne)
+         if ( inc.eq.2 ) return
+      endif
+C
+      if ( Iuhf.eq.0 ) return
+      ne = NBE
+      inc = 2
+      call tread(Iogues,A,nsq,1,nsq,1,0)
+      call tread(Ioteig,AA,NB,1,NB,1,0)
+      goto 100
+C
+      end
+@* INDEX.

@@ -1,0 +1,52 @@
+@* ind401.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NB                                                        
+\item[OUTPUT:] INDB                                                      
+\item[OUTPUT:] INDAA                                                     
+\item[OUTPUT:] INDBB                                                     
+\item[OUTPUT:] INDSCR                                                    
+\item[OUTPUT:] INDTAB                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   GUESS                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ind401(NB,INDB,INDAA,INDBB,INDSCR,INDTAB)
+      implicit none
+      integer INDAA , INDB , INDBB , INDSCR , INDTAB , indtot , mxcore , 
+     &        NB
+C ----------------------------------------------------------------------
+C          routine to compute indices for core allocation in l401.
+C     the first argument supplies this routine with the number for
+C     basis functions.  the remaining arguments are set by this
+C     routine:
+C          indb .... the index of the start of a nb x nb array.
+C          indaa ... the index of the start of a vector of length nb.
+C          indbb ... index for start of vector, length nb.
+C          indscr .. index for (36,11) array.
+C          indtab .. index for (nb,3) array.
+C ----------------------------------------------------------------------
+      data mxcore/50000/
+      INDB = NB*NB + 1
+      INDAA = INDB + NB*NB
+      INDBB = INDAA + NB
+      INDSCR = INDBB + NB
+      INDTAB = INDSCR + 36*11
+      indtot = INDTAB + 3*NB
+      if ( indtot.lt.50000 ) return
+      write (6,99001) indtot , mxcore
+99001 format (' Not enough MEMORY in L401; REQUIRED ',i8,'  PROVIDED ',
+     &        i8)
+      call lnk1e
+C
+      end
+@* INDEX.

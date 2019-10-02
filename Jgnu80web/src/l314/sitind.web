@@ -1,0 +1,80 @@
+@* sitind.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IS1     IS2     IS3     JS1     JS2     JS3     KS1    
+             KS2     KS3                                            
+\item[Uses]  NFA     NFB     NFC     NFD                            
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PHOENI                                                 
+                                                                    
+\end{description}
+@a
+      subroutine sitind
+      implicit none
+      integer i , Idmp , Idump , Is1 , Is2 , Is3 , Istm , itemp1 , 
+     &        itemp2 , itemp3 , jk , jkl , jl , Js1 , Js2 , Js3 , Jstm , 
+     &        kl , Ks1 , Ks2
+      integer Ks3 , Kstm , lim , Lstm , Nfa , Nfb , Nfc , Nfd
+      common /dump  / Idmp , Idump
+      common /site  / Is1(10) , Js1(10) , Ks1(10) , Is2(10) , Js2(10) , 
+     &                Ks2(10) , Is3(10) , Js3(10) , Ks3(10)
+      common /nf    / Nfa , Nfb , Nfc , Nfd , Istm , Jstm , Kstm , Lstm
+C
+C***********************************************************************
+C     routine to form the 'site' indexing arrays for reading the
+C     integrals out of tq in the routines dfout0,... etc.
+C     this routine forms these indexing arrays in the common /site/.
+C***********************************************************************
+C
+C
+C     form the products of the various ranges.
+      jk = Nfb*Nfc
+      jl = Nfb*Nfd
+      kl = Nfc*Nfd
+      jkl = Nfb*Nfc*Nfd
+C
+C     fill is1,2,3  (note that they are all the same).
+      itemp1 = 0
+      do 100 i = 1 , Nfa
+         Is1(i) = itemp1
+         Is2(i) = itemp1
+         Is3(i) = itemp1
+         itemp1 = itemp1 + jkl
+ 100  continue
+C
+C     fill js1,2,3 according to the permutations defined in phoenix.
+C     note that the range for j must reflect both j, k, and l.
+      itemp1 = 0
+      itemp2 = 0
+      itemp3 = 0
+      lim = max0(Nfb,Nfc,Nfd)
+      do 200 i = 1 , lim
+         Js1(i) = itemp1
+         Js2(i) = itemp2
+         Js3(i) = itemp3
+         itemp1 = itemp1 + kl
+         itemp2 = itemp2 + jk
+         itemp3 = itemp3 + jl
+ 200  continue
+C
+C     fill ks1,2,3 according to the permutations defined in phoenix.
+C     here, the limit must reflect both k and j.
+      itemp1 = 0
+      itemp2 = 0
+      lim = max0(Nfc,Nfb)
+      do 300 i = 1 , lim
+         Ks1(i) = itemp1
+         Ks2(i) = itemp2
+         Ks3(i) = itemp1
+         itemp1 = itemp1 + Nfd
+         itemp2 = itemp2 + Nfc
+ 300  continue
+C
+C     all done, return to caller.
+      return
+C
+      end
+@* INDEX.

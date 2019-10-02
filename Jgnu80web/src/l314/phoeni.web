@@ -1,0 +1,892 @@
+@* phoeni.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] D                                                         
+\item[PASSED:] F                                                         
+\item[INPUT:] IOP                                                       
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    A       CCPX    CCPY    CCPZ    CCQX    CCQY    CCQZ   
+             EP      EP2I    EQ      EXPARG  F20I    F6I     IDUMP  
+             IEND    IGAUSS  IGBEG   IGDF    IGEND   IMJ     IMK    
+             IMKJML  IPURE   IRANGE  ISTART  ITYPE   JEND    JGAUSS 
+             JGBEG   JGDF    JGEND   JML     JPURE   JRANGE  JSTART 
+             JTYPE   KEND    KGAUSS  KGBEG   KGDF    KGEND   KLIND  
+             KML     KPURE   KRANGE  KSTART  KTYPE   LAMAX   LBMAX  
+             LCMAX   LDMAX   LEND    LENTQ   LGAUSS  LGBEG   LGDF   
+             LGEND   LPMAX   LPQMAX  LPURE   LQMAX   LRANGE  LSTART 
+             LTYPE   NFA     NFB     NFC     NFD     NUMDF   PEXP   
+             PT5     PTEST   R1      R2      R3      R3OV2   R4     
+             RABSQ   RCDSQ   RHOT2   ROOT15  ROOT3   ROOT5   XA     
+             XB      XC      XD      YA      YB      YC      YD     
+             Z1      Z2      Z3      ZA      ZB      ZC      ZD     
+\item[Transmits as argument]  CA      CB      CC      CD      DBUF2E  EXX     IBUF2E 
+             IPURD   IPURF   ISMODE  ISTM    ISYM2E  JSTM    KSTM   
+             LSTM    TQ      XIP     YIP     ZIP                    
+\item[Uses]  AOS     CA      CB      CC      CCPX    CCPY    CCPZ   
+             CCQX    CCQY    CCQZ    CD      DBUF2E  EP      EQ     
+             EQSAV   EXPARG  EXX     IBUF2E  IDUMP   IEND    IFPURE 
+             IGAUSS  IGBEG   IGDF    IGEND   IMJ     IMK     IMKJML 
+             IPURD   IPURE   IPURF   ISMODE  ISTART  ISTM    ISYM2E 
+             ITYPE   JEND    JGAUSS  JGBEG   JGDF    JGEND   JML    
+             JPURE   JSTART  JSTM    JTYPE   KEND    KGAUSS  KGBEG  
+             KGDF    KGEND   KLCUTQ  KLIND   KML     KPURE   KSTART 
+             KSTM    KTYPE   LAMAX   LBMAX   LBOUND  LCMAX   LDMAX  
+             LEND    LENTQ   LGAUSS  LGBEG   LGDF    LGEND   LPMAX  
+             LPURE   LQMAX   LSTART  LSTM    LTYPE   NFA     NFB    
+             NFC     NFD     NORDR   NSHELL  NUMDF   PEXP    PQCUT1 
+             PQCUT2  PQCUT3  PT5     PTEST   QXPSAV  QXSAV   QYSAV  
+             QZSAV   R3OV2   RABSQ   RHOT2   ROOT3   ROOT5   SHELLA 
+             SHELLC  SHELLN  SHELLT  SHLADF  TQ      UBOUND  ULPURE 
+             X       XA      XB      XC      XD      XINT    XIP    
+             Y       YA      YB      YC      YD      YIP     Z      
+             ZA      ZB      ZC      ZD      ZERO    ZIP            
+                                                                    
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+                                                                    
+\item[Calls]       ACLEAR  AOSUMF  CNTPRM  DFCUT   DFOUT1  DFOUT2  DFOUT3 
+             DFOUT4  DFOUT6  DFOUT8  FILLC   FILLCP  GAOIND  GETA2  
+             GETCC2  GETIP2  ILSW    ISYMGO  LENTQF  MTGET   OUT2E  
+             PURDF2  QINF    REPLCT  RPOL2   SETORD  SETRYS  SITIND 
+             TREAD                                                  
+\item[Called by]   DIRCLO  L314                                           
+                                                                    
+\end{description}
+@a
+      subroutine phoeni(D,F,IOP,JUMP)
+      implicit none
+      double precision A , as , asxa , asya , asza , Atmchg , bs , C , 
+     &                 C1 , C2 , C3 , C4 , Ca , Cb , Cc , Ccpx , Ccpy , 
+     &                 Ccpz , Ccqx , Ccqy
+      double precision Ccqz , Cd , cmaxi , cmaxj , Dbuf2e , dxyz , Ep , 
+     &                 Ep2i , epeq , epi , eppeqi , Eq , Eqsav , 
+     &                 Exparg , Exx , F100 , F20i , F6i , Fillct , four
+      double precision half , one , pconst , Pexp , pi , pii , Pqcut1 , 
+     &                 Pqcut2 , Pqcut3 , pqx , pqy , pqz , Pt5 , ptemp , 
+     &                 Ptest , px , py , pz , qexp , qx
+      double precision Qxpsav , Qxsav , qy , Qysav , qz , Qzsav , R1 , 
+     &                 R2 , R3 , R3ov2 , R4 , Rabsq , Rcdsq , rho , 
+     &                 Rhot2 , Root15 , Root3 , Root5 , rpqsq , six
+      double precision symfac , three , tp , Tq , twenty , tworho , wp , 
+     &                 X , Xa , xap , Xb , xbp , Xc , xcq , Xd , xdq , 
+     &                 Xint , Xip , Y , Ya
+      double precision yap , Yb , ybp , Yc , ycq , Yd , ydq , Yip , Z , 
+     &                 Z1 , Z2 , Z3 , Za , zap , Zb , zbp , Zc , 
+     &                 zconst , zcq , Zd
+      double precision zdq , Zero , Zip , Zistar , ztemp
+      integer i , iacc , Ian , Ibf , Ibuf2e , Icharg , idcout , Idmp , 
+     &        Idump , Iend , Ifao , Ifcont , Ifpure , Igauss , Igbeg , 
+     &        Igdf , Igend , ijcutp , Imj , Imk
+      integer Imkjml , In , Indao , Indix , Indiy , Indiz , Indjx , 
+     &        Indjy , Indjz , Indkx , Indky , Indkz , Indlx , Indly , 
+     &        Indlz , intc , intcp , iop20p , Iout , ipqcut
+      integer Ipunch , Ipurd , Ipure , Ipurf , Irange , iret , irwb , 
+     &        Is1 , Is2 , Is3 , iset , ish , ishell , ishp , Ismode , 
+     &        ist , Istart , Istm , Isym2e , isymm
+      integer isytmp , itemp , itqb , itqb1 , itqb2 , itqb3 , itqbas , 
+     &        itqprm , Itype , izero , j , Jan , Jend , Jgauss , Jgbeg , 
+     &        Jgdf , Jgend , Jml , Jpure , Jrange
+      integer Js1 , Js2 , Js3 , jsh , jshell , jshp , jst , Jstart , 
+     &        Jstm , Jtype , JUMP , k , Kend , Kgauss , Kgbeg , Kgdf , 
+     &        Kgend , Klcutq , Klind , Kml
+      integer Kpure , Krange , Ks1 , Ks2 , Ks3 , ksh , kshell , kshp , 
+     &        kst , Kstart , Kstm , Ktype , l , Lamax , lambda , Lbmax , 
+     &        Lbound , Lcmax , Ldmax , LENB
+      integer Lend , lenneq , Lentq , lentqf , lentqp , Lgauss , Lgbeg , 
+     &        Lgdf , Lgend , Limxyz , Lpmax , Lpqmax , Lpure , Lqmax , 
+     &        Lrange , lsave , lsh , lshell , lshp , lst
+      integer Lstart , Lstm , Ltype , MAXPRM , MAXS21 , MAXSH1 , 
+     &        MAXSHL , Maxtyp , Maxxyz , mtget , mtype , mu , Multip , 
+     &        N10ord , N5ord , N6ord , N7ord , Nae , Natoms , Nbasis
+      integer Nbe , ndc , Ne , neq , neqshl , Nfa , Nfb , Nfc , Nfd , 
+     &        nga , ngb , ngc , ngd , Nordr , nset , Nshell , nsymop , 
+     &        nu , Numdf , nzero
+      integer IOP(*)
+      double precision D(*) , F(*)
+      logical reject
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      integer sconap , sconbp , sconcp , scondp
+      integer Ubound , Ulpure , sigma
+      logical dbuf
+      dimension tp(7) , wp(7) , Zip(256) , Ibuf2e(9520) , irwb(2)
+C      dimension      c4(80),shladf(80)
+      dimension lsave(4) , itqbas(3) , isytmp(2)
+C      common /iop/iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension neqshl(MAXSHL,8)
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /twbuf / Tq(5184) , Dbuf2e(4760)
+      common /io    / In , Iout , Ipunch
+      common /cfact / Pt5 , R3ov2 , Root3 , Root5 , Root15 , R1 , R2 , 
+     &                R3 , R4 , Z1 , Z2 , Z3
+      common /limit / Imj , Imk , Jml , Kml , Imkjml , Istart , Jstart , 
+     &                Kstart , Lstart , Iend , Jend , Kend , Lend , 
+     &                Irange , Jrange , Krange , Lrange , Lentq , Numdf
+      common /stypes/ Itype , Jtype , Ktype , Ltype
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+      common /ipure / Ipurd , Ipurf
+      common /coord / Xa , Ya , Za , Xb , Yb , Zb , Rabsq , Xc , Yc , 
+     &                Zc , Xd , Yd , Zd , Rcdsq
+      common /gcloop/ Igauss , Igbeg , Igend , Igdf , Jgauss , Jgbeg , 
+     &                Jgend , Jgdf , Kgauss , Kgbeg , Kgend , Kgdf , 
+     &                Lgauss , Lgbeg , Lgend , Lgdf
+      common /qinfo / Eqsav(100) , Qxsav(100) , Qysav(100) , Qzsav(100)
+     &                , Qxpsav(100) , Exparg , Ptest , Pexp , Ep , Eq , 
+     &                Ep2i , Klind , Klcutq(100)
+      common /dfcuts/ Pqcut1 , Pqcut2 , Pqcut3 , Fillct
+      common /int   / Zero , Xint(12)
+      common /a     / A(174)
+      common /ccpq  / Ccpx(48) , Ccpy(48) , Ccpz(48) , Ccqx(48) , 
+     &                Ccqy(48) , Ccqz(48)
+      common /max   / Lamax , Lbmax , Lcmax , Ldmax , Lpmax , Lqmax , 
+     &                Lpqmax
+      common /xyzint/ Xip(256) , Yip(256) , Zistar(256)
+      common /rhot2 / Rhot2
+      common /contr / Ca(20) , Cb(20) , Cc(20) , Cd(20)
+      common /intcon/ F6i , F20i , F100
+      common /jpure / Ifpure(4,4) , Ipure , Jpure , Kpure , Lpure
+      common /aoinds/ Ifcont , Limxyz , Maxxyz , Ifao , Indao(1296)
+      common /indxyz/ Indix(20) , Indiy(20) , Indiz(20) , Indjx(20) , 
+     &                Indjy(20) , Indjz(20) , Indkx(20) , Indky(20) , 
+     &                Indkz(20) , Indlx(20) , Indly(20) , Indlz(20)
+      common /ibf   / Ibf(30)
+      common /nf    / Nfa , Nfb , Nfc , Nfd , Istm , Jstm , Kstm , Lstm
+      common /site  / Is1(10) , Js1(10) , Ks1(10) , Is2(10) , Js2(10) , 
+     &                Ks2(10) , Is3(10) , Js3(10) , Ks3(10)
+      common /dump  / Idmp , Idump
+      equivalence (Zip(1),Zistar(1))
+      equivalence (Ibuf2e(1),Dbuf2e(1))
+      equivalence (Ismode,Ibf(1)) , (Isym2e,Ibf(30))
+      data idcout/14/ , dbuf/.true./
+      data irwb/506 , 1481/
+      data isymm/551/ , neq/565/
+      data six/6.0D0/ , twenty/20.0D0/
+      data half/0.5D0/ , one/1.0D0/ , four/4.0D0/ , three/3.0D0/
+C
+C
+C***********************************************************************
+C     program to compute two-electron integrals over
+C     atomic orbitals using the method of rys polynomials.
+C     this program will handle s, p, d, and f functions, and s, s=p,
+C     s=p=d, d and f type shells.  some limitations may be placed
+C     on calculations by the dimension of tq in /twbuf/.
+C
+C
+C     the internal order of the functions produced is:
+C    1        s
+C    2        x
+C    3        y
+C    4        z
+C    5        x**2      d(0)   3*z**2-r**2
+C    6        z**2      d(1,+) x*z
+C    7        z**2      d(1,-) y*z
+C    8        x*y       d(2,+) x**2-y**2
+C    9        x*z       d(2,-) x*y
+C   10        y*z
+C   11        x**3                             f(0)   z*(5*z**2-3*r**2)
+C   12        y**3                             f(1,+) x*(5*z**2-r**2)
+C   13        z**3                             f(1,-) y*(5*z**2-r**2)
+C   14        x*y**2                           f(2,+) z*(x**2-y**2)
+C   15        x**2*y                           f(2,-) z*(x*y)
+C   16        x**2*z                           f(3,+) x*(x**2-3*y**2)
+C   17        x*z**2                           f(3,-) y*(3*x**2-y**2)
+C   18        y*z**2
+C   19        y**2*z
+C   20        x*y*z
+C     the external order is determined by routine setord.
+C***********************************************************************
+C
+C
+C
+C
+C
+C=bd  data indlx/1,2,1,1,3,1,1,2,2,1,4,1,1,2,3,3,2,1,1,2/
+C=bd  data indly/1,1,2,1,1,3,1,2,1,2,1,4,1,3,2,1,1,2,3,2/
+C=bd  data indlz/1,1,1,2,1,1,3,1,2,2,1,1,4,1,1,2,3,3,2,2/
+C=bd  data indkx/0,4,0,0,8,0,0,4,4,0,12,0,0,4,8,8,4,0,0,4/
+C=bd  data indky/0,0,4,0,0,8,0,4,0,4,0,12,0,8,4,0,0,4,8,4/
+C=bd  data indkz/0,0,0,4,0,0,8,0,4,4,0,0,12,0,0,4,8,8,4,4/
+C=bd  data indjx/0,16,0,0,32,0,0,16,16,0,48,0,0,16,32,32,16,0,0,16/
+C=bd  data indjy/0,0,16,0,0,32,0,16,0,16,0,48,0,32,16,0,0,16,32,16/
+C=bd  data indjz/0,0,0,16,0,0,32,0,16,16,0,0,48,0,0,16,32,32,16,16/
+C=bd  data indix/0,64,0,0,128,0,0,64,64,0,192,0,0,64,128,128,64,0,0,64/
+C=bd  data indiy/0,0,64,0,0,128,0,64,0,64,0,192,0,128,64,0,0,64,128,64/
+C=bd  data indiz/0,0,0,64,0,0,128,0,64,64,0,0,192,0,0,64,128,128,64,64/
+C=bd  data ifpure/0,0,-1,+1,0,0,0,+1,0,0,-1,0,4*0/
+C=bd  data maxxyz/1296/
+C=nr  data cut1/42.0d0/
+C=bd  data xint/1.0d0,2.0d0,3.0d0,4.0d0,5.0d0,6.0d0,7.0d0,8.0d0,9.0d0,
+C=bd $ 10.0d0,11.0d0,12.0d0/
+C
+C
+C***********************************************************************
+C        initialize this overlay.
+C***********************************************************************
+      irwb(2) = LENB
+C above uses the parameter
+      Idump = IOP(34)
+      iacc = IOP(28) - idcout
+C     establish 5d/6d and 7f/10f via ilsw.
+      call ilsw(2,16,Ipurf)
+      call ilsw(2,2,Ipurd)
+      iop20p = 2*Ipurf + Ipurd + 1
+C     set up lsave.
+      lsave(1) = Ubound(1)
+      lsave(2) = Ubound(2)
+      lsave(3) = Ubound(3)
+      lsave(4) = Ubound(4)
+      if ( Ipurd.eq.0 ) lsave(3) = Ulpure(3)
+      if ( Ipurf.eq.0 ) lsave(4) = Ulpure(4)
+      pi = four*datan(one)
+      Pt5 = half
+      Root3 = dsqrt(three)
+      Root5 = dsqrt(Xint(5))
+      Root15 = dsqrt(Xint(10)+Xint(5))
+      R1 = Pt5*dsqrt(Xint(5)/Xint(2))
+      R2 = Xint(3)/(Xint(2)*Root5)
+      R4 = Pt5*dsqrt(Xint(3)/Xint(2))
+      Z1 = Xint(4)/Root5
+      Z2 = Xint(1)/Root5
+      Z3 = Xint(3)/Root5
+      R3ov2 = Pt5*Root3
+      R3 = R3ov2
+      F6i = one/six
+      F20i = one/twenty
+      pconst = (pi+pi)*pi*dsqrt(pi)
+      pii = one/pi
+C     recover common/b/.
+      call tread(irwb(1),Exx(1),irwb(2),1,irwb(2),1,0)
+      call setord
+      call out2e(-1,mu,nu,lambda,sigma,Tq(1),dbuf,Ibuf2e,Dbuf2e,iret,
+     &           idcout,IOP,D,F)
+      if ( iret.eq.0 ) then
+C
+C     if two-electron symmetry is enabled, read the information in.
+         if ( Isym2e.eq.1 ) then
+            call tread(isymm,isytmp,1,1,1,1,0)
+            nsymop = isytmp(1)
+            lenneq = 4*MAXSHL
+            call tread(neq,neqshl(1,1),lenneq,1,lenneq,1,0)
+         endif
+         do 50 i = 1 , 174
+            A(i) = Zero
+ 50      continue
+         do 100 i = 1 , 48
+            Ccpx(i) = Zero
+            Ccpy(i) = Zero
+            Ccpz(i) = Zero
+            Ccqx(i) = Zero
+            Ccqy(i) = Zero
+            Ccqz(i) = Zero
+ 100     continue
+C
+C     establish critical cutoffs for this segment.
+         call dfcut(IOP)
+         call setrys
+C
+C***********************************************************************
+C     commence loops over shells.
+C***********************************************************************
+C
+C     loop over reduced set, ish,... etc.
+         do 150 ish = 1 , Nshell
+            do 140 jsh = 1 , ish
+               do 130 ksh = 1 , jsh
+                  do 125 lsh = 1 , ksh
+C     if(ish.ne.5)go to 404
+C     if(jsh.ne.5)go to 404
+C     if(ksh.ne.3)go to 404
+C     if(lsh.ne.3)go to 404
+C
+C     given the reduced set ish,... etc, determine the primed set
+C     ishp,... etc that reflects the preliminary switches (if any)
+C     this piece of information, along with mtype (the master type)
+C     and nset (the number of permuted sets) is returned by mtget.
+                     mtype = mtget(ish,jsh,ksh,lsh,ishp,jshp,kshp,lshp,
+     &                       nset)
+                     if ( Idump.eq.11 ) then
+                        write (6,99002) ish , jsh , ksh , lsh
+                        write (6,99003) ishp , jshp , kshp , lshp
+                        write (6,99004) nset
+                     endif
+C
+C     determine the number of d- or f-type functions.  under
+C     normal circumstances, this link computes only those integrals
+C     that have at least one d- or f-type function.  this is
+C     readily determined from the shell types of the four shells
+C     and is independent of any permuting done by the iset
+C     loop.
+                     Numdf = Shellt(ish)/2 + Shellt(jsh)/2 + Shellt(ksh)
+     &                       /2 + Shellt(lsh)/2
+C     if the 'iacc' option is set appropriately, we will do all
+C     integrals here.
+                     if ( iacc.ne.0 ) then
+                        if ( Numdf.le.0 ) goto 125
+                     endif
+C
+C     accept/reject if symmetry is turned on, and in any case, define
+C     symfac.
+                     call isymgo(ish,jsh,ksh,lsh,nsymop,neqshl,Isym2e,
+     &                           reject,symfac)
+C     if rejected, skip out.
+                     if ( .not.(reject) ) then
+C
+C     with the primed set at hand, allocate the required amount of
+C     space in tq.  this is somewhat complicated, because we do
+C     not conveniently have the range information yet.  simply get
+C     it directly from /b/ and /order/.
+C     ***note*** nfa, etc are sometimes re-computed in purdf2.
+C     specifically, if the run is 5-d or 7-f, the number
+C     of functions on a, b, c and d is re-computed in purdf2 when
+C     iset=1.  currently , these variables are used
+C     only in dfout1,2,3, etc. and this should pose no problems.
+C     note that the following calls to lentqf will determine
+C     istm,j,k,l which specify the start-1 of the a. o.
+C     orbital (local index range) for this shell.
+                        Nfa = lentqf(ishp,Istm)
+                        Nfb = lentqf(jshp,Jstm)
+                        Nfc = lentqf(kshp,Kstm)
+                        Nfd = lentqf(lshp,Lstm)
+                        Lentq = Nfa*Nfb*Nfc*Nfd
+C
+C
+C     build the 'site' indexing arrays for the three sets.
+                        call sitind
+C
+C     knowing how big each entry in tq is going to be, allocate 3 sets
+C     worth at this time.  the layout of tq is as follows.
+C
+C     tq(1)  =========
+C       .       /
+C       .       ..
+C       .       ..
+C       .      primitive integrals
+C       .       ..
+C       .       ..
+C     tq(l)     /
+C     tq(l+1)   /
+C       .       ..
+C       .       ..
+C       .      integrals for iset=1
+C       .       ..
+C       .       ..
+C      tq(2*l)  /
+C      tq(2*l+1)/
+C
+C
+C     allocate separately for the primitive array.  if this shell
+C     pass is completely uncontracted, we can use the same array
+C     for primitives and final integrals.
+                        lentqp = Lentq
+                        ndc = Shelln(ish)*Shelln(jsh)*Shelln(ksh)
+     &                        *Shelln(lsh)
+                        if ( ndc.eq.1 ) lentqp = 0
+C
+C     test ismode before performing the final allocation of tq.
+                        itqprm = 0
+                        if ( Ismode.le.0 ) then
+C
+C     allocate tq for the non-raffenetti case.  here, we need space
+C     for only one set of integrals.  this means one or two arrays
+C     depending on whether or not there is any contraction to be done.
+                           itqbas(1) = itqprm + lentqp
+                           itqbas(2) = itqbas(1)
+                           itqbas(3) = itqbas(1)
+                        else
+C
+C     allocate store for the raffenetti storage case.  here,
+C     we need three arrays in addition to anything required for
+C     primitive integral evaluation.
+                           itqbas(1) = itqprm + lentqp
+                           itqbas(2) = itqbas(1) + Lentq
+                           itqbas(3) = itqbas(2) + Lentq
+                        endif
+                        if ( Idump.eq.11 ) write (6,99007) Lentq , 
+     &                       lentqp , itqprm , itqbas
+C
+C     commence the loop over the expanded (ie. permuted) sets.
+                        do 120 iset = 1 , nset
+C
+C     get the base in tq for the current pass.
+                           itqb = itqbas(iset)
+C     carry the primitive array in the same space as the final integral
+C     array when ndc=1 (ie. in the uncontracted case).
+                           if ( ndc.eq.1 ) itqprm = itqb
+C
+C     determine ishell,... etc from ishp,... etc.
+                           if ( iset.eq.2 ) then
+C
+C     iset=2 ... (ad,bc).
+                              ishell = ishp
+                              jshell = lshp
+                              kshell = jshp
+                              lshell = kshp
+                           elseif ( iset.eq.3 ) then
+C
+C     iset=3 ... (ac,bd).
+                              ishell = ishp
+                              jshell = kshp
+                              kshell = jshp
+                              lshell = lshp
+                           else
+C
+C     iset=1 ... no permutation, use ishp,... etc directly.
+                              ishell = ishp
+                              jshell = jshp
+                              kshell = kshp
+                              lshell = lshp
+                           endif
+                           if ( Idump.eq.11 ) write (6,99008) iset , 
+     &                          itqb , ishell , jshell , kshell , lshell
+C
+C     obtain information for ishell.
+                           Xa = X(ishell)
+                           Ya = Y(ishell)
+                           Za = Z(ishell)
+                           Igbeg = Shella(ishell)
+                           nga = Shelln(ishell)
+                           Itype = Shellt(ishell)
+                           Igdf = Shladf(ishell)
+                           sconap = Shellc(ishell) + 1
+                           Igend = Igbeg + nga - 1
+                           Lamax = Itype + 1
+                           Istart = Lbound(Lamax,sconap)
+                           Iend = Ubound(Lamax)
+                           Irange = Iend - Istart + 1
+                           Ipure = Ifpure(Lamax,iop20p)
+C
+C     obtain information for jshell.
+                           Xb = X(jshell)
+                           Yb = Y(jshell)
+                           Zb = Z(jshell)
+                           Jgbeg = Shella(jshell)
+                           ngb = Shelln(jshell)
+                           Jtype = Shellt(jshell)
+                           Jgdf = Shladf(jshell)
+                           sconbp = Shellc(jshell) + 1
+                           Jgend = Jgbeg + ngb - 1
+                           Lbmax = Jtype + 1
+                           Jstart = Lbound(Lbmax,sconbp)
+                           Jend = Ubound(Lbmax)
+                           Jrange = Jend - Jstart + 1
+                           Jpure = Ifpure(Lbmax,iop20p)
+                           Lpmax = Lamax + Lbmax - 1
+                           Imj = iabs(ishell-jshell)
+                           Rabsq = (Xb-Xa)**2 + (Yb-Ya)**2 + (Zb-Za)**2
+C
+C     obtain information for kshell.
+                           Xc = X(kshell)
+                           Yc = Y(kshell)
+                           Zc = Z(kshell)
+                           Kgbeg = Shella(kshell)
+                           ngc = Shelln(kshell)
+                           Ktype = Shellt(kshell)
+                           Kgdf = Shladf(kshell)
+                           sconcp = Shellc(kshell) + 1
+                           Kgend = Kgbeg + ngc - 1
+                           Lcmax = Ktype + 1
+                           Kstart = Lbound(Lcmax,sconcp)
+                           Kend = Ubound(Lcmax)
+                           Krange = Kend - Kstart + 1
+                           Kpure = Ifpure(Lcmax,iop20p)
+                           Imk = iabs(ishell-kshell)
+C
+C     obtain information for lshell.
+                           Xd = X(lshell)
+                           Yd = Y(lshell)
+                           Zd = Z(lshell)
+                           Lgbeg = Shella(lshell)
+                           ngd = Shelln(lshell)
+                           Ltype = Shellt(lshell)
+                           Lgdf = Shladf(lshell)
+                           scondp = Shellc(lshell) + 1
+                           Lgend = Lgbeg + ngd - 1
+                           Ldmax = Ltype + 1
+                           Lstart = Lbound(Ldmax,scondp)
+                           Lend = Ubound(Ldmax)
+                           Lrange = Lend - Lstart + 1
+                           Lpure = Ifpure(Ldmax,iop20p)
+                           Lqmax = Lcmax + Ldmax - 1
+                           Lpqmax = Lpmax + Lqmax - 1
+                           Jml = iabs(jshell-lshell)
+                           Kml = iabs(kshell-lshell)
+                           Imkjml = Imk + Jml
+                           nzero = ((Itype+Jtype+Ktype+Ltype)/2) + 1
+C
+                           Rcdsq = (Xd-Xc)**2 + (Yd-Yc)**2 + (Zd-Zc)**2
+C     reset jend, kend and lend on each pass through l-loop.
+C     this is necessary because purdf2 changes these quantities.
+                           Iend = Ubound(Lamax)
+                           Jend = Ubound(Lbmax)
+                           Kend = Ubound(Lcmax)
+                           Lend = Ubound(Ldmax)
+                           call aclear(Lentq,Tq(1+itqb))
+C
+C     perform aoloop indexing.
+                           call gaoind(IOP)
+C
+C     ******************************************************************
+C     commence loop over gaussian expansion
+C     ******************************************************************
+C     preliminary q-loop.
+                           call qinf
+                           intc = 0
+                           do 110 Igauss = Igbeg , Igend
+                              as = Exx(Igauss)
+                              call fillcp(Itype,Igbeg,Igauss,Igdf,Ca,
+     &                           cmaxi)
+                              asxa = as*Xa
+                              asya = as*Ya
+                              asza = as*Za
+C
+                              do 108 Jgauss = Jgbeg , Jgend
+                                 bs = Exx(Jgauss)
+                                 call fillcp(Jtype,Jgbeg,Jgauss,Jgdf,Cb,
+     &                              cmaxj)
+C
+                                 Ep = as + bs
+                                 epi = one/Ep
+                                 Ep2i = one/(Ep+Ep)
+                                 px = (asxa+bs*Xb)*epi
+                                 py = (asya+bs*Yb)*epi
+                                 pz = (asza+bs*Zb)*epi
+                                 Exparg = as*bs*Rabsq*epi
+                                 if ( Exparg.lt.Pqcut3 ) then
+                                    Pexp = dexp(-Exparg)
+                                    ptemp = pconst*Pexp/symfac
+                                    Ptest = cmaxi*cmaxj*Pexp
+                                    if ( Ptest.ge.Pqcut1 ) then
+                                       ijcutp = 0
+C
+                                    elseif ( Ptest.lt.Pqcut2 ) then
+                                       ijcutp = 2
+                                    else
+C
+                                       ijcutp = 1
+                                    endif
+                                    xap = px - Xa
+                                    xbp = px - Xb
+                                    yap = py - Ya
+                                    ybp = py - Yb
+                                    zap = pz - Za
+                                    zbp = pz - Zb
+                                    call getcc2(Ccpx,xap,xbp,Lamax,
+     &                                 Lbmax)
+                                    call getcc2(Ccpy,yap,ybp,Lamax,
+     &                                 Lbmax)
+                                    call getcc2(Ccpz,zap,zbp,Lamax,
+     &                                 Lbmax)
+C
+                                    Klind = 0
+                                    do 106 Kgauss = Kgbeg , Kgend
+                                       call fillc(Ktype,Kgbeg,Kgauss,
+     &                                    Kgdf,Cc)
+C
+                                       do 104 Lgauss = Lgbeg , Lgend
+                                         Klind = Klind + 1
+                                         call fillc(Ltype,Lgbeg,Lgauss,
+     &                                      Lgdf,Cd)
+C
+C
+C     test cutoffs.
+                                         ipqcut = ijcutp + Klcutq(Klind)
+                                         if ( ipqcut.lt.2 ) then
+                                         Eq = Eqsav(Klind)
+                                         qx = Qxsav(Klind)
+                                         qy = Qysav(Klind)
+                                         qz = Qzsav(Klind)
+                                         qexp = Qxpsav(Klind)
+                                         epeq = Ep*Eq
+                                         eppeqi = one/(Ep+Eq)
+                                         rho = epeq*eppeqi
+                                         tworho = rho + rho
+                                         ztemp = ptemp*dsqrt(eppeqi)
+     &                                      *qexp/epeq
+                                         xcq = qx - Xc
+                                         xdq = qx - Xd
+                                         ycq = qy - Yc
+                                         ydq = qy - Yd
+                                         zcq = qz - Zc
+                                         zdq = qz - Zd
+                                         call getcc2(Ccqx,xcq,xdq,Lcmax,
+     &                                      Ldmax)
+                                         call getcc2(Ccqy,ycq,ydq,Lcmax,
+     &                                      Ldmax)
+                                         call getcc2(Ccqz,zcq,zdq,Lcmax,
+     &                                      Ldmax)
+                                         pqx = qx - px
+                                         pqy = qy - py
+                                         pqz = qz - pz
+                                         rpqsq = pqx*pqx + pqy*pqy + 
+     &                                      pqz*pqz
+                                         dxyz = rho*rpqsq
+                                         call rpol2(nzero,dxyz,tp,wp)
+                                         call geta2
+C
+C
+C     if we are dealing with contracted functions, it is necessary to
+C     clear the primitive accumulation array each time through
+C     the contraction loops.  this way, the zeroes loop accumulates into
+C     a fresh area each time.
+                                         if ( ndc.ne.1 )
+     &                                      call aclear(Lentq,
+     &                                      Tq(1+itqprm))
+C
+C
+C
+C***********************************************************************
+C     commence loop over zeroes of rys polynomial.
+C***********************************************************************
+C
+                                         do 102 izero = 1 , nzero
+C     obtain root of rys polynomial.
+                                         Rhot2 = tworho*tp(izero)
+                                         if ( Idump.eq.13 )
+     &                                      write (6,99001) izero , 
+     &                                      Rhot2 , tworho , tp(izero)
+C
+99001                                    format (
+     &                                  ' IZERO,RHOT2,TWORHO,TP(IZERO)='
+     &                                  ,i10,3G15.3)
+C
+                                         zconst = ztemp*wp(izero)
+C     test for possible bypass within zeroes loop.
+                                         if ( zconst.gt.Pqcut2 ) then
+                                         call getip2(Xip,pqx,one,Ccpx,
+     &                                      Ccqx)
+                                         call getip2(Yip,pqy,one,Ccpy,
+     &                                      Ccqy)
+                                         call getip2(Zip,pqz,zconst,
+     &                                      Ccpz,Ccqz)
+C
+C
+C     ******************************************************************
+C     *  commence loop over atomic orbitals.                           *
+C     ******************************************************************
+C
+C     if possible, use high-speed loop.
+C     aoloop (assembler) not available in portable gnu80
+C                                              if (ifao) 230,240,
+C     +                                            230
+C  230                                         call aoloop(limxyz,indao,
+C     +                                                    tq(itqprm+1),
+C     +                                                    xip,yip,zip)
+C                                              intc = intc + limxyz
+C                                              go to 250
+C
+                                         call aosumf(intc,Tq(itqprm+1),
+     &                                      Xip,Yip,Zip)
+                                         endif
+C
+C
+C
+ 102                                     continue
+C
+C
+C     use routine cntprm to apply contraction coefficients.
+                                         call cntprm(ndc,intc,Tq(1+itqb)
+     &                                      ,Tq(1+itqprm))
+                                         endif
+C
+C***********************************************************************
+C
+ 104                                   continue
+ 106                                continue
+                                 endif
+ 108                          continue
+ 110                       continue
+C     ******************************************************************
+C     end of loop over gaussians
+C     ******************************************************************
+C
+C     test intc to see if any integrals are in tq.  if there are any,
+C     call routine dfout to have them processed (output).
+C
+C     this is not completely obvious since, if intc is zero,
+C     raffenetti is in effect with iset=1 and 6d to 5d transformation
+C     must be performed.
+C     so, make sure that nfa,...,etc have the correct values.
+C     if they do not, the array nordr will be acessed in an undefined
+C     place with unpredictable results.
+                           itemp = iabs(Ipure) + iabs(Jpure)
+     &                             + iabs(Kpure) + iabs(Lpure)
+                           if ( intc.eq.0 .and. Ismode.ne.0 .and. 
+     &                          iset.eq.1 .and. itemp.ne.0 ) then
+                              Iend = Ulpure(Lamax)
+                              Jend = Ulpure(Lbmax)
+                              Kend = Ulpure(Lcmax)
+                              Lend = Ulpure(Ldmax)
+                              Nfa = Iend - Istart + 1
+                              Nfb = Jend - Jstart + 1
+                              Nfc = Kend - Kstart + 1
+                              Nfd = Lend - Lstart + 1
+                           endif
+C
+                           if ( intc.ne.0 ) then
+                              if ( Idump.eq.11 ) write (6,99005) intc
+                              if ( Idump.eq.11 ) write (6,99006)
+     &                             (i,Tq(i+itqb),i=1,intc)
+                              call purdf2(intc,Ismode,iset,Tq(1+itqb),
+     &                           Tq(1+itqb),intcp)
+C***********************************************************************
+C     loop over remaining integrals, apply a. o. labels and give
+C     them over to the integral output routine.
+C     in this manner, the array tq is flushed via out2e in
+C     every pass through the iset loop.
+C***********************************************************************
+                              if ( Ismode.le.0 ) then
+                                 ist = Aos(ishell) - 1
+                                 jst = Aos(jshell) - 1
+                                 kst = Aos(kshell) - 1
+                                 lst = Aos(lshell) - 1
+                                 intc = itqb
+                                 do 118 i = Istart , Iend
+                                    mu = ist + Nordr(i)
+                                    if ( Imj.eq.0 ) Jend = i
+                                    if ( Imkjml.eq.0 ) Kend = i
+                                    do 116 j = Jstart , Jend
+                                       nu = jst + Nordr(j)
+                                       do 114 k = Kstart , Kend
+                                         lambda = kst + Nordr(k)
+                                         Lend = lsave(Ldmax)
+                                         if ( Kml.eq.0 ) Lend = k
+                                         if ( Imkjml.eq.0 .and. i.eq.k )
+     &                                      Lend = j
+                                         do 112 l = Lstart , Lend
+                                         sigma = lst + Nordr(l)
+                                         intc = intc + 1
+C
+                                         call out2e(1,mu,nu,lambda,
+     &                                      sigma,Tq(intc),dbuf,Ibuf2e,
+     &                                      Dbuf2e,iret,idcout,IOP,D,F)
+C
+ 112                                     continue
+ 114                                   continue
+ 116                                continue
+ 118                             continue
+                              endif
+                           endif
+C
+C     end of loop over sets.
+ 120                    continue
+C
+C
+C     if we are not doing raffenetti, skip past the raffenetti code.
+                        if ( Ismode.ne.0 ) then
+C
+C
+C     branch to the appropriate code based on mtype, the master
+C     shell duplicate flag.
+                           itqb1 = itqbas(1)
+                           itqb2 = itqbas(2)
+                           itqb3 = itqbas(3)
+                           if ( mtype.eq.2 .or. mtype.eq.5 ) then
+C
+C
+C     mtype=2, kshp=lshp only.  first, replicate the necessary
+C     integrals.
+                              call replct(Lentq,Tq(1+itqb2),Tq(1+itqb3),
+     &                           2,3)
+C     use special routine dfout2 to loop the integrals into the
+C     output routine.
+                              call dfout2(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           elseif ( mtype.eq.3 ) then
+C
+C
+C     mtype=3, jshlp=kshlp only.  replicate block 1 into block 3
+C     and then call special output routine dfout3 to process the
+C     integrals into out2e.
+                              call replct(Lentq,Tq(1+itqb1),Tq(1+itqb3),
+     &                           1,3)
+                              call dfout3(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           elseif ( mtype.eq.4 .or. mtype.eq.7 ) then
+C
+C
+C     mtype=4 ... jshp=kshp=lshp only, replicate two sets and then
+C     use special routine dfout4 for output.
+                              call replct(Lentq,Tq(1+itqb1),Tq(1+itqb2),
+     &                           1,2)
+                              call replct(Lentq,Tq(1+itqb1),Tq(1+itqb3),
+     &                           1,3)
+                              call dfout4(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           elseif ( mtype.eq.6 ) then
+C
+C
+C     mtype=6 ... ishp=jshp and kshp=lshp.  replicate tq2 into
+C     tq3 and then use special routine dfout6 to output the
+C     integrals.
+                              call replct(Lentq,Tq(1+itqb2),Tq(1+itqb3),
+     &                           2,3)
+                              call dfout6(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           elseif ( mtype.eq.8 ) then
+C
+C
+C     mtype = 8 ... all shells are the same.  replicate the integrals
+C     from block one to blocks two and three and then use special
+C     routine dfout8 to output the integrals.
+                              call replct(Lentq,Tq(1+itqb1),Tq(1+itqb2),
+     &                           1,2)
+                              call replct(Lentq,Tq(1+itqb1),Tq(1+itqb3),
+     &                           1,3)
+                              call dfout8(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           else
+C
+C     mtype=1, no shell duplicates involved.
+                              call dfout1(Tq(1+itqb1),Tq(1+itqb2),
+     &                           Tq(1+itqb3),dbuf,Ibuf2e,Dbuf2e,ishp,
+     &                           jshp,kshp,lshp,IOP,D,F)
+                           endif
+                        endif
+                     endif
+C
+C
+ 125              continue
+ 130           continue
+ 140        continue
+ 150     continue
+C
+C     final call to output routine to finish up this link.
+         call out2e(0,mu,nu,lambda,sigma,Tq(1),dbuf,Ibuf2e,Dbuf2e,iret,
+     &              idcout,IOP,D,F)
+      endif
+C
+C     ..............
+      JUMP = 0
+C     ..............
+C
+99002 format (' ISH,  ETC=',4I3)
+99003 format (' ISHP, ETC=',4I3)
+99004 format (' AFTER MTGET, NSET=',i2)
+99005 format (' AT END OF LOOP, INTC=',i6)
+99006 format (7(i5,d13.6))
+99007 format (' LENTQ=',i5/' LENTQP=',i5/' ITQPRM=',i5/' ITQBAS=',3I5)
+99008 format (' IN ISET LOOP:',i3,'   ITQB=',i6/' ISHELL, ETC=',4I3)
+C
+      return
+C
+      end
+@* INDEX.

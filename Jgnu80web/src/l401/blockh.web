@@ -1,0 +1,91 @@
+@* blockh.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] X                                                         
+\item[INPUT:] MAXDIM                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IBASIS                                                    
+\item[INPUT:] IFDON1                                                    
+\item[INPUT:] IFDON2                                                    
+\item[INPUT:] I5OR6D                                                    
+\item[INPUT:] IFPONH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   HUCKEL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine blockh(X,MAXDIM,IAN,NATOMS,IBASIS,IFDON1,IFDON2,I5OR6D,
+     &                  IFPONH)
+      implicit none
+      integer i , I5OR6D , ia , IAN , IBASIS , ifd , IFDON1 , IFDON2 , 
+     &        IFPONH , ilop , In , index , Iout , Ipunch , j , jj , 
+     &        MAXDIM , mbasis , NATOMS
+      real*8 X , zero
+C
+      common /io    / In , Iout , Ipunch
+      dimension X(MAXDIM,MAXDIM) , IAN(NATOMS)
+      data zero/0.0D0/
+C
+      if ( IBASIS.le.0 ) then
+         if ( (IFDON1+IFDON2+IFPONH).eq.0 ) return
+      endif
+      index = 0
+C
+      do 100 i = 1 , NATOMS
+         ia = IAN(i)
+         if ( ia.le.2 ) then
+            ilop = index + 2
+            index = index + 1
+            if ( IBASIS.le.0 ) then
+               if ( IFPONH.le.0 ) goto 100
+               index = index + 3
+            else
+               index = ilop
+               if ( IFPONH.gt.0 ) index = index + 3
+            endif
+         else
+C
+            if ( ia.le.10 ) then
+               ilop = index + 6
+               ifd = IFDON1
+C
+            elseif ( ia.le.18 ) then
+               ilop = index + 10
+               ifd = IFDON2
+            else
+C
+               write (Iout,99001)
+99001          format (//,24H NOT CODED FOR THIRD ROW)
+               stop
+            endif
+            if ( IBASIS.le.0 ) then
+               index = ilop - 1
+               if ( ifd.le.0 ) goto 100
+               index = index + 5 + I5OR6D
+            else
+               index = ilop + 3
+               if ( ifd.gt.0 ) index = index + 5 + I5OR6D
+            endif
+         endif
+C
+         do 50 j = ilop , index
+            do 20 jj = 1 , mbasis
+               if ( j.ne.jj ) then
+                  X(j,jj) = zero
+                  X(jj,j) = zero
+               endif
+ 20         continue
+ 50      continue
+ 100  continue
+      return
+      end
+@* INDEX.

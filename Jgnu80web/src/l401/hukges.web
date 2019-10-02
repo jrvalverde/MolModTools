@@ -1,0 +1,76 @@
+@* hukges.
+
+\begin{verbatim}
+A routine to do a huckel guess.  it just calls "huckel"
+to form the hamiltonian, then "getmo" to turn these into
+MO coefficients.  the arguments are:
+
+     a, b ... these are two scratch arrays, dimensioned (md,md).  on
+               return, the mo coefficients are in "a".
+     aa, bb ... two scratch vectors of length "md".  on return, the
+               eigenvalues are in "aa".
+     scr ... some more scratch space.  this should be an array of
+               at least (36,11).
+     md ... the dimension of the arrays.  this may or may not be
+               be the same as the number of basis functions, "nb".
+     nb ... the number of basis functions.
+     iov ... the read-write file number on which the transformation
+               matrix is stored.
+     ios ... the read-write file number on which the overlap matrix
+               is stored.
+     ian ... a vector of length "natoms" containing atomic numbers.
+     natoms ... length of "ian".
+
+The remaining arguments describe the type of basis set, and
+correspond to the appropriate ilsw fields.
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] AA                                                        
+\item[PASSED:] BB                                                        
+\item[PASSED:] SCR                                                       
+\item[PASSED:] MD                                                        
+\item[PASSED:] NB                                                        
+\item[PASSED:] IOV                                                       
+\item[PASSED:] IOS                                                       
+\item[PASSED:] IAN                                                       
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] IBASIS                                                    
+\item[PASSED:] IFPONH                                                    
+\item[PASSED:] IFDON1                                                    
+\item[PASSED:] IFDON2                                                    
+\item[PASSED:] I5OR6D                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETMO   HUCKEL                                         
+\item[Called by]   GUESS   PRJHUK                                         
+                                                                    
+\end{description}
+@a
+      subroutine hukges(A,B,AA,BB,SCR,MD,NB,IOV,IOS,IAN,NATOMS,IBASIS,
+     &                  IFPONH,IFDON1,IFDON2,I5OR6D)
+      implicit none
+      double precision A , AA , B , BB , SCR
+      integer I5OR6D , IAN , IBASIS , IFDON1 , IFDON2 , IFPONH , IOS , 
+     &        IOV , MD , NATOMS , NB
+      dimension A(*) , B(*) , AA(*) , BB(*) , SCR(*) , IAN(*)
+C this is the new call
+C      call huckel(a(1),b(1),md,nb,ian,natoms,scr,ios)
+C this is the old one
+      call huckel(A(1),B(1),MD,NB,IAN,NATOMS,SCR,IOS,IBASIS,IFDON1,
+     &            IFDON2,I5OR6D,IFPONH)
+C
+      call getmo(A(1),B(1),AA(1),BB(1),MD,NB,IOV)
+      return
+C
+      end
+@* INDEX.

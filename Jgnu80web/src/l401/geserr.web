@@ -1,0 +1,84 @@
+@* geserr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NERR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   CHKRD   GESOPT  HUCKEL  RDGES   ROOTMT                 
+                                                                    
+\end{description}
+@a
+      subroutine geserr(NERR)
+      implicit none
+      integer In , Iout , Ipunch , NERR
+      common /io    / In , Iout , Ipunch
+C
+C    *******************************************************************
+C
+C     this routine prints hopefully useful error messages in the case
+C     of bad input to guess.
+C
+C    *******************************************************************
+C
+C
+C    *******************************************************************
+C
+99001 format ('  NO MO''S OR DENSITY FOUND.')
+99002 format (
+     &'  PROJECTION SUPPRESSED OR BASES IDENTICAL; YET INPUT DATA HAS WR
+     &ONG NBASIS.')
+99003 format (
+     &'  NO BASIS READ IN; YET INPUT DATA IS FOR NEITHER THE CURRENT BAS
+     &IS NOR FOR A MINIMAL BASIS.')
+99004 format ('  DO NOT USE IOP(8)=2 WITH PHF.')
+99005 format ('  INPUT BASIS AND INPUT MATRIX HAVE DIFFERENT NBASIS.')
+99006 format ('  INPUT MATRICES HAVE DIFFERENT NBASIS.')
+99007 format ('  OVERLAP HAS NEGATIVE OR ZERO EIGENVALUE.')
+99008 format ('  CANNOT COMPLETE COMPLEX MO''S FOR NBASIS.GT.65')
+99009 format ('  CANNOT HANDLE THIRD ROW ATOMS')
+C
+C    *******************************************************************
+C
+      if ( NERR.eq.2 ) then
+C
+         write (Iout,99002)
+      elseif ( NERR.eq.3 ) then
+C
+         write (Iout,99003)
+      elseif ( NERR.eq.4 ) then
+C
+         write (Iout,99004)
+      elseif ( NERR.eq.5 ) then
+C
+         write (Iout,99005)
+      elseif ( NERR.eq.6 ) then
+C
+         write (Iout,99006)
+      elseif ( NERR.eq.7 ) then
+C
+         write (Iout,99007)
+      elseif ( NERR.eq.8 ) then
+C
+         write (Iout,99008)
+      elseif ( NERR.eq.9 ) then
+C
+         write (Iout,99009)
+      elseif ( NERR.eq.10 ) then
+      elseif ( NERR.ne.11 ) then
+C
+         write (Iout,99001)
+      endif
+C
+C
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

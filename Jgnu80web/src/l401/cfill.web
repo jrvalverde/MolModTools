@@ -1,0 +1,89 @@
+@* cfill.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IT                                                        
+\item[INPUT:] IGBEG                                                     
+\item[INPUT:] IGSP                                                      
+\item[INPUT:] IGDF                                                      
+\item[INPUT:] C1                                                        
+\item[INPUT:] C2                                                        
+\item[INPUT:] C3                                                        
+\item[INPUT:] C4                                                        
+\item[OUTPUT:] CA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  ROOT15  ROOT3   ROOT5                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   OVLP                                                   
+                                                                    
+\end{description}
+@a
+      subroutine cfill(IT,IGBEG,IGSP,IGDF,C1,C2,C3,C4,CA)
+      implicit none
+      double precision C1 , C2 , C3 , C4 , CA , Pt5 , R1 , R2 , R3 , 
+     &                 R3ov2 , R4 , Root15 , Root3 , Root5 , temp , Z1 , 
+     &                 Z2 , Z3
+      integer IGBEG , IGDF , IGSP , In , inddf , Iout , Ipunch , IT
+      dimension CA(*)
+      dimension C1(*) , C2(*) , C3(*) , C4(*)
+      common /cfact / Pt5 , R3ov2 , Root3 , Root5 , Root15 , R1 , R2 , 
+     &                R3 , R4 , Z1 , Z2 , Z3
+      common /io    / In , Iout , Ipunch
+C
+C     test for f-functions.
+      if ( IT.lt.3 ) then
+C
+C     no f-functions are involved, fill only the first 10 locations
+C     in ca.
+         CA(1) = C1(IGSP)
+C
+C     test for beyond s.
+         if ( IT.gt.0 ) then
+C
+C     fill p-part.
+            CA(2) = C2(IGSP)
+            CA(3) = C2(IGSP)
+            CA(4) = C2(IGSP)
+C
+C     test for beyond p.
+            if ( IT.gt.1 ) then
+C
+C     fill d-part, and watch out for normalization.
+C     inddf provides indexing when added to igdf.
+               inddf = IGDF + (IGSP-IGBEG)
+               CA(5) = C3(inddf)
+               CA(6) = C3(inddf)
+               CA(7) = C3(inddf)
+               temp = C3(inddf)*Root3
+               CA(8) = temp
+               CA(9) = temp
+               CA(10) = temp
+            endif
+         endif
+      else
+C
+C     fill f-part.
+C     inddf provides indexing into c4.
+         inddf = IGDF + (IGSP-IGBEG)
+         CA(11) = C4(inddf)
+         CA(12) = C4(inddf)
+         CA(13) = C4(inddf)
+         temp = C4(inddf)*Root5
+         CA(14) = temp
+         CA(15) = temp
+         CA(16) = temp
+         CA(17) = temp
+         CA(18) = temp
+         CA(19) = temp
+         CA(20) = C4(inddf)*Root15
+      endif
+C
+      return
+C
+      end
+@* INDEX.

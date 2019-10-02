@@ -1,0 +1,118 @@
+@* projec.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[PASSED:] AA                                                        
+\item[PASSED:] BB                                                        
+\item[PASSED:] SCR                                                       
+\item[INPUT:] MDIM                                                      
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] MBASIS                                                    
+\item[INPUT:] IFCP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  ICMP    ICMPLT  IDUMP   IOPROJ  IORTHG  IOSVEC  IOVMAT 
+\item[Uses]  ICMP    ICMPLT  IDUMP   IOPROJ  IORTHG  IOSVEC  IOVMAT 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       COMPLT  GESPRT  MATREC  ROOTMT  TREAD   TWRITE         
+\item[Called by]   GETGES  PRJHUK                                         
+                                                                    
+\end{description}
+@a
+      subroutine projec(A,B,AA,BB,SCR,MDIM,NBASIS,MBASIS,IFCP)
+      implicit none
+      double precision A , AA , B , BB , SCR
+      integer i , I56d , Ialt , Ibasis , Iblock , Icmp , Icmplt , Idgn , 
+     &        Idon1 , Idon2 , Idump , IFCP , Iguess , Imix , Iobas , 
+     &        Iocmat , Iocore , Iodmat , Iodtot , Iodum
+      integer Ioeig , Iogues , Iominc , Iomins , Iominv , Ioproj , 
+     &        Iorthg , Ioscr1 , Iosmat , Iosvec , Iosym , Ioteig , 
+     &        Iovmat , Ipolh , Iprint , Iproj , Iscale , Ismear , Itst , 
+     &        Iuhf
+      integer j , MBASIS , MDIM , NBASIS
+      dimension AA(*) , BB(*) , SCR(*)
+      dimension A(MDIM,MDIM) , B(MDIM,MDIM)
+      common /ops401/ Iguess , Iproj , Iuhf , Icmp , Ialt , Imix , 
+     &                Idgn , Iscale , Ismear , Iblock , Icmplt , Itst , 
+     &                Ibasis , Ipolh , Idon1 , Idon2 , Iprint , Idump , 
+     &                I56d
+      common /rwf401/ Iosmat , Iodmat , Iocmat , Iovmat , Iocore , 
+     &                Iobas , Iodum , Iominc , Iomins , Iominv , 
+     &                Iodtot , Ioeig , Iogues , Iosym , Ioproj , 
+     &                Iosvec , Ioscr1 , Iorthg , Ioteig
+C
+C    *******************************************************************
+C
+C          this subroutine projects the mo coefficients in the array
+C     a into the space of the current basis set.  the array b is
+C     also used, but the projected mo coefs are returned in a.  the
+C     routine also handles all necessary normalization and completion
+C     when the mo's are real.  no normalization or completion is
+C     carried out for complex mo's.
+C
+C          the routine can also project a density matrix into the
+C     space of the new basis set.  this is controlled by the value of
+C     ifcp.  if this is 2, then the density matrix in a
+C     is to be projected;  if it is 1, a contains the mo coefs to be
+C     projected.  no normalization or orthogonalization is possible
+C     with the projected density type of guess.
+C
+C    *******************************************************************
+C
+C
+C     tread the projection matrix.
+      call tread(Ioproj,B,MDIM,MDIM,NBASIS,MBASIS,0)
+      if ( Idump.ne.0 ) call gesprt(7,A,0,MDIM,NBASIS,MBASIS)
+C
+C     project the mo coefs.
+      call matrec(B,A,AA,MDIM,NBASIS,MBASIS,MBASIS,4)
+      if ( IFCP.eq.1 ) then
+C
+         if ( Icmp.eq.1 ) return
+C
+C     now, re-orthonormalize the projected molecular orbitals.
+C
+C     first, calculate the matrix q=c(transpose).c.    (remember that
+C     these are the transformed coefficients.)
+         call twrite(Iorthg,A,MDIM,MDIM,NBASIS,MBASIS,0)
+C
+         do 50 i = 1 , NBASIS
+            do 20 j = 1 , MBASIS
+               B(j,i) = A(i,j)
+ 20         continue
+ 50      continue
+         call matrec(B,A,AA,MDIM,MBASIS,NBASIS,MBASIS,1)
+C
+C     now, take the inverse square root of the matrix q.
+         call rootmt(B,A,BB,AA,MDIM,MBASIS,1)
+C
+C     now, right multiply the mo coefficients by gsqrt(q).  the
+C     resulting coefficients will be orthonormal.
+         call tread(Iorthg,A,MDIM,MDIM,NBASIS,MBASIS,0)
+         call matrec(A,B,AA,MDIM,NBASIS,MBASIS,MBASIS,1)
+C
+C     finally, complete the coefficient matrix if necessary.
+         if ( Icmplt.ne.0 .and. MBASIS.lt.NBASIS ) then
+            call tread(Iosvec,B,MDIM,MDIM,NBASIS,NBASIS,0)
+            call complt(A,A,B,AA,BB,SCR,MDIM,NBASIS,MBASIS,MBASIS,Icmp,
+     &                  Icmplt,Idump)
+         endif
+      else
+C
+C     project the density matrix.
+         call matrec(A,B,AA,MDIM,NBASIS,MBASIS,NBASIS,3)
+         return
+      endif
+C
+C     back transform the mo coefs.
+      call tread(Iovmat,B,MDIM,MDIM,NBASIS,NBASIS,0)
+      call matrec(B,A,AA,MDIM,NBASIS,NBASIS,NBASIS,4)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,54 @@
+@* gdot.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] AR                                                        
+\item[INPUT:] AI                                                        
+\item[INPUT:] BR                                                        
+\item[INPUT:] BI                                                        
+\item[OUTPUT:] ANSR                                                      
+\item[OUTPUT:] ANSI                                                      
+\item[INPUT:] ICMP                                                      
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   COMPLT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine gdot(AR,AI,BR,BI,ANSR,ANSI,ICMP,NBASIS)
+      implicit none
+      double precision AI , ANSI , ANSR , AR , BI , BR , zero
+      integer i , ICMP , NBASIS
+C    *******************************************************************
+      dimension AR(NBASIS) , AI(NBASIS) , BR(NBASIS) , BI(NBASIS)
+      data zero/0.0D0/
+C
+C          this subroutine evaluated the dot product of the vectors
+C     a and b.  the real and imaginary parts of a are in ar, and ai,
+C     respectively, and b is in br and bi.  the real and imaginary
+C     parts of the result are returned in ansr and ansi.  icmp should
+C     be 0 for real and 1 for complex.
+C
+C    *******************************************************************
+C
+      ANSR = zero
+      ANSI = zero
+C
+      do 100 i = 1 , NBASIS
+         ANSR = ANSR + AR(i)*BR(i)
+         if ( ICMP.ne.0 ) then
+            ANSR = ANSR + AI(i)*BI(i)
+            ANSI = ANSI + AR(i)*BI(i) - BR(i)*AI(i)
+         endif
+ 100  continue
+      return
+C
+      end
+@* INDEX.
