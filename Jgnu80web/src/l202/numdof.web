@@ -1,0 +1,160 @@
+@* numdof.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] FRAME                                                     
+\item[INPUT:] NATOMS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD    NUMER   PRSFWG                                 
+\item[Called by]   OMEGA                                                  
+                                                                    
+\end{description}
+@a
+      integer function numdof(FRAME,NATOMS)
+      implicit none
+      integer i , ichar , In , iord , Iout , ipos , Ipunch , jchar , 
+     &        nat , NATOMS , natss , ndof , nprin , ns , numer
+      integer FRAME(*) , fwg(100)
+      common /io    / In , Iout , Ipunch
+C
+C
+C      determine the number of degrees of freedom with a given symmetry
+C         constraint.
+C      input:  frame,  the (unpacked) character string containing the
+C                      framework group symbol.
+C              natoms, number of atoms.
+C      output: numdof, the number of degrees of freedom within the given
+C                      framework group.  a zero is returned and a
+C                      message printed if an error is detected.
+C      method: see pople, satay, and halevi, israel j. chem., 1979.
+C              to determine the number of equivalent sets of atoms in
+C              each symmetric subspace you divide the total number of
+C              atoms in the subspace by the number of atoms in the
+C              subspace that are equivalent by the operations of the
+C              group.  the divisor is dependent on the subspace and
+C              the point group.
+C
+C
+C
+99001 format (1x,'NUMDOF-- NOT CODED TO HANDLE GROUPS TH, I, OR IH')
+99002 format (1x,'NUMDOF-- UNRECOGNIZED SYMMETRIC SUBSPACE, ICHAR= "',
+     &        a4,'"')
+99003 format (1x,'NUMDOF-- NAT= ',i5,' NATOMS= ',i5)
+C
+C
+      do 100 i = 1 , 100
+         fwg(i) = FRAME(i)
+ 100  continue
+C
+C                                   nprin: order of the principal axis.
+C                                   ipos:  current position in fwg.
+C                                   nat:   number of atoms according to
+C                                          fwg, to be compared with
+C                                          natoms.
+C
+      numdof = 0
+      ipos = 0
+      nat = 0
+      nprin = numer(fwg)
+C                                    test for atoms
+      if ( fwg(1).eq.iord('K') ) return
+C                                    test for cubic groups
+      if ( fwg(1).eq.iord('I') .or. fwg(2).eq.iord('T') ) then
+         if ( .not.((fwg(1).eq.iord('T') .and. fwg(2).eq.iord(' ')) .or. 
+     &        (fwg(1).eq.iord('T') .and. fwg(2).eq.iord('D'))) ) then
+            write (Iout,99001)
+            numdof = -1
+            goto 300
+         endif
+      endif
+C                                    fwg is parsed by subroutine prsfwg.
+C                                    it finds the next symmetric
+C                                    subspace and returns its type and
+C                                    the number of atoms is contains.
+C                                    loop over symmetric subspaces:
+ 200  call prsfwg(fwg,ipos,ichar,jchar,natss)
+C not sure about this character v  (vk).
+      if ( ichar.ne.iord('>') ) then
+         nat = nat + natss
+C                                    point subspace.
+         if ( ichar.eq.iord('O') ) goto 200
+C                                    linear subspace.
+C                                    jchar is the order of the subspace.
+C                                        case 1- sn, d*h, cnh, dn
+C                                        case 2- c2 in d groups
+C                                        case 3- cn, cnv, c*v
+C                                        case 4- c3 in t, td
+C                                        case 5- c4 in o, oh
+C                                        case 6- c2 in t, td, o, oh
+C                                                c3 in o, oh
+         if ( ichar.eq.iord('C') ) then
+            ndof = natss/2
+            if ( jchar.eq.2 .and. fwg(1).eq.iord('D') )
+     &           ndof = natss/nprin
+            if ( fwg(1).eq.iord('C') .and. fwg(4).ne.iord('H') )
+     &           ndof = natss
+            if ( fwg(1).eq.iord('T') .and. jchar.eq.3 ) ndof = natss/4
+            if ( fwg(1).eq.iord('O') .and. jchar.eq.4 ) ndof = natss/6
+            if ( (fwg(1).eq.iord('O') .and. (jchar.eq.2 .or. jchar.eq.3)
+     &           ) .or. (fwg(1).eq.iord('T') .and. jchar.eq.2) )
+     &           ndof = natss/8
+            numdof = numdof + ndof
+            goto 200
+C                                  planar subspaces.
+C                                  jchar contains 'h' for sigmah, etc.
+C                                    case 1- sigmav/sigmad in dnh, dnd.
+C                                            sigma/sigma'/sigma'' in d2h
+C                                            sigmah in dnh
+C                                    case 2- sigma in cs
+C                                            sigmah in  cnh
+C                                            sigmav/sigmad in cnv.
+C                                    case 3- sigmad in td, sigmah in oh
+C                                            sigmad in oh
+         elseif ( ichar.eq.iord('S') ) then
+            if ( nprin.eq.0 ) nprin = 1
+            ndof = natss/nprin
+            if ( fwg(1).eq.iord('C') ) ndof = 2*natss/nprin
+            if ( fwg(1).eq.iord('T') .or. fwg(1).eq.iord('O') )
+     &           ndof = natss/12
+            numdof = numdof + ndof
+            goto 200
+C                                    assymetric subspace.
+C                                    jchar is the order of the pt grp.
+         elseif ( ichar.ne.iord('X') ) then
+C                                    unrecognized subspace.
+            numdof = -1
+            write (Iout,99002) ichar
+         else
+            numdof = numdof + 3*(natss/jchar)
+            goto 200
+         endif
+C                                    end of loop over subspaces.
+C                                    check nat, if ok then subtract
+C                                    for translation/rotation and
+C                                    return.
+      elseif ( nat.ne.NATOMS ) then
+         numdof = 0
+         write (Iout,99003) nat , NATOMS
+C
+      elseif ( fwg(1).eq.iord('C') .or. fwg(1).eq.iord('S') ) then
+         ns = 0
+         if ( fwg(1).eq.iord('S') ) ns = 1
+         if ( fwg(4).eq.iord('H') ) ns = 1
+         if ( fwg(4).eq.iord('V') .or. fwg(3).eq.iord('V') ) ns = 1
+         if ( fwg(2).eq.iord('S') ) ns = 3
+         if ( fwg(2).eq.iord('I') ) ns = 3
+         if ( ns.eq.0 .and. nprin.eq.1 ) ns = 6
+         if ( ns.eq.0 ) ns = 2
+         numdof = numdof - ns
+      endif
+C
+ 300  return
+C
+      end
+@* INDEX.

@@ -1,0 +1,66 @@
+@* ord2h.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] ATMCHG                                                    
+\item[PASSED:] IAN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GATAN   ORNAX   ORPTST  ORYZ    ROTATE                 
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ord2h(MAXAP3,A,B,NATOMS,ATMCHG,IAN)
+      implicit none
+      double precision A , ATMCHG , B , gatan , halfpi , one , pi , t , 
+     &                 two
+      integer IAN , itst , ixyz , MAXAP3 , NATOMS , numatm
+      integer ornax
+      dimension t(3,3)
+      dimension A(*) , B(*) , ATMCHG(*) , IAN(*)
+      data one , two/1.0D0 , 2.0D0/
+C
+C
+C     following mullikens's recommendation --jcp, 23, 1997 (1955)--,
+C     planar d2h molecules are oriented with:
+C     1-- the molecular plane coincident with the yz cartesian plane.
+C     2-- the z axis such that it passes through the greatest number
+C         of atoms or the greatest number of bonds if the atom
+C         criterion is not decisive.
+C
+C
+C
+C
+C     test for planarity.
+C
+      call orptst(MAXAP3,A,NATOMS,ixyz)
+      if ( ixyz.eq.0 ) return
+C
+C     put the molecule in the yz plane.
+C
+      if ( ixyz.ne.1 ) call oryz(MAXAP3,A,B,NATOMS,ATMCHG,ixyz)
+C
+C     find the axis which should be z and reorient the molecule
+C     if necessary.
+C
+      itst = ornax(MAXAP3,A,NATOMS,IAN)
+      if ( itst.ne.2 ) return
+      numatm = NATOMS + 3
+      halfpi = two*gatan(one)
+      pi = two*halfpi
+      call rotate(MAXAP3,A,B,numatm,t,1,-halfpi)
+      call rotate(MAXAP3,B,A,numatm,t,3,-pi)
+      return
+C
+      end
+@* INDEX.

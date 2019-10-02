@@ -1,0 +1,97 @@
+@* fill.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] NOP                                                       
+\item[INPUT:] MAXOP                                                     
+\item[INPUT:] T                                                         
+\item[OUTPUT:] TRANS                                                     
+\item[OUTPUT:] NPERM                                                     
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILREP  GABS                                           
+\item[Called by]   C2AXES  CNAXIS  OCTA    OPER    SIGHCN  SNAXIS  TETRA  
+             VERT                                                   
+                                                                    
+\end{description}
+@a
+      subroutine fill(MAXAP3,NATOMS,NOP,MAXOP,T,TRANS,NPERM,A,B)
+      implicit none
+      double precision A , B , gabs , T , test , Tol2 , Toler , TRANS
+      integer i , iat , iflag , In , Iout , Ipunch , ixyz , j , kat , 
+     &        lperm , MAXAP3 , MAXOP , NATOMS , NOP , NPERM
+      dimension T(3,3) , TRANS(3,3,MAXOP) , NPERM(MAXAP3,MAXOP)
+      dimension A(MAXAP3,3) , B(MAXAP3,3)
+      dimension lperm(100)
+      common /io    / In , Iout , Ipunch
+      common /tol   / Toler , Tol2
+      data iflag/1/
+C
+C
+C     a and b contain the coordinates of the atoms before and after
+C     a symmetry operation; t is the 3x3 coordinate transformation
+C     matrix.  this routine:
+C     1--  increments nop and compares it with maxop.
+C     2--  stuffs t into trans.
+C     3--  fills a column of nperm.
+C
+C
+C
+C
+C
+99001 format (1x,'FILL--  OPERATION LISTS TERMINATED AT ',i3)
+C
+C     build a local copy of permutations.
+C
+      do 100 iat = 1 , NATOMS
+         do 50 kat = 1 , NATOMS
+            do 20 ixyz = 1 , 3
+               test = A(kat,ixyz) - B(iat,ixyz)
+               if ( gabs(test).gt.Toler ) goto 50
+ 20         continue
+            lperm(iat) = kat
+            goto 100
+C
+ 50      continue
+ 100  continue
+C
+C     call routine which saves operations for orbital symmetry assign.
+      call filrep(T,lperm,NATOMS)
+C
+C     make sure that the arrays are not overflown.
+C
+      NOP = NOP + 1
+      if ( NOP.gt.MAXOP ) then
+         NOP = NOP - 1
+         if ( iflag.lt.0 ) return
+         write (Iout,99001) MAXOP
+         iflag = -1
+         return
+      endif
+C
+C     stuff t into trans.
+C
+      do 200 i = 1 , 3
+         do 150 j = 1 , 3
+            TRANS(i,j,NOP) = T(i,j)
+ 150     continue
+ 200  continue
+C
+C     fill nperm.
+C
+      do 300 i = 1 , NATOMS
+         NPERM(i,NOP) = lperm(i)
+ 300  continue
+      return
+C
+      end
+@* INDEX.

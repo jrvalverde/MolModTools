@@ -1,0 +1,93 @@
+@* findv.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] NPOP                                                      
+\item[INPUT:] NSET                                                      
+\item[PASSED:] ATMCHG                                                    
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CIRSET  EQUIV   GABS    GATAN   MOVE    REFLCT  ROTATE 
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine findv(MAXAP3,A,B,D,NATOMS,NPOP,NSET,ATMCHG,ITST)
+      implicit none
+      double precision A , ATMCHG , B , D , gabs , gatan , half , 
+     &                 halfpi , one , t , theta , Tol2 , Toler , two , 
+     &                 x , y
+      integer iat , iattop , iset , ITST , j1 , jat , MAXAP3 , NATOMS , 
+     &        NPOP , NSET , numatm , numset
+      dimension A(MAXAP3,3) , NSET(*) , B(*) , D(*) , NPOP(*) , 
+     &          ATMCHG(*)
+      dimension t(3,3)
+      common /tol   / Toler , Tol2
+      data half , one , two/0.5D0 , 1.0D0 , 2.0D0/
+C
+C
+C     this routine tests for a set of norder vertical planes.  it
+C     is assumed that the principal axis is aligned with the
+C     the cartesian z axis.  if a set of planes is found, it leaves
+C     one of them coincident with the yz cartesian plane.
+C
+C
+C
+C
+C
+      numatm = NATOMS + 3
+      halfpi = two*gatan(one)
+C
+C     look for a circular-set of atoms.  a vertical mirror must
+C     pass through the point midway between any atom in the set
+C     and one other atom in the set.
+C
+      call cirset(MAXAP3,NATOMS,A,ATMCHG,3,NSET,NPOP,D,numset)
+C
+      iset = 1
+      iattop = NATOMS - 1
+      do 100 iat = 1 , iattop
+         if ( NSET(iat).eq.iset ) goto 200
+C
+ 100  continue
+      ITST = 0
+      return
+C
+ 200  j1 = iat + 1
+      do 300 jat = j1 , NATOMS
+         if ( NSET(jat).eq.iset ) then
+            x = (A(iat,1)+A(jat,1))*half
+            y = (A(iat,2)+A(jat,2))*half
+            if ( gabs(x).le.Toler .and. gabs(y).le.Toler ) then
+               x = half*A(jat,1)
+               y = half*A(jat,2)
+            endif
+            theta = halfpi
+            if ( gabs(y).gt.Toler ) theta = -gatan(x/y)
+            call rotate(MAXAP3,A,B,numatm,t,3,theta)
+            call reflct(MAXAP3,B,D,NATOMS,t,1)
+            call equiv(MAXAP3,B,D,ATMCHG,NATOMS,ITST)
+            if ( ITST.ne.0 ) then
+               call move(MAXAP3,B,A,numatm)
+               ITST = 1
+               return
+            endif
+         endif
+C
+ 300  continue
+      ITST = 0
+      return
+C
+      end
+@* INDEX.

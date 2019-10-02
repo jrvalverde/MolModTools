@@ -1,0 +1,111 @@
+@* ordn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[PASSED:] ASET                                                      
+\item[PASSED:] ATMCHG                                                    
+\item[PASSED:] NPOP                                                      
+\item[PASSED:] NSET                                                      
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] NORDER                                                    
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GATAN   MOVE    ORAXIS  ORKEY   ORPTST  ROTATE 
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ordn(MAXAP3,A,B,ASET,ATMCHG,NPOP,NSET,NATOMS,NORDER,
+     &                IDUMP)
+      implicit none
+      double precision A , ASET , ATMCHG , B , curpx , curpy , direct , 
+     &                 four , gabs , gatan , one , phi , pi , t , 
+     &                 theta , Tol2 , Toler , zero
+      integer IDUMP , In , Iout , Ipunch , itry , ixyz , key , MAXAP3 , 
+     &        NATOMS , NORDER , NPOP , NSET , numatm
+      integer orkey
+      dimension A(MAXAP3,3) , B(MAXAP3,3)
+      dimension ASET(*) , ATMCHG(*) , NPOP(*) , NSET(*)
+      dimension t(3,3)
+      common /tol   / Toler , Tol2
+      common /io    / In , Iout , Ipunch
+      data zero , one , four/0.0D0 , 1.0D0 , 4.0D0/
+C
+C
+C     this routine orients symmetric top molecules in the point
+C     groups dn, dnd, dnh, and cnv.  in dn and dnh molecules a
+C     c2 axis is coincident with the cartesian y axis.  in dnd and
+C     c2v molecules there is a vertical plane coincident with the
+C     yz plane.  the molecule is rotated by pi/norder about
+C     the z axis until one of the following occurs:
+C     1-- the projection of the key atom on the y axis is a maximum.
+C     2-- if two orientations give the greatest projection on y, the
+C         one where the key atom has a positive x coordinate is chosen.
+C     spherical top molecules in the point groups t, td, th, o, oh,
+C      and ih are also oriented here.  the proper axis has already been
+C      oriented with z.
+C
+C
+C
+C
+C
+99001 format (1x,'ORDN-- KEY ATOM:',i3)
+C
+      pi = four*gatan(one)
+      numatm = NATOMS + 3
+      theta = pi/NORDER
+      key = orkey(MAXAP3,NATOMS,A,ATMCHG,NSET,NPOP,ASET)
+      if ( IDUMP.ne.0 ) write (Iout,99001) key
+      curpy = A(key,2)
+      curpx = A(key,1)
+C
+C     rotate the molecule so that the key atom has a positive
+C     y coordinate.
+C
+      if ( curpy.le.zero ) then
+         call rotate(MAXAP3,A,B,numatm,t,3,pi)
+         call move(MAXAP3,B,A,numatm)
+         curpx = A(key,1)
+         curpy = A(key,2)
+      endif
+C
+C     search for the maximum curpy.
+C
+      itry = 0
+      direct = -dsign(one,curpx)
+ 100  phi = direct*theta
+      call rotate(MAXAP3,A,B,numatm,t,3,phi)
+      itry = itry + 1
+      if ( gabs(curpy-B(key,2)).lt.Toler ) then
+C
+         if ( B(key,1).ge.zero ) call move(MAXAP3,B,A,numatm)
+      elseif ( curpy.gt.B(key,2) ) then
+C
+         if ( itry.le.1 ) then
+            direct = -direct
+            goto 100
+         endif
+      else
+         call move(MAXAP3,B,A,numatm)
+         curpy = A(key,2)
+         if ( gabs(A(key,1)).ge.Toler ) goto 100
+      endif
+C
+C     planar molecules contained in the xy plane have not been
+C     completely specified.
+C
+      call orptst(MAXAP3,A,NATOMS,ixyz)
+      if ( ixyz.eq.3 ) call oraxis(MAXAP3,A,B,NATOMS,ATMCHG,1)
+      return
+C
+      end
+@* INDEX.

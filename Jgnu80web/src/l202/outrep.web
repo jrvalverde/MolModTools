@@ -1,0 +1,81 @@
+@* outrep.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  LBLREP  NSYMOP                                         
+\item[Uses]  CHRTBL  IOUT    IPRMUT  ISAVE   LBLREP  NREPS   NSAVE  
+             NSYMOP  SYMOPS                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETB    TWRITE                                         
+\item[Called by]   OPER                                                   
+                                                                    
+\end{description}
+@a
+      subroutine outrep(IDUMP)
+C ----------------------------------------------------------------------
+      implicit none
+      integer blank , i , IDUMP , In , Iout , Ipunch , irwrep , Isave , 
+     &        j , lbcur , len , lrwrep , Ncnt , Nsave , tmp
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      dimension tmp(10)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      common /reploc/ Nsave , Ncnt , Isave(15)
+      common /io    / In , Iout , Ipunch
+      data irwrep/562/ , lrwrep/767/
+      data blank/' '/
+C          this routine writes out /repcom/ onto its read-write
+C     file.  it also dumps the contents of the common block if
+C     "idump" is non-zero.
+C ----------------------------------------------------------------------
+C
+C
+      call twrite(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+C
+C                        dump, if requested.
+      if ( IDUMP.eq.0 ) return
+      if ( Nreps.eq.0 ) return
+      write (Iout,99001) Nsymop , Nreps , (Lblrep(i),i=1,Nreps)
+C
+99001 format ('  NSYMOP =',i2,',NREPS =',i2,/,'  ORBITAL LABELS:  ',
+     &        15A4)
+C
+      write (Iout,99002)
+C
+99002 format ('  CHARACTER TABLE.')
+C
+      lbcur = 0
+      do 100 i = 1 , Nreps
+         tmp(1) = blank
+         call getb(2,tmp,len,Lblrep,lbcur)
+         write (Iout,99003) tmp(1) , (Chrtbl(j,i),j=1,Nsymop)
+C
+99003    format (1x,a4,2x,10F7.1)
+C
+ 100  continue
+C
+      write (Iout,99004) Nsave , (Isave(i),i=1,Nsave)
+C
+99004 format ('   # OF SAVED OPERATIONS =',i2,', SAVED:',10I3)
+C
+      do 200 i = 1 , Nsymop
+         write (Iout,99005) (Symops(j,i),j=1,9)
+C
+99005    format (3(10x,3D15.4,/))
+C
+         write (Iout,99006) (Iprmut(j,i),j=1,10)
+C
+99006    format ('  NUCLEAR PERMUTATIONS:',10I3)
+C
+ 200  continue
+      return
+C
+      end
+@* INDEX.

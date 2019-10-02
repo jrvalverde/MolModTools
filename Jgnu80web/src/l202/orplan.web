@@ -1,0 +1,117 @@
+@* orplan.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] NUMATM                                                    
+\item[INPUT:] PRMOM                                                     
+\item[INPUT:] PRAXES                                                    
+\item[INPUT:] IXYZ                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOL2    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GATAN   MOVE    ORAXIS  ORPTST  ROTATE  SECMOM 
+\item[Called by]   ORC2V   ORYZ    PTGRP                                  
+                                                                    
+\end{description}
+@a
+      subroutine orplan(MAXAP3,A,B,ATMCHG,NUMATM,PRMOM,PRAXES,IXYZ)
+      implicit none
+      double precision A , ATMCHG , B , gabs , gatan , halfpi , one , 
+     &                 PRAXES , PRMOM , t , theta , Tol2 , Toler , 
+     &                 tst1 , tst2 , tst3 , two , v2 , v3
+      integer i2 , i3 , iax , itop , IXYZ , izyx , MAXAP3 , natoms , 
+     &        NUMATM
+      dimension PRMOM(3) , PRAXES(3,3)
+      dimension t(3,3) , A(*) , B(*) , ATMCHG(*)
+      common /tol   / Toler , Tol2
+      data one , two/1.0D0 , 2.0D0/
+C
+C
+C     rotate the molecule about cartesian axis ixyz such that the
+C     principal axis corresponding to the higher in-plane moment
+C     is coincident with the higher priority in-plane cartesian
+C     axis (the priority of cartesian axes is z > y > x).
+C
+C
+C
+C
+C
+      halfpi = two*gatan(one)
+      natoms = NUMATM - 3
+      call secmom(MAXAP3,natoms,A,ATMCHG,PRMOM,PRAXES)
+C
+C     this orientation scheme applys only to asymmetric top molecules.
+C
+      itop = 0
+      tst1 = PRMOM(2) - PRMOM(3)
+      tst2 = PRMOM(1) - PRMOM(3)
+      tst3 = PRMOM(1) - PRMOM(2)
+      if ( gabs(tst1).lt.Tol2 ) itop = itop + 1
+      if ( gabs(tst2).lt.Tol2 ) itop = itop + 1
+      if ( gabs(tst3).lt.Tol2 ) itop = itop + 1
+      if ( itop.ne.3 ) itop = itop + 1
+      if ( itop.ne.1 ) return
+C
+      i2 = 1 + mod(IXYZ,3)
+      i3 = 1 + mod(i2,3)
+C
+      if ( IXYZ.eq.2 ) then
+C
+         v2 = PRAXES(1,3)
+         v3 = PRAXES(3,3)
+      elseif ( IXYZ.eq.3 ) then
+C
+         v2 = PRAXES(1,2)
+         v3 = PRAXES(2,2)
+      else
+C
+         v2 = PRAXES(2,3)
+         v3 = PRAXES(3,3)
+      endif
+C
+      if ( gabs(v2).ge.Toler ) then
+         theta = halfpi
+         if ( gabs(v3).gt.Toler ) theta = gatan(v2/v3)
+         call rotate(MAXAP3,A,B,NUMATM,t,IXYZ,theta)
+         call move(MAXAP3,B,A,NUMATM)
+      endif
+C
+C     orient the axes properly.  it is assumed that the ixyz axis is
+C     properly oriented and its orientation will not be changed.
+C
+      call orptst(MAXAP3,A,natoms,izyx)
+      if ( izyx.eq.0 ) then
+C
+C     non-planar molecules.
+C
+         iax = 3
+         if ( IXYZ.eq.3 ) iax = 2
+         call oraxis(MAXAP3,A,B,natoms,ATMCHG,iax)
+         if ( IXYZ.eq.2 ) call oraxis(MAXAP3,A,B,natoms,ATMCHG,2)
+         return
+C
+C     planar molecules ... plane perpindicular to ixyz.
+C
+      elseif ( izyx.eq.IXYZ ) then
+         call oraxis(MAXAP3,A,B,natoms,ATMCHG,i3)
+         call oraxis(MAXAP3,A,B,natoms,ATMCHG,i2)
+         return
+      endif
+C
+C     planar molecules ... ixyz included in the plane.
+C
+      iax = i2
+      if ( i2.eq.izyx ) iax = i3
+      call oraxis(MAXAP3,A,B,natoms,ATMCHG,iax)
+      return
+C
+      end
+@* INDEX.

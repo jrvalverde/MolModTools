@@ -1,0 +1,82 @@
+@* orkey.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] NSET                                                      
+\item[PASSED:] NPOP                                                      
+\item[INPUT:] ASET                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CIRSET  GABS                                           
+\item[Called by]   ORCN    ORDN                                           
+                                                                    
+\end{description}
+@a
+      integer function orkey(MAXAP3,NATOMS,A,ATMCHG,NSET,NPOP,ASET)
+      implicit none
+      double precision A , ASET , ATMCHG , gabs , p , small , test , 
+     &                 Tol2 , Toler , zero
+      integer iat , iset , jat , jset , MAXAP3 , NATOMS , NPOP , NSET , 
+     &        numset
+      dimension NSET(*) , ASET(MAXAP3,3)
+      dimension A(*) , ATMCHG(*) , NPOP(*)
+      common /tol   / Toler , Tol2
+      data zero/0.0D0/
+C
+C
+C     the "key atom" in a symmetric top molecule is hereby defined to
+C     be the lowest numbered atom in the first circular-set.  the
+C     first circular-set is that set which is nearest the cartesian
+C     xy plane.  if two sets are in the same plane then the inner
+C     one takes precedence and the lower atomic numbered one takes
+C     precedence next.  if two sets are equidistant from the xy
+C     plane, the one with a positive projection on the z-axis takes
+C     precedence.
+C
+C
+C
+C
+C
+      call cirset(MAXAP3,NATOMS,A,ATMCHG,3,NSET,NPOP,ASET,numset)
+      iset = 99
+      do 100 jat = 1 , NATOMS
+         jset = NSET(jat)
+         p = ASET(jat,2)
+         if ( jset.ne.0 .and. jset.ne.iset ) then
+            if ( iset.ne.99 ) then
+C
+               test = gabs(small) - gabs(p)
+               if ( gabs(test).le.Toler ) then
+                  test = p - small
+                  if ( gabs(test).le.Toler ) then
+                     test = ASET(iat,3) - ASET(jat,3)
+                     if ( gabs(test).le.Toler ) test = ASET(iat,1)
+     &                    - ASET(jat,1)
+                  endif
+               endif
+               if ( test.ge.zero ) then
+                  iset = jset
+                  small = p
+                  iat = jat
+               endif
+            else
+               iset = jset
+               iat = jat
+               small = p
+            endif
+         endif
+ 100  continue
+      orkey = iat
+      return
+C
+      end
+@* INDEX.

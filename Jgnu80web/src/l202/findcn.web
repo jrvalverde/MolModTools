@@ -1,0 +1,81 @@
+@* findcn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+\item[PASSED:] IAN                                                       
+\item[INPUT:] NPOP                                                      
+\item[PASSED:] NSET                                                      
+\item[PASSED:] IXYZ                                                      
+\item[OUTPUT:] NORDER                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CIRSET  EQUIV   GATAN   GFLOAT  ROTATE                 
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine findcn(MAXAP3,NATOMS,A,B,D,IAN,NPOP,NSET,IXYZ,NORDER)
+      implicit none
+      double precision A , B , D , eight , gatan , gfloat , one , t , 
+     &                 theta , twopi
+      integer i , IAN , itst , IXYZ , j , MAXAP3 , maxmul , multst , 
+     &        NATOMS , NORDER , NPOP , NSET , numset
+      dimension NPOP(*) , A(*) , B(*) , D(*) , IAN(*) , NSET(*)
+      dimension t(3,3)
+      data one , eight/1.0D0 , 8.0D0/
+C
+C
+C     this routine finds the highest order proper axis which is
+C     coincident with cartesian axis ixyz.
+C
+C     an axis of order n will produce a number of "circular-sets" of
+C     equivalent atoms (circular-set is more fully defined in
+C     subroutine cirset).  furthermore, the population of each of
+C     these sets must be an integer multiple of n.
+C
+C
+C
+C
+      twopi = eight*gatan(one)
+C
+C     cirset determines the populations of all circular sets which
+C     are present.
+C
+      call cirset(MAXAP3,NATOMS,A,IAN,IXYZ,NSET,NPOP,D,numset)
+C
+C     test the common multiples of the elements of npop in descending
+C     order as possible orders for an axis of symetry.
+C
+      maxmul = 1
+      do 100 i = 1 , numset
+         maxmul = max0(maxmul,NPOP(i))
+ 100  continue
+      do 200 i = 1 , maxmul
+         multst = maxmul - i + 1
+         do 150 j = 1 , numset
+            if ( mod(NPOP(j),multst).ne.0 ) goto 200
+ 150     continue
+         theta = twopi/gfloat(multst)
+         call rotate(MAXAP3,A,B,NATOMS,t,IXYZ,theta)
+         call equiv(MAXAP3,A,B,IAN,NATOMS,itst)
+         if ( itst.ne.0 ) then
+            NORDER = multst
+            return
+         endif
+C
+ 200  continue
+      NORDER = 1
+      return
+C
+      end
+@* INDEX.

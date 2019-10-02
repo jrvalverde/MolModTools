@@ -1,0 +1,704 @@
+@* fwgrp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NGRP                                                      
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] ICHARG                                                    
+\item[INPUT:] MULTIP                                                    
+\item[PASSED:] IAN                                                       
+\item[PASSED:] NOP                                                       
+\item[PASSED:] MAXOP                                                     
+\item[PASSED:] NPERM                                                     
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+\item[OUTPUT:] MOLFOR                                                    
+\item[OUTPUT:] LENFOR                                                    
+\item[OUTPUT:] FWG                                                       
+\item[OUTPUT:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CRAM    GATAN   IORD    MOVE    NUMER   PUT     ROTATE 
+             SSSC    SSSEQ   SSSO    SSSSIG  STOICH                 
+\item[Called by]   SYMM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine fwgrp(MAXAP3,NGRP,NATOMS,ICHARG,MULTIP,IAN,NOP,MAXOP,
+     &                 NPERM,A,B,D,MOLFOR,LENFOR,FWG,LENGTH)
+      implicit none
+      double precision A , B , D , four , gatan , one , pi , t , theta , 
+     &                 v
+      integer i , i1 , IAN , iat , iatflg , iblnk , ichar , ICHARG , 
+     &        iord , itst , jchar , LENFOR , LENGTH , MAXAP3 , MAXOP , 
+     &        MOLFOR , MULTIP , NATOMS , NGRP , nhalf
+      integer NOP , norder , NPERM , num , numer
+      integer FWG(*)
+      dimension A(MAXAP3,3) , NGRP(4) , IAN(*) , B(MAXAP3,3) , 
+     &          D(MAXAP3,3)
+      dimension MOLFOR(*) , NPERM(*)
+      dimension t(3,3) , v(3) , iatflg(100)
+      data iblnk/' '/
+      data one , four/1.0D0 , 4.0D0/
+C
+C
+C     given the schonflies symbol for the point group, ngrp,
+C     and the re-oriented coordinates, a, determine:
+C     1--  the molecule's stoichiometry
+C     2--  the molecule's framework group
+C
+C
+C
+C
+C
+      pi = four*gatan(one)
+C
+C
+C     obtain the stoiciometric formula.
+C
+C     initialize the buffers which are used to accumulate
+C     the character strings and set all atom flags.
+C
+      LENGTH = 0
+      LENFOR = 0
+      do 100 i = 1 , 100
+         if ( i.le.30 ) MOLFOR(i) = iblnk
+         FWG(i) = iblnk
+         iatflg(i) = 2
+ 100  continue
+C
+C     get the stoichiometric formula.
+C
+      call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENFOR,MOLFOR,0,3)
+      call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENFOR,MOLFOR,0,0)
+C
+C     remove punctuatuation.
+C
+      LENFOR = LENFOR - 3
+      do 200 i = 1 , LENFOR
+         MOLFOR(i) = MOLFOR(i+1)
+ 200  continue
+C
+C     append the charge, if not zero.
+C
+      if ( ICHARG.ne.0 ) then
+         call cram(203,MOLFOR,LENFOR)
+         num = iabs(ICHARG)
+         call cram(num,MOLFOR,LENFOR)
+         if ( ICHARG.lt.0 ) call cram(219,MOLFOR,LENFOR)
+         if ( ICHARG.gt.0 ) call cram(218,MOLFOR,LENFOR)
+         if ( MULTIP.eq.1 ) then
+            call cram(204,MOLFOR,LENFOR)
+         else
+            call cram(216,MOLFOR,LENFOR)
+            call cram(MULTIP,MOLFOR,LENFOR)
+            call cram(204,MOLFOR,LENFOR)
+         endif
+C
+C      append the multiplicity, if not 1.
+C
+      elseif ( MULTIP.ne.1 ) then
+         call cram(203,MOLFOR,LENFOR)
+         call cram(MULTIP,MOLFOR,LENFOR)
+         call cram(204,MOLFOR,LENFOR)
+      endif
+C
+C
+C     length is the current number of characters in the buffer used
+C     to accumulate the framework group, fwg.
+C
+      LENGTH = 0
+      do 300 i = 1 , 4
+         LENGTH = LENGTH + 1
+         FWG(LENGTH) = NGRP(i)
+ 300  continue
+      call cram(220,FWG,LENGTH)
+      call cram(201,FWG,LENGTH)
+C
+C     initialize the atom flags.  three values are possible during the
+C     course of things:
+C        0--  the atom has not been assigned to a symmetric sub-space.
+C        1--  the atom has been assigned to a symmetric sub-space.
+C        2--  the atom is in the current symmetric sub-space.
+C
+      do 400 iat = 1 , NATOMS
+         iatflg(iat) = 0
+ 400  continue
+C
+C     branch on the first character of the schonflies symbol.
+C
+      ichar = NGRP(1)
+      if ( ichar.eq.iord('C') ) then
+C
+C     the first character in the schonflies symbol is c.
+C
+         jchar = NGRP(2)
+C
+C     test for the special groups c*v, c1, cs, ci, and c2v.
+C
+C     c*v.
+C
+         if ( jchar.eq.iord('*') ) then
+            call cram(211,FWG,LENGTH)
+            call cram(208,FWG,LENGTH)
+            do 420 iat = 1 , NATOMS
+               iatflg(iat) = 2
+ 420        continue
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,1)
+C
+C     c1.
+C
+         elseif ( jchar.ne.iord('0') .or. NGRP(3).ne.iord('1') ) then
+C
+C     cs.
+C
+            if ( jchar.eq.iord('S') ) then
+               call ssssig(MAXAP3,NATOMS,iatflg,A,3,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+C
+C     ci.
+C
+            elseif ( jchar.eq.iord('I') ) then
+               call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+               if ( itst.ne.0 ) then
+                  call cram(209,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+C
+C     c2v.
+C
+            elseif ( jchar.ne.iord('0') .or. NGRP(3).ne.iord('2') .or. 
+     &               NGRP(4).ne.iord('V') ) then
+C
+C     get norder and do cn, cnv, and cnh.
+C
+               jchar = NGRP(4)
+               norder = numer(NGRP)
+               if ( jchar.eq.iblnk ) then
+C
+C     cn.
+C
+                  call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(211,FWG,LENGTH)
+                     call cram(norder,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           3,1)
+                  endif
+C
+C     cnh.
+C
+               elseif ( jchar.eq.iord('H') ) then
+                  call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(209,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           0,0)
+                  endif
+                  call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(211,FWG,LENGTH)
+                     call cram(norder,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           3,2)
+                  endif
+                  call ssssig(MAXAP3,NATOMS,iatflg,A,3,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(212,FWG,LENGTH)
+                     call cram(213,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           0,0)
+                  endif
+C
+C     cnv (n odd).
+C
+               elseif ( mod(norder,2).eq.0 ) then
+C
+C     cnv (n even, > 2).
+C
+                  nhalf = norder/2
+                  call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(211,FWG,LENGTH)
+                     call cram(norder,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           3,1)
+                  endif
+                  call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(nhalf,FWG,LENGTH)
+                     call cram(212,FWG,LENGTH)
+                     call cram(214,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           0,0)
+                  endif
+                  theta = pi/norder
+                  call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+                  call ssssig(MAXAP3,NATOMS,iatflg,B,1,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(nhalf,FWG,LENGTH)
+                     call cram(212,FWG,LENGTH)
+                     call cram(215,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           0,0)
+                  endif
+               else
+                  call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(211,FWG,LENGTH)
+                     call cram(norder,FWG,LENGTH)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           3,1)
+                  endif
+                  call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(norder,FWG,LENGTH)
+                     call cram(212,FWG,LENGTH)
+                     call cram(214,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           0,0)
+                  endif
+               endif
+            else
+               call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+               if ( itst.ne.0 ) then
+                  call cram(211,FWG,LENGTH)
+                  call cram(2,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,1)
+               endif
+               call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call cram(214,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+               call ssssig(MAXAP3,NATOMS,iatflg,A,2,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call cram(214,FWG,LENGTH)
+                  call cram(206,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+            endif
+         endif
+      elseif ( ichar.eq.iord('S') ) then
+C
+C     sn.
+C
+         call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+         if ( itst.ne.0 ) then
+            call cram(211,FWG,LENGTH)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+         endif
+         norder = numer(NGRP)/2
+         call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+         if ( itst.ne.0 ) then
+            call cram(211,FWG,LENGTH)
+            call cram(norder,FWG,LENGTH)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+         endif
+      elseif ( ichar.eq.iord('D') ) then
+C
+C     the first character in the schonflies symbol is d.
+C
+         call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+         if ( itst.ne.0 ) then
+            call cram(209,FWG,LENGTH)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+         endif
+C
+         if ( NGRP(2).ne.iord('*') ) then
+C
+            norder = numer(NGRP)
+            nhalf = norder/2
+            if ( norder.ne.2 .or. NGRP(4).ne.iord('H') ) then
+C
+               call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+               if ( itst.ne.0 ) then
+                  call cram(211,FWG,LENGTH)
+                  call cram(norder,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+               endif
+C
+               if ( NGRP(4).ne.iblnk ) then
+C
+C
+C     dnd.
+C
+                  if ( NGRP(4).eq.iord('D') ) then
+                     theta = pi/norder
+                     call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+                     call sssc(MAXAP3,NATOMS,iatflg,B,2,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(norder,FWG,LENGTH)
+                        call cram(211,FWG,LENGTH)
+                        call cram(2,FWG,LENGTH)
+                        call cram(206,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,2,2)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(norder,FWG,LENGTH)
+                        call cram(212,FWG,LENGTH)
+                        call cram(215,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+C
+C
+C     dnh (n odd).
+C
+                  elseif ( mod(norder,2).eq.0 ) then
+C
+C
+C     dnh (n even, > 2).
+C
+                     call sssc(MAXAP3,NATOMS,iatflg,A,2,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(nhalf,FWG,LENGTH)
+                        call cram(211,FWG,LENGTH)
+                        call cram(2,FWG,LENGTH)
+                        call cram(206,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,2,2)
+                     endif
+                     theta = pi/norder
+                     call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+                     call sssc(MAXAP3,NATOMS,iatflg,B,2,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(nhalf,FWG,LENGTH)
+                        call cram(211,FWG,LENGTH)
+                        call cram(2,FWG,LENGTH)
+                        call cram(207,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,2,2)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,A,3,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(212,FWG,LENGTH)
+                        call cram(213,FWG,LENGTH)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(nhalf,FWG,LENGTH)
+                        call cram(212,FWG,LENGTH)
+                        call cram(214,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,B,1,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(nhalf,FWG,LENGTH)
+                        call cram(212,FWG,LENGTH)
+                        call cram(215,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+C  dbc put fwg into above line
+                        call stoich(MAXAP3,iatflg,IAN,B,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+                  else
+                     call sssc(MAXAP3,NATOMS,iatflg,A,2,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(norder,FWG,LENGTH)
+                        call cram(211,FWG,LENGTH)
+                        call cram(2,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,2,2)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,A,3,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(212,FWG,LENGTH)
+                        call cram(213,FWG,LENGTH)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+                     call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+                     if ( itst.ne.0 ) then
+                        call cram(norder,FWG,LENGTH)
+                        call cram(212,FWG,LENGTH)
+                        call cram(214,FWG,LENGTH)
+                        call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                        call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,
+     &                              FWG,0,0)
+                     endif
+                  endif
+               elseif ( mod(norder,2).eq.0 ) then
+C
+C
+C     dn (n even).
+C
+                  call sssc(MAXAP3,NATOMS,iatflg,A,2,itst)
+                  if ( itst.ne.0 ) then
+                     if ( nhalf.ne.1 ) call cram(nhalf,FWG,LENGTH)
+                     call cram(211,FWG,LENGTH)
+                     call cram(2,FWG,LENGTH)
+                     call cram(206,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           2,2)
+                  endif
+                  theta = pi/norder
+                  call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+                  call sssc(MAXAP3,NATOMS,iatflg,B,2,itst)
+                  if ( itst.ne.0 ) then
+                     if ( nhalf.ne.1 ) call cram(nhalf,FWG,LENGTH)
+                     call cram(211,FWG,LENGTH)
+                     call cram(2,FWG,LENGTH)
+                     call cram(207,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,B,NATOMS,LENGTH,FWG,
+     &                           2,2)
+                  endif
+               else
+C
+C     dn (n odd).
+C
+                  call sssc(MAXAP3,NATOMS,iatflg,A,2,itst)
+                  if ( itst.ne.0 ) then
+                     call cram(norder,FWG,LENGTH)
+                     call cram(211,FWG,LENGTH)
+                     call cram(2,FWG,LENGTH)
+                     call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                     call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,
+     &                           2,2)
+                  endif
+               endif
+            else
+C
+C     d2h.
+C
+               call sssc(MAXAP3,NATOMS,iatflg,A,1,itst)
+               if ( itst.ne.0 ) then
+                  call cram(211,FWG,LENGTH)
+                  call cram(2,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,1,2)
+               endif
+               call sssc(MAXAP3,NATOMS,iatflg,A,2,itst)
+               if ( itst.ne.0 ) then
+                  call cram(211,FWG,LENGTH)
+                  call cram(2,FWG,LENGTH)
+                  call cram(206,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,2,2)
+               endif
+               call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+               if ( itst.ne.0 ) then
+                  call cram(211,FWG,LENGTH)
+                  call cram(2,FWG,LENGTH)
+                  call cram(207,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+               endif
+               call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+               call ssssig(MAXAP3,NATOMS,iatflg,A,2,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call cram(206,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+               call ssssig(MAXAP3,NATOMS,iatflg,A,3,itst)
+               if ( itst.ne.0 ) then
+                  call cram(212,FWG,LENGTH)
+                  call cram(207,FWG,LENGTH)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+            endif
+         else
+C
+C     d*h.
+C
+            call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+            call cram(211,FWG,LENGTH)
+            call cram(208,FWG,LENGTH)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+         endif
+      elseif ( ichar.eq.iord('T') ) then
+C
+C     the first character in the schonflies symbol is t.
+C
+         if ( NGRP(2).ne.iord('H') ) then
+C
+            call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+            if ( itst.ne.0 ) then
+               call cram(209,FWG,LENGTH)
+               call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+            endif
+C
+C     rotation operations c3 and c2.
+C
+            call move(MAXAP3,A,B,NATOMS)
+            v(1) = one
+            v(2) = one
+            v(3) = one
+            call put(MAXAP3,B,D,t,v,NATOMS,3)
+            call sssc(MAXAP3,NATOMS,iatflg,B,3,itst)
+            if ( itst.ne.0 ) then
+               call cram(4,FWG,LENGTH)
+               call cram(211,FWG,LENGTH)
+               call cram(3,FWG,LENGTH)
+               call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+               call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+            endif
+            call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+            if ( itst.ne.0 ) then
+               call cram(3,FWG,LENGTH)
+               call cram(211,FWG,LENGTH)
+               call cram(2,FWG,LENGTH)
+               call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+               call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+            endif
+            if ( NGRP(2).ne.iblnk ) then
+C
+C     dihedral planes for td.
+C
+               theta = gatan(one)
+               call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+               call ssssig(MAXAP3,NATOMS,iatflg,B,1,itst)
+               if ( itst.ne.0 ) then
+                  call cram(6,FWG,LENGTH)
+                  call cram(212,FWG,LENGTH)
+                  call cram(215,FWG,LENGTH)
+                  call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+                  call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+               endif
+            endif
+         else
+            LENGTH = LENGTH - 2
+            do 440 i = 3 , 15
+               FWG(i) = iblnk
+ 440        continue
+            return
+         endif
+      elseif ( ichar.eq.iord('O') ) then
+C
+C      the first character in the schonflies symbol is o.
+C
+         call ssso(MAXAP3,NATOMS,iatflg,A,itst)
+         if ( itst.ne.0 ) then
+            call cram(209,FWG,LENGTH)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+         endif
+C
+C     rotation operations c4, c3, and c2.
+C
+         call sssc(MAXAP3,NATOMS,iatflg,A,3,itst)
+         if ( itst.ne.0 ) then
+            call cram(3,FWG,LENGTH)
+            call cram(211,FWG,LENGTH)
+            call cram(4,FWG,LENGTH)
+            call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+         endif
+         call move(MAXAP3,A,B,NATOMS)
+         v(1) = one
+         v(2) = one
+         v(3) = one
+         call put(MAXAP3,B,D,t,v,NATOMS,3)
+         call sssc(MAXAP3,NATOMS,iatflg,B,3,itst)
+         if ( itst.ne.0 ) then
+            call cram(4,FWG,LENGTH)
+            call cram(211,FWG,LENGTH)
+            call cram(3,FWG,LENGTH)
+            call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,3,2)
+         endif
+         theta = gatan(one)
+         call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+         call sssc(MAXAP3,NATOMS,iatflg,B,2,itst)
+         if ( itst.ne.0 ) then
+            call cram(4,FWG,LENGTH)
+            call cram(211,FWG,LENGTH)
+            call cram(3,FWG,LENGTH)
+            call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+            call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,2,2)
+         endif
+C
+C     dihedral and horizontal planes of oh.
+C
+         if ( NGRP(2).eq.iord('H') ) then
+            call ssssig(MAXAP3,NATOMS,iatflg,B,1,itst)
+            if ( itst.ne.0 ) then
+               call cram(6,FWG,LENGTH)
+               call cram(212,FWG,LENGTH)
+               call cram(215,FWG,LENGTH)
+               call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+               call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+            endif
+            call ssssig(MAXAP3,NATOMS,iatflg,A,1,itst)
+            if ( itst.ne.0 ) then
+               call cram(3,FWG,LENGTH)
+               call cram(212,FWG,LENGTH)
+               call cram(213,FWG,LENGTH)
+               call ssseq(MAXAP3,NATOMS,NOP,MAXOP,iatflg,NPERM)
+               call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+            endif
+         endif
+      elseif ( ichar.eq.iord('I') ) then
+C
+C     the first character in the schonflies symbol is i.
+C
+         LENGTH = LENGTH - 2
+         i1 = LENGTH + 1
+         do 450 i = i1 , 15
+            FWG(i) = iblnk
+ 450     continue
+         return
+      else
+         if ( ichar.eq.iord('K') ) then
+         endif
+C
+C     the first character in the schonflies symbol is k
+C     or is not recognized.
+C
+         LENGTH = LENGTH - 2
+         i1 = LENGTH + 1
+         do 500 i = i1 , 15
+            FWG(i) = iblnk
+ 500     continue
+         return
+      endif
+C
+C     fill the asymmetric sub-space.
+C
+      num = 0
+      do 600 iat = 1 , NATOMS
+         if ( iatflg(iat).ne.1 ) then
+            num = num + 1
+            iatflg(iat) = 2
+         endif
+ 600  continue
+      if ( num.ne.0 ) then
+         call cram(210,FWG,LENGTH)
+         call stoich(MAXAP3,iatflg,IAN,A,NATOMS,LENGTH,FWG,0,0)
+      endif
+      call cram(217,FWG,LENGTH)
+      call cram(202,FWG,LENGTH)
+C
+      return
+C
+      end
+@* INDEX.

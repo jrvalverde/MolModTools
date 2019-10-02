@@ -1,0 +1,49 @@
+@* num.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] IDIGIT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CRAM    PTGRP                                          
+                                                                    
+\end{description}
+@a
+      integer function num(N,IDIGIT)
+      implicit none
+      integer i , IDIGIT , idx , N
+      dimension i(10)
+      data i/'1' , '2' , '3' , '4' , '5' , '6' , '7' , '8' , '9' , '0'/
+C
+C
+C     given an integer quanity, n, this function returns
+C     its hollereith equivalent.
+C
+C
+C
+      if ( IDIGIT.ne.2 ) then
+C
+C     tens digit.
+C
+         idx = N/10
+         if ( idx.eq.0 ) idx = 10
+         num = i(idx)
+         return
+      endif
+C
+C     ones digit.
+C
+      idx = mod(N,10)
+      if ( idx.eq.0 ) idx = 10
+      num = i(idx)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,41 @@
+@* mul3x3.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] C                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FIXREP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine mul3x3(A,B,C)
+      implicit none
+      integer i , j , k
+C ----------------------------------------------------------------------
+      double precision A(3,3) , B(3,3) , C(3,3) , zero
+      data zero/0.0D0/
+C           a little routine to do a 3x3 matrix multtiplication.
+C     returns in "c" the product "ab".
+C ----------------------------------------------------------------------
+C
+      do 100 i = 1 , 3
+         do 50 j = 1 , 3
+            C(i,j) = zero
+            do 20 k = 1 , 3
+               C(i,j) = C(i,j) + A(i,k)*B(k,j)
+ 20         continue
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

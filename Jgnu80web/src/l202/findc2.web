@@ -1,0 +1,146 @@
+@* findc2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[INPUT:] ASET                                                      
+\item[PASSED:] NPOP                                                      
+\item[INPUT:] NSET                                                      
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOL2    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CIRSET  EQUIV   GABS    GATAN   MOVE    ROTATE         
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine findc2(MAXAP3,A,B,ASET,NPOP,NSET,ATMCHG,NATOMS,ITST)
+      implicit none
+      double precision A , ani , ASET , ATMCHG , B , disi , gabs , 
+     &                 gatan , half , halfpi , one , pi , proi , t , 
+     &                 theta , Tol2 , Toler , two , x , xi
+      double precision y , yi
+      integer iat , iattop , iset , ITST , j1 , jat , jset , MAXAP3 , 
+     &        NATOMS , NPOP , NSET , numatm , numset
+      dimension A(MAXAP3,3) , NSET(*) , ASET(MAXAP3,3)
+      dimension t(3,3) , B(*) , ATMCHG(*) , NPOP(*)
+      common /tol   / Toler , Tol2
+      data half , one , two/0.5D0 , 1.0D0 , 2.0D0/
+C
+C
+C     this routine tests for a set of norder c2 axes perpindicular
+C     to the principal (cartesian z assumed) symmetry axis.  if
+C     found, one of the c2 axes is left coincident with the y
+C     cartesian axis.
+C
+C
+C
+C
+C
+      numatm = NATOMS + 3
+      halfpi = two*gatan(one)
+      pi = two*halfpi
+C
+      call cirset(MAXAP3,NATOMS,A,ATMCHG,3,NSET,NPOP,ASET,numset)
+C
+C     look for circular-sets in the xy plane.  a c2 axis must pass
+C     through the point midway between any atom in the set and one
+C     other atom in the set.
+C
+      iattop = NATOMS - 1
+      do 200 iset = 1 , numset
+         do 50 iat = 1 , NATOMS
+            if ( NSET(iat).eq.iset ) goto 100
+ 50      continue
+         goto 200
+C
+ 100     if ( gabs(ASET(iat,2)).le.Toler ) then
+            j1 = iat + 1
+            do 120 jat = j1 , NATOMS
+               if ( NSET(jat).eq.iset ) then
+                  x = (A(iat,1)+A(jat,1))*half
+                  y = (A(iat,2)+A(jat,2))*half
+                  theta = halfpi
+                  if ( gabs(y).gt.Toler ) theta = -gatan(x/y)
+                  call rotate(MAXAP3,A,B,numatm,t,3,theta)
+                  call rotate(MAXAP3,B,ASET,NATOMS,t,2,pi)
+                  call equiv(MAXAP3,B,ASET,ATMCHG,NATOMS,ITST)
+                  if ( ITST.ne.0 ) then
+                     call move(MAXAP3,B,A,numatm)
+                     return
+                  endif
+               endif
+C
+ 120        continue
+         endif
+ 200  continue
+C
+C     pick an atom in one of the circular sets not in the xy plane.
+C     a c2 axis must bisect the angle formed by the projection of the
+C     reference atom in the xy plane and the projection of an atom
+C     in the set opposed to the reference set.
+C
+      call cirset(MAXAP3,NATOMS,A,ATMCHG,3,NSET,NPOP,ASET,numset)
+C something strange going on here, label 160 is unreachable
+C     do 160 iset=1,numset
+      iset = 1
+      do 300 iat = 1 , NATOMS
+         if ( NSET(iat).eq.iset ) goto 400
+ 300  continue
+      ITST = 0
+      return
+C
+ 400  proi = ASET(iat,2)
+      ani = ASET(iat,1)
+      disi = ASET(iat,3)
+C 160 continue
+C     itst = 0
+C     return
+      xi = A(iat,1)
+      yi = A(iat,2)
+      j1 = iset + 1
+      do 600 jset = j1 , numset
+         do 450 jat = 1 , NATOMS
+            if ( NSET(jat).eq.jset ) goto 500
+ 450     continue
+         ITST = 0
+         return
+C
+ 500     if ( gabs(proi+ASET(jat,2)).le.Toler .and. 
+     &        gabs(ani-ASET(jat,1)).le.Tol2 .and. gabs(disi-ASET(jat,3))
+     &        .le.Toler ) goto 700
+C
+ 600  continue
+      ITST = 0
+      return
+C
+ 700  do 800 jat = 1 , NATOMS
+         if ( NSET(jat).eq.jset ) then
+            x = (xi+A(jat,1))*half
+            y = (yi+A(jat,2))*half
+            theta = halfpi
+            if ( gabs(y).gt.Tol2 ) theta = -gatan(x/y)
+            call rotate(MAXAP3,A,B,numatm,t,3,theta)
+            call rotate(MAXAP3,B,ASET,NATOMS,t,2,pi)
+            call equiv(MAXAP3,B,ASET,ATMCHG,NATOMS,ITST)
+            if ( ITST.ne.0 ) then
+               call move(MAXAP3,B,A,numatm)
+               return
+            endif
+         endif
+C
+ 800  continue
+      ITST = 0
+      return
+C
+      end
+@* INDEX.

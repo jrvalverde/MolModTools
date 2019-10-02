@@ -1,0 +1,69 @@
+@* filchg.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] IAN                                                       
+\item[OUTPUT:] ATMCHG                                                    
+\item[INPUT:] CHARGE                                                    
+\item[INPUT:] NDCHG                                                     
+\item[INPUT:] IPRINT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT                                                 
+\item[Called by]   GEOM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine filchg(NATOMS,IAN,ATMCHG,CHARGE,NDCHG,IPRINT)
+      implicit none
+      double precision ATMCHG , ch , CHARGE , gfloat
+      integer i , IAN , In , Iout , IPRINT , Ipunch , NATOMS , NDCHG
+      dimension IAN(*) , ATMCHG(*) , CHARGE(*)
+      common /io    / In , Iout , Ipunch
+C
+C***********************************************************************
+C     routine to install default atomic charges into the array atmchg.
+C     initially, these are merely the atomic numbers.  later on
+C     other routines might modify this data.  (like in a pseud-pot
+C     run).
+C     when non default charges are used, this routine fills atmchg
+C     with them
+C
+C     arguments:
+C
+C     natoms ... number of atoms.
+C     ian    ... integer array of length natoms containing the
+C                atomic numbers.
+C     atmchg ... working precision output array containing the
+C                floating-point charges.
+C     charge ... working precision array containing non default charges
+C     ndchg  ... if this is non-zero non default charges should be used
+C***********************************************************************
+C
+      if ( NDCHG.ne.0 ) then
+C
+         if ( IPRINT.ne.0 ) write (Iout,99001)
+         do 50 i = 1 , NATOMS
+            ch = CHARGE(i)
+            if ( IPRINT.ne.0 ) write (Iout,99002) i , ch
+            ATMCHG(i) = ch
+ 50      continue
+         return
+C
+99001    format ('  NON-DEFAULT ATOMIC CHARGES USED')
+99002    format (' ',i10,g15.5)
+      endif
+C     loop over the atoms, filling atmchg.
+      do 100 i = 1 , NATOMS
+         ATMCHG(i) = gfloat(IAN(i))
+ 100  continue
+      return
+C=====>
+      end
+@* INDEX.

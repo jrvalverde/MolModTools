@@ -1,0 +1,115 @@
+@* cirset.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] ATMCHG                                                    
+\item[INPUT:] IXYZ                                                      
+\item[OUTPUT:] NSET                                                      
+\item[OUTPUT:] NPOP                                                      
+\item[OUTPUT:] ASET                                                      
+\item[OUTPUT:] NUMSET                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOL2    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GSQRT                                          
+\item[Called by]   FINDC2  FINDCN  FINDV   ORKEY                          
+                                                                    
+\end{description}
+@a
+      subroutine cirset(MAXAP3,NATOMS,A,ATMCHG,IXYZ,NSET,NPOP,ASET,
+     &                  NUMSET)
+      implicit none
+      double precision A , ad , an , ap , ASET , ATMCHG , gabs , gsqrt , 
+     &                 q2 , q3 , Tol2 , Toler , zero
+      integer i2 , i3 , iat , iattop , iset , IXYZ , j1 , jat , MAXAP3 , 
+     &        NATOMS , NPOP , NSET , NUMSET
+      dimension A(MAXAP3,3) , NSET(*) , NPOP(*) , ASET(MAXAP3,3) , 
+     &          ATMCHG(*)
+      common /tol   / Toler , Tol2
+      data zero/0.0D0/
+C
+C
+C     a "circular-set" of atoms is hereby defined as those atoms
+C     lying in a plane which have the same atomic number and
+C     which are equidistant from some reference axis perpindicular
+C     to the plane.  a proper rotation axis generates a circular-set
+C     of atoms.
+C
+C     this routine searches for circular-sets of atoms.
+C     ixyz is the cartesian reference axis.
+C     nset(i) gives the number of the set which atom i belongs to.
+C     set 0 is defined as the set of on-axis atoms.
+C     npop(j) is the number of atoms in set j.
+C
+C
+C
+C
+C
+      i2 = 1 + mod(IXYZ,3)
+      i3 = 1 + mod(i2,3)
+C
+C     aset(i,1):  atmchg(i) and a flag.
+C     aset(i,2):  the projection of the i'th atom on the reference
+C                 axis.
+C     aset(i,3):  its distance from the reference axis.
+C
+      do 100 iat = 1 , NATOMS
+         ASET(iat,1) = ATMCHG(iat)
+         ASET(iat,2) = A(iat,IXYZ)
+         q2 = A(iat,i2)
+         q3 = A(iat,i3)
+         ASET(iat,3) = gsqrt(q2*q2+q3*q3)
+ 100  continue
+C
+C     define set 0.
+C
+      do 200 iat = 1 , NATOMS
+         if ( gabs(ASET(iat,3)).le.Toler ) then
+            NSET(iat) = 0
+            ASET(iat,1) = zero
+         endif
+ 200  continue
+C
+C     find the remaining sets.
+C
+      iattop = NATOMS - 1
+      iset = 0
+      do 300 iat = 1 , iattop
+         if ( ASET(iat,1).ne.zero ) then
+            iset = iset + 1
+            NSET(iat) = iset
+            NPOP(iset) = 1
+            an = ASET(iat,1)
+            ap = ASET(iat,2)
+            ad = ASET(iat,3)
+            ASET(iat,1) = zero
+            j1 = iat + 1
+            do 220 jat = j1 , NATOMS
+               if ( gabs(ASET(jat,1)-an).le.Tol2 .and. 
+     &              gabs(ASET(jat,2)-ap).le.Toler .and. 
+     &              gabs(ASET(jat,3)-ad).le.Toler ) then
+                  NSET(jat) = iset
+                  NPOP(iset) = NPOP(iset) + 1
+                  ASET(jat,1) = zero
+               endif
+ 220        continue
+         endif
+ 300  continue
+      NUMSET = iset
+C
+C     restore aset(i,1).
+C
+      do 400 iat = 1 , NATOMS
+         ASET(iat,1) = ATMCHG(iat)
+ 400  continue
+      return
+C
+      end
+@* INDEX.

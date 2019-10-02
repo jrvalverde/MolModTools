@@ -1,0 +1,89 @@
+@* noones.
+
+\begin{verbatim}
+ input:  oldstr- an unpacked character string containing     
+                 the framework group or a stoichiometry      
+         oldlen- the number of characters in oldstr          
+ output: newstr- an unpacked character string containing     
+                 the fwg or stoich in a form suitable for    
+                 printing                                    
+         newlen- the number of characters in newstr          
+ operation:  the first four characters of a fwg string       
+             consist of the point group.  blanks and zeroes  
+             are removed from these.  stoich strings and fwg 
+             strings contain ones following the atomic       
+             symbols.  these are removed by applying the     
+             following rules:                                
+              a one is removed unless the next character is  
+              a digit, a plus sign, or a minus sign and the  
+              previous character is not a digit.             
+                                                             
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] OLDLEN                                                    
+\item[INPUT:] OLDSTR                                                    
+\item[OUTPUT:] NEWLEN                                                    
+\item[OUTPUT:] NEWSTR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   OMEGA                                                  
+                                                                    
+\end{description}
+@a
+      subroutine noones(OLDLEN,OLDSTR,NEWLEN,NEWSTR)
+      implicit none
+      integer blank , bra , i , i1 , minus , NEWLEN , NEWSTR , next , 
+     &        nine , OLDLEN , OLDSTR , one , plus , prev , zero
+      logical fwg
+      dimension OLDSTR(6) , NEWSTR(6)
+      data zero/'0'/ , blank/' '/ , bra/'<'/ , one/'1'/
+      data plus/1H+/ , minus/1H-/ , nine/1H9/
+C
+C
+      fwg = OLDSTR(6).eq.bra
+      NEWLEN = 0
+      prev = blank
+      i1 = 1
+      if ( fwg ) then
+C
+C                                            deal with the point group
+C                                            part of an fwg string
+C
+         do 50 i = 1 , 4
+            if ( .not.(OLDSTR(i).eq.blank .or. (OLDSTR(i).eq.zero .and. 
+     &           i.ne.3)) ) then
+               NEWLEN = NEWLEN + 1
+               NEWSTR(NEWLEN) = OLDSTR(i)
+            endif
+ 50      continue
+         i1 = 6
+      endif
+C
+C                                            remove ones
+C
+      do 100 i = i1 , OLDLEN
+         next = OLDSTR(i+1)
+         if ( i.eq.OLDLEN ) next = blank
+         if ( i.ne.1 ) prev = OLDSTR(i-1)
+         if ( .not.(OLDSTR(i).eq.one .and. (next.lt.zero .or. next.gt.
+     &        nine) .and. next.ne.plus .and. next.ne.minus .and. 
+     &        (prev.lt.zero .or. prev.gt.nine)) ) then
+            NEWLEN = NEWLEN + 1
+            NEWSTR(NEWLEN) = OLDSTR(i)
+         endif
+ 100  continue
+C
+C
+      return
+C
+      end
+@* INDEX.

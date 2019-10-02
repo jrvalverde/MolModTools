@@ -1,0 +1,56 @@
+@* equiv.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[INPUT:] ATMCHG                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOL2    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   FINDC2  FINDCN  FINDV   PTGRP   TSTC3   TSTC4   TSTC5  
+                                                                    
+\end{description}
+@a
+      subroutine equiv(MAXAP3,A,B,ATMCHG,NATOMS,ITST)
+      implicit none
+      double precision A , ATMCHG , B , gabs , test , Tol2 , Toler
+      integer iat , ITST , ixyz , jat , MAXAP3 , NATOMS
+      dimension A(MAXAP3,3) , B(MAXAP3,3) , ATMCHG(*)
+      common /tol   / Toler , Tol2
+C
+C
+C     itst is set to 1 if the two molecular orientations in a and
+C     in b are equivalent.  otherwise itst is set to 0.
+C
+C
+C
+C
+      do 100 iat = 1 , NATOMS
+         do 50 jat = 1 , NATOMS
+            if ( gabs(ATMCHG(iat)-ATMCHG(jat)).le.Tol2 ) then
+               do 10 ixyz = 1 , 3
+                  test = A(iat,ixyz) - B(jat,ixyz)
+                  if ( gabs(test).gt.Toler ) goto 50
+ 10            continue
+               goto 100
+            endif
+C
+ 50      continue
+         ITST = 0
+         return
+C
+ 100  continue
+      ITST = 1
+      return
+C
+      end
+@* INDEX.

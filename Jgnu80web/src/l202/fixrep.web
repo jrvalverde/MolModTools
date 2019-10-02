@@ -1,0 +1,73 @@
+@* fixrep.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] T                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    SYMOPS                                                 
+\item[Transmits as argument]  NSYMOP                                                 
+\item[Uses]  NSYMOP  SYMOPS                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       MUL3X3  TREAD   TWRITE                                 
+\item[Called by]   OMEGA                                                  
+                                                                    
+\end{description}
+@a
+      subroutine fixrep(T)
+      implicit none
+      integer i , imin , iop , irwrep , j , lrwrep
+C ----------------------------------------------------------------------
+      double precision T(3,3) , c(9) , temp
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      data irwrep/562/ , lrwrep/767/
+C          the symmetry operations have been passed to the orbital
+C     symmetry routines as if the molecule were re-oriented by the
+C     symmetry program.  in certain cases, however, after this has
+C     been done, the symmetry program changes its mind, and decides
+C     not to re-orient the molecule after all.  when this happens,
+C     this routine should be called to transform the matrices that
+C     were passed to the orbital assignment routines.  the only
+C     calling argument, "t", is the 3x3 matrix that would have been
+C     used to re-orient the molecule.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      if ( Nsymop.eq.0 ) return
+      call tread(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+C
+      do 100 iop = 1 , Nsymop
+         call mul3x3(Symops(1,iop),T,c)
+         do 50 i = 1 , 9
+            Symops(i,iop) = c(i)
+ 50      continue
+ 100  continue
+C
+C
+      do 200 i = 2 , 3
+         imin = i - 1
+         do 150 j = 1 , imin
+            temp = T(i,j)
+            T(i,j) = T(j,i)
+            T(j,i) = temp
+ 150     continue
+ 200  continue
+C
+C
+      do 300 iop = 1 , Nsymop
+         call mul3x3(T,Symops(1,iop),c)
+         do 250 i = 1 , 9
+            Symops(i,iop) = c(i)
+ 250     continue
+ 300  continue
+      call twrite(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+C
+      return
+C
+      end
+@* INDEX.

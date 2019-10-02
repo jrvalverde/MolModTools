@@ -1,0 +1,221 @@
+@* geom.
+
+\begin{verbatim}
+
+     Routine to determine the coordinates, given the z-matrix,
+     and to analyze the molecular symmetry, if requested.
+
+     this link receives the z-matrix or coordinates from the
+     rw-files, and determines the framework group of the
+     molecule and produces the standard (3 by 3) transformation
+     matrices.  when input consists of a z-matrix, routine
+     ztoc is called upon to obtain the coordinates.
+     note that ztoc produces both the regular coordinates,
+     and a set in which the dummy atoms have not been deleted.
+
+
+     options ... iop( ):
+
+iop(9)
+     iop(9) ... printing of distance matrix.
+     0 ... print distance matrix (only if there are more than
+           two atoms in the molecule.
+     1 ... do not print the distance matrix.
+
+iop(10)
+     iop(10) ... tetrahedral angle fixing
+     0 ... angles within 0.001 degree of 109.471 will be set to
+           acos(-1/3).
+     1 ... do not test for such angles.
+
+iop(11)
+     iop(11) ... printing of z-matrix and resultant coordinates.
+     0 ... print.
+     1 ... do not print.
+
+iop(12)
+     iop(12) ... crowding abort control
+     0 ... if two atoms are less than 0.5 angstroms apart,
+           abort the run.
+     1 ... do not abort the run for small interatomic distances.
+
+iop(15)
+     iop(15) ... symmetry control.
+     0 ... leave symmetry in whatever state it is presently in.
+     1 ... unconditionally turn symmetry off.  note that symm
+           is still called, and will determine the framework group.
+           hoewever, the molecule is not oriented.
+
+iop(29)
+     iop(29) ... direct coordinate input
+             note that this option is usually set in conjunction with
+             iop(29) in l101.
+     0 ... coordinates were input via the z-matrix.
+     1 ... coordinates were input directly.
+
+iop(30)
+     iop(30) ... non default atomic charges
+             note that this option is usually set in conjunction with
+             iop(29) in l101.
+     0 ... atomic charges are the atomic numbers
+     1 ... charges were input directly.
+
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IN                                                     
+\item[Transmits as argument]  ALPHA   ATMCHG  BETA    BL      C       IAN     IANZ   
+             ICHARG  IOP     IOUT    IZ      LALPHA  LBETA   LBL    
+             MULTIP  NATOMS  NVAR    NZ      TOANG                  
+\item[Uses]  ALPHA   ATMCHG  BETA    BL      C       IAN     IANZ   
+             ICHARG  IN      IOP     IOUT    IZ      LALPHA  LBETA  
+             LBL     MULTIP  NATOMS  NVAR    NZ      TOANG          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CORPR1  DISMAT  FILCHG  ILSW    LNK1E   SUBVAR  SYMM   
+             TQUERY  TREAD   TWRITE  ZPRINT  ZTOC                   
+\item[Called by]   L202                                                   
+                                                                    
+\end{description}
+@a
+      subroutine geom(JUMP)
+      implicit none
+      double precision Alpha , Atmchg , Beta , Bl , C , Phycon , Toang , 
+     &                 work
+      integer i , i1 , i2 , i3 , i4 , i5 , i6 , i7 , Ian , Ianz , 
+     &        Icharg , idout , idump , iend , In , Iop , Iout , iozmat , 
+     &        iprint , Ipunch
+      integer irwchg , irwzc , Iz , JUMP , Lalpha , Lbeta , Lbl , 
+     &        maxnz , Multip , mxwork , Nae , Natoms , Nbasis , Nbe , 
+     &        ndchg , Ne , Nvar , Nz , nz3
+      logical ttest , error
+      dimension iozmat(2)
+      dimension work(1000)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /phycon/ Toang , Phycon(29)
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvar
+      common /io    / In , Iout , Ipunch
+      data iozmat/507 , 351/ , maxnz/50/ , irwzc/572/ , irwchg/577/
+      data mxwork/1000/ , ndchg/0/
+C
+C
+99001 format (' ALLOCATION FAILURE IN GEOM.'/'  NEEDS ',i6,
+     &        ' BUT HAS ONLY',i6,' WORDS.')
+99002 format (18x,'Z-MATRIX ORIENTATION:')
+99003 format (20x,'DISTANCE MATRIX (ANGSTROMS)')
+99004 format (1x,18x,'INPUT ORIENTATION:')
+99005 format (1x,'PROBLEM WITH THE Z-MATRIX IN LINK 202')
+99006 format (1x,'PROBLEM WITH THE DISTANCE MATRIX IN LINK 202')
+99007 format (1x,'NON-DEFAULT ATOMIC CHARGES: (BEFORE COMPRESS)')
+99008 format (1x,i10,f10.5)
+C
+C
+      iprint = Iop(33) + Iop(34)
+      idump = Iop(34)
+C
+C     process iop(15).
+C     if this option is set, set the symm field in ilsw
+C     to indicate no symmetry.  this will still allow
+C     symm (routine called below) to work, however,
+C     the molecule will not be brought into a standard
+C     orientation.
+      if ( Iop(15).ne.0 ) call ilsw(1,26,1)
+C
+C                   skip the z-matrix handling section if direct
+C                   coordinate input was used.
+C
+      if ( Iop(29).ne.1 ) then
+C
+C     recover the z-matrix from the rw-files.
+         call tread(iozmat(1),Ianz,iozmat(2),1,iozmat(2),1,0)
+C
+C     alocate space in 'work'.
+         nz3 = 3*Nz
+         i1 = 1
+         i2 = i1 + Nz
+         i3 = i2 + Nz
+         i4 = i3 + Nz
+         i5 = i4 + Nz
+         i6 = i5 + Nz
+         i7 = i6 + nz3
+         iend = i7 + Nz - 1
+         if ( iend.gt.mxwork ) then
+            write (Iout,99001) iend , mxwork
+            call lnk1e
+         endif
+C
+C     process possible z-matrix substitutions.
+         call subvar(Bl,Alpha,Beta,Lbl,Lalpha,Lbeta,Nz,Nvar)
+C
+C     update rw-file copy of /zmat/ after substitutions.
+         call twrite(iozmat(1),Ianz,iozmat(2),1,iozmat(2),1,0)
+C
+C                         determine the tet angle test and get the
+C                         cartesian coordinates.
+         ttest = Iop(10).eq.0
+         if ( Iop(11).eq.0 ) call zprint(Nz,Ianz,Iz,Bl,Alpha,Beta,Toang)
+         call tquery(irwchg,ndchg)
+C     if charges have been read in recover them from disk:
+         if ( ndchg.ne.0 ) then
+            call tread(irwchg,work(i7),Nz,1,Nz,1,0)
+            if ( idump.ne.0 ) then
+               write (Iout,99007)
+               do 10 i = 1 , Nz
+                  In = i7 + i - 1
+                  write (Iout,99008) i , work(In)
+ 10            continue
+            endif
+         endif
+         call ztoc(maxnz,Nz,Ianz,Iz,Bl,Alpha,Beta,ttest,Natoms,Ian,C,
+     &             work(i6),work(i1),work(i2),work(i3),work(i4),work(i5)
+     &             ,Iout,error,work(i7))
+         if ( error ) then
+            write (Iout,99005)
+            call lnk1e
+         endif
+C
+C     save complete coordinate copy on the disk.
+         call twrite(irwzc,work(i6),nz3,1,nz3,1,0)
+C
+C     save z-matrix if tetrahedral angles have been changed
+         if ( ttest ) call twrite(iozmat(1),Ianz,iozmat(2),1,iozmat(2),
+     &                            1,0)
+      endif
+      if ( Iop(11).eq.0 ) then
+         if ( Iop(29).eq.0 ) write (Iout,99002)
+         if ( Iop(29).eq.1 ) write (Iout,99004)
+         if ( Iop(29).eq.0 ) call corpr1(Nz,Ianz,work(i6),Toang)
+         if ( Iop(29).eq.1 ) call corpr1(Natoms,Ian,C,Toang)
+      endif
+C
+C     possibly print the distance matrix.
+      idout = Iout
+      if ( (Natoms.le.2) .or. (Iop(9).ne.0) ) idout = 0
+      if ( idout.ne.0 ) write (idout,99003)
+      call dismat(Natoms,Ian,C,2,5,idout,error,Iop(12),Toang)
+      if ( error ) then
+         write (Iout,99006)
+         call lnk1e
+      endif
+C
+C     fill the atomic charge   array.
+      call filchg(Natoms,Ian,Atmchg,work(i7),ndchg,iprint)
+C
+C     determine molecular symmetry.
+      call symm(Iop,Natoms,Multip,Icharg,Ian,C,Atmchg,Toang)
+C
+      JUMP = 0
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,248 @@
+@* oper.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NGRP                                                      
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] MAXOP                                                     
+\item[OUTPUT:] TRANS                                                     
+\item[OUTPUT:] NPERM                                                     
+\item[OUTPUT:] NOP                                                       
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       C2AXES  CNAXIS  FILL    GATAN   GFLOAT  INIREP  INVERT 
+             IORD    NUMER   OCTA    OUTREP  REFLCT  SIGHCN  SNAXIS 
+             TETRA   VERT                                           
+\item[Called by]   SYMM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine oper(MAXAP3,NGRP,NATOMS,MAXOP,TRANS,NPERM,NOP,A,B,D,
+     &                IDUMP)
+      implicit none
+      double precision A , B , D , four , gatan , gfloat , one , t , 
+     &                 theta , Tol2 , Toler , TRANS , zero
+      integer i , iat , iblnk , ichar , IDUMP , In , iord , Iout , 
+     &        Ipunch , j , j1 , j2 , jchar , k , MAXAP3 , MAXOP , 
+     &        NATOMS , NGRP , NOP , norder
+      integer NPERM , numer
+      dimension NGRP(4) , TRANS(3,3,MAXOP) , NPERM(MAXAP3,MAXOP)
+      dimension A(MAXAP3,3) , B(MAXAP3,3) , D(MAXAP3,3)
+      dimension t(3,3)
+      common /io    / In , Iout , Ipunch
+      common /tol   / Toler , Tol2
+      data zero , one , four/0.0D0 , 1.0D0 , 4.0D0/
+      data iblnk/' '/
+C
+C
+C     given the schonflies symbol for the point group, ngrp, and the
+C     re-oriented coordinates, a, derive the 3x3 transformation
+C     matrix, trans, and the atom permutation vector, nperm, for
+C     each operation of the group.  maxop is the maximum number
+C     of operations allowed.
+C
+C
+C
+C
+C
+99001 format (/)
+99002 format (/1x,'TOTAL NUMBER OF SYMMETRY OPERATIONS: ',i3/)
+99003 format (1x,'PERMUTATIONS OVER ATOMS:'/)
+99004 format (1x,44I3)
+99005 format (/1x,'TRANSFORMATION MATRICES:')
+99006 format (/1x,12x,i3,3(31x,i3))
+99007 format (1x,3(2(f8.5,2x),f8.5,6x),2(f8.5,2x),f8.5)
+99008 format (/1x,'POINT GROUP ',4A1)
+C
+C     each point group is treated in turn.  the comment statements
+C     give the order of the group and list the operations in the
+C     order in which they are generated and stored.
+C
+C     e, the idenity operation, is common to all.
+C
+      NOP = 1
+      do 100 iat = 1 , NATOMS
+         NPERM(iat,NOP) = iat
+         do 50 i = 1 , 3
+            do 20 j = 1 , 3
+               TRANS(i,j,NOP) = zero
+ 20         continue
+            TRANS(i,i,NOP) = one
+ 50      continue
+ 100  continue
+C
+C     initialize the routines for determining orbital symmetries.
+      call inirep(NGRP,NATOMS)
+C
+C     branch on the first character of the schonflies symbol.
+C
+      ichar = NGRP(1)
+      if ( ichar.eq.iord('C') ) then
+C
+         jchar = NGRP(2)
+C
+C     c*v:  1;  e.
+C     c1 :  1;  e.
+C
+         if ( jchar.ne.iord('*') .and. NGRP(3).ne.iord('1') ) then
+C
+C     cs:  2;  e, sigma.
+C
+            if ( jchar.eq.iord('S') ) then
+               call reflct(MAXAP3,A,B,NATOMS,t,3)
+               call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,A,B)
+C
+C     ci:  2;  e, i.
+C
+            elseif ( jchar.ne.iord('I') ) then
+C
+C     cn:  n;  e, (n-1)cn.
+C
+               norder = numer(NGRP)
+               jchar = NGRP(4)
+               if ( jchar.eq.iblnk ) then
+                  call cnaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,
+     &                        NPERM,A,B)
+C
+C     cnv:  2n;  e, (n-1)cn, n-sigmav.
+C
+               elseif ( jchar.ne.iord('V') ) then
+C
+C     cnh:  2n;  e, (n-1)cn, sigmah, (n-1)(sigmah * cn)
+C
+                  call cnaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,
+     &                        NPERM,A,B)
+                  call sighcn(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,
+     &                        NPERM,A,B,D)
+               else
+                  call cnaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,
+     &                        NPERM,A,B)
+                  call vert(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,
+     &                      A,B,D)
+               endif
+            else
+               call invert(MAXAP3,A,B,NATOMS,t)
+               call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,A,B)
+            endif
+         endif
+      elseif ( ichar.eq.iord('S') ) then
+C
+C
+C     s2n:  2n;  e, (2n-1)s2n.
+C
+         norder = numer(NGRP)
+         call snaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,D)
+      elseif ( ichar.eq.iord('D') ) then
+C
+         norder = numer(NGRP)
+C
+C     dn:  2n;  e, (n-1)cn, nc2.
+C
+         if ( NGRP(2).eq.iord('*') ) then
+C
+C     d*h:  2;  e, i.
+C
+            call invert(MAXAP3,A,B,NATOMS,t)
+            call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,A,B)
+         elseif ( NGRP(4).ne.iblnk ) then
+C
+C     dnd:  4n;  e, nc2, nsigmad, (2n-1)s2n.
+C
+            if ( NGRP(4).ne.iord('D') ) then
+C
+C     dnh:  4n;  e, (n-1)cn, nc2, nsigmav, sigmah, (n-1)sn
+C
+               call cnaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,
+     &                     B)
+               call c2axes(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,
+     &                     B,D,zero)
+               call vert(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,
+     &                   D)
+               call sighcn(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,
+     &                     B,D)
+            else
+               theta = four*gatan(one)/gfloat(2*norder)
+               call c2axes(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,
+     &                     B,D,theta)
+               call vert(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,
+     &                   D)
+               call snaxis(MAXAP3,2*norder,NATOMS,NOP,MAXOP,TRANS,NPERM,
+     &                     A,B,D)
+            endif
+         else
+            call cnaxis(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B)
+            call c2axes(MAXAP3,norder,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,
+     &                  D,zero)
+         endif
+      elseif ( ichar.eq.iord('T') ) then
+C
+C     t :  12;  e, 8c3, 3c2.
+C     td:  24;  e, 8c3, 3c2, 6s4, 6sigmad.
+C
+         if ( NGRP(2).ne.iord('H') )
+     &        call tetra(MAXAP3,NGRP,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,D)
+      elseif ( ichar.eq.iord('O') ) then
+C
+C     o :  24;  e, 9c4, 8c3, 6c2.
+C     oh:  48;  e, 9c4, 8c3, 6c2, i, 3sigmah, 6sigmad, 6s4, 8s6.
+C
+C
+C     i, ih.
+C
+C
+C     kh and unrecognized groups.
+C
+         call octa(MAXAP3,NGRP,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,D)
+      elseif ( ichar.ne.iord('I') ) then
+         if ( ichar.eq.iord('K') ) then
+         endif
+      endif
+C
+C     debug print and exit.
+C
+C
+C     flush out the 'rep' common blocks (orbital symmetry).
+      call outrep(IDUMP)
+C
+      if ( IDUMP.eq.0 ) return
+      write (Iout,99008) (NGRP(i),i=1,4)
+      write (Iout,99002) NOP
+      write (Iout,99003)
+      j1 = 1
+ 200  j2 = min0(NOP,j1+43)
+      write (Iout,99004) (j,j=j1,j2)
+      write (Iout,99001)
+      do 300 i = 1 , NATOMS
+         write (Iout,99004) (NPERM(i,j),j=j1,j2)
+ 300  continue
+      if ( j2.eq.NOP ) then
+C
+         write (Iout,99005)
+         j1 = 1
+ 350     j2 = min0(NOP,j1+3)
+         write (Iout,99006) (j,j=j1,j2)
+         do 400 i = 1 , 3
+            write (Iout,99007) ((TRANS(i,j,k),j=1,3),k=j1,j2)
+ 400     continue
+         if ( j2.eq.NOP ) return
+         j1 = j2 + 1
+         goto 350
+      else
+         j1 = j2 + 1
+         write (Iout,99001)
+         write (Iout,99001)
+         goto 200
+      endif
+C
+      end
+@* INDEX.

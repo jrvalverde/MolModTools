@@ -1,0 +1,57 @@
+@* labrep.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] STRING                                                    
+\item[INPUT:] NUM                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  LBLREP                                                 
+\item[Uses]  LBLREP                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETBC   PUTBC   PUTDEL                                 
+\item[Called by]   REPCI   REPCN   REPCNH  REPCNV  REPCS   REPCST  REPDN  
+             REPDND  REPDNH  REPDST  REPO    REPOH   REPT    REPTD  
+                                                                    
+\end{description}
+@a
+      subroutine labrep(STRING,NUM)
+C ----------------------------------------------------------------------
+      implicit none
+      integer i , incur , len , NUM , outcur
+      save 
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      character*1 tmp(10) , STRING(*)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+C          a routine to put the labels for orbital symmetries (a1g,
+C     for instance) into the common block /repcom/.  subsequent programs
+C     will use these to print out the symmetries of the individual
+C     orbitals.  the two arguments are   1.) a hollerith string in
+C     which the several labels are separated by commas, spaces, or
+C     by equal signs.  2.) the number of such labels.  be sure that the
+C     last label is terminated by one of the above delimiters.
+C     r. a. whiteside - february 1980
+C ----------------------------------------------------------------------
+C
+C
+C                              initialize cursors.
+      incur = 0
+      outcur = 0
+C
+C                              loop over labels.
+      do 100 i = 1 , NUM
+C                        get a label (word).
+         call getbc(1,tmp,len,STRING,incur)
+C                        append it to lblrep (section).
+         call putbc(tmp,len,Lblrep,outcur)
+         call putdel(2,Lblrep,outcur)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,62 @@
+@* filrep.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] T                                                         
+\item[INPUT:] LPERM                                                     
+\item[INPUT:] NATOMS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IPRMUT  NCNT    SYMOPS                                 
+\item[Uses]  ISAVE   NCNT    NSAVE                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FILL                                                   
+                                                                    
+\end{description}
+@a
+      subroutine filrep(T,LPERM,NATOMS)
+      implicit none
+      integer i , Isave , LPERM , n , NATOMS , Ncnt , Nsave
+C ----------------------------------------------------------------------
+      double precision T(9)
+      dimension LPERM(NATOMS)
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      common /reploc/ Nsave , Ncnt , Isave(15)
+C          this routine, called by "fill" in the l202 symmetry package,
+C     saves certain of the symmetry operations for the assignment of
+C     orbital symmetries by subsequent overlays.  the sequential
+C     numbers of the operations to be saved were determined previously
+C     by the routine "inirep" (called from "oper"), and these numbers
+C     were stored into /reploc/.  thus, "fill" calls this routine for
+C     each symmetry operation, and this routine saves the important
+C     ones.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      if ( Nsave.eq.0 ) return
+      Ncnt = Ncnt + 1
+C                              see if this operation is to be saved.
+      do 100 i = 1 , Nsave
+         n = i
+         if ( Isave(i).eq.Ncnt ) goto 200
+ 100  continue
+      return
+C
+C                              yep.
+ 200  do 300 i = 1 , 9
+         Symops(i,n) = T(i)
+ 300  continue
+C
+      do 400 i = 1 , NATOMS
+         Iprmut(i,n) = LPERM(i)
+ 400  continue
+      return
+C
+      end
+@* INDEX.

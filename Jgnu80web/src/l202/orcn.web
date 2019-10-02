@@ -1,0 +1,216 @@
+@* orcn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] D                                                         
+\item[PASSED:] ASET                                                      
+\item[INPUT:] ATMCHG                                                    
+\item[PASSED:] NPOP                                                      
+\item[PASSED:] NSET                                                      
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GATAN   MOVE    ORAXIS  ORKEY   ORPTST  ROTATE 
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine orcn(MAXAP3,A,B,D,ASET,ATMCHG,NPOP,NSET,NATOMS,IDUMP)
+      implicit none
+      double precision A , angmat , ASET , ATMCHG , B , bestx , besty , 
+     &                 curang , D , flag , gabs , gatan , halfpi , 
+     &                 heavy , one , pi , savang , t , theta , Tol2
+      double precision Toler , two , x , x1 , y , y1 , zero
+      integer i , i2 , iat , ibest , IDUMP , idx , In , Iout , Ipunch , 
+     &        ixyz , j , j1 , j2 , jat , key , MAXAP3 , maxhvy , msav , 
+     &        NATOMS , ncur
+      integer nhvy , nmax , NPOP , nsav , NSET , numatm
+      integer orkey
+      dimension A(MAXAP3,3) , B(MAXAP3,3) , D(MAXAP3,3) , ATMCHG(*)
+      dimension angmat(435) , savang(20) , t(3,3) , NPOP(*) , ASET(*) , 
+     &          NSET(*)
+      common /io    / In , Iout , Ipunch
+      common /tol   / Toler , Tol2
+      data maxhvy/30/ , msav/20/
+      data heavy/2.D0/
+      data zero , one , two , flag/0.0D0 , 1.0D0 , 2.0D0 , 100.D0/
+C
+C
+C     this routine orients molecules in the groups cs, cn, sn, cnh,
+C     and i.  these point groups have one uniquely defined axis which
+C     is coincident with the z cartesian axis.  rotation about this
+C     axis, however, does not change the position of any symmetry
+C     elements.  thus, this routine rotates the molecule about the
+C     z-axis so as to maximize the number of pairs of heavy (non-
+C     hydrogen) atoms which are parallel to the y axis.  if there is
+C     only one heavy atom or if there is no orientation in which
+C     more than one heavy atom pair can be aligned with y, then the
+C     key atom as defined in function subroutine orkey is put in the
+C     yz plane so as to give it a positive y coordinate.  if two or
+C     more orientations give the same number of "bonds" parallel to y
+C     then the one which maximizes the y coordinate of the key atom
+C     is selected.
+C
+C
+C
+C
+C
+99001 format (1x,'ORCN-- KEY ATOM ',i3)
+99002 format (1x,'ORCN-- HEAVY ATOM MATRIX TRUNCATED AT ',i3)
+C
+      numatm = NATOMS + 3
+      halfpi = two*gatan(one)
+      pi = two*halfpi
+      key = orkey(MAXAP3,NATOMS,A,ATMCHG,NSET,NPOP,ASET)
+      if ( IDUMP.ne.0 ) write (Iout,99001) key
+C
+C     calculate the angles of rotation neccessary to align each heavy
+C     atom pair with y.
+C
+      nhvy = 0
+      idx = 0
+      do 100 iat = 1 , NATOMS
+         if ( ATMCHG(iat).gt.heavy ) then
+            x1 = A(iat,1)
+            y1 = A(iat,2)
+            j2 = iat - 1
+            nhvy = nhvy + 1
+            if ( nhvy.ne.1 ) then
+               if ( nhvy.le.maxhvy ) then
+C
+                  do 5 jat = 1 , j2
+                     if ( ATMCHG(jat).gt.heavy ) then
+                        idx = idx + 1
+                        x = A(jat,1) - x1
+                        y = A(jat,2) - y1
+                        theta = halfpi
+                        if ( gabs(y).gt.Toler ) theta = -gatan(x/y)
+                        angmat(idx) = theta
+                     endif
+ 5                continue
+               else
+                  write (Iout,99001) maxhvy
+                  goto 200
+               endif
+            endif
+         endif
+ 100  continue
+C
+C     which angle occurs most frequently
+C
+ 200  if ( nhvy.ne.1 ) then
+         if ( nhvy.gt.2 ) then
+C
+            i2 = nhvy*(nhvy-1)/2
+            nmax = 0
+            nsav = 0
+            do 220 i = 1 , i2
+               curang = angmat(i)
+               if ( curang.ne.flag ) then
+                  j1 = i + 1
+                  ncur = 1
+                  do 205 j = j1 , i2
+                     if ( gabs(curang-angmat(j)).le.Toler ) then
+                        ncur = ncur + 1
+                        angmat(j) = flag
+                     endif
+ 205              continue
+                  if ( nmax.lt.ncur ) then
+                     nsav = 1
+                     savang(1) = curang
+                     nmax = ncur
+                  elseif ( nmax.eq.ncur ) then
+C
+                     nsav = nsav + 1
+                     if ( nsav.le.msav ) savang(nsav) = curang
+                  endif
+               endif
+ 220        continue
+            if ( nmax.eq.1 ) goto 300
+         else
+            savang(1) = angmat(1)
+            nsav = 1
+         endif
+C
+C     if nsav is one then a unique orientation has been selected.
+C     rotate the molecule and return.
+C
+         if ( nsav.gt.1 ) then
+C
+C     find which of several orientations maximizes the y-coordinate of
+C     the key atom.  for zero or equal y values the x-coordinate is
+C     tested.
+C
+            D(1,1) = A(key,1)
+            D(1,2) = A(key,2)
+            D(1,3) = A(key,3)
+            call rotate(MAXAP3,D,B,1,t,3,savang(1))
+            bestx = B(1,1)
+            besty = B(1,2)
+            ibest = 1
+            do 240 i = 2 , nsav
+               call rotate(MAXAP3,D,B,1,t,3,savang(i))
+               if ( gabs(gabs(besty)-gabs(B(1,2))).ge.Toler ) then
+                  if ( gabs(besty).ge.Toler .or. gabs(B(1,2)).ge.Toler )
+     &                 then
+                     if ( besty.le.B(1,2) ) then
+                        ibest = i
+                        besty = B(1,2)
+                        bestx = B(1,1)
+                     endif
+                     goto 240
+                  endif
+               endif
+C
+               if ( gabs(gabs(bestx)-gabs(B(1,1))).ge.Toler ) then
+                  if ( bestx.le.B(1,1) ) then
+                     ibest = i
+                     bestx = B(1,1)
+                     besty = B(1,2)
+                  endif
+               endif
+ 240        continue
+C
+            call rotate(MAXAP3,A,B,numatm,t,3,savang(ibest))
+            call move(MAXAP3,B,A,numatm)
+            return
+         else
+            call rotate(MAXAP3,A,B,numatm,t,3,savang(1))
+            call move(MAXAP3,B,A,numatm)
+            call oraxis(MAXAP3,A,B,numatm,ATMCHG,2)
+            return
+         endif
+      endif
+C
+C     no orientation aligns more than one heavy atom pair with y.
+C
+ 300  theta = halfpi
+      x = A(key,1)
+      y = A(key,2)
+      if ( gabs(y).gt.Toler ) theta = -gatan(x/y)
+      call rotate(MAXAP3,A,B,numatm,t,3,theta)
+      if ( B(key,2).gt.zero ) then
+C
+         call move(MAXAP3,B,A,numatm)
+      else
+         call rotate(MAXAP3,B,A,numatm,t,3,pi)
+      endif
+C
+C     planar molecules contained in the xy plane have not been
+C     completely specified.
+C
+      call orptst(MAXAP3,A,NATOMS,ixyz)
+      if ( ixyz.eq.3 ) call oraxis(MAXAP3,A,B,NATOMS,ATMCHG,1)
+      return
+C
+      end
+@* INDEX.

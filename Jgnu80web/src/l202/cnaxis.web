@@ -1,0 +1,53 @@
+@* cnaxis.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[INPUT:] N                                                         
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] NOP                                                       
+\item[PASSED:] MAXOP                                                     
+\item[PASSED:] TRANS                                                     
+\item[PASSED:] NPERM                                                     
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILL    GATAN   GFLOAT  ROTATE                         
+\item[Called by]   OPER                                                   
+                                                                    
+\end{description}
+@a
+      subroutine cnaxis(MAXAP3,N,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B)
+      implicit none
+      double precision A , B , eight , gatan , gfloat , one , phi , t , 
+     &                 theta , TRANS , zero
+      integer iop , MAXAP3 , MAXOP , N , NATOMS , NOP , NPERM , num
+      dimension t(3,3)
+      dimension TRANS(*) , NPERM(*) , A(*) , B(*)
+      data zero , one , eight/0.0D0 , 1.0D0 , 8.0D0/
+C
+C
+C     generate the n-1 operations of an n-fold proper rotation axis
+C     along z.
+C
+C
+C
+C
+      phi = eight*gatan(one)/gfloat(N)
+      theta = zero
+      num = N - 1
+      do 100 iop = 1 , num
+         theta = theta + phi
+         call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+         call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,A,B)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,124 @@
+@* cram.
+\begin{verbatim}
+   the array ia is filled with characters, one per word.  icode
+   defines the string to be stuffed into ia.  l is the number
+   of characters currently in ia and is updated by this routine.
+
+      icode      string
+
+      1-99       hollerith equivalent of icode
+      101-199    the atomic symbol for atomic number icode-100
+      201        <  (left square bracket)
+      202        >  (right square bracket)
+      203        (  (left parenthesis)
+      204        )  (right parenthesis)
+      205        .  (period)
+      206        '  (apostrophe)
+      207        "  (quotation mark, used for two apostrophes)
+      208        *  (asterisk)
+      209        o
+      210        x
+      211        c
+      212        sigma (abbreviated to sg)
+      213        h
+      214        v
+      215        d
+      216        ,  (comma)
+      217        backspace
+      218        +  (plus sign)
+      219        -  (minus sign)
+      220           (blank)
+
+
+    note that lower case characters are used in the atomic symbols.
+
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ICODE                                                     
+\item[OUTPUT:] IA                                                        
+\item[OUTPUT:] L                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD    NUM                                            
+\item[Called by]   FWGRP   STOICH                                         
+                                                                    
+\end{description}
+@a
+      subroutine cram(ICODE,IA,L)
+      implicit none
+      integer IA , iasymb , iblnk , ibsymb , ICODE , iord , jcode , L , 
+     &        num
+      dimension IA(*)
+      dimension iasymb(2,104) , ibsymb(30)
+      data iasymb/' ' , 'H' , 'H' , 'e' , 'L' , 'i' , 'B' , 'e' , ' ' , 
+     &     'B' , ' ' , 'C' , ' ' , 'N' , ' ' , 'O' , ' ' , 'F' , 'N' , 
+     &     'e' , 'N' , 'a' , 'M' , 'g' , 'A' , 'l' , 'S' , 'i' , ' ' , 
+     &     'P' , ' ' , 'S' , 'C' , 'l' , 'A' , 'r' , ' ' , 'K' , 'C' , 
+     &     'a' , 'S' , 'c' , 'T' , 'i' , ' ' , 'V' , 'C' , 'r' , 'M' , 
+     &     'n' , 'F' , 'e' , 'C' , 'o' , 'N' , 'i' , 'C' , 'u' , 'Z' , 
+     &     'n' , 'G' , 'a' , 'G' , 'e' , 'A' , 's' , 'S' , 'e' , 'B' , 
+     &     'r' , 'K' , 'r' , 'R' , 'b' , 'S' , 'r' , ' ' , 'Y' , 'Z' , 
+     &     'r' , 'N' , 'b' , 'M' , 'o' , 'T' , 'c' , 'R' , 'u' , 'R' , 
+     &     'h' , 'P' , 'd' , 'A' , 'g' , 'C' , 'd' , 'I' , 'n' , 'S' , 
+     &     'n' , 'S' , 'b' , 'T' , 'e' , ' ' , 'I' , 'X' , 'e' , 'C' , 
+     &     's' , 'B' , 'a' , 'L' , 'a' , 'C' , 'e' , 'P' , 'r' , 'N' , 
+     &     'd' , 'P' , 'm' , 'S' , 'm' , 'E' , 'u' , 'G' , 'd' , 'T' , 
+     &     'b' , 'D' , 'y' , 'H' , 'o' , 'E' , 'r' , 'T' , 'm' , 'Y' , 
+     &     'b' , 'L' , 'u' , 'H' , 'f' , 'T' , 'a' , ' ' , 'W' , 'R' , 
+     &     'e' , 'O' , 's' , 'I' , 'r' , 'P' , 't' , 'A' , 'u' , 'H' , 
+     &     'g' , 'T' , 'l' , 'P' , 'b' , 'B' , 'i' , 'P' , 'o' , 'A' , 
+     &     't' , 'R' , 'n' , 'F' , 'r' , 'R' , 'a' , 'A' , 'c' , 'T' , 
+     &     'h' , 'P' , 'a' , ' ' , 'U' , 'N' , 'p' , 'P' , 'u' , 'A' , 
+     &     'm' , 'C' , 'm' , 'B' , 'k' , 'C' , 'f' , 'E' , 's' , 'F' , 
+     &     'm' , 'M' , 'd' , 'N' , 'o' , 'L' , 'r' , 'K' , 'y'/
+      data ibsymb/'<' , '>' , '(' , ')' , '.' , 1H' , '"' , '*' , 'O' , 
+     &     'X' , 'C' , 'S' , 'H' , 'V' , 'D' , ',' , ' ' , '+' , '-' , 
+     &     ' ' , 10*' '/
+      data iblnk/' '/
+C
+C
+      if ( ICODE.le.99 ) then
+         if ( ICODE.ge.10 ) then
+            L = L + 1
+            IA(L) = num(ICODE,1)
+         endif
+         L = L + 1
+         IA(L) = num(ICODE,2)
+         return
+C
+      elseif ( ICODE.gt.199 ) then
+C
+         jcode = ICODE - 200
+         L = L + 1
+         IA(L) = ibsymb(jcode)
+         if ( jcode.eq.12 ) then
+C
+            L = L + 1
+            IA(L) = iord('G')
+            return
+         elseif ( jcode.ne.17 ) then
+            return
+         endif
+      else
+         jcode = ICODE - 100
+         if ( iasymb(1,jcode).ne.iblnk ) then
+            L = L + 1
+            IA(L) = iasymb(1,jcode)
+         endif
+         L = L + 1
+         IA(L) = iasymb(2,jcode)
+         return
+      endif
+C
+      L = L - 2
+      return
+C
+      end
+@* INDEX.
