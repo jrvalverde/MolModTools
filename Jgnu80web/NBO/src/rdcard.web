@@ -1,0 +1,50 @@
+@*rdcard.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    END     ICD     IPT
+\item[Uses]  ICD     LFN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FNDFLD  STRTIN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rdcard
+C*****************************************************************************
+      implicit none
+      integer i , Icd , ichara , icharz , Ipt , Length , Lfn , Look ,
+     &        Nexp
+C
+      common /nbcrd1/ Icd(80) , Look(80) , Length , Ipt , Lfn , Nexp
+      common /nbcrd2/ Point , End , Next , Exp
+      logical Point , End , Next , Exp
+C
+      data ichara/'a'/icharz/'z'/
+C
+C  read in the next card at lfn:
+C
+      read (Lfn,99001,end=200) Icd
+C
+C  change all lower case characters to upper case:
+C
+      do 100 i = 1 , 80
+         if ( Icd(i).ge.ichara .and. Icd(i).le.icharz ) Icd(i) = Icd(i)
+     &        - 32
+ 100  continue
+C
+C  reset column pointer, ipt:
+C
+      Ipt = 1
+      return
+C
+C  end of file encountered
+C
+ 200  End = .true.
+      return
+C
+99001 format (80A1)
+      end
+@* INDEX.

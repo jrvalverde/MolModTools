@@ -1,0 +1,38 @@
+@*simtrn.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[PASSED:] T
+\item[PASSED:] V
+\item[INPUT:] NDIM
+\item[PASSED:] N
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       MATMLT  TRNSPO
+\item[Called by]    NOTHING 
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine simtrn(A,T,V,NDIM,N)
+C*****************************************************************************
+      implicit none
+      double precision A , T , V
+      integer N , NDIM
+C
+C  similarity transform a ==> t(transpose)*a*t, using scratch vector v.
+C
+      dimension A(NDIM,NDIM) , T(NDIM,NDIM) , V(NDIM)
+      call matmlt(A,T,V,NDIM,N)
+      call trnspo(A,NDIM,N)
+      call matmlt(A,T,V,NDIM,N)
+      call trnspo(A,NDIM,N)
+      return
+      end
+@* INDEX.

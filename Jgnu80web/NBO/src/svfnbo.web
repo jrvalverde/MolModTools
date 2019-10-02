@@ -1,0 +1,45 @@
+@*svfnbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] F
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  BETA    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT  PACK    UNPACK
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svfnbo(F)
+C*****************************************************************************
+      implicit none
+      double precision F
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      dimension F(Ndim,Ndim)
+C
+C  svfnbo:  saves the NBO fock matrix
+C
+      nfile = 34
+      if ( Beta ) nfile = 35
+      l2 = Ndim*(Ndim+1)/2
+      call pack(F,Ndim,Nbas,l2)
+      call nbwrit(F,l2,nfile)
+      call unpack(F,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

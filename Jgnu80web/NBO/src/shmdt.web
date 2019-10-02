@@ -1,0 +1,71 @@
+@*shmdt.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] T
+\item[INPUT:] S
+\item[INPUT:] NDIM
+\item[INPUT:] NBAS
+\item[INPUT:] NOCC
+\item[INPUT:] LSTOCC
+\item[INPUT:] NEMT
+\item[INPUT:] LSTEMT
+\item[OUTPUT:] SBLK
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine shmdt(T,S,NDIM,NBAS,NOCC,LSTOCC,NEMT,LSTEMT,SBLK)
+C*****************************************************************************
+      implicit none
+      integer i , ip , j , jp , k , LSTEMT , LSTOCC , NBAS , NDIM ,
+     &        NEMT , NOCC
+      double precision S , SBLK , sji , T , zero
+C
+C  schmidt orthogonalization of column vectors in t
+C     schmidt orthogonalize each empty orbital (specified in 'lstemt')
+C        to the orthonormal occupied (lstocc) orbitals;
+C
+      dimension T(NDIM,NDIM) , S(NDIM,NDIM) , LSTOCC(NDIM) ,
+     &          LSTEMT(NDIM) , SBLK(NDIM,NDIM)
+      data zero/0.0D0/
+      do 100 i = 1 , NBAS
+         do 50 j = 1 , NOCC
+            jp = LSTOCC(j)
+            sji = zero
+            do 20 k = 1 , NBAS
+               sji = sji + T(k,jp)*S(k,i)
+ 20         continue
+            SBLK(i,j) = sji
+ 50      continue
+ 100  continue
+C   schmidt orthogonalize each unoccupied ui to each vj:
+C...loop over unoccupied ui's,
+      do 200 i = 1 , NEMT
+         ip = LSTEMT(i)
+C...loop over occupied vj's,
+         do 150 j = 1 , NOCC
+            jp = LSTOCC(j)
+C...calculate sji = vj.ui
+            sji = zero
+            do 120 k = 1 , NBAS
+               sji = sji + SBLK(k,j)*T(k,ip)
+ 120        continue
+C...and replace each ui = ui - sji*vj
+            do 140 k = 1 , NBAS
+               T(k,ip) = T(k,ip) - sji*T(k,jp)
+ 140        continue
+ 150     continue
+ 200  continue
+      return
+      end
+@* INDEX.

@@ -1,0 +1,118 @@
+@*symort.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] S
+\item[OUTPUT:] T
+\item[INPUT:] BLK
+\item[INPUT:] NDIM
+\item[INPUT:] N
+\item[OUTPUT:] EVAL
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  LFNPR
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       JACOBI
+\item[Called by]   RYDIAG  SYMUNI
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine symort(S,T,BLK,NDIM,N,EVAL)
+C*****************************************************************************
+      implicit none
+      double precision BLK , danger , diagth , eigenv , EVAL , one , S ,
+     &                 sij , smlest , T , toosml , zero
+      integer i , j , k , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm ,
+     &        Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho ,
+     &        Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa
+      integer Lfnpr , N , NDIM
+C******************************************************************
+C
+C   symort: symmetric orthogonalization subroutine
+C
+C   s:           full overlap matrix               (destroyed!)
+C   t:           vectors to be orthoged.
+C   n:           number of vectors
+C
+C   note:    blk and bigblk share the same storage but are
+C               dimensioned differently.
+C            the same applies for s and sblk.
+C
+C******************************************************************
+      dimension S(N,N) , T(NDIM,NDIM) , BLK(N,N) , EVAL(N)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      data zero , one/0.0D0 , 1.0D0/
+C
+C  important constants:
+C           diagth          threshold for matrix diagonalization used in
+C                            subroutine jacobi.  in jacobi, this constant
+C                            is called "doneth".
+C           danger          criterion for deciding that the job should be
+C                            aborted due to numerical problems caused by near
+C                            linear dependencies in the basis set.  all
+C                            eigenvalues of the weighted overlap matrix must
+C                            be greater than diagth*danger.
+C
+      data diagth , danger/1.0D-12 , 1.0D3/
+C
+C  form the inverse sqrt of the overlap matrix of the vectors:
+      do 100 i = 1 , N
+         do 50 j = 1 , N
+            sij = zero
+            do 20 k = 1 , N
+               sij = sij + T(k,i)*T(k,j)
+ 20         continue
+            S(i,j) = sij
+ 50      continue
+ 100  continue
+      call jacobi(N,S,EVAL,BLK,N,N,0)
+      smlest = one
+      toosml = diagth*danger
+      do 200 i = 1 , N
+         eigenv = EVAL(i)
+         if ( eigenv.lt.toosml ) goto 600
+         EVAL(i) = one/sqrt(eigenv)
+         if ( eigenv.lt.smlest ) smlest = eigenv
+ 200  continue
+      do 300 i = 1 , N
+         do 250 j = 1 , i
+            sij = zero
+            do 220 k = 1 , N
+               sij = sij + EVAL(k)*BLK(i,k)*BLK(j,k)
+ 220        continue
+            S(i,j) = sij
+            S(j,i) = sij
+ 250     continue
+ 300  continue
+C
+C  s now contains the -0.5 power of the overlap matrix,
+C   and is the orthog. transform that we want.
+C   now, form the total transformation:
+      do 500 i = 1 , N
+         do 350 j = 1 , N
+            EVAL(j) = zero
+            do 320 k = 1 , N
+               EVAL(j) = EVAL(j) + T(i,k)*S(k,j)
+ 320        continue
+ 350     continue
+         do 400 j = 1 , N
+            T(i,j) = EVAL(j)
+ 400     continue
+ 500  continue
+      return
+C
+ 600  write (Lfnpr,99001) eigenv , toosml
+99001 format (/1x,'An eigenvalue of the overlap matrix of the ',
+     &        'symmetrized Jacobi transf. ','matrix of ',e13.5,
+     &        ' has been found.'/1x,
+     &        'This is lower than the allowed threshold of ',e13.5)
+      stop
+      end
+@* INDEX.

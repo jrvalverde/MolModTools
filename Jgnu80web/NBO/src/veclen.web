@@ -1,0 +1,36 @@
+@*veclen.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] X
+\item[INPUT:] N
+\item[INPUT:] NDIM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FNDSOL
+
+\end{description}
+@a
+C*****************************************************************************
+      function veclen(X,N,NDIM)
+C*****************************************************************************
+      implicit none
+      integer i , N , NDIM
+      double precision sum , veclen , X , zero
+      dimension X(NDIM)
+      data zero/0.0D0/
+C
+      sum = zero
+      do 100 i = 1 , N
+         sum = sum + X(i)*X(i)
+ 100  continue
+      veclen = sqrt(sum)
+      return
+      end
+@* INDEX.

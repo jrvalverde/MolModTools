@@ -1,0 +1,39 @@
+@*trnspo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] A
+\item[INPUT:] NDIM
+\item[INPUT:] N
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   DFGORB  HYBDIR  NBODEL  NBODRV  SIMTRN  XCITED
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine trnspo(A,NDIM,N)
+C*****************************************************************************
+      implicit none
+      double precision A , temp
+      integer i , j , N , NDIM
+      dimension A(NDIM,NDIM)
+C
+C  transpose matrix a, store result in a.
+C
+      do 100 i = 1 , N
+         do 50 j = 1 , i
+            temp = A(i,j)
+            A(i,j) = A(j,i)
+            A(j,i) = temp
+ 50      continue
+ 100  continue
+      return
+      end
+@* INDEX.

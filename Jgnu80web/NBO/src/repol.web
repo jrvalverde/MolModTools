@@ -1,0 +1,120 @@
+@*repol.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] DM
+\item[INPUT:] Q
+\item[OUTPUT:] POL
+\item[OUTPUT:] BLK
+\item[PASSED:] EVAL
+\item[INPUT:] C
+\item[INPUT:] NBD
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  LARC    MXBO
+\item[Uses]  IATHY   ILL     LABEL   LARC    MXAO    MXBO    NBAS
+             NDIM    NORBS
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       JACOBI  RANK
+\item[Called by]   CHOOSE  NATHYB
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine repol(DM,Q,POL,BLK,EVAL,C,NBD)
+C*****************************************************************************
+      implicit none
+      double precision BLK , C , cri , csj , dij , DM , EVAL , POL , Q ,
+     &                 zero
+      integer i , ia , iab , Iatcr , Iathy , Iatno , ib , Ibxm , Ill ,
+     &        Ino , ir , irp , Ispin , Iul , Iznuc , j , ja , js , jsp ,
+     &        Label
+      integer Larc , lstar , Lstocc , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , n3cb , Naoctr , Naol , Natoms , Nbas ,
+     &        NBD , nbond , nctr , Ndim , nhi , nhj
+      integer Norbs
+C
+C  diagonalize density matrix in basis of orthonormal hybrids for
+C  each bond orbital to find new polarization coefficients.
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ill(MAXATM) , Iul(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      dimension DM(Ndim,Ndim) , Q(Mxao,Ndim) , POL(Ndim,3) ,
+     &          BLK(Mxbo,Mxbo) , EVAL(Mxbo) , C(Mxbo,Mxbo)
+      data zero/0.0D0/
+      data lstar/1H*/
+C
+C
+C  first, count number of bonds and 3c bonds:
+      nbond = 0
+      n3cb = 0
+      do 100 ib = 1 , Nbas
+         if ( Label(ib,2).ne.lstar ) then
+            if ( Label(ib,5).ne.0 ) then
+               nbond = nbond + 1
+               if ( Label(ib,6).ne.0 ) n3cb = n3cb + 1
+            endif
+         endif
+ 100  continue
+C
+C  iab+1 is the number of the first antibond in the NBO list:
+      iab = Nbas - nbond - n3cb
+C
+      do 200 ib = 1 , NBD
+         if ( Label(ib,2).ne.lstar ) then
+            nctr = 1
+            if ( Label(ib,5).gt.0 ) nctr = 2
+            if ( Label(ib,6).gt.0 ) nctr = 3
+            if ( nctr.ne.1 ) then
+               do 110 i = 1 , nctr
+                  ia = Label(ib,i+3)
+                  nhi = Norbs(ia)
+                  do 105 j = 1 , i
+                     ja = Label(ib,j+3)
+                     nhj = Norbs(ja)
+                     dij = zero
+                     do 104 ir = 1 , nhi
+                        irp = Ill(ia) + ir - 1
+                        cri = Q(ir,Ill(ia)+Iathy(ib,i)-1)
+                        do 102 js = 1 , nhj
+                           jsp = Ill(ja) + js - 1
+                           csj = Q(js,Ill(ja)+Iathy(ib,j)-1)
+                           dij = dij + cri*csj*DM(irp,jsp)
+ 102                    continue
+ 104                 continue
+                     BLK(i,j) = dij
+                     BLK(j,i) = dij
+ 105              continue
+ 110           continue
+C  diagonalize 'blk' and extract new polarization coefficients
+               call jacobi(nctr,BLK,EVAL,C,Mxbo,Mxbo,0)
+               call rank(EVAL,nctr,Mxbo,Larc)
+               do 120 i = 1 , nctr
+                  POL(ib,i) = C(i,Larc(1))
+ 120           continue
+               iab = iab + 1
+               do 130 i = 1 , nctr
+                  POL(iab,i) = C(i,Larc(2))
+ 130           continue
+               if ( nctr.eq.3 ) then
+                  iab = iab + 1
+                  do 135 i = 1 , nctr
+                     POL(iab,i) = C(i,Larc(3))
+ 135              continue
+               endif
+            endif
+         endif
+ 200  continue
+      return
+      end
+@* INDEX.

@@ -1,0 +1,71 @@
+@*runnbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] CORE
+\item[PASSED:] MEMORY
+\item[INPUT:] IOP
+\item[OUTPUT:] ICONTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LFNIN   LFNPR
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CHARPN  DELSCF  NBO     NBOEAN
+\item[Called by]    NOTHING 
+
+\end{description}
+@a
+C***********************************************************************
+      subroutine runnbo(CORE,MEMORY,IOP,ICONTR)
+C***********************************************************************
+      implicit none
+      double precision CORE
+      integer i , ICONTR , idone , IOP , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao ,
+     &        Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh ,
+     &        Lfnpnl
+      integer Lfnppa , Lfnpr , MEMORY , nboopt
+      dimension CORE(*) , IOP(50)
+      dimension nboopt(10)
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      Lfnin = 5
+      Lfnpr = 6
+C
+C  set NBO options.
+C
+      do 100 i = 1 , 9
+         nboopt(i) = IOP(i+39)
+ 100  continue
+      nboopt(10) = 82
+C
+C  --- NBO analysis ---
+C
+      ICONTR = 0
+      if ( abs(nboopt(1)).lt.2 ) then
+         call charpn(4HNBO )
+         call nbo(CORE,MEMORY,nboopt)
+C
+C  --- NBO energetic analysis ---
+C
+      elseif ( nboopt(1).eq.2 ) then
+         call charpn(4HDELE)
+         call nboean(CORE,MEMORY,nboopt,idone)
+         if ( idone.ne.0 ) ICONTR = 1
+         if ( idone.eq.0 ) call delscf(CORE,CORE,nboopt)
+      elseif ( nboopt(1).eq.3 ) then
+         call charpn(4HEDEL)
+         call delscf(CORE,CORE,nboopt)
+         call nboean(CORE,MEMORY,nboopt,idone)
+      endif
+C
+      return
+      end
+@* INDEX.

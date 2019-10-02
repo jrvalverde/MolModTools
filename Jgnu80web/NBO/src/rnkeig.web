@@ -1,0 +1,54 @@
+@*rnkeig.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] RANK
+\item[OUTPUT:] EIG
+\item[INPUT:] N
+\item[INPUT:] NDIM
+\item[OUTPUT:] ARCRNK
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NEWDM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rnkeig(RANK,EIG,N,NDIM,ARCRNK)
+C*****************************************************************************
+      implicit none
+      double precision EIG , temp
+      integer i , i1 , itemp , j , N , NDIM
+C
+C  rank eigenvalues in 'eig', lowest values first, in 'rank':
+C
+      integer RANK , ARCRNK
+      dimension RANK(NDIM) , EIG(NDIM) , ARCRNK(NDIM)
+      do 100 i = 1 , N
+         ARCRNK(i) = i
+ 100  continue
+      do 200 i = 1 , N
+         if ( i.ne.N ) then
+            i1 = i + 1
+            do 120 j = i1 , N
+               if ( EIG(j).lt.EIG(i) ) then
+                  temp = EIG(i)
+                  EIG(i) = EIG(j)
+                  EIG(j) = temp
+                  itemp = ARCRNK(i)
+                  ARCRNK(i) = ARCRNK(j)
+                  ARCRNK(j) = itemp
+               endif
+ 120        continue
+         endif
+         RANK(ARCRNK(i)) = i
+ 200  continue
+      return
+      end
+@* INDEX.

@@ -1,0 +1,90 @@
+@*redblk.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[PASSED:] TPNAO
+\item[INPUT:] IL
+\item[INPUT:] DM
+\item[OUTPUT:] BLK
+\item[PASSED:] EVAL
+\item[INPUT:] C
+\item[OUTPUT:] NF
+\item[INPUT:] IORB
+\item[INPUT:] NC
+\item[OUTPUT:] IRANK
+\item[INPUT:] IRPNAO
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  LARC    NBAS    NDIM
+\item[Uses]  LARC    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       JACOBI  LIMTRN  RANK
+\item[Called by]   REDIAG
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine redblk(T,TPNAO,IL,DM,BLK,EVAL,C,NF,IORB,NC,IRANK,
+     &                  IRPNAO)
+C*****************************************************************************
+      implicit none
+      double precision ave , BLK , C , DM , EVAL , sum , T , TPNAO ,
+     &                 zero
+      integer i , IL , inao , IORB , IRANK , IRPNAO , Ispin , j , jc ,
+     &        jnao , Larc , Lbl , Ldeg , Lorb , Lorbc , Lstemt ,
+     &        Lstocc , m , MAXATM , MAXBAS
+      integer Munit , Mxao , Mxaolm , Mxbo , Naoctr , Naol , Natoms ,
+     &        Nbas , NC , Ndim , NF , nm
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Ldeg(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      dimension DM(Ndim,Ndim) , BLK(NC,NC) , C(NC,NC) , EVAL(Ndim) ,
+     &          T(Ndim,Ndim) , TPNAO(Ndim,Ndim) , IRANK(Nbas)
+      data zero/0.0D0/
+C
+C  find the rediagonalization transformation for the dm subblock for
+C  the angular momentum "il" on an atom, put in t2:
+C
+      nm = IL*2 + 1
+      do 100 j = 1 , NC
+         do 50 i = 1 , j
+            sum = zero
+            do 20 m = 1 , nm
+               inao = IORB + i - 1 + (m-1)*NC
+               jnao = IORB + j - 1 + (m-1)*NC
+               sum = sum + DM(inao,jnao)
+ 20         continue
+            ave = sum/nm
+            BLK(i,j) = ave
+            BLK(j,i) = ave
+ 50      continue
+ 100  continue
+      call jacobi(NC,BLK,EVAL,C,NC,NC,1)
+      call rank(EVAL,NC,NC,Larc)
+      do 200 j = 1 , NC
+         jc = Larc(j)
+         do 150 i = 1 , NC
+            BLK(i,j) = C(i,jc)
+ 150     continue
+ 200  continue
+      do 300 m = 1 , nm
+         do 250 j = 1 , NC
+            NF = NF + 1
+            IRANK(j) = NF
+ 250     continue
+         call limtrn(T,IRANK,BLK,C,Ndim,Nbas,NC,NC,1)
+         call limtrn(DM,IRANK,BLK,C,Ndim,Nbas,NC,NC,0)
+         if ( IRPNAO.eq.1 ) call limtrn(TPNAO,IRANK,BLK,C,Ndim,Nbas,NC,
+     &                                  NC,1)
+ 300  continue
+C
+      return
+      end
+@* INDEX.

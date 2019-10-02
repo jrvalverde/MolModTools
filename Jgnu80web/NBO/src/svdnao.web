@@ -1,0 +1,47 @@
+@*svdnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  BETA    NBAS    NDIM    ORTHO
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT  PACK    UNPACK
+\item[Called by]   DMNAO   DMSIM   NAODRV  NAOSIM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svdnao(DM)
+C*****************************************************************************
+      implicit none
+      double precision DM
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension DM(Ndim,Ndim)
+C
+C  svdnao:  save the NAO density matrix
+C
+      if ( .not.Ortho ) then
+         nfile = 23
+         if ( Beta ) nfile = 24
+         l2 = Ndim*(Ndim+1)/2
+         call pack(DM,Ndim,Nbas,l2)
+         call nbwrit(DM,l2,nfile)
+         call unpack(DM,Ndim,Nbas,l2)
+      endif
+      return
+      end
+@* INDEX.

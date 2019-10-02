@@ -1,0 +1,124 @@
+@*strtin.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] LFNIN
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    END     LFN     NEXT
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       RDCARD
+\item[Called by]   CHSINP  CORINP  DELINP  GENINP  NBOEAN  NBOINP
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C  free format input routines:
+C
+C      subroutine strtin(lfnin)
+C      subroutine rdcard
+C      subroutine ifld(int,error)
+C      subroutine rfld(real,error)
+C      subroutine hfld(keywd,leng,endd)
+C      subroutine fndfld
+C      function equal(ia,ib,l)
+C
+C*****************************************************************************
+C
+C  user  instructions:
+C
+C     1. the character string "end" is the field terminating mark:
+C
+C     2. commas and equal signs are treated as equivalent to blanks.
+C          commas, equal signs, and blanks delimit input items.
+C
+C     3. all characters to the right of an exclamation mark
+C are treated as
+C          comments, and the next card is read in when these are encountered.
+C
+C     4. upper and lower case characters can be read by these routines.
+C          however, lower case characters are converted to upper case
+C          when encountered.
+C
+C     5. to read in data for the first time from lfn "lfnin" (perhaps
+C          after using these subroutines to read in data from another lfn),
+C          or to continue reading in data from lfnin after encountering
+C          a field terminating mark, call strtin(lfnin)  (start input)
+C
+C     6. to fetch the next non-blank string of characters from lfn lfnin,
+C           call hfld(keywd,length,end),
+C            where keywd   is a vector of dimension "length"  or longer,
+C                  length  is the maximum number of characters to fetch,
+C                  end     must be a declared logical variable.
+C           upon return,
+C            end=.true. if a field terminating mark was found to be the next
+C                 non-blank character string.  otherwise, end=.false.
+C            end=.true. and length=0 means the end-of-file was found.
+C            length is changed to the actual number of characters in string
+C                 if this is less than the value of length set by the calling
+C                 program.
+C            keywd(1) through keywd(length) contain the character string,
+C                 one character per element of keywd.
+C
+C     7. to fetch the integer value of the next character string,
+C           call ifld(int,error),
+C            where int     is the variable to be read,
+C                  error   must be a declared logical variable.
+C            upon return,
+C             if error=.false., an integer was found and placed in "int".
+C             if error=.true. and int.gt.0, a field terminating mark was
+C                 found as the next character string.
+C             if error=.true. and int.lt.0, the next character string found
+C                 was neither an integer nor a field terminating mark.
+C
+C     8. to fetch the real value of the next character string,
+C           (an exponent is allowed, with or without an "e" or "f".
+C             if no letter is present to signify the exponent field,
+C             a + or - sign must start the exponent.  if no mantissa is
+C             present, the exponent field must start with a letter, and
+C             the mantissa is set to one.)
+C           call rfld(real,error),
+C            where real    is the variable to be read,
+C                  error   must be a declared logical variable.
+C            upon return,
+C             if error=.false., a real number was found and placed in "real".
+C             if error=.true. and real.gt.1, a field terminating mark was
+C                 found as the next character string.
+C             if error=.true. and real.lt.-1, the next character string found
+C                 was neither a real number nor a field terminating mark.
+C
+C     9. to compare the corresponding first l elements of each of two vectors
+C          ia(l) and ib(l) to see if the vectors are equivalent,
+C           use the function equal(ia,ib,l).
+C           equal must be declared logical in the calling program,
+C            and the function value (.true. or .false.) will tell if the
+C            vectors ia and ib are equal up to element l.
+C        note: this function is useful for determining if a character string
+C          read by a call to hfld matches a certain keyword which is stored
+C          in a vector, one character per element.
+C
+C
+C*****************************************************************************
+      subroutine strtin(LFNIN)
+C*****************************************************************************
+      implicit none
+      integer Icd , Ipt , Length , Lfn , LFNIN , Look , Nexp
+C
+      common /nbcrd1/ Icd(80) , Look(80) , Length , Ipt , Lfn , Nexp
+      common /nbcrd2/ Point , End , Next , Exp
+      logical Point , End , Next , Exp
+C
+C  initialize input from lfn lfnin:
+C
+      Lfn = LFNIN
+      End = .false.
+      Next = .true.
+      call rdcard
+C
+      return
+      end
+@* INDEX.

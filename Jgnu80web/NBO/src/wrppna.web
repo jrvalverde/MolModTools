@@ -1,0 +1,64 @@
+@*wrppna.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[INPUT:] OCC
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  LSTOCC  NAOCTR  NAOL    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine wrppna(T,OCC,IFLG)
+C*****************************************************************************
+      implicit none
+      integer IFLG , Ispin , j , Label , Larc , Lbl , lfn , Lorb ,
+     &        Lorbc , Lstemt , Lstocc , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Naoctr , Naol , Natoms
+      integer Nbas , Ndim
+      double precision OCC , T
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+C
+      dimension T(Ndim,Ndim) , OCC(Ndim)
+      character*80 title
+C
+C  write the pnao information to the external file abs(iflg):
+C
+C  note: this is the pure-ao to pnao transformation, not the raw ao
+C        to pnao transform.
+C
+      title = 'PNAOs in the PAO basis:'
+      call aout(T,Ndim,Nbas,Nbas,title,-1,IFLG)
+C
+C  write the NAO orbital labels to the external file:
+C
+      lfn = abs(IFLG)
+      write (lfn,99001) (Naoctr(j),j=1,Nbas)
+      write (lfn,99001) (Naol(j),j=1,Nbas)
+      write (lfn,99001) (Lstocc(j),j=1,Nbas)
+C
+C  write the pnao orbital occupancies:
+C
+      write (lfn,99002) (OCC(j),j=1,Nbas)
+      return
+C
+99001 format (1x,20I4)
+99002 format (1x,5F15.9)
+      end
+@* INDEX.

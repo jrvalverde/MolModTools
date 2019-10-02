@@ -1,0 +1,43 @@
+@*svtnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  NDIM    ORTHO
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT
+\item[Called by]   NAODRV  NAOSIM  RDTNAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svtnao(T)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l3 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      double precision T
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension T(Ndim,Ndim)
+C
+C  svtnao:  save the AO to NAO transformation matrix.
+C
+      if ( .not.Ortho ) then
+         nfile = 43
+         l3 = Ndim*Ndim
+         call nbwrit(T,l3,nfile)
+      endif
+      return
+      end
+@* INDEX.

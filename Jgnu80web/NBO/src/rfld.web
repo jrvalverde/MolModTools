@@ -1,0 +1,145 @@
+@*rfld.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] REAL
+\item[OUTPUT:] ERROR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    END     EXP     NEXP    NEXT    POINT
+\item[Uses]  END     EXP     LENGTH  LOOK    NEXP    NEXT    POINT
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FNDFLD
+\item[Called by]   IFLD
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rfld(REAL,ERROR)
+C*****************************************************************************
+      implicit none
+      integer i , Icd , Ipt , isexp , j , k , Length , Lfn , lk , Look ,
+     &        nchar , ndec , Nexp
+      double precision one , REAL , sign , ten , zero
+      logical ERROR , expsgn , mantis
+C
+      common /nbcrd1/ Icd(80) , Look(80) , Length , Ipt , Lfn , Nexp
+      common /nbcrd2/ Point , End , Next , Exp
+      logical Point , End , Next , Exp
+C
+      dimension nchar(15)
+C
+      data nchar/1H0 , 1H1 , 1H2 , 1H3 , 1H4 , 1H5 , 1H6 , 1H7 , 1H8 ,
+     &     1H9 , 1H. , 1H+ , 1H- , 1HD , 1HE/
+      data zero , one , ten/0.0D0 , 1.0D0 , 10.0D0/
+C
+C  search lfn for the next string of non-blank characters, see if they form
+C  a real number (exponent is optional) (if not, error=.true.) and, if so,
+C  place its numerical value in "real":
+C
+      REAL = zero
+      sign = one
+      ndec = 0
+      isexp = 1
+      Nexp = 0
+      expsgn = .false.
+      Exp = .false.
+      Point = .false.
+      ERROR = .false.
+      mantis = .false.
+      End = .false.
+C
+C  find the next string of non-blank characters, "look", of length "length":
+C
+      if ( Next ) call fndfld
+      if ( .not.(End) ) then
+         if ( Length.ne.0 ) then
+C
+C  find the numerical value of the characters in "look":
+C
+            do 40 j = 1 , Length
+               lk = Look(j)
+               do 10 i = 1 , 15
+                  if ( lk.eq.nchar(i) ) goto 20
+ 10            continue
+               goto 100
+ 20            k = i - 11
+               if ( k.lt.0 ) then
+C
+C  this character is a number:
+C
+                  if ( Exp ) then
+C
+C  add digit to exponent:
+C
+                     Nexp = Nexp*10 + (i-1)
+                  else
+C
+C  add digit to mantissa:
+C
+                     mantis = .true.
+                     REAL = REAL*ten + float(i-1)
+C
+C  if we are to the right of a decimal point, increment the decimal counter:
+C
+                     if ( Point ) ndec = ndec + 1
+                  endif
+               elseif ( k.eq.0 ) then
+C
+C  decimal point:
+C
+                  if ( Point ) goto 100
+                  Point = .true.
+C
+C  exponent (+,-,d,e):
+C
+               elseif ( k.eq.2 ) then
+C
+C  minus sign: if not first character, count as part of exponent:
+C
+                  if ( j.ne.1 ) then
+                     isexp = -1
+                     if ( .not.(expsgn) ) then
+                        expsgn = .true.
+                        Exp = .true.
+                     endif
+                  else
+                     sign = -one
+                  endif
+               elseif ( k.eq.3 .or. k.eq.4 ) then
+C
+C  d or e: start of exponent:
+C
+                  if ( Exp ) goto 100
+                  Exp = .true.
+C
+C  plus sign: if not first character, count as part of exponent:
+C
+               elseif ( j.ne.1 ) then
+                  if ( .not.(expsgn) ) then
+                     expsgn = .true.
+                     Exp = .true.
+                  endif
+               endif
+ 40         continue
+C
+C  set final value of real (if no mantissa, but exponent present,
+C  set mantissa to one):
+C
+            if ( Exp .and. .not.mantis ) REAL = one
+            REAL = REAL*sign*(ten**(-ndec+isexp*Nexp))
+            Next = .true.
+            return
+         endif
+      endif
+C
+C  no real number found, or field terminating mark:
+C
+ 100  ERROR = .true.
+      REAL = -ten
+      if ( End ) REAL = ten
+      return
+      end
+@* INDEX.

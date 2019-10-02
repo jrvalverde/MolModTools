@@ -1,0 +1,81 @@
+@*wrnlmo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[INPUT:] DM
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  IATNO   IBXM    LABEL   NATOMS  NBAS    NBOTYP  NBOUNI
+             NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine wrnlmo(T,DM,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision DM , T
+      integer Iatcr , Iatno , Ibxm , IFLG , Ino , Ispin , Iznuc , j ,
+     &        Label , Larc , Lbl , lfn , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab
+      integer Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb ,
+     &        Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , Ll , Lorb , Lorbc ,
+     &        Lstocc , Lu , MAXATM , MAXBAS , Munit , Mxao , Mxaolm
+      integer Mxbo , Natoms , Nbas , Nbotyp , Nbouni , Ndim , Norbs
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension T(Ndim,Ndim) , DM(Ndim,Ndim)
+      character*80 title
+C
+C  write the AO to NLMO transformation matrix and NLMO info to the external
+C  file abs(iflg):
+C
+      title = 'NLMOs in the AO basis:'
+      call aout(T,Ndim,Nbas,Nbas,title,1,IFLG)
+C
+C  write out the NLMO occupancies:
+C
+      lfn = abs(IFLG)
+      write (lfn,99001) (DM(j,j),j=1,Nbas)
+C
+C  write out nbouni, nbotyp, label, ibxm, and iatno:
+C
+      write (lfn,99002) (Nbouni(j),j=1,Nbas)
+      write (lfn,99002) (Nbotyp(j),j=1,Nbas)
+      write (lfn,99003) (Label(j,1),j=1,Nbas)
+      write (lfn,99003) (Label(j,2),j=1,Nbas)
+      write (lfn,99002) (Label(j,3),j=1,Nbas)
+      write (lfn,99002) (Label(j,4),j=1,Nbas)
+      write (lfn,99002) (Label(j,5),j=1,Nbas)
+      write (lfn,99002) (Label(j,6),j=1,Nbas)
+      write (lfn,99002) (Ibxm(j),j=1,Nbas)
+      write (lfn,99002) (Iatno(j),j=1,Natoms)
+      return
+C
+99001 format (1x,5F15.9)
+99002 format (1x,20I3)
+99003 format (1x,20A3)
+      end
+@* INDEX.

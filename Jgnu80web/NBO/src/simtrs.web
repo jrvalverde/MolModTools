@@ -1,0 +1,38 @@
+@*simtrs.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[PASSED:] S
+\item[PASSED:] V
+\item[INPUT:] NDIM
+\item[PASSED:] N
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       MATML2  MATMLT
+\item[Called by]   ATDIAG  DIPANL  DIPELE  DMNAO   DMSIM   NAO     NAODRV
+             NAOSIM  NBODRV  RDTNAB  RDTNAO  XCITED
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine simtrs(A,S,V,NDIM,N)
+C*****************************************************************************
+      implicit none
+      double precision A , S , V
+      integer N , NDIM
+C
+C  similarity transform a ==> s(transpose)*a*s, using scratch vector v.
+C    fast version --- assumes result is a symmetric matrix
+C
+      dimension A(NDIM,NDIM) , S(NDIM,NDIM) , V(NDIM)
+      call matmlt(A,S,V,NDIM,N)
+      call matml2(S,A,V,NDIM,N)
+      return
+      end
+@* INDEX.

@@ -1,0 +1,63 @@
+@*unpack.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] T
+\item[INPUT:] NDIM
+\item[INPUT:] NBAS
+\item[INPUT:] L2
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FEDNAO  FEDRAW  FEDXYZ  FEFAO   FEPPAO  FESNAO  FESRAW
+             FNBOAN  NBOSUM  SVDNAO  SVFNBO  SVPPAO  SVSNAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine unpack(T,NDIM,NBAS,L2)
+C*****************************************************************************
+      implicit none
+      integer i , icol , iptr , j , jptr , k , L2 , NBAS , NDIM
+      double precision T
+      dimension T(1)
+C
+C  unpack:  unpacks an upper triangular matrix (vector l2 long) into a
+C           symmetric matrix t(nbas,nbas).  note: t should be dimensioned
+C           (ndim,ndim) in the calling routine.
+C
+C  first spread out the l2 numbers into the upper part of the whole array.
+C
+      j = 0
+      k = 1
+      iptr = (NDIM+1)*(NBAS-k) + 1
+      do 100 i = L2 , 1 , -1
+         T(iptr-j) = T(i)
+         if ( j.lt.NBAS-k ) then
+            j = j + 1
+         else
+            j = 0
+            k = k + 1
+            iptr = (NDIM+1)*(NBAS-k) + 1
+         endif
+ 100  continue
+C
+C  now fill in the holes in the output array.
+C
+      do 200 j = 1 , NBAS - 1
+         icol = (j-1)*NDIM
+         do 150 i = j + 1 , NBAS
+            iptr = icol + i
+            jptr = (i-1)*NDIM + j
+            T(iptr) = T(jptr)
+ 150     continue
+ 200  continue
+C
+      return
+      end
+@* INDEX.

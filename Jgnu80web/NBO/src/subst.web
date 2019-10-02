@@ -1,0 +1,59 @@
+@*subst.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] X
+\item[INPUT:] W
+\item[INPUT:] B
+\item[INPUT:] IPIVOT
+\item[INPUT:] N
+\item[INPUT:] NDIM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FNDSOL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine subst(X,W,B,IPIVOT,N,NDIM)
+C*****************************************************************************
+      implicit none
+      double precision B , sum , W , X , zero
+      integer i , ip , IPIVOT , j , N , NDIM
+      dimension X(NDIM) , W(NDIM,NDIM) , B(NDIM) , IPIVOT(NDIM)
+      data zero/0.0D0/
+C
+      if ( N.eq.1 ) then
+         X(1) = B(1)/W(1,1)
+         return
+      endif
+C
+C  use multipliers stored in w and back substitution to find x:
+C
+      ip = IPIVOT(1)
+      X(1) = B(ip)
+      do 100 i = 2 , N
+         sum = zero
+         do 50 j = 1 , i - 1
+            sum = W(i,j)*X(j) + sum
+ 50      continue
+         ip = IPIVOT(i)
+         X(i) = B(ip) - sum
+ 100  continue
+      X(N) = X(N)/W(N,N)
+      do 200 i = N - 1 , 1 , -1
+         sum = zero
+         do 150 j = i + 1 , N
+            sum = W(i,j)*X(j) + sum
+ 150     continue
+         X(i) = (X(i)-sum)/W(i,i)
+ 200  continue
+      return
+      end
+@* INDEX.

@@ -1,0 +1,95 @@
+@*rdtnab.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[INPUT:] DM
+\item[OUTPUT:] BNDOCC
+\item[PASSED:] SCR
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    IBXM    LABEL
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  ISPIN   LFNPR   NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AREAD   SIMTRS
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rdtnab(T,DM,BNDOCC,SCR,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision BNDOCC , DM , SCR , T
+      integer i , Iathy , Ibxm , IFLG , Ispin , j , job , Label , Larc ,
+     &        lfn , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo
+      integer Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , Lstocc , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Naoctr , Naol , Natoms , Nbas , Ndim
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension T(Ndim,Ndim) , DM(Ndim,Ndim) , BNDOCC(Ndim) , SCR(Ndim)
+      dimension job(20)
+      logical error
+C
+C  read the NAO to NBO transformation matrix from the external file
+C  abs(iflg/1000).  also read the NBO labels, the NBO occupancies,
+C  and transform the input NAO density matrix to the NBO basis:
+C
+      lfn = abs(IFLG/1000)
+      write (Lfnpr,99001)
+C
+      if ( Ispin.ge.0 ) rewind (lfn)
+      call aread(T,Ndim,Nbas,Nbas,job,lfn,error)
+      if ( error ) then
+C
+         write (Lfnpr,99004) lfn
+         stop
+      else
+         if ( Ispin.ge.0 ) write (Lfnpr,99002) job
+         if ( Ispin.lt.0 ) write (Lfnpr,99003)
+C
+C  read the NBO labels:
+C
+         do 50 i = 1 , Nbas
+            read (lfn,99006,end=200) (Label(i,j),j=1,6) , Ibxm(i)
+ 50      continue
+C
+C  transform the NAO density matrix, dm, to the NBO basis, and store the
+C  NBO occupancies in bndocc:
+C
+         call simtrs(DM,T,SCR,Ndim,Nbas)
+         do 100 i = 1 , Nbas
+            BNDOCC(i) = DM(i,i)
+ 100     continue
+         return
+      endif
+C
+ 200  write (Lfnpr,99005) lfn
+      stop
+C
+99001 format (/1x,'NAO to NBO transformation from a previous ',
+     &        'calculation will be used:')
+99002 format (1x,20A4)
+99003 format (/1x,'See alpha NBO output for title of the transformation'
+     &        )
+99004 format (/1x,'Error reading NAO to NBO transformation from LFN',i3)
+99005 format (/1x,'Error reading NBO orbital labels from LFN',i3)
+99006 format (1x,a2,a1,4I3,3x,i3)
+      end
+@* INDEX.

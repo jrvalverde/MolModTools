@@ -1,0 +1,34 @@
+@*sve0.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] EDEL
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  NBWRIT
+\item[Called by]   DELSCF
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine sve0(EDEL)
+C*****************************************************************************
+      implicit none
+      double precision EDEL , x
+      integer nfile
+      dimension x(2)
+C
+C  sve0:  saves the deletion energy
+C
+      nfile = 8
+      call nbread(x,2,nfile)
+      x(1) = EDEL
+      call nbwrit(x,2,nfile)
+      return
+      end
+@* INDEX.

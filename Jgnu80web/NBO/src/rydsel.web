@@ -1,0 +1,63 @@
+@*rydsel.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] LSTEMT
+\item[INPUT:] NEMT
+\item[OUTPUT:] NSEL1
+\item[OUTPUT:] LIST1
+\item[OUTPUT:] NSEL2
+\item[OUTPUT:] LIST2
+\item[OUTPUT:] WT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rydsel(LSTEMT,NEMT,NSEL1,LIST1,NSEL2,LIST2,WT)
+C*****************************************************************************
+      implicit none
+      integer i , iryd , Ispin , LIST1 , LIST2 , LSTEMT , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Natoms , Nbas , Ndim , NEMT , NSEL1 ,
+     &        NSEL2
+      double precision one , WT , wtthr
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension WT(Ndim) , LIST1(Nbas) , LIST2(Nbas) , LSTEMT(Nbas)
+      data one , wtthr/1.0D0 , 1.0D-4/
+C
+C   divide the rydberg orbitals into 2 groups:
+C      list1:     rydbergs of significant occupancy ( .gt.wtthr )
+C
+C      list2:     rydbergs of very low occupancy ( .lt.wtthr )
+C
+C      wtthr is set to 0.0001
+C
+C    set the weightings of the rydbergs in list2 to one so that the weighted
+C      orthogonalization that will later be done among these orbitals will
+C      be in fact a lowdin orthog.
+C
+      NSEL1 = 0
+      NSEL2 = 0
+      do 100 i = 1 , NEMT
+         iryd = LSTEMT(i)
+         if ( WT(iryd).lt.wtthr ) then
+            NSEL2 = NSEL2 + 1
+            LIST2(NSEL2) = iryd
+            WT(iryd) = one
+         else
+            NSEL1 = NSEL1 + 1
+            LIST1(NSEL1) = iryd
+         endif
+ 100  continue
+      return
+      end
+@* INDEX.

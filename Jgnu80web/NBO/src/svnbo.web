@@ -1,0 +1,100 @@
+@*svnbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[PASSED:] OCC
+\item[OUTPUT:] ISCR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  BETA    IATNO   IBXM    LABEL   NATOMS  NBAS    NBOTYP
+             NBOUNI  NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svnbo(T,OCC,ISCR)
+C*****************************************************************************
+      implicit none
+      integer i , Iatcr , Iatno , Ibxm , ii , Ino , ISCR , Ispin ,
+     &        Iznuc , k , l1 , l3 , l4 , Label , Larc , Lbl , Ll ,
+     &        Lorb , Lorbc , Lstocc
+      integer Lu , MAXATM , MAXBAS , Munit , Mxao , Mxaolm , Mxbo ,
+     &        Natoms , Nbas , Nbotyp , Nbouni , Ndim , nfile , Norb
+      double precision OCC , T
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norb(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+C
+      dimension T(Ndim,Ndim) , OCC(Ndim) , ISCR(1)
+C
+C  svnbo:  saves NBO information (transformation, occupancies, labels, etc.)
+C          if alpha .eq. .true.  save the alpha information
+C          if beta .eq. .true.  save the beta information.
+C
+C  save the AO to NBO transformation matrix:
+C
+      l1 = Ndim
+      l3 = Ndim*Ndim
+      l4 = Ndim*10
+      nfile = 44
+      if ( Beta ) nfile = 45
+      call nbwrit(T,l3,nfile)
+C
+C  save NBO orbital occupancies:
+C
+      nfile = 27
+      if ( Beta ) nfile = 28
+      call nbwrit(OCC,l1,nfile)
+C
+C  save the lists of NBO information for later use in the deletions.
+C  pack the information into iscr(10*ndim):
+C
+      ii = 0
+      do 100 k = 1 , 6
+         do 50 i = 1 , Nbas
+            ii = ii + 1
+            ISCR(ii) = Label(i,k)
+ 50      continue
+ 100  continue
+      do 200 i = 1 , Nbas
+         ii = ii + 1
+         ISCR(ii) = Ibxm(i)
+ 200  continue
+      do 300 i = 1 , Natoms
+         ii = ii + 1
+         ISCR(ii) = Iatno(i)
+ 300  continue
+      do 400 i = 1 , Nbas
+         ii = ii + 1
+         ISCR(ii) = Nbouni(i)
+ 400  continue
+      do 500 i = 1 , Nbas
+         ii = ii + 1
+         ISCR(ii) = Nbotyp(i)
+ 500  continue
+C
+      nfile = 60
+      if ( Beta ) nfile = 61
+      call nbwrit(ISCR,l4,nfile)
+C
+      return
+      end
+@* INDEX.

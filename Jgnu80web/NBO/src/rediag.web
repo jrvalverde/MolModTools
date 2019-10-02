@@ -1,0 +1,90 @@
+@*rediag.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[PASSED:] T
+\item[PASSED:] TPNAO
+\item[PASSED:] EVAL
+\item[PASSED:] BLK
+\item[PASSED:] C
+\item[PASSED:] IRANK
+\item[INPUT:] IRPNAO
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  MXAOLM  NAOCTR  NAOL    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FEPNAO  REDBLK  SVPNAO
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rediag(DM,T,TPNAO,EVAL,BLK,C,IRANK,IRPNAO)
+C*****************************************************************************
+      implicit none
+      double precision BLK , C , DM , EVAL , T , TPNAO
+      integer iadd , Iatcr , Iatno , il , ilbl , imax , Ino , iorb ,
+     &        IRANK , IRPNAO , Ispin , Iznuc , jorb , jorbl , Larc ,
+     &        Lbl , Ldeg , Ll , Lorb , Lorbc
+      integer Lstemt , Lstocc , Lu , m , MAXATM , MAXBAS , Munit ,
+     &        Mxao , Mxaolm , Mxbo , Naoctr , Naol , Natoms , Nbas ,
+     &        nc , Ndim , nf , nl , nm , Norbs
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Ldeg(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      dimension DM(Ndim,Ndim) , T(Ndim,Ndim) , TPNAO(Ndim,Ndim) ,
+     &          C(Mxaolm,Mxaolm) , EVAL(Ndim) , BLK(Mxaolm,Mxaolm) ,
+     &          IRANK(Nbas)
+C
+C  rediagonalize the symmetry averaged dm subblocks for each angular
+C  symmetry on each atom:
+C
+C  read in old t-pnao into tpnao so that it can be updated (if irpnao.eq.1):
+C
+      if ( IRPNAO.eq.1 ) call fepnao(TPNAO)
+      nf = 0
+      iorb = 0
+      nl = 1
+ 100  iorb = iorb + nl
+      if ( iorb.le.Nbas ) then
+         nl = 1
+         ilbl = Naoctr(iorb)
+         il = Naol(iorb)/100
+         nm = il*2 + 1
+         imax = Nbas - iorb
+         do 150 iadd = 1 , imax
+            jorb = iorb + iadd
+            jorbl = Naol(jorb)/100
+            if ( (Naoctr(jorb).ne.ilbl) .or. (jorbl.ne.il) ) goto 200
+            nl = nl + 1
+ 150     continue
+ 200     nc = nl/nm
+         if ( nc.eq.1 ) then
+            do 220 m = 1 , nm
+               nf = nf + 1
+ 220        continue
+         else
+            call redblk(T,TPNAO,il,DM,BLK,EVAL,C,nf,iorb,nc,IRANK,
+     &                  IRPNAO)
+         endif
+         goto 100
+      endif
+      if ( IRPNAO.eq.0 ) return
+C
+C  save new t-pnao from tpnao:
+C
+      call svpnao(TPNAO)
+      return
+      end
+@* INDEX.

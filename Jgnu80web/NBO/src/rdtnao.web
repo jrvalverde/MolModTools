@@ -1,0 +1,105 @@
+@*rdtnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[PASSED:] T
+\item[PASSED:] SCR
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LSTOCC  NAOCTR  NAOL
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  LFNPR   NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AREAD   SIMTRS  SVSNAO  SVTNAO
+\item[Called by]   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rdtnao(DM,T,SCR,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision DM , SCR , T
+      integer IFLG , Ispin , j , job , Label , Larc , Lbl , lfn ,
+     &        Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo ,
+     &        Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm
+      integer Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr ,
+     &        Lorb , Lorbc , Lstemt , Lstocc , MAXATM , MAXBAS , Munit ,
+     &        Mxao , Mxaolm , Mxbo , Naoctr , Naol , Natoms , Nbas
+      integer Ndim
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension T(Ndim,Ndim) , DM(Ndim,Ndim) , SCR(Ndim)
+      dimension job(20)
+      logical error
+C
+C  note: t is the pnao overlap matrix on return to the calling routine
+C        dm is the NAO density matrix on return
+C
+C  read in AO to NAO transformation from the external file abs(iflg/1000),
+C  and store it on the NBO daf:
+C
+      lfn = abs(IFLG/1000)
+      write (Lfnpr,99001)
+C
+      rewind (lfn)
+      call aread(T,Ndim,Nbas,Nbas,job,lfn,error)
+      if ( error ) then
+C
+         write (Lfnpr,99003) lfn
+         stop
+      else
+         write (Lfnpr,99002) job
+         call svtnao(T)
+C
+C  transform the AO density matrix, presently in dm, to the NAO basis:
+C
+         call simtrs(DM,T,SCR,Ndim,Nbas)
+C
+C  read in orbital labels from lfn:
+C
+         read (lfn,99006,end=100) (Naoctr(j),j=1,Nbas)
+         read (lfn,99006,end=100) (Naol(j),j=1,Nbas)
+         read (lfn,99006,end=100) (Lstocc(j),j=1,Nbas)
+C
+C  read the pnao overlap from lfn, and save this matrix on the NBO daf:
+C
+         call aread(T,Ndim,-Nbas,Nbas,job,lfn,error)
+         if ( error ) then
+C
+            write (Lfnpr,99005) lfn
+            stop
+C
+99001       format (/1x,
+     &              'NAO basis set from a previous calculation used:')
+99002       format (1x,20A4)
+99003       format (/1x,
+     &              'Error reading AO to NAO transformation from LFN',
+     &              i3)
+99004       format (/1x,'Error reading NAO orbital labels from LFN',i3)
+99005       format (/1x,'Error reading PNAO overlap matrix from LFN',i3)
+99006       format (1x,20I4)
+         else
+            call svsnao(T)
+            return
+         endif
+      endif
+C
+ 100  write (Lfnpr,99004) lfn
+      stop
+      end
+@* INDEX.

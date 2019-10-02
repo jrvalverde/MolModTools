@@ -1,0 +1,55 @@
+@*simtrm.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[PASSED:] S
+\item[PASSED:] V
+\item[INPUT:] NDIM
+\item[PASSED:] N
+\item[INPUT:] IWMULP
+\item[PASSED:] IWCUBF
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       MATML2  MATMLT  MULANA
+\item[Called by]   DMNAO   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C  routines called by the NAO drivers:
+C
+C      subroutine simtrm(a,s,v,ndim,n,iwmulp,iwcubf)
+C      subroutine mulana(bs,vmayer,bmayer,iwmulp,iwcubf)
+C      subroutine dfgorb(renorm,dm,t,itran,iwcubf,itopt,lfnpr)
+C      subroutine nao(t,s,occ,blk,sblk,eval,c,evect,eval2,listao,nblock)
+C      subroutine naoanl(dm,spnao,bindex,bindt,ovpop,f,enao)
+C      subroutine frmtmo(t,tmo,c,scr,index,iflg)
+C
+C*****************************************************************************
+      subroutine simtrm(A,S,V,NDIM,N,IWMULP,IWCUBF)
+C*****************************************************************************
+      implicit none
+      double precision A , S , V
+      integer i1 , IWCUBF , IWMULP , N , NDIM
+C
+C  similarity transform a ==> s(transpose)*a*s, using scratch vector v.
+C   write the diagonal elements of a*s by calling subroutine mulana if
+C          iwmulp.ne.0
+C     (these are the mulliken populations if s= overlap matrix
+C                                       and a= bond-order matrix)
+C
+      dimension A(NDIM,NDIM) , S(NDIM,NDIM) , V(1)
+      call matmlt(A,S,V,NDIM,N)
+      i1 = NDIM + 1
+      if ( IWMULP.ne.0 ) call mulana(A,V(1),V(i1),IWMULP,IWCUBF)
+      call matml2(S,A,V,NDIM,N)
+      return
+      end
+@* INDEX.

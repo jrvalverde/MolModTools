@@ -1,0 +1,59 @@
+@*rank.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] EIG
+\item[INPUT:] N
+\item[INPUT:] NDIM
+\item[OUTPUT:] ARCRNK
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   CHOOSE  DIPANL  NAO     NATHYB  REDBLK  REPOL   RYDIAG
+             XCITED
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine rank(EIG,N,NDIM,ARCRNK)
+C*****************************************************************************
+      implicit none
+      double precision differ , EIG , temp
+      integer i , i1 , itemp , j , N , NDIM
+C
+C  order numbers in 'eig', highest values first,
+C    and construct 'arcrnk':
+C     arcrnk(i) is the old location of the i-th highest value in eig
+C      note: upon return, eig(i) is the i-th highest value in eig
+C      important: numbers in eig are not switched unless they differ
+C       by more than "differ":  5.0d-8
+C
+      integer ARCRNK
+      dimension ARCRNK(NDIM) , EIG(NDIM)
+      data differ/5.0D-8/
+      do 100 i = 1 , N
+         ARCRNK(i) = i
+ 100  continue
+      do 200 i = 1 , N
+         if ( i.ne.N ) then
+            i1 = i + 1
+            do 120 j = i1 , N
+               if ( (EIG(j)-EIG(i)).ge.differ ) then
+                  temp = EIG(i)
+                  EIG(i) = EIG(j)
+                  EIG(j) = temp
+                  itemp = ARCRNK(i)
+                  ARCRNK(i) = ARCRNK(j)
+                  ARCRNK(j) = itemp
+               endif
+ 120        continue
+         endif
+ 200  continue
+      return
+      end
+@* INDEX.

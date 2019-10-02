@@ -1,0 +1,40 @@
+@*svsnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] S
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT  PACK    UNPACK
+\item[Called by]   NAODRV  RDTNAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svsnao(S)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      double precision S
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension S(Ndim,Ndim)
+C
+C   svsnao:  save the overlap matrix in the pnao or rpnao basis set.
+C
+      nfile = 11
+      l2 = Ndim*(Ndim+1)/2
+      call pack(S,Ndim,Nbas,l2)
+      call nbwrit(S,l2,nfile)
+      call unpack(S,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

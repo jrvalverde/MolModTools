@@ -1,0 +1,37 @@
+@*svtlmo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine svtlmo(T)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l3 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      double precision T
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension T(Ndim,Ndim)
+C
+C  svtlmo:  save the NBO to NLMO transformation matrix.
+C
+      nfile = 49
+      l3 = Ndim*Ndim
+      call nbwrit(T,l3,nfile)
+      return
+      end
+@* INDEX.

@@ -1,0 +1,72 @@
+@*simltr.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] N
+\item[INPUT:] NDIM
+\item[OUTPUT:] F
+\item[INPUT:] U
+\item[OUTPUT:] R
+\item[OUTPUT:] S
+\item[INPUT:] KNTROL
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NBODEL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine simltr(N,NDIM,F,U,R,S,KNTROL)
+C*****************************************************************************
+      implicit none
+      double precision F , R , S , sum , U
+      integer i , ij , in , j , jk , jn , k , kn , KNTROL , N , NDIM ,
+     &        nt
+      dimension F(1) , U(NDIM,1) , S(1) , R(1)
+C  take u(transpose)*f*u:
+C     f    matrix to be transformed (packed upper triangular)
+C     u    is the transformation matrix
+C     r    is the matrix in which the result will be returned
+C     s    is a scratch matrix of dimension n
+C     kntrol....=0  result returned only in  r
+C               =1  result copied into  f
+C
+      in = 0
+      do 200 i = 1 , N
+         jn = 0
+         do 50 j = 1 , N
+            sum = 0.
+            kn = 0
+            do 20 k = 1 , N
+               jk = jn + k
+               if ( j.lt.k ) jk = kn + j
+               sum = sum + F(jk)*U(k,i)
+               kn = kn + k
+ 20         continue
+            S(j) = sum
+            jn = jn + j
+ 50      continue
+         do 100 j = 1 , i
+            sum = 0.
+            do 60 k = 1 , N
+               sum = sum + S(k)*U(k,j)
+ 60         continue
+            ij = in + j
+            R(ij) = sum
+ 100     continue
+         in = in + i
+ 200  continue
+      if ( KNTROL.eq.0 ) return
+      nt = N*(N+1)/2
+      do 300 i = 1 , nt
+         F(i) = R(i)
+ 300  continue
+      return
+      end
+@* INDEX.
