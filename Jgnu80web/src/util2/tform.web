@@ -1,0 +1,42 @@
+@* tform.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] T                                                         
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[INPUT:] N                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   INVERT  OCTA    PUT     REFLCT  ROTATE  TETRA          
+                                                                    
+\end{description}
+@a
+      subroutine tform(MAXAP3,T,A,B,N)
+      implicit none
+      double precision A , B , T
+      integer iat , MAXAP3 , N
+      dimension T(3,3) , A(MAXAP3,3) , B(MAXAP3,3)
+C
+C
+C     t is the 3x3 transformation matrix which is used to transform
+C     the n coordinates in a to those in b.
+C
+C
+C
+      do 100 iat = 1 , N
+         B(iat,1) = T(1,1)*A(iat,1) + T(1,2)*A(iat,2) + T(1,3)*A(iat,3)
+         B(iat,2) = T(2,1)*A(iat,1) + T(2,2)*A(iat,2) + T(2,3)*A(iat,3)
+         B(iat,3) = T(3,1)*A(iat,1) + T(3,2)*A(iat,2) + T(3,3)*A(iat,3)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

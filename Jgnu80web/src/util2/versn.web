@@ -1,0 +1,29 @@
+@* versn.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GNU80                                                  
+                                                                    
+\end{description}
+@a
+      subroutine versn
+      implicit none
+      integer In , Iout , Ipunch
+      common /io    / In , Iout , Ipunch
+C     routine to display the current version and revision level
+C     of the gaussian system.
+C
+C
+99001 format (1x,43(1H*)/1x,'    gnu80: PORTABLE GAUSSIAN SYSTEM',/,1x,
+     &        43(1H*))
+C
+      write (Iout,99001)
+      return
+C
+      end
+@* INDEX.

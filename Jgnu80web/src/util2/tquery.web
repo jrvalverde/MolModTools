@@ -1,0 +1,40 @@
+@* tquery.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IFILE                                                     
+\item[PASSED:] LEN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO                                                 
+\item[Called by]   CIDS2   CONDDF  DOUBAR  DQ      ECNFIG  FRMPOP  GEOM   
+             OMEGA   RSTART  SCFDM   SFOPTI  SYMASG  SYMLBL  VIBSYM 
+                                                                    
+\end{description}
+@a
+      subroutine tquery(IFILE,LEN)
+      implicit none
+      integer idum , IFILE , jdum , LEN
+C
+C
+C1tquery
+C
+C     subroutine tquery(ifile,len)
+C
+C          this routine returns the length (in double words) of the
+C     file number 'ifile'.  this number may correspond to either
+C     a read-write file or a bucket.  the length is returned
+C     in 'len'.
+C
+C
+C
+      call fileio(11,IFILE,LEN,idum,jdum)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,38 @@
+@* unpck4.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    I       J       K       L                              
+\item[Uses]  JA                                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SHIFT                                                  
+\item[Called by]   CIPRM   DCLOSE  DOPEN   FOFCLO  FOFOPN  FOFPHF  FORMF  
+             INTPRT  TRCL80  TRCLOS  TROP80  TROPEN  WTILDA  WTILDB 
+                                                                    
+\end{description}
+@a
+      subroutine unpck4
+      implicit none
+      integer maski , maskj , maskk , maskl
+      integer I , J , K , L , Ja
+      double precision Valint
+      integer shift , iand
+      common /packed/ I , J , K , L , Valint , Ja
+      data maski , maskj , maskk , maskl/255 , 65280 , 16711680 , 
+     &     -16777216/
+C  ===============================================================
+C  these are the actual values if they need to be computed
+C     on a new system
+C      maski = 255
+C      maskj = shift(maski,8)
+C      maskk = shift(maski,16)
+C      maskl = shift(maski,24)
+C  ==============================================================
+      I = iand(maski,Ja)
+      J = shift(iand(maskj,Ja),-8)
+      K = shift(iand(maskk,Ja),-16)
+      L = shift(iand(maskl,Ja),-24)
+      return
+      end
+@* INDEX.

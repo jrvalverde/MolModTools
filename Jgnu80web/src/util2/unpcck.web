@@ -1,0 +1,99 @@
+@* unpcck.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] K                                                         
+\item[UNUSED:] KK                                                        
+\item[OUTPUT:] X                                                         
+\item[INPUT:] M                                                         
+\item[INPUT:] N                                                         
+\item[INPUT:] MM                                                        
+\item[INPUT:] NN                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GETGES  TREAD   TWRITE                                 
+                                                                    
+\end{description}
+@a
+      subroutine unpcck(K,KK,X,M,N,MM,NN)
+      implicit none
+      integer i , ii , ipfc , ix , j , jj , jx , K , KK , M , MM , N , 
+     &        nfc , NN
+      double precision X
+      dimension X(M,N)
+C
+C
+C     used by drum routines to convert between single and doubly
+C     subscripted arrays
+C
+C
+C
+C     k non-zero       upper triangle of symmetric matrix
+C     k zero           complete rectangular matrix
+C
+C     array symmetric ... occupies upper triangle
+C
+      if ( K.ne.0 ) then
+         ii = (MM*(MM+1))/2
+      else
+C
+         ii = MM*NN
+      endif
+      nfc = ii/M
+      ipfc = ii - nfc*M
+      if ( ipfc.ne.0 ) then
+C
+         jj = nfc + 1
+         ii = ipfc
+      else
+         jj = nfc
+         ii = M
+      endif
+      if ( K.ne.0 ) then
+         ix = NN + 1
+         do 50 i = 1 , NN
+            ix = ix - 1
+            do 20 j = 1 , ix
+               jx = MM - i - j + 2
+               X(jx,ix) = X(ii,jj)
+               ii = ii - 1
+               if ( ii.eq.0 ) then
+                  ii = M
+                  jj = jj - 1
+               endif
+ 20         continue
+ 50      continue
+         jj = NN - 1
+         do 100 j = 1 , jj
+            ii = j + 1
+            do 60 i = ii , NN
+               X(i,j) = X(j,i)
+ 60         continue
+ 100     continue
+         return
+      endif
+C
+C     array not symmetric
+C
+      do 200 i = 1 , NN
+         ix = NN - i + 1
+         do 150 j = 1 , MM
+            jx = MM - j + 1
+            X(jx,ix) = X(ii,jj)
+            ii = ii - 1
+            if ( ii.eq.0 ) then
+               ii = M
+               jj = jj - 1
+            endif
+ 150     continue
+ 200  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,64 @@
+@* shlatm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] NATOMS                                                    
+\item[INPUT:] C                                                         
+\item[INPUT:] NSHELL                                                    
+\item[INPUT:] X                                                         
+\item[INPUT:] Y                                                         
+\item[INPUT:] Z                                                         
+\item[OUTPUT:] IATM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   DPHNIX                                                 
+                                                                    
+\end{description}
+@a
+      subroutine shlatm(NATOMS,C,NSHELL,X,Y,Z,IATM)
+      implicit none
+      double precision C , ccut , gabs , X , Y , Z
+      integer i , ia , iaind , IATM , NATOMS , NSHELL
+      dimension C(*) , X(*) , Y(*) , Z(*) , IATM(*)
+      data ccut/1.0D-06/
+C
+C***********************************************************************
+C     routine to fill array iatm which contains the shell to atom map.
+C     that is, iatm(i) = the atom number of the i-th shell.
+C
+C     arguments:
+C
+C     natoms ... number of atoms.
+C     c      ... coordinate array, stored (x,y,z) for each atom.
+C     nshell ... number of shells.
+C     x,y,z  ... the cartesian coordinates of the up to 80 shells.
+C     iatm   ... output array of length nshell.
+C***********************************************************************
+C
+C
+C
+C     construct shell-atom maps.
+      ia = 1
+      iaind = 0
+      do 100 i = 1 , NSHELL
+         if ( gabs(X(i)-C(1+iaind)).le.ccut ) then
+            if ( gabs(Y(i)-C(2+iaind)).le.ccut ) then
+               if ( gabs(Z(i)-C(3+iaind)).le.ccut ) goto 50
+            endif
+         endif
+C
+         ia = ia + 1
+         iaind = iaind + 3
+ 50      IATM(i) = ia
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

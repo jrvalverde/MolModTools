@@ -1,0 +1,32 @@
+@* rtrace.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NAME                                                      
+\item[INPUT:] TRLEVL                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOP     IOUT                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMBG                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rtrace(NAME,TRLEVL)
+      implicit none
+      integer In , Iop , Iout , Ipunch , TRLEVL
+      character*6 NAME
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+C
+99001 format (9H TRACE:  ,a6)
+C
+      if ( Iop(34).ge.TRLEVL ) write (Iout,99001) NAME
+      return
+C
+      end
+@* INDEX.

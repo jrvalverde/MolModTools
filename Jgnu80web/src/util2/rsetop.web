@@ -1,0 +1,62 @@
+@* rsetop.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[OUTPUT:] PA                                                        
+\item[OUTPUT:] PB                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMF                                                  
+                                                                    
+\end{description}
+@a
+      subroutine rsetop(NBASIS,PA,PB)
+      implicit none
+      integer i , j , k , NBASIS
+      double precision PA , PB , pspin , ptotl
+      dimension PA(*) , PB(*)
+C
+C***********************************************************************
+C     routine to set up the total and spin density matrices
+C     prior to their use with two-electron integral in the
+C     raffenetti format.
+C
+C     arguments:
+C
+C     nbasis ... number of basis functions.
+C     pa     ... array of length ntt containing alpha-density matrix
+C                on input.  at the end of this routine, this array
+C                will contain the total-density matrix with
+C                off-diagonal elements doubled.
+C     pb     ... same as pa, but with the beta-density matrix as
+C                as input, spin density as output.
+C***********************************************************************
+C
+C
+C
+C     loop over all elements, doubling where necessary.
+      k = 0
+      do 100 i = 1 , NBASIS
+         do 50 j = 1 , i
+            k = k + 1
+            ptotl = PA(k) + PB(k)
+            pspin = PA(k) - PB(k)
+            PA(k) = ptotl + ptotl
+            PB(k) = pspin + pspin
+ 50      continue
+         PA(k) = ptotl
+         PB(k) = pspin
+ 100  continue
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

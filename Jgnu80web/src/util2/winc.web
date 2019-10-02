@@ -1,0 +1,88 @@
+@* winc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NOCC                                                      
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] IOCC                                                      
+\item[PASSED:] IRW                                                       
+\item[OUTPUT:] E                                                         
+\item[OUTPUT:] W                                                         
+\item[INPUT:] C                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT  TREAD                                          
+\item[Called by]   FRMW                                                   
+                                                                    
+\end{description}
+@a
+      subroutine winc(NOCC,NBASIS,IOCC,IRW,E,W,C)
+      implicit none
+      double precision C , E , gfloat , temp , W
+      integer i , indc , IOCC , IRW , k , mu , NBASIS , NOCC , nsq , nu
+      dimension E(*) , W(*) , C(*)
+C
+C***********************************************************************
+C     routine to add a contribution into the energy weighted density
+C     matrix.
+C
+C     arguments:
+C
+C     nocc   ... number of occupied orbitals.
+C     nbasis ... number of basis functions.
+C     iocc   ... occupation factor. (1 for uhf, 2 for rhf).
+C     irw    ... rw-file from which the orbital coefficients
+C                are obtained.
+C     e      ... input vector that contains the orbital energies
+C                (eigenvalues).
+C     w      ... output array of length ntt that contains the
+C                energy weighted density matrix so far.
+C     c      ... scratch array of at least nbasis**2 that will
+C                be used internally to hold the orbital
+C                coefficients.
+C
+C***********************************************************************
+C
+C
+C     fetch the designated rw-file.
+      nsq = NBASIS*NBASIS
+      call tread(IRW,C(1),nsq,1,nsq,1,0)
+C
+C     if iocc is not one, scale the eigenvalues appropriately.
+      if ( IOCC.ne.1 ) then
+         temp = gfloat(IOCC)
+         do 50 i = 1 , NBASIS
+            E(i) = temp*E(i)
+ 50      continue
+      endif
+C
+C     for each occupied orbital, sum the contributions into w.
+      indc = 0
+      do 200 i = 1 , NOCC
+         k = 0
+         do 100 mu = 1 , NBASIS
+            do 60 nu = 1 , mu
+               k = k + 1
+               W(k) = W(k) - C(mu+indc)*C(nu+indc)*E(i)
+ 60         continue
+ 100     continue
+         indc = indc + NBASIS
+ 200  continue
+C
+C     re-scale e if necessary.
+      if ( IOCC.ne.1 ) then
+         do 250 i = 1 , NBASIS
+            E(i) = E(i)/temp
+ 250     continue
+      endif
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

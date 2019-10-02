@@ -1,0 +1,26 @@
+@* timeo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] L                                                         
+\item[UNUSED:] J                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CPUTIM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine timeo(L,J)
+      implicit none
+      integer J , L
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,61 @@
+@* strout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOUT                                                      
+\item[INPUT:] ISTR                                                      
+\item[INPUT:] LEN                                                       
+\item[INPUT:] CRLF                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ALTGES  BASPRT  ECNFIG  FFERR   GESPRT  GETGES  INITBS 
+             INITFC  ISUBST  LSUBST  MULPOP  NOROUT  PRMOUT  PRMTBL 
+             PRTRTE  PRTSYM  QPERRO  SZPRNT  ZCENTR  ZMATCH         
+                                                                    
+\end{description}
+@a
+      subroutine strout(IOUT,ISTR,LEN,CRLF)
+      implicit none
+      integer blank , CRLF , i , ilen , IOUT , LEN , n , nold
+      integer ISTR(*)
+      integer jstr(33)
+      character*1 str(132)
+      equivalence (jstr(1),str(1))
+      data blank/' '/ , n/0/
+C          this routine just outputs a logical*1 string to fortran unit
+C     "iout". the characters to be output are in "str", and there are
+C     "len" of these characters.  "crlf" indicates whether a <cr><lf>
+C     is desired at the end of the string (0/1 ---> no/yes).
+C     crlf=-1 indicates that the current str should be printed on the
+C     same line as the previus one.
+C     note that the crlf specifications are only compatible with other
+C     strout calls, not with the standard format io calls.
+C2
+C     r. a. whiteside - september 1979.
+C ----------------------------------------------------------------------
+C
+99001 format (' ',132A1)
+99002 format ('+',132A1)
+C
+      ilen = LEN/4
+      if ( mod(LEN,4).gt.0 ) ilen = ilen + 1
+      do 100 i = 1 , ilen
+         jstr(i) = ISTR(i)
+ 100  continue
+      if ( CRLF.eq.-1 ) n = nold
+      if ( n+LEN.gt.132 ) n = 0
+      if ( n.eq.0 ) write (IOUT,99001) (str(i),i=1,LEN)
+      if ( n.ne.0 ) write (IOUT,99002) (blank,i=1,n) , (str(i),i=1,LEN)
+      n = n + LEN
+      nold = n
+      if ( CRLF.ne.0 ) n = 0
+      return
+C
+      end
+@* INDEX.

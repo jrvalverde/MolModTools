@@ -1,0 +1,31 @@
+@* setrys.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    S                                                      
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DPHNIX  PHOENI                                         
+                                                                    
+\end{description}
+@a
+      subroutine setrys
+      implicit none
+      integer Iadr , Lent , Lind
+      double precision S , T2 , Ycut
+      common /t2    / S(7) , Ycut(7) , T2(2884) , Lent(7) , Lind(7) , 
+     &                Iadr(7)
+C
+      S(1) = 0.25D0
+      S(2) = 0.367006838D0
+      S(3) = 0.180984215D0
+      S(4) = 0.116432928D0
+      S(5) = 0.084694160D0
+      S(6) = 0.066094029D0
+      S(7) = 0.053971558D0
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,80 @@
+@* rsetcl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[OUTPUT:] PAR                                                       
+\item[OUTPUT:] PAI                                                       
+\item[INPUT:] COMPLX                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMF                                                  
+                                                                    
+\end{description}
+@a
+      subroutine rsetcl(NBASIS,PAR,PAI,COMPLX)
+      implicit none
+      integer i , j , k , NBASIS
+      double precision PAI , PAR , pt5
+      logical COMPLX
+      dimension PAR(*) , PAI(*)
+      data pt5/0.5D0/
+C
+C***********************************************************************
+C     routine to set up density matrices (real and if required,
+C     imaginary) prior to use with two-electron integrals
+C     composed in the raffenetti format.
+C
+C     arguments:
+C
+C     nbasis ... number of basis functions.
+C     par    ... array of length ntt containing the real-alpha
+C                density matrix on input.
+C                at the end of this routine, this array will contain
+C                the matrix with off-diagonal elements doubled.
+C     pai    ... array of length ntt containing the imaginary-alpha
+C                density.  used only if complx=.true..
+C     complx ... logical flag indicating whether or not the current
+C                run is complex.
+C***********************************************************************
+C
+C
+C
+C
+C     handle real and complex cases separately.
+      k = 0
+      if ( COMPLX ) then
+C
+C     treat the complex case.
+         do 50 i = 1 , NBASIS
+            do 20 j = 1 , i
+               k = k + 1
+               PAR(k) = PAR(k) + PAR(k)
+               PAI(k) = PAI(k) + PAI(k)
+ 20         continue
+            PAR(k) = pt5*PAR(k)
+            PAI(k) = pt5*PAI(k)
+ 50      continue
+      else
+C
+C     treat real case:
+         do 100 i = 1 , NBASIS
+            do 60 j = 1 , i
+               k = k + 1
+               PAR(k) = PAR(k) + PAR(k)
+ 60         continue
+            PAR(k) = pt5*PAR(k)
+ 100     continue
+      endif
+C
+C     all done, return to caller.
+      return
+C
+      end
+@* INDEX.

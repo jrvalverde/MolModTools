@@ -1,0 +1,92 @@
+@* skip.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IEO                                                       
+\item[PASSED:] BB                                                        
+\item[OUTPUT:] NBB                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DELTYP  GETCHR                                         
+\item[Called by]   ECNFIG  GETREP  MATPRT  SYMLBL                         
+                                                                    
+\end{description}
+@a
+      subroutine skip(IEO,BB,NBB)
+      implicit none
+      integer BB , c1 , c1t , c2 , deltyp , getchr , i , IEO , j , jt , 
+     &        leos , NBB
+      dimension BB(*)
+C          this routine advances the cursor, nbb, past a delimiter
+C     character in the string bb.  the argument "ieo" indicates what
+C     is to be skipped:
+C          ieo = 0 ... skip a "word".
+C          ieo = 1 ... skip a "statement".
+C          ieo = 2 ... skip a "section".
+C     see routine "getb" for definitions of word, statement, and
+C     section.
+C2
+C     r. a. whiteside - fall 1978
+C ----------------------------------------------------------------------
+C
+      if ( IEO.eq.2 ) then
+C
+C     skip a statement.
+         if ( NBB.ne.0 ) then
+            i = NBB - 1
+            c1 = getchr(BB,i)
+            c2 = getchr(BB,i)
+            c1t = deltyp(c1)
+            if ( c1.eq.c2 .and. c1t.eq.2 ) return
+         endif
+ 50      j = getchr(BB,NBB)
+         jt = deltyp(j)
+         if ( jt.lt.3 ) then
+C
+            if ( jt.eq.2 ) return
+            goto 50
+         else
+            NBB = NBB - 1
+            return
+         endif
+      elseif ( IEO.eq.3 ) then
+C
+C     skip a section.
+         if ( NBB.ne.0 ) NBB = NBB - 1
+         leos = 0
+ 100     c1 = getchr(BB,NBB)
+         c1t = deltyp(c1)
+         if ( c1t.lt.4 ) then
+C
+            if ( c1t.ne.2 ) then
+               leos = 0
+            else
+               if ( leos.eq.1 ) return
+               leos = 1
+            endif
+            goto 100
+         endif
+      else
+C
+C     skip a word.
+ 150     j = getchr(BB,NBB)
+         jt = deltyp(j)
+         if ( jt.lt.2 ) then
+C
+            if ( jt.eq.1 ) return
+            goto 150
+         else
+            NBB = NBB - 1
+            return
+         endif
+      endif
+      NBB = NBB - 1
+      return
+C
+      end
+@* INDEX.

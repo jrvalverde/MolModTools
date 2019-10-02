@@ -1,0 +1,51 @@
+@* streq.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] I                                                         
+\item[PASSED:] J                                                         
+\item[INPUT:] LEN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR                                                 
+\item[Called by]   INITBS  INITFC  QPCSTR  QPSCHR  QPWORD  STREQC         
+                                                                    
+\end{description}
+@a
+      logical function streq(I,J,LEN)
+      implicit none
+      integer I , ii , ij , J , ll
+      integer LEN , l
+      logical k
+      integer getchr
+      dimension I(LEN) , J(LEN)
+C          this logical function returns "true" if the two strings
+C     are equal, or "false" otherwise.  upper case is not considered
+C     "equal" to lower case.
+C     but there are no lower case characters on the ibm....
+C
+C ----------------------------------------------------------------------
+C
+      k = .false.
+      if ( LEN.ne.0 ) then
+         do 50 l = 1 , LEN
+C      ii=i(l)
+C      ij=j(l)
+            ll = l - 1
+            ii = getchr(I,ll)
+            ll = l - 1
+            ij = getchr(J,ll)
+            if ( ii.ne.ij ) goto 100
+ 50      continue
+         k = .true.
+      endif
+ 100  streq = k
+      return
+C
+      end
+@* INDEX.

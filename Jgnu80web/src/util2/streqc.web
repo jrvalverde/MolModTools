@@ -1,0 +1,36 @@
+@* streqc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] I                                                         
+\item[PASSED:] J                                                         
+\item[INPUT:] LEN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       STREQ                                                  
+\item[Called by]   ISUBST  LSUBST  QPCSTR  QPSCHR  ZMATCH                 
+                                                                    
+\end{description}
+@a
+      logical function streqc(I,J,LEN)
+      implicit none
+      integer I , J
+      integer LEN
+      logical streq
+      dimension I(LEN) , J(LEN)
+C     logical function streqc(str1,str2,len)
+C          this logical function is the same as streq, except that
+C     the strings are first converted to upper case, then the strings
+C     are compared.
+C     in the ibm version this routine is the same as streq.
+C ----------------------------------------------------------------------
+      streqc = streq(I,J,LEN)
+      return
+C
+      end
+@* INDEX.

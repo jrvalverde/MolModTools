@@ -1,0 +1,26 @@
+@* unpck2.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    I       J                                              
+\item[Uses]  JA                                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SHIFT                                                  
+\item[Called by]   FOFCLO  FOFOPN  FOFPHF  FORMF   INTPRT                 
+                                                                    
+\end{description}
+@a
+      subroutine unpck2
+      implicit none
+      integer maski , maskj
+      integer I , J , K , L , Ja
+      double precision Valint
+      integer shift , iand
+      common /packed/ I , J , K , L , Valint , Ja
+      data maski , maskj/65535 , -65536/
+      I = iand(maski,Ja)
+      J = shift(iand(maskj,Ja),-16)
+      return
+      end
+@* INDEX.

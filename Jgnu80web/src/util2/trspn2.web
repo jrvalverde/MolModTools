@@ -1,0 +1,54 @@
+@* trspn2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[OUTPUT:] T                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FVMUL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine trspn2(N,T)
+      implicit none
+      integer iloc , ipiv , ipivp , iswap , jloc , loc , N , nm1
+      double precision swap , T
+      dimension T(*)
+C
+C
+C
+C***********************************************************************
+C     routine to transpose an n by n matrix in place using single
+C     indexing.  the input matrix t is assumed to be of dimension
+C     n by n, stored packed column-wise.  on output, the matrix
+C     t has been transposed (t(i,j).swap.t(j,i)).
+C***********************************************************************
+C
+C
+      nm1 = N - 1
+      loc = 1
+      do 100 ipiv = 1 , nm1
+         iloc = loc
+         jloc = loc
+         ipivp = ipiv + 1
+         do 50 iswap = ipivp , N
+            iloc = iloc + 1
+            jloc = jloc + N
+            swap = T(iloc)
+            T(iloc) = T(jloc)
+            T(jloc) = swap
+ 50      continue
+         loc = loc + (N+1)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

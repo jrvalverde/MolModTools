@@ -1,0 +1,36 @@
+@* vprod.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] VP                                                        
+\item[INPUT:] X                                                         
+\item[INPUT:] Y                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ZTOC                                                   
+                                                                    
+\end{description}
+@a
+      subroutine vprod(VP,X,Y)
+      implicit none
+      double precision VP , X , Y
+      dimension VP(3) , X(3) , Y(3)
+C
+C
+C     vp=x cross y
+C
+C
+C
+      VP(1) = X(2)*Y(3) - X(3)*Y(2)
+      VP(2) = X(3)*Y(1) - X(1)*Y(3)
+      VP(3) = X(1)*Y(2) - X(2)*Y(1)
+      return
+C
+      end
+@* INDEX.

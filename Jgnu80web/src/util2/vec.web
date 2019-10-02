@@ -1,0 +1,50 @@
+@* vec.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] SMALL                                                     
+\item[OUTPUT:] OHOH                                                      
+\item[OUTPUT:] U                                                         
+\item[INPUT:] C                                                         
+\item[INPUT:] J                                                         
+\item[INPUT:] K                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   ZTOC                                                   
+                                                                    
+\end{description}
+@a
+      subroutine vec(SMALL,OHOH,U,C,J,K)
+      implicit none
+      double precision C , gsqrt , r , r2 , SMALL , U , zero
+      integer i , J , jtemp , K , ktemp
+      logical OHOH
+      dimension C(*) , r(3) , U(3)
+      data zero/0.0D0/
+C
+C
+C
+C
+      r2 = zero
+      jtemp = (J-1)*3
+      ktemp = (K-1)*3
+      do 100 i = 1 , 3
+         r(i) = C(i+jtemp) - C(i+ktemp)
+         r2 = r2 + r(i)*r(i)
+ 100  continue
+      r2 = gsqrt(r2)
+      OHOH = r2.lt.SMALL
+      if ( OHOH ) return
+      do 200 i = 1 , 3
+         U(i) = r(i)/r2
+ 200  continue
+      return
+C
+      end
+@* INDEX.
