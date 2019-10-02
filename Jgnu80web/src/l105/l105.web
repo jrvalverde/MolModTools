@@ -1,0 +1,27 @@
+@* l105.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       MSOPT   NEXTOV                                         
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l105(NCHAIN)
+      implicit none
+      integer jump , NCHAIN , nextov
+C
+      call msopt(jump)
+      NCHAIN = nextov(jump)
+      return
+C
+      end
+@* INDEX.

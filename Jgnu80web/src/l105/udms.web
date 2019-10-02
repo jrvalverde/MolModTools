@@ -1,0 +1,46 @@
+@* udms.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] X                                                         
+\item[INPUT:] NVAR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    VALUES                                                 
+\item[Transmits as argument]  ANAMES                                                 
+\item[Uses]  ANAMES                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TREAD   TWRITE                                         
+\item[Called by]   MSOPT                                                  
+                                                                    
+\end{description}
+@a
+      subroutine udms(X,NVAR)
+      implicit none
+      double precision Anames , Fpvec , Values , X
+      integer i , Intvec , iozsub , NVAR
+      dimension X(*)
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      data iozsub/570/
+C
+C
+C      updata common /zsubst/ with the current optimization values from
+C      the input argument.
+C
+C
+C
+C
+C
+C
+      call tread(iozsub,Anames,175,1,175,1,0)
+      do 100 i = 1 , NVAR
+         Values(i) = X(i)
+ 100  continue
+      call twrite(iozsub,Anames,175,1,175,1,0)
+C
+      return
+C
+      end
+@* INDEX.

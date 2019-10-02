@@ -1,0 +1,45 @@
+@* tests.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DELTA1  DELTA2  EPSILN  FCONV   IDNTS   IGO     IGUESS 
+             ISTYPE  STPMIN                                         
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   MSOPT                                                  
+                                                                    
+\end{description}
+@a
+      subroutine tests
+      implicit none
+      double precision Alpha , Delta1 , Delta2 , Epsiln , Fconv , 
+     &                 Flowb , Gkm1p , Gnorm , Pnorm , Stpmin
+      integer Idnts , Ierr , Igo , Iguess , Istype , Ndum
+      common /ctests/ Alpha , Delta1 , Delta2 , Epsiln , Stpmin , 
+     &                Fconv , Flowb , Gkm1p , Pnorm , Gnorm , Idnts , 
+     &                Iguess , Ierr , Igo , Istype , Ndum
+C
+C
+C     see comments in subroutine nextx for the definition of these
+C     constants.
+C     note that the value of delta2 does not follow the convention
+C     of the paper by murtaugh-sargent.
+C
+C
+C
+      Delta1 = 1.0D-08
+      Delta2 = 1.0D-02
+      Epsiln = 1.0D-08
+      Istype = 1
+      Fconv = 5.0D-07
+      Idnts = 1
+      Iguess = 0
+      Igo = 1
+      Stpmin = 1.0D-03
+C
+      return
+C
+      end
+@* INDEX.

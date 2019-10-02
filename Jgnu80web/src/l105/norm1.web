@@ -1,0 +1,37 @@
+@* norm1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] X                                                         
+\item[INPUT:] N                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   NEXTX                                                  
+                                                                    
+\end{description}
+@a
+      double precision function norm1(X,N)
+      implicit none
+      double precision gabs , X , zero
+      integer i , N
+      dimension X(N)
+      data zero/0.0D0/
+C
+C
+C
+C
+C
+      norm1 = zero
+      do 100 i = 1 , N
+         if ( gabs(X(i)).gt.norm1 ) norm1 = gabs(X(i))
+ 100  continue
+      return
+C
+      end
+@* INDEX.

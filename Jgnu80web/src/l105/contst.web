@@ -1,0 +1,121 @@
+@* contst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] IOP                                                       
+\item[INPUT:] ISTEP                                                     
+\item[UNUSED:] NVAR                                                      
+\item[INPUT:] RMSF                                                      
+\item[INPUT:] FMAX                                                      
+\item[INPUT:] RMSD                                                      
+\item[INPUT:] DMAX                                                      
+\item[INPUT:] NSTEP                                                     
+\item[INPUT:] THRESH                                                    
+\item[OUTPUT:] IHDG                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CONVGD  ILSW                                           
+\item[Called by]   MSOPT                                                  
+                                                                    
+\end{description}
+@a
+      logical function contst(IOP,ISTEP,NVAR,RMSF,FMAX,RMSD,DMAX,NSTEP,
+     &                        THRESH,IHDG)
+      implicit none
+      double precision con , DMAX , FMAX , four , onept5 , RMSD , RMSF , 
+     &                 THRESH
+      integer IHDG , In , IOP , Iout , Ipunch , ireslt , ISTEP , NSTEP , 
+     &        NVAR
+      logical test
+      dimension IOP(50)
+      dimension ireslt(3)
+      common /io    / In , Iout , Ipunch
+      data onept5 , four/1.5D0 , 4.0D0/
+C
+C
+C      murtaugh-sargent geometry optimization.
+C      convergence testing. the criteria are taken from subroutine
+C      grdopt in link 103.
+C
+C
+C
+C
+C
+99001 format (1x,8x,'ITEM',8x,5x,2x,'VALUE',3x,2x,'THRESHOLD',2x,
+     &        'CONVERGED'/)
+99002 format (1x,'MAXIMUM FORCE       ',5x,f8.6,5x,f8.6,5x,3A1)
+99003 format (1x,'RMS     FORCE       ',5x,f8.6,5x,f8.6,5x,3A1)
+99004 format (1x,'MAXIMUM DISPLACEMENT',5x,f8.6,5x,f8.6,5x,3A1)
+99005 format (1x,'RMS     DISPLACEMEMT',5x,f8.6,5x,f8.6,5x,3A1)
+99006 format (1x,'EXIT NOT ALLOWED ON THE FIRST STEP')
+99007 format (1H0,'*** OPTIMIZATION ABORTED, TOO MANY STEPS ***')
+99008 format (1H0,'*** OPTIMIZATION COMPLETED ***')
+C
+C
+      contst = .true.
+      write (Iout,99001)
+C
+C      for convergence, rmsf < thresh
+C
+      test = RMSF.lt.THRESH
+      contst = contst .and. test
+      call convgd(RMSF,THRESH,ireslt)
+      write (Iout,99003) RMSF , THRESH , ireslt
+C
+C      for convergence, fmax < 1.5*thresh
+C
+      con = onept5*THRESH
+      test = FMAX.lt.con
+      contst = contst .and. test
+      call convgd(FMAX,con,ireslt)
+      write (Iout,99002) FMAX , con , ireslt
+C
+C      for convergence, rmsd < 4*thresh
+C
+      con = four*THRESH
+      test = RMSD.lt.con
+      contst = contst .and. test
+      call convgd(RMSD,con,ireslt)
+      write (Iout,99005) RMSD , con , ireslt
+C
+C      for convergence, dmax < 1.5*4*thresh
+C
+      con = onept5*con
+      test = DMAX.lt.con
+      contst = contst .and. test
+      call convgd(DMAX,con,ireslt)
+      write (Iout,99004) DMAX , con , ireslt
+C
+C      for convergence, istep > 1
+C
+      test = ISTEP.gt.1
+      contst = contst .and. test
+      if ( .not.test ) write (Iout,99006)
+C
+C      maximum number of steps test.
+C      see comments for iop(6).
+C
+      test = ISTEP.gt.NSTEP
+      contst = contst .or. test
+      if ( test ) write (Iout,99007)
+C
+      if ( .not.contst ) return
+C
+C     if we've converged (or exceeded maximum number of steps)
+C     set the heading flag for use in prmtbl.  if max steps
+C     has been exceed then set the no archive flag.
+C
+      if ( .not.test ) write (Iout,99008)
+      IHDG = 1
+      if ( test ) IHDG = 2
+      if ( test ) call ilsw(1,25,1)
+C
+      return
+C
+      end
+@* INDEX.

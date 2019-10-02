@@ -1,0 +1,110 @@
+@* initfc.
+
+\begin{verbatim}
+Initialize the inverse matrix of second derivatives.
+itype is for the print routine prmtbl only.
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+\item[OUTPUT:] S                                                         
+\item[INPUT:] INTVEC                                                    
+\item[OUTPUT:] FPVEC                                                     
+\item[INPUT:] NVAR                                                      
+\item[OUTPUT:] ITYPE                                                     
+\item[PASSED:] XNAME                                                     
+\item[INPUT:] FRCNST                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT                                                   
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ANALFC  BINRD   IDENT   LNK1E   STREQ   STROUT         
+\item[Called by]   INITMS                                                 
+                                                                    
+\end{description}
+@a
+      subroutine initfc(IOP,S,INTVEC,FPVEC,NVAR,ITYPE,XNAME,FRCNST)
+      implicit none
+      double precision chknam , FPVEC , FRCNST , one , S , XNAME
+      integer i , idx , In , INTVEC , IOP , Iout , Ipunch , ititle , 
+     &        ITYPE , nb , nel , NVAR , nwrd
+      logical test , streq
+      dimension S(50,50) , IOP(50) , INTVEC(*) , FPVEC(*) , ITYPE(*) , 
+     &          XNAME(*)
+      dimension FRCNST(*)
+      dimension chknam(100) , ititle(20)
+      common /io    / In , Iout , Ipunch
+      data one/1.0D0/
+C
+99001 format (1H0,'MURTAUGH-SARGENT DOESN''T KNOW HOW TO COMPUTE '/1x,
+     &        'NUMERICAL SECOND DERIVATIVES, IVAR= ',i5/1x,
+     &        'TRY COMPUTING THEM WITH L103 AND INPUT THEM TO L105')
+99002 format (1x,'FORCE CONSTANT MATRIX READ FROM GUESS FILE--')
+99003 format (1x,'ATTEMPT TO READ FORCE CONSTANTS FAILS:'/1x,
+     &        'MIS-MATCH IN VARIABLE NAMES'/1x,'LENGTH=',i5,
+     &        ' EXPECTED LENGTH=',i5)
+99004 format (1x,'NAME STRING READ, FIRST 72 CHARACTERS:')
+99005 format (1x,'EXPECTED NAME STRING, FIRST 72 CHARACTERS:')
+99006 format (1x,'ATTEMPT TO READ FORCE CONSTANTS FAILS:'/1x,
+     &        'FILE IS WRONG LENGTH'/1x,'LENGTH=',i5,
+     &        ' EXPECTED LENGTH=',i5)
+C
+C
+C                                    initialize s to an identity matrix
+      call ident(S,50,NVAR)
+      do 100 i = 1 , NVAR
+         ITYPE(i) = 5
+ 100  continue
+C                                    read s from the ges file if
+C                                    requested.
+      if ( IOP(10).eq.3 ) then
+         nel = 200
+         call binrd(chknam,ititle,16HVARIABLE NAMES  ,nwrd,nb)
+         test = nwrd.eq.nel
+         test = test .and. streq(chknam,XNAME,200)
+         write (Iout,99002)
+         call strout(Iout,ititle,72,1)
+         if ( .not.(test) ) then
+            write (Iout,99003) nwrd , nel
+            write (Iout,99004)
+            call strout(Iout,chknam,72,1)
+            write (Iout,99005)
+            call strout(Iout,XNAME,72,1)
+            call lnk1e
+         endif
+         call binrd(FRCNST,ititle,16HFORCE CONSTANTS ,nwrd,nb)
+         nel = NVAR*(NVAR+1)
+         test = nwrd.eq.nel
+         if ( .not.(test) ) then
+            write (Iout,99006) nwrd , nel
+            call lnk1e
+         endif
+         call analfc(NVAR,FRCNST,S)
+         do 150 i = 1 , NVAR
+            ITYPE(i) = 97
+            idx = i*(i+1)/2
+            if ( INTVEC(i).eq.0 ) FPVEC(i) = FRCNST(idx)
+ 150     continue
+      endif
+C                                    insert any user supplied values
+      do 200 i = 1 , NVAR
+         if ( INTVEC(i).ne.0 ) then
+            if ( INTVEC(i).ne.1 ) then
+               write (Iout,99001) i
+               call lnk1e
+            endif
+            ITYPE(i) = 1
+            S(i,i) = one/FPVEC(i)
+         endif
+ 200  continue
+C
+      return
+C
+      end
+@* INDEX.
