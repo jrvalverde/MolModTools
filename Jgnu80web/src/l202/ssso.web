@@ -1,0 +1,50 @@
+@* ssso.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] IATFLG                                                    
+\item[PASSED:] A                                                         
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   FWGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ssso(MAXAP3,NATOMS,IATFLG,A,ITST)
+      implicit none
+      double precision A , gabs , Tol2 , Toler
+      integer iat , IATFLG , ITST , ixyz , MAXAP3 , NATOMS
+      dimension IATFLG(*) , A(MAXAP3,3)
+      common /tol   / Toler , Tol2
+C
+C
+C     flag an atom at the origin.
+C
+C
+C
+C
+      ITST = 0
+      do 100 iat = 1 , NATOMS
+         if ( IATFLG(iat).eq.0 ) then
+            do 20 ixyz = 1 , 3
+               if ( gabs(A(iat,ixyz)).gt.Toler ) goto 100
+ 20         continue
+            IATFLG(iat) = 2
+            ITST = 1
+            return
+         endif
+C
+ 100  continue
+      return
+C
+      end
+@* INDEX.

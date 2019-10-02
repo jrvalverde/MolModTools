@@ -1,0 +1,161 @@
+@* sphset.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] ATMCHG                                                    
+\item[OUTPUT:] NSET                                                      
+\item[OUTPUT:] NPOP                                                      
+\item[OUTPUT:] ASET                                                      
+\item[OUTPUT:] NUMSET                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GSQRT                                          
+\item[Called by]   SPHERE                                                 
+                                                                    
+\end{description}
+@a
+      subroutine sphset(MAXAP3,NATOMS,A,ATMCHG,NSET,NPOP,ASET,NUMSET)
+      implicit none
+      double precision A , ASET , ATMCHG , curd , curz , gabs , gsqrt , 
+     &                 Tol2 , Toler , zero
+      integer i , iat , iattop , ic , ictop , idx , init , iset , j , 
+     &        j1 , j2 , jat , jc , jset , k , k1 , l , MAXAP3 , mpop , 
+     &        mset
+      integer NATOMS , NPOP , NSET , num , NUMSET
+      dimension A(MAXAP3,3) , ATMCHG(*) , NPOP(*) , NSET(*) , 
+     &          ASET(MAXAP3,3)
+      dimension mset(100) , mpop(100) , init(100) , idx(100)
+      common /tol   / Toler , Tol2
+      data zero/0.0D0/
+C
+C
+C     a "spherical-set" of atoms is hereby defined as consisting of
+C     those atoms which have the same atomic number and which are
+C     equidistant from the molecules charge center.  any atoms in a
+C     molecule which are equivalent by symmetry must belong to the
+C     same spherical-set.
+C
+C     this routine searches for spherical-sets of atoms.
+C     nset(i)    gives the number of the atom in each set where the
+C                boundrys between sets can be determined from npop.
+C                the list is sorted in terms of increasing distance
+C                from the origin and secondarily in terms of
+C                increasing atomic number.
+C     npop(j)    is the number of atoms in set j.
+C     init(j)    is the number of the first atom in set j.
+C     aset(i,1)  is atmchg(i) and is also used as a flag.
+C     aset(i,2)  is the distance of the i'th atom from the origin.
+C
+C
+C
+C
+C
+C     fill aset.
+C
+      do 100 iat = 1 , NATOMS
+         ASET(iat,1) = ATMCHG(iat)
+         ASET(iat,2) = gsqrt(A(iat,1)**2+A(iat,2)**2+A(iat,3)**2)
+ 100  continue
+C
+C     flag any atoms at the origin.
+C
+      do 200 iat = 1 , NATOMS
+         if ( gabs(ASET(iat,2)).lt.Toler ) ASET(iat,1) = zero
+ 200  continue
+C
+C     fill mset and mpop.
+C
+      iattop = NATOMS - 1
+      ic = 0
+      iset = 0
+      do 300 iat = 1 , iattop
+         if ( ASET(iat,1).ne.zero ) then
+            ic = ic + 1
+            iset = iset + 1
+            mpop(iset) = 1
+            mset(ic) = iat
+            init(iset) = iat
+            j1 = iat + 1
+            do 220 jat = j1 , NATOMS
+               if ( ASET(jat,1).ne.zero ) then
+                  if ( gabs(ASET(jat,2)-ASET(iat,2)).le.Toler ) then
+                     ic = ic + 1
+                     mpop(iset) = mpop(iset) + 1
+                     mset(ic) = jat
+                     ASET(jat,1) = zero
+                  endif
+               endif
+ 220        continue
+         endif
+ 300  continue
+      NUMSET = iset
+      ictop = ic
+C
+C     sort the list in terms of increasing distance from the origin.
+C     if more than on set is at the same distance place the lower
+C     atomic numbered one first.
+C
+C     the proper ordering is first extablished in idx.
+C
+      do 400 i = 1 , NUMSET
+         idx(i) = i
+ 400  continue
+      if ( NUMSET.ne.1 ) then
+C
+         i = 0
+ 450     i = i + 1
+         j = idx(i)
+         iat = init(j)
+         curd = ASET(iat,2)
+         curz = ASET(iat,1)
+         k1 = i + 1
+         do 500 k = k1 , NUMSET
+            l = idx(k)
+            jat = init(l)
+            if ( gabs(curd-ASET(jat,2)).gt.Toler ) then
+C
+               if ( curd.lt.ASET(jat,2) ) goto 500
+            elseif ( curz.lt.ASET(jat,1) ) then
+               goto 500
+            endif
+            idx(i) = l
+            idx(k) = j
+            iat = init(l)
+            curd = ASET(iat,2)
+            curz = ASET(iat,1)
+ 500     continue
+         if ( i.lt.NUMSET-1 ) goto 450
+      endif
+C
+C     move the data from mset and mpop to nset and npop using the
+C     order stored in idx.
+C
+      ic = 0
+      do 600 iset = 1 , NUMSET
+         jset = idx(iset)
+         NPOP(iset) = mpop(jset)
+         num = NPOP(iset)
+         jc = 0
+         if ( jset.ne.1 ) then
+            j2 = jset - 1
+            do 520 j = 1 , j2
+               jc = jc + mpop(j)
+ 520        continue
+         endif
+         do 550 i = 1 , num
+            ic = ic + 1
+            NSET(ic) = mset(jc+i)
+ 550     continue
+ 600  continue
+      return
+C
+      end
+@* INDEX.

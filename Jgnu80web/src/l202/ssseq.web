@@ -1,0 +1,49 @@
+@* ssseq.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] NOP                                                       
+\item[INPUT:] MAXOP                                                     
+\item[OUTPUT:] IATFLG                                                    
+\item[INPUT:] NPERM                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FWGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ssseq(MAXAP3,NATOMS,NOP,MAXOP,IATFLG,NPERM)
+      implicit none
+      integer iat , IATFLG , iop , jat , MAXAP3 , MAXOP , NATOMS , NOP , 
+     &        NPERM
+      dimension IATFLG(*) , NPERM(MAXAP3,MAXOP)
+C
+C
+C     flag (set iatflg to 1) the atoms which are in symmetric
+C     subspaces equivalent to the current one.
+C
+C
+      if ( NOP.eq.1 ) return
+      do 100 iat = 1 , NATOMS
+         if ( IATFLG(iat).eq.2 ) then
+            do 20 iop = 2 , NOP
+               do 10 jat = 1 , NATOMS
+                  if ( NPERM(jat,iop).eq.iat ) then
+                     if ( IATFLG(jat).eq.0 ) IATFLG(jat) = 1
+                  endif
+ 10            continue
+ 20         continue
+         endif
+ 100  continue
+      return
+C
+      end
+@* INDEX.

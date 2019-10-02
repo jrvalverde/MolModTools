@@ -1,0 +1,40 @@
+@* repci.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICNT    ISAVE   NSAVE                                  
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LABREP  PUTTBL                                         
+\item[Called by]   INIREP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine repci
+      implicit none
+      integer Icnt , Isave , Nsave
+C ----------------------------------------------------------------------
+      double precision citbl(2,2)
+      common /reploc/ Nsave , Icnt , Isave(15)
+C      data citbl/'ag',1.0,'au',-1.0/
+      data citbl/0.0 , 1.0 , 0.0 , -1.0/
+C            routine to set up character table and initialize stuff for
+C      molecules of ci symmetry.  need to save the only symmetry
+C      operation:  inversion center.
+C      r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C                        the strings in this data statement are
+C                        not used, but rather are just "comments".
+C
+      Nsave = 1
+      Icnt = 0
+      Isave(1) = 1
+C                  put the character table.
+      call puttbl(2,2,citbl)
+C                  put the labels.
+      call labrep('AG,AU,',2)
+      return
+C
+      end
+@* INDEX.

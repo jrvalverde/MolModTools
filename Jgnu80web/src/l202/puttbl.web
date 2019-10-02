@@ -1,0 +1,52 @@
+@* puttbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NSYMP                                                     
+\item[INPUT:] NRP                                                       
+\item[INPUT:] CTBL                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CHRTBL  NREPS   NSYMOP                                 
+\item[Uses]  NSYMOP                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   REPCI   REPCN   REPCNH  REPCNV  REPCS   REPDN   REPDND 
+             REPDNH  REPO    REPOH   REPT    REPTD                  
+                                                                    
+\end{description}
+@a
+      subroutine puttbl(NSYMP,NRP,CTBL)
+      implicit none
+      integer i , j , NRP , NSYMP
+C ----------------------------------------------------------------------
+      double precision CTBL(NSYMP,*)
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+C          this routine puts a character table intp /repdat/.  the
+C     table, "ctbl", should be a (nsym+1 x nrp) double precision array
+C     containing the label and values for each symmetry operation.
+C     the label values are not used by this routine, but allowances
+C     are made for their presence, since they make nice comments in the
+C     "data" statements of calling routines.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      Nreps = NRP
+      Nsymop = NSYMP - 1
+C
+      if ( NRP.eq.0 ) return
+      do 100 i = 1 , NRP
+         do 50 j = 1 , Nsymop
+            Chrtbl(j,i) = CTBL(j+1,i)
+ 50      continue
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

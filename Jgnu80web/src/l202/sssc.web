@@ -1,0 +1,49 @@
+@* sssc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] IATFLG                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] IXYZ                                                      
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   FWGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine sssc(MAXAP3,NATOMS,IATFLG,A,IXYZ,ITST)
+      implicit none
+      double precision A , gabs , Tol2 , Toler
+      integer i1 , i2 , iat , IATFLG , ITST , IXYZ , MAXAP3 , NATOMS
+      dimension IATFLG(*) , A(MAXAP3,3)
+      common /tol   / Toler , Tol2
+C
+C
+C     flag those atoms which are on cartesian axis ixyz.
+C
+C
+C
+C
+      i1 = 1 + mod(IXYZ,3)
+      i2 = 1 + mod(i1,3)
+      ITST = 0
+      do 100 iat = 1 , NATOMS
+         if ( gabs(A(iat,i1)).le.Toler .and. gabs(A(iat,i2))
+     &        .le.Toler .and. IATFLG(iat).eq.0 ) then
+            ITST = 1
+            IATFLG(iat) = 2
+         endif
+ 100  continue
+      return
+C
+      end
+@* INDEX.

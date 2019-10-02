@@ -1,0 +1,47 @@
+@* ssssig.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[OUTPUT:] IATFLG                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] IXYZ                                                      
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   FWGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ssssig(MAXAP3,NATOMS,IATFLG,A,IXYZ,ITST)
+      implicit none
+      double precision A , gabs , Tol2 , Toler
+      integer iat , IATFLG , ITST , IXYZ , MAXAP3 , NATOMS
+      dimension IATFLG(*) , A(MAXAP3,3)
+      common /tol   / Toler , Tol2
+C
+C
+C     flag those atoms which are in the plane of symmetry perpindicular
+C     to cartesian axes ixyz at ixyz=0.
+C
+C
+C
+C
+      ITST = 0
+      do 100 iat = 1 , NATOMS
+         if ( gabs(A(iat,IXYZ)).le.Toler .and. IATFLG(iat).eq.0 ) then
+            IATFLG(iat) = 2
+            ITST = 1
+         endif
+ 100  continue
+      return
+C
+      end
+@* INDEX.

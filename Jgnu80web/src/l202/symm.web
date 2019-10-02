@@ -1,0 +1,353 @@
+@* symm.
+\begin{verbatim}
+
+     this is the main driver for the symmetry package.
+
+
+     given the coordinates and atomic numbers (or any other
+     identifying feature such as atomic weights) this package
+     determines:
+        1--  the molecule's point group.
+        2--  the standard orientation of the molecule in cartesian
+             space.
+        3--  the molecule's framework group.
+        4--  a permutation list over atoms.
+        5--  the 3x3 rotation matrices for the operations of the group.
+
+     ian is used to determine the atomic symbols which are placed
+     in the stoichimetry and framework group strings.  the floating
+     point array, atmchg, which normally contains atomic numbers
+     but in some applications may contain massed, is used for
+     determining the point group and orienting the molecule.
+
+
+     the many routines are in alphabetical order in the source file
+     except for the mainline routines symm, ptgrp, oper, fwgrp, and
+     omega which appear at the beginning.  below is given a brief
+     description of the subroutines included.  routines are grouped
+     together according to the mainline routine with which they're
+     associated.  general utility routines are described with symm.
+
+
+     symm  ...  the main driver routine.  initialization is done here
+                and the mainline routines ptgrp, oper, fwgrp and omega
+                are called.
+
+        invert  ...  inverts the molecule through the origin and return
+                     the transformation matrix.
+        move    ...  transfers coordinates from one array to another.
+        num     ...  does numeric to hollereith conversion.
+        numer   ...  form a number from the hollerith digits in ngrp.
+        print   ...  debug coordinate printing.
+        put     ...  rotate the molecule so as to put an arbitrary give
+                     point on one of the cartesian axes.
+        reflect ...  relects the molecule through one of the three
+                     cartesian planes and returns the transformation
+                     matrix.
+        rotate  ...  rotates the molecule through a given angle about
+                     one of the cartesian axes and returns the
+                     transformation matrix.
+        tform   ...  transform the coordinates given the 3x3
+                     transformation matrix.
+
+     ptgrp ...  determines the point group of the molecule and imposes
+                a standard orientation in cartesian space.
+
+        center  ...  determine the coordinates of the center of charge.
+        cirset  ...  search for circular sets of atoms.
+        equiv   ...  test two sets of coordinates for equivalence.
+        findc2  ...  search for a set of c2 axes perpindicular to the
+                     principal symmetry axis.
+        findcn  ...  determine the order of the principal rotation axis
+                     in a symmetric top molecule.
+        findv   ...  search for a vertical mirror plane.
+        or3mom  ...  calculate the third moment of charge.
+        oraxis  ...  fix the alignment of a smmetry axis with a
+                     cartesian axis.
+        orc2v   ...  orient planar c2v molecules.
+        orcn    ...  orient cs, cn, cnh, sn, and i molecules.
+        ord2h   ...  orient planar d2h molecules.
+        ordn    ...  orient dn, dnd, dnh, cnv, t, td, th, o, and oh
+                     molecules.
+        ordoc   ...  a dummy routine outlining the orientation
+                     conventions.
+        orkey   ...  determine the key atom in a symmetric top.
+        ornax   ...  determine which cartesian axis passes through the
+                     greatest number of atoms or bonds.
+        orplan  ...  orient the molecule in a cartesian plane.
+        orptst  ...  determine if a molecule is contained in a cartesia
+                     plane and which one if it is.
+        oryz    ...  put a planar molecule in the yz plane and orient
+                     it.
+        secmom  ...  calculate the principal second moments and axes of
+                     charge.
+        sphere  ...  determine if a spherical top molecule is
+                     tetrahedral, octahedral, or icosahedral and do som
+                     preliminary orientation.
+        sphset  ...  search for spherical sets of atoms.
+        triang  ...  given three atoms, detrmine the sides and angles
+                     of the triangle that they form.
+        tstc3   ...  do three given atoms define a c3 rotation axis
+        tstc4   ...  do three given atoms define a c4 rotation axis
+        tstc5   ...  do three given atoms define a c5 rotation axis
+
+     oper  ...  derives the permutation list over atoms and the set of
+                3x3 transformation matrices.
+
+        c2axes  ...  generate the operations of a set of c2 axes in the
+                     xy plane.
+        cnaxis  ...  generate the operations of a proper rotation axis.
+        fill    ...  derive the permutation list and stuff the current
+                     transformation matrix onto the master list.
+        octa    ...  generate the operations of molecules in the poin
+                     groups o and oh.
+        sighcn  ...  generate the operations produced by the product
+                     of proper rotation and horizontal reflection.
+        snaxis  ...  generate the operations of a rotation-reflection
+                     axis.
+        tetra   ...  generate the operations of molecules in the point
+                     groups t and td.
+        vert    ...  generate the operations of a set of verticle
+                     planes.
+        inirep  ...  figures out which symmetry operations are needed
+                     to make orbital and vibrational symmetry
+                     assignments, stores this list into /reploc/
+                     so that "filrep" can find it.  also, this routine
+                     stores the character table for the point group
+                     of the molecule into /repcom/.
+        filrep  ...  saves (in /repcom/) the symmetry operations needed
+                     to make orbital and vibrational symmetry
+                     assigmnents.
+        outrep  ...  saves the contents of /repcom/ on a read-write
+                     file.
+
+     fwgrp ...  build character strings containing the stoichiometry
+                and the framework group.
+
+        cram    ...  builds the character strings.
+        sssc    ...  flag the atoms in a linear symmetric subspace.
+        ssseq   ...  flag the atoms in symmetric subspaces equivalent
+                     to the current one.
+        ssso    ...  flag an atom at the central point.
+        ssssig  ...  flag the atoms in a planar symmetric subspace.
+        stoich  ...  determine the stoichiometric formula of flagged
+                     atoms.
+
+     omega ... edit and output the symmetry information, transform
+               the coordinates, monitor the nosym flag
+               in ilsw and the point group during optimizations.
+
+        noones  ...  removes the ones in stoichiometric formulas
+                     for printing, e.g. c1h4 ==> ch4.
+        fixrep  ...  in the case that omega decides to to rotate the
+                     coordinates to the standard orientation, this
+                     routine is called to back-transform the
+                     symmetry operations stored in /repcom/ by
+                     "filrep".
+        mul3x3  ...  a routine to do a 3x3 matrix multiplication.
+
+
+      options used:
+
+        iop(33) ... print switch
+              0 ... off
+              1 ... printing of translation vector, moments of charge,
+                    rotation matrix, and final symmetry information.
+        iop(34) ... dump switch
+              0 ... off
+              1 ... printing of trace information and some intermediate
+                    results along with the printing afforded by iop(33)
+        ilsw  nosym flag (where=26)
+             0 ... symmetry turned on.
+             1 ... symmetry turned off.
+             2 ... symetry turned off due to a change in point group.
+
+     the gnu80 utility routines diagd, ilsw, and matpac are
+     also required.
+
+
+
+
+
+
+     maxop  ...  the number of symmetry operations trans and nperm can
+                 hold.
+     maxap3 ...  three plus the number of atoms that the program is
+                 dimesnioned for.
+     isymm  ...  the r/w file number for the symmetry informaion.
+     ifwg   ...  the r/w file number for the stoichiometry and
+                 framework group designation.
+
+
+     to change the number of atoms that this program is dimensioned for
+     to max:
+       change maxap3 to max+3
+       dimension c(max,3)
+       dimension cnew(maxap3,3),cscr1(maxap3,3),cscr2(maxap3)
+       dimension nperm(maxap3,maxop), with concomittant changes to
+        the read/write file
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] MULTIP                                                    
+\item[PASSED:] ICHARG                                                    
+\item[INPUT:] IAN                                                       
+\item[OUTPUT:] CIN                                                       
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    TOL2    TOLER                                          
+\item[Transmits as argument]  FWG     LENFOR  LENFWG  MOLFOR                         
+\item[Uses]  FWG     IOUT    LENFOR  LENFWG  MOLFOR  TOLER          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FWGRP   ILSW    IORD    OMEGA   OPER    PTGRP          
+\item[Called by]   GEOM                                                   
+                                                                    
+\end{description}
+
+@a
+      subroutine symm(IOP,NATOMS,MULTIP,ICHARG,IAN,CIN,ATMCHG,TOANG)
+      implicit none
+      double precision ATMCHG , c , CIN , cnew , cscr1 , cscr2 , TOANG , 
+     &                 Tol2 , Toler , trans , trvec
+      integer i , IAN , iat , iblnk , ICHARG , idump , ifau , ifwg , 
+     &        In , IOP , iord , Iout , iprint , Ipunch , isymm , j , k , 
+     &        Lenfor , Lenfwg , maxap3
+      integer maxop , Molfor , MULTIP , NATOMS , ngrp , nop , nosyme , 
+     &        nperm
+      integer Fwg
+      dimension IAN(*) , IOP(50) , CIN(*) , ATMCHG(*)
+      dimension c(100,3)
+      dimension ngrp(4) , cnew(103,3) , cscr1(103,3) , cscr2(103,3)
+      dimension trans(3,3,48) , nperm(103,48) , trvec(3)
+      common /io    / In , Iout , Ipunch
+      common /tol   / Toler , Tol2
+C=> local common i807a,i807b
+      common /cfwg  / Lenfor , Molfor(30) , Lenfwg , Fwg(100)
+      data c/300*0./ , cnew/309*0./ , cscr1/309*0./
+      data cscr2/309*0./ , trans/432*0./ , nperm/4944*0/
+      data trvec/3*0./
+      data iblnk/1H /
+      data maxop/48/ , maxap3/103/ , isymm/551/ , ifwg/552/
+C
+C
+C
+99001 format (1x,'SYMM--  CANNOT COPE WITH DUMMY OR (SHIVER!) GHOST',
+     &        ' ATOMS'/1x,'SYMM--  SYMMETRY TURNED OFF')
+99002 format (1x,'SYMM--  SYMMETRY TURNED OFF FOR ATOMIC CALCULATION')
+99003 format (1x,'SYMM--  SYMMETRY TURNED OFF BY EXTERNAL REQUEST')
+C
+C
+C
+C     check for user set nosym.
+C
+      call ilsw(2,26,nosyme)
+      if ( nosyme.ne.0 ) write (Iout,99003)
+C
+C
+C     initialize ngrp, toler, and tol.  toler is a constant which is the
+C     smallest distance in angstroms which will be considered finite.
+C     tol2 is a constant which is used for comparing non-coordinate
+C     quantities for zero (such as the difference between principal
+C     moments of charge) and as a cutoff for the values of cartesian
+C     coordinates in omega (if c(iat,ixyz) .lt. tol then c(iat,ixyz)
+C     = zero).
+C
+      ngrp(1) = iblnk
+      ngrp(2) = iblnk
+      ngrp(3) = iblnk
+      ngrp(4) = iblnk
+      Toler = 1.0D-05
+      Tol2 = 2.5D-07
+C
+C     change toler if the coordinates are in atomic units.
+C
+      call ilsw(2,18,ifau)
+      if ( ifau.ne.0 ) Toler = Toler/TOANG
+C
+C     set the print and dump switches.
+C
+      iprint = IOP(33) + IOP(34)
+      idump = IOP(34)
+C
+C     copy the input vector of cartesian coordinates to the internal
+C     array.
+C
+      k = 0
+      do 100 i = 1 , NATOMS
+         do 50 j = 1 , 3
+            k = k + 1
+            c(i,j) = CIN(k)
+ 50      continue
+ 100  continue
+C
+C     check for an atomic calculation.  if found, turn off symmetry.
+C
+      if ( NATOMS.gt.1 ) then
+C
+C     check for dummy and ghost atoms.
+C
+         do 150 iat = 1 , NATOMS
+            if ( IAN(iat).le.0 ) then
+               write (Iout,99001)
+               call ilsw(1,26,1)
+               goto 200
+            endif
+C
+ 150     continue
+C
+C     determine the point group and standard orientation.
+C     the new coordinates are returned in cnew, the schonflies symbol
+C     for the point group in ngrp, and the translation vector in
+C     trvec.  the final rotation matrix is the last three "atoms"
+C     in cnew.
+C
+         call ptgrp(maxap3,cnew,cscr1,c,cscr2,IAN,ATMCHG,NATOMS,iprint,
+     &              idump,ngrp,trvec)
+      else
+         ngrp(1) = iord('K')
+         ngrp(2) = iord('H')
+         call ilsw(1,26,1)
+         write (Iout,99002)
+      endif
+C
+C     form the operation matrices nperm and trans.  nop is the number
+C     of symmetry operations.
+C
+ 200  call oper(maxap3,ngrp,NATOMS,maxop,trans,nperm,nop,cnew,cscr1,
+     &          cscr2,idump)
+C
+C     form the character strings containing the stoichiometric formula,
+C     molfor, and the framework group, fwg.  the length fo the strings
+C     are lenfor and lenfwg, respectively.
+C
+      call fwgrp(maxap3,ngrp,NATOMS,ICHARG,MULTIP,IAN,nop,maxop,nperm,
+     &           cnew,cscr1,cscr2,Molfor,Lenfor,Fwg,Lenfwg)
+C
+C     omega is the output routine.
+C
+      call omega(maxap3,isymm,ifwg,nop,trans,nperm,maxop,NATOMS,iprint,
+     &           idump,cnew,c,trvec,ngrp,IAN,cscr1,TOANG)
+C
+C     copy the cartesian coordinates from the internal array to the
+C     external vector.
+C
+      k = 0
+      do 300 i = 1 , NATOMS
+         do 250 j = 1 , 3
+            k = k + 1
+            CIN(k) = c(i,j)
+ 250     continue
+ 300  continue
+C
+C
+      return
+C
+      end
+@* INDEX.

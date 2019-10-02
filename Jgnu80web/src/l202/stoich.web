@@ -1,0 +1,163 @@
+@* stoich.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[OUTPUT:] IATFLG                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] A                                                         
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] LENGTH                                                    
+\item[PASSED:] IA                                                        
+\item[INPUT:] IXYZ                                                      
+\item[INPUT:] LIN                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CRAM    GABS    GMIN1                                  
+\item[Called by]   FWGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine stoich(MAXAP3,IATFLG,IAN,A,NATOMS,LENGTH,IA,IXYZ,LIN)
+      implicit none
+      double precision A , big , curz , gabs , gmin1 , oldz , one , 
+     &                 Tol2 , Toler , zero , zmin
+      integer i , IA , IAN , iat , IATFLG , iatnum , icode , idx , 
+     &        iflag , imin , IXYZ , jdx , LENGTH , LIN , MAXAP3 , 
+     &        NATOMS , num , numfla
+      dimension IATFLG(*) , IAN(*) , A(MAXAP3,3) , IA(*)
+      dimension idx(104) , jdx(92)
+      common /tol   / Toler , Tol2
+C      data jdx/6,1,13,18,33,5,4,35,20,17,27,24,29,9,26,31,32,2,19,36,3,
+C     +     12,25,7,11,10,28,8,15,16,21,34,14,22,23,30/
+      data jdx/6 , 1 , 89 , 47 , 13 , 18 , 33 , 85 , 79 , 5 , 56 , 4 , 
+     &     83 , 35 , 20 , 48 , 58 , 17 , 27 , 24 , 55 , 29 , 66 , 68 , 
+     &     63 , 9 , 26 , 87 , 31 , 64 , 32 , 2 , 72 , 80 , 67 , 53 , 
+     &     49 , 77 , 19 , 36 , 57 , 3 , 71 , 12 , 25 , 42 , 7 , 11 , 
+     &     41 , 60 , 10 , 28 , 8 , 76 , 15 , 91 , 82 , 46 , 61 , 59 , 
+     &     84 , 78 , 88 , 37 , 75 , 45 , 86 , 44 , 16 , 51 , 21 , 34 , 
+     &     14 , 62 , 50 , 38 , 73 , 65 , 43 , 52 , 90 , 22 , 81 , 69 , 
+     &     92 , 23 , 74 , 54 , 39 , 70 , 30 , 40/
+C
+      data zero , one , big/0.0D0 , 1.0D0 , 100.D0/
+C
+C
+C     this routine determines the stoichiometric formula for the
+C     atoms in the current symmetric sub-space (i.e. those atoms
+C     whose flags are set to 2) and places it in the framework
+C     group buffer.
+C     lin is used to indicate that:
+C        lin=0  the current symmetric sub-space is not linear.
+C        lin=1  the current symmetric sub-space is linear.
+C        lin=2  the current symmetric sub-space is linear and
+C               contains a unique central point.
+C        lin=3  initialize idx.
+C
+C
+C
+C
+C
+      if ( LIN.eq.3 ) then
+C
+C     initialize idx which governs the order of the atomic symbols
+C     in a stoichiometric formula.  the hill system is used:  for
+C     carbon containing compounds the order is carbon, hydrogen,
+C     with remaining elements in alphabetical order.  for non-
+C     carbonaceous species the order is strictly alphabetical.
+C     the order given in the data statement assumes the prescence
+C     of carbon.
+C
+         do 50 i = 1 , 92
+            idx(i) = jdx(i)
+ 50      continue
+         do 100 i = 93 , 104
+            idx(i) = i
+ 100     continue
+         do 150 iat = 1 , NATOMS
+            if ( IAN(iat).eq.6 ) return
+ 150     continue
+         do 200 i = 1 , 12
+            idx(i) = idx(i+2)
+ 200     continue
+         idx(13) = 6
+         do 250 i = 14 , 30
+            idx(i) = idx(i+1)
+ 250     continue
+         idx(31) = 1
+         return
+      elseif ( LIN.gt.0 ) then
+C
+C     for linear subspaces the atoms are listed in sequential order
+C     along the axis.  if the molecule has a center of symmetry
+C     (lin=2) then the central point will be represented by a dot.
+C
+         call cram(203,IA,LENGTH)
+C
+C     count the flagged atoms.
+C
+         numfla = 0
+         do 300 iat = 1 , NATOMS
+            if ( IATFLG(iat).eq.2 ) numfla = numfla + 1
+ 300     continue
+C
+C     scan the axis from negative to positive.
+C
+         oldz = -big
+         zmin = big
+ 350     iflag = 0
+         do 400 iat = 1 , NATOMS
+            if ( IATFLG(iat).eq.2 ) then
+               iflag = 1
+               curz = A(iat,IXYZ)
+               zmin = gmin1(zmin,curz)
+               if ( gabs(curz-zmin).lt.Toler ) imin = iat
+            endif
+ 400     continue
+         if ( iflag.ne.0 ) then
+            if ( LIN.eq.2 .and. numfla.gt.1 .and. dsign(one,oldz)
+     &           .ne.dsign(one,zmin) ) call cram(205,IA,LENGTH)
+            IATFLG(imin) = 1
+            icode = IAN(imin) + 100
+            call cram(icode,IA,LENGTH)
+            call cram(1,IA,LENGTH)
+            oldz = zmin
+            zmin = big
+            goto 350
+         endif
+      else
+         call cram(203,IA,LENGTH)
+         do 450 i = 1 , 104
+            iatnum = idx(i)
+            num = 0
+            do 420 iat = 1 , NATOMS
+               if ( IATFLG(iat).eq.2 ) then
+                  if ( IAN(iat).eq.iatnum ) then
+                     num = num + 1
+                     IATFLG(iat) = 1
+                  endif
+               endif
+ 420        continue
+            if ( num.ne.0 ) then
+               icode = iatnum + 100
+               call cram(icode,IA,LENGTH)
+               call cram(num,IA,LENGTH)
+            endif
+ 450     continue
+         call cram(204,IA,LENGTH)
+         call cram(216,IA,LENGTH)
+         return
+      endif
+C
+      if ( LIN.eq.2 .and. numfla.gt.1 .and. dsign(one,oldz).lt.zero )
+     &     call cram(205,IA,LENGTH)
+      call cram(204,IA,LENGTH)
+      call cram(216,IA,LENGTH)
+      return
+C
+      end
+@* INDEX.

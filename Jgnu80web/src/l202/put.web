@@ -1,0 +1,103 @@
+@* put.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[OUTPUT:] T                                                         
+\item[INPUT:] V                                                         
+\item[PASSED:] NATOMS                                                    
+\item[INPUT:] IXYZ                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GSQRT   MOVE    TFORM                          
+\item[Called by]   FWGRP   OCTA    PTGRP   SPHERE  TETRA   TSTC3   TSTC4  
+             TSTC5                                                  
+                                                                    
+\end{description}
+@a
+      subroutine put(MAXAP3,A,B,T,V,NATOMS,IXYZ)
+      implicit none
+      double precision A , alph , B , beta , gabs , gamm , gsqrt , one , 
+     &                 T , t1 , Tol2 , Toler , V , v1 , v2 , v2233 , 
+     &                 v2v2 , v3 , v3v3 , vnorm
+      integer i1 , i2 , i3 , IXYZ , MAXAP3 , NATOMS
+      dimension V(3) , T(3,3)
+      dimension t1(3,3) , A(*) , B(*)
+      common /tol   / Toler , Tol2
+      data one/1.0D0/
+C
+C
+C     the n sets of coordinates in a are rotated so that the point
+C     specified by v is placed on the ixyz axis.  the axis of rotation
+C     is given by the vector product of v with the unit vector defining
+C     the axis ixyz.  the angle of rotation is given by the appropriate
+C     direction cosine.
+C
+C
+C
+C
+C
+C     define the axes i1, i2, and i3 where i1=ixyz:
+C            i1:  x  z  y
+C            i2:  y  x  z
+C            i3:  z  y  x
+C     the projections on these (i1, i2, i3) are v1, v2, and v3.
+C
+      i1 = IXYZ
+      i2 = 1 + mod(i1,3)
+      i3 = 1 + mod(i2,3)
+      v1 = V(i1)
+      v2 = V(i2)
+      v3 = V(i3)
+      vnorm = gsqrt(v1*v1+v2*v2+v3*v3)
+      if ( gabs(gabs(v1)-vnorm).lt.Toler ) return
+C
+C    compute the direction cosines and some common factors.
+C
+      alph = v1/vnorm
+      beta = v2/vnorm
+      gamm = v3/vnorm
+      v2v2 = v2*v2
+      v3v3 = v3*v3
+      v2233 = one/(v2v2+v3v3)
+C
+C     form the transformation matrix in the i1, i2, i3 coordinates.
+C     this matrix will place the point (v1,v2,v3) on the pos've i1 axis.
+C
+      t1(1,1) = alph
+      t1(1,2) = beta
+      t1(1,3) = gamm
+      t1(2,1) = -t1(1,2)
+      t1(3,1) = -t1(1,3)
+      t1(2,3) = v2*v3*(alph-one)*v2233
+      t1(3,2) = t1(2,3)
+      t1(2,2) = (v2v2*alph+v3v3)*v2233
+      t1(3,3) = (v3v3*alph+v2v2)*v2233
+C
+C     transform to the original coordinate system.
+C
+      T(i1,i1) = t1(1,1)
+      T(i1,i2) = t1(1,2)
+      T(i1,i3) = t1(1,3)
+      T(i2,i1) = t1(2,1)
+      T(i2,i2) = t1(2,2)
+      T(i2,i3) = t1(2,3)
+      T(i3,i1) = t1(3,1)
+      T(i3,i2) = t1(3,2)
+      T(i3,i3) = t1(3,3)
+C
+C     carry out the rotation.
+C
+      call tform(MAXAP3,T,A,B,NATOMS)
+      call move(MAXAP3,B,A,NATOMS)
+      return
+C
+      end
+@* INDEX.

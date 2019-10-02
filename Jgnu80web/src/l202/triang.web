@@ -1,0 +1,70 @@
+@* triang.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] I                                                         
+\item[INPUT:] J                                                         
+\item[INPUT:] K                                                         
+\item[OUTPUT:] ALP                                                       
+\item[OUTPUT:] BET                                                       
+\item[OUTPUT:] GAM                                                       
+\item[OUTPUT:] DIJ                                                       
+\item[OUTPUT:] DIK                                                       
+\item[OUTPUT:] DJK                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GACOS   GSQRT                                          
+\item[Called by]   TSTC3   TSTC4   TSTC5                                  
+                                                                    
+\end{description}
+@a
+      subroutine triang(MAXAP3,A,I,J,K,ALP,BET,GAM,DIJ,DIK,DJK)
+      implicit none
+      double precision A , ALP , BET , DIJ , DIK , DJK , dotij , dotik , 
+     &                 dotjk , gacos , GAM , gsqrt , xi , xj , xk , yi , 
+     &                 yj , yk , zi , zj
+      double precision zk
+      integer I , J , K , MAXAP3
+      dimension A(MAXAP3,3)
+C
+C
+C     given the atomic coordinates in a and the three atoms i, j, and k
+C     find:
+C       1-- the distances defined by the locations of the three atoms,
+C           dij, dik, and djk.
+C       2-- the angles defined by the location of the three atoms,
+C           alp    k.i.j
+C           bet    i.j.k
+C           gam    j.k.i
+C
+C
+C
+      xi = A(I,1)
+      yi = A(I,2)
+      zi = A(I,3)
+      xj = A(J,1)
+      yj = A(J,2)
+      zj = A(J,3)
+      xk = A(K,1)
+      yk = A(K,2)
+      zk = A(K,3)
+      DIJ = gsqrt((xi-xj)**2+(yi-yj)**2+(zi-zj)**2)
+      DIK = gsqrt((xi-xk)**2+(yi-yk)**2+(zi-zk)**2)
+      DJK = gsqrt((xj-xk)**2+(yj-yk)**2+(zj-zk)**2)
+      dotjk = (xj-xi)*(xk-xi) + (yj-yi)*(yk-yi) + (zj-zi)*(zk-zi)
+      dotik = (xi-xj)*(xk-xj) + (yi-yj)*(yk-yj) + (zi-zj)*(zk-zj)
+      dotij = (xi-xk)*(xj-xk) + (yi-yk)*(yj-yk) + (zi-zk)*(zj-zk)
+      ALP = gacos(dotjk/(DIJ*DIK))
+      BET = gacos(dotik/(DIJ*DJK))
+      GAM = gacos(dotij/(DIK*DJK))
+      return
+C
+      end
+@* INDEX.

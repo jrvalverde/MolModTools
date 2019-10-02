@@ -1,0 +1,105 @@
+@* subvar.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] BL                                                        
+\item[OUTPUT:] ALPHA                                                     
+\item[OUTPUT:] BETA                                                      
+\item[INPUT:] LBL                                                       
+\item[INPUT:] LALPHA                                                    
+\item[INPUT:] LBETA                                                     
+\item[INPUT:] NZ                                                        
+\item[INPUT:] NVAR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  ANAMES                                                 
+\item[Uses]  ANAMES  IOUT    VALUES                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E   TREAD                                          
+\item[Called by]   GEOM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine subvar(BL,ALPHA,BETA,LBL,LALPHA,LBETA,NZ,NVAR)
+      implicit none
+      double precision ALPHA , Anames , BETA , BL , Fpvec , one , sign , 
+     &                 Values
+      integer i , idx , In , Intvec , Iout , iozsub , Ipunch , j , 
+     &        LALPHA , LBETA , LBL , NVAR , NZ
+      dimension BL(*) , ALPHA(*) , BETA(*)
+      dimension LBL(*) , LALPHA(*) , LBETA(*)
+      common /io    / In , Iout , Ipunch
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      data iozsub/570/
+      data one/1.0D0/
+C
+C
+C      purpose:  substitutes the values of variables into the z-matrix.
+C      input  :  data from /zmat/ as arguments and /zsubst/ from r/w
+C                files.  these commons are explained in subroutine
+C                rdgeom in l101 where there are formed.
+C      output :  a complete z-matrix in /zmat/ which can be used to
+C                compute the cartesian coordinates.
+C
+C
+C
+C
+C
+99001 format (1x,'VARIABLE INDEX OF ',i4,' ON CARD ',i3,
+     &        ' IS OUT OF ''RANGE.  NVAR = ',i3)
+C
+C
+C                                         if there are no variables the
+C                                         z-matrix is ready to go.
+C
+      if ( NVAR.eq.0 ) return
+      call tread(iozsub,Anames,175,1,175,1,0)
+C
+C                                         lbl, lalpha, and lbeta are
+C                                         arrays for mapping from the
+C                                         lists of variables in /zsubst/
+C                                         into the z-matrix.  for
+C                                         example, if lbl(i) is zero
+C                                         then bl(i) is all ready. if
+C                                         lbl(i) is 4 then set bl(i) to
+C                                         values(4).  if lbl(i)=-4,
+C                                         then set bl(i) to -values(4).
+C
+      do 100 i = 1 , NZ
+         j = i
+         if ( LBL(i).ne.0 ) then
+            idx = iabs(LBL(i))
+            if ( idx.le.0 .or. idx.gt.NVAR ) goto 200
+            sign = one
+            if ( LBL(i).lt.0 ) sign = -one
+            BL(i) = sign*Values(idx)
+         endif
+         if ( LALPHA(i).ne.0 ) then
+            idx = iabs(LALPHA(i))
+            if ( idx.le.0 .or. idx.gt.NVAR ) goto 200
+            sign = one
+            if ( LALPHA(i).lt.0 ) sign = -one
+            ALPHA(i) = sign*Values(idx)
+         endif
+         if ( LBETA(i).ne.0 ) then
+            idx = iabs(LBETA(i))
+            if ( idx.le.0 .or. idx.gt.NVAR ) goto 200
+            sign = one
+            if ( LBETA(i).lt.0 ) sign = -one
+            BETA(i) = sign*Values(idx)
+         endif
+ 100  continue
+      return
+C
+C                                     error exit
+C
+ 200  write (Iout,99001) idx , j , NVAR
+      call lnk1e
+C normal no  return from lnk1e
+      stop 13
+C
+      end
+@* INDEX.

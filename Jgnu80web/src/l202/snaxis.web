@@ -1,0 +1,62 @@
+@* snaxis.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[INPUT:] N                                                         
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] NOP                                                       
+\item[PASSED:] MAXOP                                                     
+\item[PASSED:] TRANS                                                     
+\item[PASSED:] NPERM                                                     
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILL    GATAN   GFLOAT  MATPAC  REFLCT  ROTATE         
+\item[Called by]   OPER                                                   
+                                                                    
+\end{description}
+@a
+      subroutine snaxis(MAXAP3,N,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,D)
+      implicit none
+      double precision A , B , D , eight , gatan , gfloat , one , phi , 
+     &                 r , s , t , theta , TRANS , zero
+      integer iop , MAXAP3 , MAXOP , N , NATOMS , NOP , NPERM , num
+      dimension r(3,3) , s(3,3) , t(3,3)
+      dimension TRANS(*) , NPERM(*) , A(*) , B(*) , D(*)
+      data zero , one , eight/0.0D0 , 1.0D0 , 8.0D0/
+C
+C
+C     generate the n-1 operations of an n-fold improper rotation axis
+C     along z.
+C
+C
+C
+C
+      phi = eight*gatan(one)/gfloat(N)
+      theta = zero
+      num = N - 1
+      do 100 iop = 1 , num
+         theta = theta + phi
+         call rotate(MAXAP3,A,B,NATOMS,t,3,theta)
+         if ( mod(iop,2).eq.1 ) then
+C
+            call reflct(MAXAP3,B,D,NATOMS,r,3)
+            call matpac(r,t,s,3,3,1)
+            call fill(MAXAP3,NATOMS,NOP,MAXOP,s,TRANS,NPERM,A,D)
+         else
+            call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,A,B)
+         endif
+C
+ 100  continue
+      return
+C
+      end
+@* INDEX.

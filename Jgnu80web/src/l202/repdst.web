@@ -1,0 +1,91 @@
+@* repdst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CHRTBL  ICNT    IPRMUT  ISAVE   NREPS   NSAVE   NSYMOP 
+             SYMOPS                                                 
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GATAN   GCOS    GSIN    LABREP                         
+\item[Called by]   INIREP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine repdst(NATOMS)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision angle , f180 , four , gatan , gcos , gsin , one , 
+     &                 pi , ten , three , two , zero
+      integer i , Icnt , Isave , NATOMS , Nsave
+      double precision dsttbl(3,8)
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      common /reploc/ Nsave , Icnt , Isave(15)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+C      data dsttbl/'sgg',1.0,1.0,'sgu',1.0,-1.0,'pig','??',2.0,'piu',
+C     +     '??',-2.0,'dltg','??',2.0,'dltu','??',-2.0,'phig','??',2.0,
+C     +     'phiu','??',-2.0/
+      data dsttbl/0.0 , 1.0 , 1.0 , 0.0 , 1.0 , -1.0 , 0.0 , 0.0 , 2.0 , 
+     &     0.0 , 0.0 , -2.0 , 0.0 , 0.0 , 2.0 , 0.0 , 0.0 , -2.0 , 0.0 , 
+     &     0.0 , 2.0 , 0.0 , 0.0 , -2.0/
+      data four/4.0D0/ , one/1.0D0/ , f180/180.0D0/ , three/3.0D0/
+      data ten/10.0D0/ , two/2.0D0/ , zero/0.0D0/
+C          this routine sets things up for linear symmetric molecules.
+C     in case you're wondering, the 'dst' in the name of the
+C     routine is for "d-star", whicn in turn represents "d-infinity".
+C     anyway, as i was saying, this routine writes out the rotation
+C     matrix necessary to determine whether an orbital is sigma, pi,
+C     delta, ect.  basically, this is just a rotation about the z-axis
+C     of 10 degrees.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+C
+C                                    fill in values of character table.
+      pi = four*gatan(one)
+      angle = ten*pi/f180
+      dsttbl(2,3) = two*gcos(angle)
+      dsttbl(2,4) = two*gcos(angle)
+      dsttbl(2,5) = two*gcos(two*angle)
+      dsttbl(2,6) = two*gcos(two*angle)
+      dsttbl(2,7) = two*gcos(three*angle)
+      dsttbl(2,8) = two*gcos(three*angle)
+C
+      Icnt = 0
+      Nsave = 1
+      Nreps = 8
+      Nsymop = 2
+      Isave(1) = 1
+C
+C                              build the rotation matrix.
+      Symops(1,2) = gcos(angle)
+      Symops(2,2) = gsin(angle)
+      Symops(3,2) = zero
+      Symops(4,2) = -gsin(angle)
+      Symops(5,2) = gcos(angle)
+      Symops(6,2) = zero
+      Symops(7,2) = zero
+      Symops(8,2) = zero
+      Symops(9,2) = one
+C
+C                        build the permutation matrix.
+      do 100 i = 1 , NATOMS
+         Iprmut(i,2) = i
+ 100  continue
+C
+C                        fill the character table.
+      do 200 i = 1 , 8
+         Chrtbl(2,i) = dsttbl(2,i)
+         Chrtbl(1,i) = dsttbl(3,i)
+ 200  continue
+      call labrep('SGG,SGU,PIG,PIU,DLTG,DLTU,PHIG,PHIU,',8)
+      return
+C
+      end
+@* INDEX.

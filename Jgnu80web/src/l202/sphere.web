@@ -1,0 +1,309 @@
+@* sphere.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] A                                                         
+\item[OUTPUT:] B                                                         
+\item[PASSED:] D                                                         
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] NSET                                                      
+\item[INPUT:] NPOP                                                      
+\item[OUTPUT:] NORDER                                                    
+\item[INPUT:] IDUMP                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT    TOLER                                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GATAN   MOVE    PUT     ROTATE  SPHSET  TSTC3  
+             TSTC4   TSTC5                                          
+\item[Called by]   PTGRP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine sphere(MAXAP3,NATOMS,A,B,D,ATMCHG,NSET,NPOP,NORDER,
+     &                  IDUMP)
+      implicit none
+      double precision A , ATMCHG , B , centr , cmax , curz , D , gabs , 
+     &                 gatan , half , halfpi , one , pi , save , save2 , 
+     &                 savez , t , theta , Tol , Toler
+      double precision tst , two , x , y , z , zero
+      integer i , i2 , iat , IDUMP , ihop , In , ioff , Iout , Ipunch , 
+     &        iset , itop , itst , ixyz , j , j1 , j2 , jat , k , k1 , 
+     &        kat
+      integer key , MAXAP3 , moff , mpop1 , mpop2 , mset , NATOMS , 
+     &        NORDER , NPOP , NSET , num3 , numatm , numset
+      dimension A(MAXAP3,3) , B(MAXAP3,3) , D(MAXAP3,3) , ATMCHG(*) , 
+     &          NPOP(*) , NSET(*)
+      dimension centr(3) , save(3) , save2(3) , t(3,3)
+      common /tol   / Toler , Tol
+      common /io    / In , Iout , Ipunch
+      data half , one , two/0.5D0 , 1.0D0 , 2.0D0/
+C
+C
+C     this routine is called for spherical top molecules.
+C     it has two primary functions:
+C     1--  the highest order proper rotation axis is found and its
+C          value placed in norder.
+C          the possibilities are:
+C          5 for the point groups ih, i
+C          4 for the point groups oh, o
+C          3 for the point groups td, t, th
+C     2--  the molecule's gross orientation is fixed as follows:
+C          t, td, th  the three mutually perpindicular c2 axes are
+C                     aligned with the cartesian axes so as to max-
+C                     imize the z-coordinate of the key atom (defined
+C                     below).
+C          o, oh      the three mutually perpindicular c4 axes are
+C                     aligned with the cartesian axes so as to max-
+C                     imize the z-coordiante of the key atom.
+C          i, ih      on of the six c5 axes is aligned with the
+C                     catesian z-axis so as to maximize the z-coord-
+C                     inate of the key atom.
+C
+C
+C
+C
+C
+99001 format (1x,'SPHERE-- KEY ATOM',i4)
+C
+      NORDER = 0
+      numatm = NATOMS + 3
+      halfpi = two*gatan(one)
+      pi = two*halfpi
+C
+C     find the spherical sets.
+C
+      call sphset(MAXAP3,NATOMS,A,ATMCHG,NSET,NPOP,D,numset)
+C
+C     find the key atom -- the lowest numbered atom in the first
+C     spherical set, where the sperical sets have been ordered
+C     in sphset.
+C
+      key = NATOMS
+      itop = NPOP(1)
+      do 100 i = 1 , itop
+         key = min0(key,NSET(i))
+ 100  continue
+      if ( IDUMP.ne.0 ) write (Iout,99001) key
+C
+C     define the smallest spherical set.  axes will be searched for
+C     within thes set.
+C
+      ioff = 0
+      mpop1 = NATOMS
+      do 200 iset = 1 , numset
+         mpop2 = min0(mpop1,NPOP(iset))
+         if ( mpop2.ne.mpop1 ) then
+            mpop1 = mpop2
+            mset = iset
+            moff = ioff
+         endif
+         ioff = ioff + NPOP(iset)
+ 200  continue
+C
+C     pick three atoms from the set selected above.
+C
+      num3 = 0
+      i2 = mpop1 - 2
+      j2 = mpop1 - 1
+      do 300 i = 1 , i2
+         iat = NSET(moff+i)
+         j1 = i + 1
+         do 250 j = j1 , j2
+            jat = NSET(moff+j)
+            k1 = j + 1
+            do 220 k = k1 , mpop1
+               kat = NSET(moff+k)
+C
+C     has a 4- or 5-fold axis been found in a previous triplet of atoms
+C        if yes  then branch to 120
+C        else    search for 4- and 5-fold axes.
+C
+               if ( NORDER.le.3 ) then
+                  call move(MAXAP3,A,D,numatm)
+                  call tstc5(MAXAP3,D,B,NATOMS,ATMCHG,iat,jat,kat,centr,
+     &                       itst)
+                  if ( itst.eq.0 ) then
+C
+                     call move(MAXAP3,A,D,numatm)
+                     call tstc4(MAXAP3,D,B,NATOMS,ATMCHG,iat,jat,kat,
+     &                          centr,itst)
+                     if ( itst.ne.0 ) then
+                        NORDER = 4
+                        call move(MAXAP3,D,A,numatm)
+C
+C     no axes have been found or num3 3-fold axis have been found.
+C     test for a 3-fold axis
+C       if no  then get 3 new atoms
+C       else   test num3
+C                if zero  then set norder, save centr in save, continue
+C                if  one  then save cnetr in save2, continue
+C                if  two  then continue
+C       continue the search
+C
+                     elseif ( num3.ne.2 ) then
+                        call move(MAXAP3,A,D,numatm)
+                        call tstc3(MAXAP3,D,B,NATOMS,ATMCHG,iat,jat,kat,
+     &                             centr,itst)
+                        if ( itst.ne.0 ) then
+                           ihop = num3 + 1
+                           if ( ihop.eq.2 ) then
+C
+                              num3 = 2
+                              save2(1) = centr(1)
+                              save2(2) = centr(2)
+                              save2(3) = centr(3)
+                           else
+C
+                              NORDER = 3
+                              num3 = 1
+                              save(1) = centr(1)
+                              save(2) = centr(2)
+                              save(3) = centr(3)
+                           endif
+                        endif
+                     endif
+                  else
+                     NORDER = 5
+                     savez = gabs(D(key,3))
+                     save(1) = centr(1)
+                     save(2) = centr(2)
+                     save(3) = centr(3)
+                  endif
+C
+               elseif ( NORDER.eq.4 ) then
+C
+C     one 4-fold axis has already been found.
+C     test the current atoms for a second 4-fold axis
+C       if no  then continue the search
+C       else   rotate about z to align the new c4 with y and branch
+C              to 180
+C
+                  call move(MAXAP3,A,D,numatm)
+                  call tstc4(MAXAP3,D,B,NATOMS,ATMCHG,iat,jat,kat,centr,
+     &                       itst)
+                  if ( itst.ne.0 ) then
+                     if ( gabs(centr(3)).le.Toler ) then
+                        x = centr(1)
+                        y = centr(2)
+                        theta = halfpi
+                        if ( gabs(y).gt.Toler ) theta = gatan(x/y)
+                        call rotate(MAXAP3,D,A,numatm,t,3,theta)
+                        goto 400
+                     endif
+                  endif
+               else
+C
+C     one 5-fold axis has already been found.
+C     test the current atom triplet for a 5-fold axis
+C       if no  then continue the search
+C       else   is the z-coordinate of the key atom > savez
+C                 if yes  then save it
+C                 else    continue the search
+C
+                  call move(MAXAP3,D,A,numatm)
+                  call tstc5(MAXAP3,D,B,NATOMS,ATMCHG,iat,jat,kat,centr,
+     &                       itst)
+                  if ( itst.ne.0 ) then
+                     curz = gabs(D(key,3))
+                     if ( gabs(curz-savez).ge.Toler ) then
+                        if ( savez.le.curz ) then
+                           savez = curz
+                           save(1) = centr(1)
+                           save(2) = centr(2)
+                           save(3) = centr(3)
+                        endif
+                     endif
+                  endif
+               endif
+C
+ 220        continue
+ 250     continue
+ 300  continue
+C
+C     branch on the value of the highest order axis.  return if no
+C     axis was found.
+C
+ 400  if ( NORDER.eq.0 ) return
+      ihop = NORDER - 2
+      if ( ihop.eq.2 ) then
+      elseif ( ihop.eq.3 ) then
+C
+C     norder = 5, point groups i, ih.
+C     the c5 axis to be aligned with z is indicated by save.
+C
+         call put(MAXAP3,A,B,t,save,numatm,3)
+         goto 600
+      else
+C
+C     norder = 3, point groups t, td, th.
+C     vectors coincident with two of the 3-fold axes are in save and
+C     save2.  align the c2 which bisects these with z.
+C
+         centr(1) = half*(save(1)+save2(1))
+         centr(2) = half*(save(2)+save2(2))
+         centr(3) = half*(save(3)+save2(3))
+         call put(MAXAP3,A,B,t,centr,numatm,3)
+         B(1,1) = save(1)
+         B(1,2) = save(2)
+         B(1,3) = save(3)
+         B(2,1) = save2(1)
+         B(2,2) = save2(2)
+         B(2,3) = save2(3)
+         call put(MAXAP3,B,D,t,centr,2,3)
+         save(1) = B(1,1)
+         save(2) = B(1,2)
+         save(3) = B(1,3)
+         save2(1) = B(2,1)
+         save2(2) = B(2,2)
+         save2(3) = B(2,3)
+C
+C     find a second c2 and align it with y.
+C
+         x = half*(save(1)-save2(2))
+         y = half*(save(2)+save2(1))
+         theta = halfpi
+         if ( gabs(y).gt.Toler ) theta = gatan(x/y)
+         call rotate(MAXAP3,A,B,numatm,t,3,theta)
+C
+C     put that c2 on z which will maximize the z-coordinate of the
+C     key atom.
+C
+         call move(MAXAP3,B,A,numatm)
+      endif
+C
+C     norder = 4, point groups o, oh.
+C     the three c4 axes are aligned with the cartesian axes.  align that
+C      c4 with z that will maximize the z-coordinate of the key atom.
+C
+      x = A(key,1)
+      y = A(key,2)
+      z = A(key,3)
+      cmax = gabs(z)
+      ixyz = 3
+      do 500 i = 1 , 2
+         tst = gabs(A(key,i))
+         if ( gabs(tst-cmax).ge.Toler ) then
+            if ( cmax.le.tst ) then
+               ixyz = i
+               cmax = tst
+            endif
+         endif
+ 500  continue
+      if ( ixyz.ne.3 ) then
+         ixyz = iabs(ixyz-2) + 1
+         call rotate(MAXAP3,A,B,numatm,t,ixyz,halfpi)
+         call move(MAXAP3,B,A,numatm)
+      endif
+ 600  if ( A(key,3).gt.zero ) return
+      call rotate(MAXAP3,A,B,numatm,t,1,pi)
+      call move(MAXAP3,B,A,numatm)
+      return
+C
+      end
+@* INDEX.

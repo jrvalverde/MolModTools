@@ -1,0 +1,60 @@
+@* secmom.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] ATMCHG                                                    
+\item[PASSED:] EIGVAL                                                    
+\item[PASSED:] EIGVEC                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DIAGD                                                  
+\item[Called by]   ORPLAN  PTGRP                                          
+                                                                    
+\end{description}
+@a
+      subroutine secmom(MAXAP3,NATOMS,A,ATMCHG,EIGVAL,EIGVEC)
+      implicit none
+      double precision A , an , ATMCHG , e , e2 , EIGVAL , EIGVEC , t , 
+     &                 x , y , z , zero
+      integer i , iat , MAXAP3 , NATOMS
+      dimension A(MAXAP3,3) , ATMCHG(*) , EIGVAL(*) , EIGVEC(*)
+      dimension t(6) , e(9) , e2(18)
+      data zero/0.0D0/
+C
+C
+C     compute the principal second moments of charge and axes of
+C     charge for the natoms whose coordinates are in a and
+C     atomic numbers are in atmchg.
+C
+C
+C
+C
+      do 100 i = 1 , 6
+         t(i) = zero
+ 100  continue
+C
+      do 200 iat = 1 , NATOMS
+         an = ATMCHG(iat)
+         x = A(iat,1)
+         y = A(iat,2)
+         z = A(iat,3)
+         t(1) = t(1) + an*(y*y+z*z)
+         t(3) = t(3) + an*(x*x+z*z)
+         t(6) = t(6) + an*(x*x+y*y)
+         t(2) = t(2) - an*x*y
+         t(4) = t(4) - an*x*z
+         t(5) = t(5) - an*y*z
+ 200  continue
+      call diagd(t,EIGVEC,EIGVAL,3,e,e2,3,.false.)
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,39 @@
+@* repcs.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICNT    ISAVE   NSAVE                                  
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LABREP  PUTTBL                                         
+\item[Called by]   INIREP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine repcs
+      implicit none
+      integer Icnt , Isave , Nsave
+C ----------------------------------------------------------------------
+      double precision cstbl(2,2)
+      common /reploc/ Nsave , Icnt , Isave(15)
+C      data cstbl/'a''',1.0,'a"',-1.0/
+      data cstbl/0.0 , 1.0 , 0.0 , -1.0/
+C            routine to set up character table and initialize stuff for
+C      molecules of cs symmetry.  need to save the only symmetry
+C      operation:  sigma.
+C      r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C                              the hollerith strings here
+C                              are not used by code, but are
+C                              included for theis value as comments.
+C
+      Nsave = 1
+      Icnt = 0
+      Isave(1) = 1
+      call puttbl(2,2,cstbl)
+      call labrep('A'',A",',2)
+      return
+C
+      end
+@* INDEX.

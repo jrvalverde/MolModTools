@@ -1,0 +1,127 @@
+@* tetra.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MAXAP3                                                    
+\item[INPUT:] NGRP                                                      
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] NOP                                                       
+\item[PASSED:] MAXOP                                                     
+\item[PASSED:] TRANS                                                     
+\item[PASSED:] NPERM                                                     
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] D                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILL    GATAN   GFLOAT  IORD    MATPAC  MOVE    PUT    
+             REFLCT  ROTATE  TFORM                                  
+\item[Called by]   OPER                                                   
+                                                                    
+\end{description}
+@a
+      subroutine tetra(MAXAP3,NGRP,NATOMS,NOP,MAXOP,TRANS,NPERM,A,B,D)
+      implicit none
+      double precision A , abc , B , D , gatan , gfloat , halfpi , one , 
+     &                 phi3 , pi , piovr4 , q , r , s , t , theta , 
+     &                 three , TRANS , two , v
+      double precision zero
+      integer i , iop , iord , ixyz , j , k , l , MAXAP3 , MAXOP , 
+     &        NATOMS , NGRP , NOP , NPERM
+      dimension NGRP(4)
+      dimension v(3) , q(3,3) , r(3,3) , s(3,3) , t(3,3)
+      dimension TRANS(*) , NPERM(*) , A(*) , B(*) , D(*)
+      data zero , one , two , three/0.0D0 , 1.0D0 , 2.0D0 , 3.0D0/
+C
+C
+C     generate the operations of molecules in the groups:
+C
+C     t :  12;  e, 8c3, 3c2.
+C     td:  24;  e, 8c3, 3c2, 6s4, 6sigmad.
+C
+C
+C
+C
+      piovr4 = gatan(one)
+      halfpi = two*piovr4
+      pi = two*halfpi
+      phi3 = two*pi/three
+C
+C     8c3.
+C
+      call move(MAXAP3,A,D,NATOMS+3)
+      v(3) = one
+      do 100 i = 1 , 3 , 2
+         v(1) = gfloat(2-i)*one
+         do 50 j = 1 , 3 , 2
+            v(2) = gfloat(2-j)*one
+            theta = zero
+            do 20 iop = 1 , 2
+               call put(MAXAP3,A,B,q,v,NATOMS,3)
+               theta = theta + phi3
+               call rotate(MAXAP3,A,B,NATOMS,r,3,theta)
+               call matpac(r,q,s,3,3,1)
+               do 10 k = 1 , 3
+                  do 5 l = 1 , k
+                     if ( k.ne.l ) then
+                        abc = q(k,l)
+                        q(k,l) = q(l,k)
+                        q(l,k) = abc
+                     endif
+ 5                continue
+ 10            continue
+               call matpac(q,s,t,3,3,1)
+               call tform(MAXAP3,q,B,A,NATOMS)
+               call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,D,A)
+               call move(MAXAP3,D,A,NATOMS)
+ 20         continue
+ 50      continue
+ 100  continue
+C
+C     3c2.
+C
+      do 200 ixyz = 1 , 3
+         call rotate(MAXAP3,D,B,NATOMS,t,ixyz,pi)
+         call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,D,B)
+ 200  continue
+C
+C     6s4 for td.
+C
+      if ( NGRP(2).eq.iord('D') ) then
+         do 250 ixyz = 1 , 3
+            theta = -halfpi
+            do 220 iop = 1 , 2
+               theta = theta + pi
+               call rotate(MAXAP3,D,B,NATOMS,t,ixyz,theta)
+               call reflct(MAXAP3,B,A,NATOMS,s,ixyz)
+               call matpac(t,s,r,3,3,1)
+               call fill(MAXAP3,NATOMS,NOP,MAXOP,r,TRANS,NPERM,D,A)
+ 220        continue
+ 250     continue
+C
+C     6sigmad for td.
+C
+         do 300 ixyz = 1 , 3
+            do 260 iop = 1 , 3
+               if ( iop.ne.ixyz ) then
+                  call rotate(MAXAP3,D,B,NATOMS,q,ixyz,piovr4)
+                  call reflct(MAXAP3,B,A,NATOMS,r,iop)
+                  call matpac(r,q,s,3,3,1)
+                  call rotate(MAXAP3,A,B,NATOMS,r,ixyz,-piovr4)
+                  call matpac(r,s,t,3,3,1)
+                  call fill(MAXAP3,NATOMS,NOP,MAXOP,t,TRANS,NPERM,D,B)
+               endif
+ 260        continue
+ 300     continue
+      endif
+C
+      call move(MAXAP3,D,A,NATOMS+3)
+      return
+C
+      end
+@* INDEX.

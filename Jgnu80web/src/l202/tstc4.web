@@ -1,0 +1,90 @@
+@* tstc4.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXAP3                                                    
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] ATMCHG                                                    
+\item[INPUT:] IAT                                                       
+\item[INPUT:] JAT                                                       
+\item[INPUT:] KAT                                                       
+\item[OUTPUT:] CENTR                                                     
+\item[OUTPUT:] ITST                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  TOLER                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       EQUIV   GABS    GATAN   PUT     ROTATE  TRIANG         
+\item[Called by]   SPHERE                                                 
+                                                                    
+\end{description}
+@a
+      subroutine tstc4(MAXAP3,A,B,NATOMS,ATMCHG,IAT,JAT,KAT,CENTR,ITST)
+      implicit none
+      double precision A , alpha , ATMCHG , B , beta , CENTR , dij , 
+     &                 dik , djk , gabs , gamma , gatan , half , 
+     &                 halfpi , one , t , Tol2 , Toler , two
+      integer IAT , ITST , JAT , KAT , MAXAP3 , NATOMS , numatm
+      dimension A(MAXAP3,3) , CENTR(3)
+      dimension t(3,3) , B(*) , ATMCHG(*)
+      common /tol   / Toler , Tol2
+      data half , one , two/0.5D0 , 1.0D0 , 2.0D0/
+C
+C
+C     are the three atoms iat, jat, and kat interchangeable via a
+C     4-fold rotation
+C        if no  itst=0, return
+C        if yes itst=1, align c4 with z, return
+C     centr is the point of intersection of the c4 axis with the
+C     plane defined by the 3 atoms.
+C
+C
+C
+C
+C
+      numatm = NATOMS + 3
+      ITST = 0
+      halfpi = two*gatan(one)
+C
+C     get the angles and sides of the triangle defined by the three
+C     atoms.
+C
+      call triang(MAXAP3,A,IAT,JAT,KAT,alpha,beta,gamma,dij,dik,djk)
+C
+C     are any of these angles equal to 90 degrees (i.e. the internal
+C     angle of a square) and thus possibly equivalent by a
+C     4-fold axis of symmetry
+C     are two of the sides of the triangle of equal length
+C
+      if ( gabs(alpha-halfpi).le.Toler .and. gabs(dij-dik).le.Toler )
+     &     then
+         CENTR(1) = half*(A(JAT,1)+A(KAT,1))
+         CENTR(2) = half*(A(JAT,2)+A(KAT,2))
+         CENTR(3) = half*(A(JAT,3)+A(KAT,3))
+C
+      elseif ( gabs(beta-halfpi).gt.Toler .or. gabs(dij-djk).gt.Toler )
+     &         then
+C
+         if ( gabs(gamma-halfpi).gt.Toler .or. gabs(dik-djk).gt.Toler )
+     &        return
+         CENTR(1) = half*(A(IAT,1)+A(JAT,1))
+         CENTR(2) = half*(A(IAT,2)+A(JAT,2))
+         CENTR(3) = half*(A(IAT,3)+A(JAT,3))
+      else
+         CENTR(1) = half*(A(IAT,1)+A(KAT,1))
+         CENTR(2) = half*(A(IAT,2)+A(KAT,2))
+         CENTR(3) = half*(A(IAT,3)+A(KAT,3))
+      endif
+C
+      call put(MAXAP3,A,B,t,CENTR,numatm,3)
+      call rotate(MAXAP3,A,B,NATOMS,t,3,halfpi)
+      call equiv(MAXAP3,A,B,ATMCHG,NATOMS,ITST)
+      return
+C
+      end
+@* INDEX.
