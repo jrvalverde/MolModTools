@@ -1,0 +1,66 @@
+@* savept.
+
+\begin{verbatim}
+Push the current values of the function-value, gradient, and
+position vector onto the appropriate stacks.
+\end{verbatim}
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ESAVE   FF      IC      NP      XX                     
+\item[Uses]  ENERGY  ESAVE   F       FF      IC      ISTEP   NC     
+             NMAX    NP      X       XX                             
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GRDOPT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine savept
+      implicit none
+      double precision Convf , Dxmaxt , Eiglim , Eigmax , Eigmin , 
+     &                 Energy , Es , Esave , F , Fc , Ff , Fmaxt , 
+     &                 Fnccnv , Fncerr , Frcnst , Fs , Fswtch , Grderr , 
+     &                 Rlim , Rmax
+      double precision Rmin , X , Xname , Xx
+      integer i , Ic , ii , iip , In , Iout , ip , Ipunch , Istep , Nc , 
+     &        Ndum , Ndum2 , Neg , Nmax , Np , Nstep , Nvar
+      logical Prnt , Exit
+      dimension Esave(50)
+      common /grdnt / Energy , F(50) , Frcnst(1275) , Nvar , Ndum
+      common /optgrd/ X(100) , Xname(100) , Fc(2500) , Es , Fs(50) , 
+     &                Xx(50,50) , Ff(50,50) , Convf , Fmaxt , Dxmaxt , 
+     &                Rmax , Rmin , Rlim , Eigmax , Eigmin , Eiglim , 
+     &                Fswtch , Fncerr , Grderr , Fnccnv , Ic(50) , 
+     &                Nstep , Istep , Nmax , Np , Neg , Prnt , Exit , 
+     &                Ndum2
+      common /io    / In , Iout , Ipunch
+      equivalence (Es,Esave(1)) , (Nvar,Nc)
+C
+C
+      Np = Np + 1
+      if ( Np.ge.2 ) then
+         do 50 iip = 2 , Np
+            ip = Np + 1 - iip
+            ii = ip + 1
+            Esave(ii) = Esave(ip)
+            Ic(ii) = Ic(ip)
+            do 20 i = 1 , Nc
+               Ff(i,ii) = Ff(i,ip)
+               Xx(i,ii) = Xx(i,ip)
+ 20         continue
+ 50      continue
+      endif
+      Esave(1) = Energy
+      Ic(1) = Istep
+      do 100 i = 1 , Nc
+         Xx(i,1) = X(i)
+         Ff(i,1) = F(i)
+ 100  continue
+      if ( Np.gt.Nmax ) Np = Nmax
+      return
+C
+      end
+@* INDEX.

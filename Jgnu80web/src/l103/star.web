@@ -1,0 +1,129 @@
+@* star.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ENERGY  ES      EXIT    F       FC      FS      ISTEP  
+             NP      STARDL  X       XX                             
+\item[Uses]  ENERGY  ES      F       FC      FNCCNV  FRCNST  FS     
+             IC      ISTEP   NVAR    STARDL  X       XX             
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ESTM    GABS    GSIGN   ILSW                           
+\item[Called by]   OPTMZ                                                  
+                                                                    
+\end{description}
+@a
+      subroutine star
+      implicit none
+      double precision Convf , Dxmaxt , Eiglim , Eigmax , Eigmin , 
+     &                 Energy , Es , F , Fc , Ff , Fmaxt , Fnccnv , 
+     &                 Fncerr , frc , Frcnst , Fs , Fswtch , gabs , 
+     &                 Grderr , gsign
+      integer i , Ic , icalce , icalcf , icalff , ii , ij , ijs , In , 
+     &        Iout , Ipunch , Istep , j , ji , jj , Ndum , Ndum2 , Neg , 
+     &        Nmax , nn
+      integer Np , Nstep , Nvar
+      double precision Rlim , Rmax , Rmin , Stardl , two , X , Xname , 
+     &                 Xx
+      logical Prnt , Exit
+      dimension Stardl(50)
+      common /grdnt / Energy , F(50) , Frcnst(1275) , Nvar , Ndum
+      common /optgrd/ X(100) , Xname(100) , Fc(2500) , Es , Fs(50) , 
+     &                Xx(50,50) , Ff(50,50) , Convf , Fmaxt , Dxmaxt , 
+     &                Rmax , Rmin , Rlim , Eigmax , Eigmin , Eiglim , 
+     &                Fswtch , Fncerr , Grderr , Fnccnv , Ic(50) , 
+     &                Nstep , Istep , Nmax , Np , Neg , Prnt , Exit , 
+     &                Ndum2
+      common /io    / In , Iout , Ipunch
+      equivalence (Stardl(1),Xx(1,2))
+      data two/2.D0/
+      data icalce/2/ , icalcf/3/ , icalff/ - 1/
+C
+C
+C     put an initial second derivative matrix into fc.
+C     most of the work done here deals with the calculation of
+C     diagonal and off-diagonal force constants from discrete
+C     calculations of gradient and energy.
+C
+C
+C
+C
+C
+C
+C
+      if ( Istep.ne.0 ) then
+C
+C     return to center of star and calculate second derivatives
+C
+         Stardl(Istep) = X(Istep) - Xx(Istep,1)
+         X(Istep) = Xx(Istep,1)
+C***  reset ilsw
+         call ilsw(1,24,0)
+         jj = Istep + (Istep-1)*Nvar
+         if ( Ic(Istep).eq.icalcf ) then
+            ij = (Istep-1)*Nvar
+            do 20 i = 1 , Nvar
+               ij = ij + 1
+               Fc(ij) = -(F(i)-Fs(i))/Stardl(Istep)
+ 20         continue
+         endif
+         if ( Ic(Istep).eq.icalce ) Fc(jj)
+     &        = two*((Energy-Es)*Fnccnv/Stardl(Istep)+Fs(Istep))
+     &        /Stardl(Istep)
+      else
+         Es = Energy
+         do 50 i = 1 , Nvar
+            Fs(i) = F(i)
+            Xx(i,1) = X(i)
+            ii = i + (i-1)*Nvar
+            Stardl(i) = gsign(Fc(ii),F(i))
+ 50      continue
+         call estm
+         nn = Nvar*(Nvar+1)/2
+         ijs = 0
+         do 100 i = 1 , Nvar
+            do 60 j = 1 , i
+               ijs = ijs + 1
+               if ( (Ic(i).eq.icalff) .and. (Ic(j).eq.icalff) ) then
+                  ij = Nvar*(j-1) + i
+                  ji = Nvar*(i-1) + j
+                  Fc(ij) = Frcnst(ijs)
+                  Fc(ji) = Frcnst(ijs)
+               endif
+ 60         continue
+ 100     continue
+      endif
+C
+C     next point in star
+C
+ 200  Istep = Istep + 1
+      if ( Istep.le.Nvar ) then
+         if ( (Ic(Istep).ne.icalce) .and. (Ic(Istep).ne.icalcf) )
+     &        goto 200
+         X(Istep) = X(Istep) + Stardl(Istep)
+C***  set ilsw
+         if ( Ic(Istep).eq.icalce ) call ilsw(1,24,1)
+         return
+      endif
+C
+      do 300 i = 1 , Nvar
+         do 250 j = i , Nvar
+            ij = i + (j-1)*Nvar
+            ji = j + (i-1)*Nvar
+            frc = Fc(ij)
+            if ( gabs(Fc(ji)).gt.dabs(frc) ) frc = Fc(ji)
+            Fc(ij) = frc
+            Fc(ji) = frc
+ 250     continue
+ 300  continue
+      Energy = Es
+      do 400 i = 1 , Nvar
+         F(i) = Fs(i)
+ 400  continue
+      Istep = 0
+      Np = 0
+      Exit = .true.
+      return
+C
+      end
+@* INDEX.

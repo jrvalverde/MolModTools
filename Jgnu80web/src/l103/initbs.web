@@ -1,0 +1,272 @@
+@* initbs.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+\item[PASSED:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CNST    CONVF   DXMAXT  EIGMAX  EIGMIN  FC      FF     
+             FMAXT   FNCCNV  FNCERR  FSWTCH  GRDERR  IC      ISTEP  
+             NEG     NMAX    NP      NSTEP   NVAR    PRNT    X      
+             XNAME                                                  
+\item[Transmits as argument]  ANAMES  FRCNST  IOUT    LBL     NZ                     
+\item[Uses]  ANAMES  CNST    FC      FF      FPVEC   FRCNST  IC     
+             IN      INTVEC  IOUT    LBL     NVAR    NVARRD  NZ     
+             VALUES  X       XNAME                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINRD   GABS    GETB    GFLOAT  LNK1E   PRMTBL  PUTB   
+             PUTDEL  STREQ   STROUT  TREAD                          
+\item[Called by]   OPTMZ                                                  
+                                                                    
+\end{description}
+@a
+      subroutine initbs(IOP,TOANG)
+      implicit none
+      double precision Alpha , Anames , Beta , Bl , blank , chknam , 
+     &                 Cnst , Convf , cparm , cprm , cutoff , delta , 
+     &                 Dxmaxt , Eiglim , Eigmax , Eigmin , Energy , Es , 
+     &                 F , Fc
+      double precision Ff , ffin , Fmaxt , Fnccnv , Fncerr , Fpvec , 
+     &                 Frcnst , Fs , Fswtch , gabs , gfloat , Grderr , 
+     &                 one , pt001 , pt01 , pt1 , Rlim , Rmax , Rmin , 
+     &                 TOANG
+      double precision Values , X , Xname , Xx , zero
+      integer i , Ianz , Ic , icalce , icalcf , icalff , idx , ihop , 
+     &        ij , ijs , In , Intvec , IOP , Iout , iozsub , Ipunch , 
+     &        irdfcd , Istep , ititle , itmp
+      integer Iz , j , jc , ji , Lalpha , Lbeta , Lbl , len , lzsub , 
+     &        nb , nc , Ndum , Ndum2 , Neg , nel , Nmax , Np , Nstep , 
+     &        Nvar , Nvarrd
+      integer nwrd , Nz
+      logical cnstrn
+C  above is dbc "correction"
+      logical test , streq
+      logical Prnt , Exit
+      dimension IOP(50)
+      dimension chknam(100) , ititle(20)
+      dimension itmp(16)
+      dimension cparm(10) , cprm(3) , Cnst(10)
+      common /io    / In , Iout , Ipunch
+      common /grdnt / Energy , F(50) , Frcnst(1275) , Nvar , Ndum
+      common /optgrd/ X(100) , Xname(100) , Fc(2500) , Es , Fs(50) , 
+     &                Xx(50,50) , Ff(50,50) , Convf , Fmaxt , Dxmaxt , 
+     &                Rmax , Rmin , Rlim , Eigmax , Eigmin , Eiglim , 
+     &                Fswtch , Fncerr , Grderr , Fnccnv , Ic(50) , 
+     &                Nstep , Istep , Nmax , Np , Neg , Prnt , Exit , 
+     &                Ndum2
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvarrd
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      equivalence (Cnst(1),Convf)
+      data zero/0.0D0/ , one/1.0D0/ , pt1/0.1D0/ , pt01/0.01D0/
+      data pt001/0.001D0/
+      data cutoff/1.0D-06/ , delta/0.005D0/
+      data iozsub/570/ , lzsub/175/
+      data irdfcd/1/ , icalce/2/ , icalcf/3/ , icalff/ - 1/
+C   these are the default values of the various parameters
+C   in /optgrd/;   convf,fmaxt .......
+C   they are acessed via equivalence and using cnst(i) = cparm(i)
+C    daft i call it
+      data cparm/0.0003D0 , 1.0D+10 , 0.2D0 , 0.6D0 , 0.0015D0 , 
+     &     0.07D0 , 25.0D00 , 0.0001D0 , 5.D-04 , 0.01D0/
+      data cprm/1.0D-06 , 1.0D-06 , 1.D0/
+      data blank/1H /
+C
+C
+C      initialize l103 for geometry optimizations.
+C
+C
+C
+C
+C
+C
+99001 format (1x,'NVAR OUT OF VALID RANGE IN LINK 103, NVAR= ',i10)
+99002 format (1x,'OPTION 10 OUT OF RANGE IN L103, IOP(10)= ',i5)
+99003 format (8F10.6)
+99004 format (2I3,f20.0)
+99005 format (10F8.6)
+99006 format (' NEW OPTIMIZATION CONTROL PARAMETERS'/1x,
+     &        'FMAXT,DXMAXT,RMAX,RMIN,RLIM,EIGMAX,EIGMIN,EIGLIM'/1x,
+     &        8F10.6)
+99007 format (' ATTEMP TO READ FORCE CONSTANST MATRIX FAILS'/1x,
+     &        'MIS-MATCH IN VARIABLE NAMES'/1x,'LENGTH= ',i5,
+     &        ' EXPECTED LENGTH= ',i5)
+99008 format (1x,'NAME STRING READ, FIRST 72 CHARACTERS:')
+99009 format (1x,'NAME STRING EXPECTED, FIRST 72 CHARACTERS:')
+99010 format (' FORCE CONSTANT MATRIX READ FROM GUESS FILE:')
+99011 format (' ATTEMPT TO READ FORCE CONSTANT MATRIX FAILS'/1x,
+     &        'FILE IS WRONG LENGTH'/1x,'LENGTH= ',i5,
+     &        ' EXPECTED LENGTH= ',i5)
+C
+C
+C                                            check for valid nvar and
+C                                            read in /zsubst/
+C
+      if ( Nvarrd.gt.0 .and. Nvarrd.le.50 ) then
+C
+         call tread(iozsub,Anames,lzsub,1,lzsub,1,0)
+C
+C                                             zero out ff
+C
+         do 50 i = 1 , 50
+            do 20 j = 1 , 50
+               Ff(j,i) = zero
+ 20         continue
+ 50      continue
+C
+C                                             move relavent data read
+C                                             by link 101 to the
+C                                             optimization commons.
+C
+         do 100 i = 1 , 100
+            Xname(i) = blank
+ 100     continue
+         nc = 0
+         jc = 0
+         do 150 i = 1 , Nvarrd
+            call getb(2,itmp,len,Anames,nc)
+            call putb(itmp,len,Xname,jc)
+            call putdel(2,Xname,jc)
+            X(i) = Values(i)
+            Ic(i) = Intvec(i)
+            Ff(i,i) = Fpvec(i)
+ 150     continue
+         Nvar = Nvarrd
+C
+C                                            read second derivative
+C                                            matrix.
+C
+         ihop = IOP(10)
+         if ( ihop.ne.0 ) then
+            if ( ihop.gt.4 ) then
+               write (Iout,99002) ihop
+               call lnk1e
+            endif
+            if ( ihop.eq.2 ) then
+C
+ 160           read (In,99004) i , j , ffin
+               if ( i.ne.0 ) then
+                  Ff(i,j) = ffin
+                  Ff(j,i) = ffin
+                  goto 160
+               endif
+            elseif ( ihop.eq.3 ) then
+C
+               nel = 200
+               call binrd(chknam,ititle,16HVARIABLE NAMES  ,nwrd,nb)
+               test = nwrd.eq.nel
+               test = test .and. streq(chknam,Xname,200)
+               write (Iout,99010)
+               call strout(Iout,ititle,72,1)
+               if ( .not.(test) ) then
+                  write (Iout,99007) nwrd , nel
+                  write (Iout,99008)
+                  call strout(Iout,chknam,72,1)
+                  write (Iout,99009)
+                  call strout(Iout,Xname,72,1)
+                  call lnk1e
+               endif
+               call binrd(Frcnst,ititle,16HFORCE CONSTANTS ,nwrd,nb)
+               nel = Nvar*(Nvar+1)
+               test = nwrd.eq.nel
+               if ( .not.(test) ) then
+                  write (Iout,99011) nwrd , nel
+                  call lnk1e
+               endif
+               ijs = 0
+               do 170 i = 1 , Nvar
+                  do 165 j = 1 , i
+                     ijs = ijs + 1
+                     ij = Nvar*(j-1) + i
+                     ji = Nvar*(i-1) + j
+                     Fc(ij) = Frcnst(ijs)
+                     Fc(ji) = Frcnst(ijs)
+ 165              continue
+ 170           continue
+               do 180 i = 1 , Nvar
+                  idx = Nvar*(i-1) + i
+                  if ( Ic(i).eq.1 ) Fc(idx) = Ff(i,i)
+                  if ( Ic(i).eq.0 ) Ic(i) = 1
+                  test = Ic(i).eq.2 .or. Ic(i).eq.3
+                  if ( test ) Fc(idx) = Ff(i,i)
+                  if ( test .and. Ff(i,i).lt.cutoff ) Fc(idx) = delta
+ 180           continue
+               goto 300
+            elseif ( ihop.ne.4 ) then
+C
+               read (In,99003) ((Ff(i,j),j=1,i),i=1,Nvar)
+            endif
+         endif
+C
+C     stuff read in force constants into fc
+C
+         do 250 i = 1 , Nvar
+            if ( (Ic(i).ne.icalce) .and. (Ic(i).ne.icalcf) .and. 
+     &           (gabs(Ff(i,i)).gt.cutoff) ) Ic(i) = irdfcd
+            if ( ((Ic(i).eq.icalce) .or. (Ic(i).eq.icalcf)) .and. 
+     &           (gabs(Ff(i,i)).le.cutoff) ) Ff(i,i) = delta
+            if ( IOP(10).eq.4 ) Ic(i) = icalff
+            if ( IOP(10).eq.4 ) Ff(i,i) = zero
+            do 200 j = 1 , i
+               ij = i + (j-1)*Nvar
+               ji = j + (i-1)*Nvar
+               Fc(ij) = Ff(i,j)
+               Fc(ji) = Ff(i,j)
+ 200        continue
+ 250     continue
+      else
+         write (Iout,99001) Nvar
+         call lnk1e
+         stop
+      endif
+C
+C                                           print info concerning
+C                                           initial second derivatives.
+C
+ 300  call prmtbl(0,Xname,X,Ic,Fc,Nvar,Lbl,Nz,TOANG)
+C
+C                                           set optimization control
+C                                           parameters
+C
+      Np = -1
+      Istep = 0
+      Neg = IOP(5)
+      cnstrn = .false.
+      Nmax = max0(Nvar,49)
+      Nstep = min0(20,Nvar+10)
+      Prnt = IOP(33).ne.0 .or. IOP(34).ne.0
+C
+C     set various control parameters to standard values.
+C
+      do 400 i = 1 , 10
+         Cnst(i) = cparm(i)
+ 400  continue
+C
+C     modify control parameters if options are set
+C
+      if ( IOP(6).ne.0 ) Nstep = IOP(6)
+      if ( IOP(7).ne.0 ) Convf = pt001/gfloat(IOP(7))
+      if ( IOP(8).ne.0 ) Dxmaxt = pt01*gfloat(IOP(8))
+      if ( IOP(14).ne.0 ) Fswtch = pt001*gfloat(IOP(14))
+      if ( IOP(15).ne.0 ) Fmaxt = pt1*gfloat(IOP(15))
+      if ( IOP(16).ne.0 ) Eigmax = gfloat(IOP(16))
+      if ( IOP(17).ne.0 ) Eigmin = one/gfloat(IOP(17))
+      if ( IOP(12).ne.0 ) read (In,99005) (Cnst(i),i=1,10)
+      if ( IOP(12).ne.0 ) write (Iout,99006) (Cnst(i),i=1,10)
+C
+C     fncerr ... estimate of error in value of function
+C     grderr ... estimate of error in value of gradient
+C     fnccnv ... unit conversion factor for function
+C
+      Fncerr = cprm(1)
+      Grderr = cprm(2)
+      Fnccnv = cprm(3)
+C
+      return
+C
+      end
+@* INDEX.

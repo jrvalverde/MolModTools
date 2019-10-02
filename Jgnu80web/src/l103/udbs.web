@@ -1,0 +1,49 @@
+@* udbs.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] X                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    VALUES                                                 
+\item[Transmits as argument]  ANAMES                                                 
+\item[Uses]  ANAMES  NVARRD                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TREAD   TWRITE                                         
+\item[Called by]   OPTMZ                                                  
+                                                                    
+\end{description}
+@a
+      subroutine udbs(X)
+      implicit none
+      double precision Alpha , Anames , Beta , Bl , Fpvec , Values , X
+      integer i , Ianz , Intvec , iozsub , Iz , Lalpha , Lbeta , Lbl , 
+     &        Nvarrd , Nz
+      dimension X(*)
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvarrd
+      common /zsubst/ Anames(50) , Values(50) , Intvec(50) , Fpvec(50)
+      data iozsub/570/
+C
+C
+C      updata common /zsubst/ with the current optimization values from
+C      the input argument.
+C
+C
+C
+C
+C
+C
+      call tread(iozsub,Anames,175,1,175,1,0)
+      do 100 i = 1 , Nvarrd
+         Values(i) = X(i)
+ 100  continue
+      call twrite(iozsub,Anames,175,1,175,1,0)
+C
+      return
+C
+      end
+@* INDEX.

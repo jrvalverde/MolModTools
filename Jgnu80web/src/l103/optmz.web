@@ -1,0 +1,222 @@
+@* optmz.
+\begin{verbatim}
+     driver for gradient optimization program
+
+
+
+grdnt
+
+     l103 communicates with gnu80 primarily through /grdnt/ which
+    contains the computed value of the function, first and possibly
+    second derivatives.
+    common/grdnt/:
+
+     common /grdnt/  energy,f(50),frcnst(1275),nvar,ndum
+
+      energy -- the value of the function
+      f      -- forces (negative of first derivative -de/dx)
+      frcnst -- second derivatives if evaluated externally
+      nvar   -- the number of variables
+      ndum   -- a dummy to pad the common to an even number of words
+
+
+optgrd
+
+    local optimization data for l103 is kept in common/optgrd/:
+
+     common /optgrd/ x(100),xname(100),fc(2500),es,fs(50),xx(50,50),
+    $                ff(50,50),convf,fmaxt,dxmaxt,rmax,rmin,rlim,
+    $                eigmax,eigmin,eiglim,fswtch,fncerr,grderr,fnccnv,
+    $                ic(50),nstep,istep,nmax,np,neg,prnt,exit,ndum2
+
+     x      -- coordinates
+     xname  -- print labels for coordinates.  delimited string.
+     fc     -- second derivative matrix
+     es     -- the value of the function at the previous point
+     fs     -- the value of the function at earlier points
+     xx     -- previous coordinates
+     ff     -- previous forces
+     convf  -- convegange criterion
+     fmaxt  -- maximum force allowed
+     dxmaxt -- maximum displacement allowed
+     rmax   -- see d2corr and schmdt
+     rmin   -- see d2corr and schmdt
+     rlim   -- see d2corr and schmdt
+     eigmax -- maximum allowed eigenvalue of fc
+     eigmin -- minimum allowed eigenvalue of fc
+     eiglim -- minimum allowed determinant for inversion of fc
+               matrix (not used in this version)
+     fswtch -- minimum rms force for linear search
+     fncerr -- estimated error in energy
+     grderr -- estimated error in f
+     fnccnv -- function value unit conversion factor
+     ic     -- second derivative info on inital entry, scratch storage
+               subsequently
+     nstep  -- maximum number of steps allowed
+     istep  -- current step number
+     nmax   -- maximum number of points to store
+     np     -- number of points stored
+     neg    -- order of stationary point to search for
+     prnt   -- print switch
+     exit   -- usually indicates convergance, see also star
+     ndum2  -- pad to get even number of words
+
+
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    EXIT    FRCNST                                         
+\item[Transmits as argument]  ENERGY  IANZ    IOP     TOANG   X       XNAME          
+\item[Uses]  ENERGY  EXIT    FC      FRCNST  IANZ    IOP     IOUT   
+             NP      NVAR    TOANG   X       XNAME                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BINWT   DRUM    GRDOPT  ILSW    INITBS  STAR    TREAD  
+             TWRITE  UDBS                                           
+\item[Called by]   L103                                                   
+                                                                    
+\end{description}
+@a
+      subroutine optmz(JUMP)
+      implicit none
+      double precision Alpha , Beta , Bl , Convf , cputm , Dxmaxt , 
+     &                 Eiglim , Eigmax , Eigmin , Energy , Es , F , Fc , 
+     &                 Ff , Fmaxt , Fnccnv , Fncerr , Frcnst , Fs , 
+     &                 Fswtch
+      double precision Grderr , Pcon , Rlim , Rmax , Rmin , Toang , X , 
+     &                 Xname , Xx
+      integer i , Ianz , Ic , icnv , igrd , igrdnt , ij , ijs , In , 
+     &        Iop , ioptgr , Iout , iozmat , Ipunch , Istep , Iz , j , 
+     &        JUMP , Lalpha , Lbeta
+      integer Lbl , lgrdnt , loptgr , lzmat , Ndum , Ndum2 , Neg , nel , 
+     &        Nmax , Np , Nstep , Nvar , Nvarrd , Nz
+      logical Prnt , Exit
+      save 
+      common /iop   / Iop(50)
+      common /io    / In , Iout , Ipunch
+      common /phycon/ Toang , Pcon(29)
+      common /grdnt / Energy , F(50) , Frcnst(1275) , Nvar , Ndum
+      common /optgrd/ X(100) , Xname(100) , Fc(2500) , Es , Fs(50) , 
+     &                Xx(50,50) , Ff(50,50) , Convf , Fmaxt , Dxmaxt , 
+     &                Rmax , Rmin , Rlim , Eigmax , Eigmin , Eiglim , 
+     &                Fswtch , Fncerr , Grderr , Fnccnv , Ic(50) , 
+     &                Nstep , Istep , Nmax , Np , Neg , Prnt , Exit , 
+     &                Ndum2
+      common /zmat  / Ianz(50) , Iz(50,4) , Bl(50) , Alpha(50) , 
+     &                Beta(50) , Lbl(50) , Lalpha(50) , Lbeta(50) , Nz , 
+     &                Nvarrd
+      equivalence (cputm,icnv)
+      data igrdnt , lgrdnt , ioptgr , loptgr , iozmat , lzmat/511 , 
+     &     1327 , 575 , 7793 , 507 , 351/
+C
+C
+C
+99001 format (1x,18(4HGRAD))
+99002 format (' BERNY OPTIMIZATION')
+99003 format (' INITIALIZATION PASS')
+99004 format (' NUMERICALLY ESTIMATING SECOND DERIVATIVES')
+99005 format (' NUMERICAL SECOND DERIVATIVE COMPUTATION COMPLETE')
+C
+C
+C     initialize this link
+C     the ilsw bit will be set unless this is the first entry to l103,
+C     in which case we'll just do some initialization.
+C
+      call drum
+      write (Iout,99001)
+      write (Iout,99002)
+      Exit = .false.
+      call ilsw(2,23,igrd)
+      call ilsw(1,23,1)
+      if ( igrd.eq.1 ) then
+C
+C        start of loop for second and later calls to l103
+C
+         call tread(iozmat,Ianz,lzmat,1,lzmat,1,0)
+         call tread(igrdnt,Energy,lgrdnt,1,lgrdnt,1,0)
+         call tread(ioptgr,X,loptgr,1,loptgr,1,0)
+C
+C
+C     obtain preliminary set of diagonal second derivatives.
+C     this section is processed even if second derivatives
+C     were read.
+C
+         if ( Np.lt.0 ) then
+            call star
+            if ( .not.Exit ) write (Iout,99004)
+            if ( .not.Exit ) goto 100
+         endif
+C
+C     optimization
+C
+         call grdopt(Iop,Toang)
+C
+C    check the star-only option
+C
+         if ( Iop(18).ne.0 ) then
+            call ilsw(1,25,0)
+            write (Iout,99005)
+            Exit = .true.
+         endif
+      else
+C
+C     read in data and initialize optimization
+C
+C
+         write (Iout,99003)
+         call tread(iozmat,Ianz,lzmat,1,lzmat,1,0)
+         call initbs(Iop,Toang)
+         call twrite(ioptgr,X,loptgr,1,loptgr,1,0)
+         call twrite(igrdnt,Energy,lgrdnt,1,lgrdnt,1,0)
+         write (Iout,99001)
+         JUMP = 0
+         return
+      endif
+C
+C     save the current force constant matrix on the guess file
+C     if option 32 is set and an exit condition exits.
+C
+ 100  if ( Iop(32).eq.1 ) then
+         if ( Exit .or. Iop(30).ne.0 ) then
+            nel = 200
+            call binwt(Xname,nel,16HVARIABLE NAMES  ,0)
+C
+C     if the force constant matrix resulted from a frequency run, then
+C     it already exists in frcnst. (note that the copy in fc may have
+C     been altered by dxquad.)  if this is a geometry optimization
+C     the matrix fc will have to be copied into frcnst.
+C
+            if ( Iop(30).eq.0 ) then
+               ijs = 0
+               do 110 i = 1 , Nvar
+                  do 105 j = 1 , i
+                     ijs = ijs + 1
+                     ij = Nvar*(j-1) + i
+                     Frcnst(ijs) = Fc(ij)
+ 105              continue
+ 110           continue
+            endif
+            nel = Nvar*(Nvar+1)
+            call binwt(Frcnst,nel,16HFORCE CONSTANTS ,0)
+         endif
+      endif
+C
+C     update the r/w files and exit the link, unless prohibited
+C     by option or the run is done, in which case just leave.
+C
+      write (Iout,99001)
+      JUMP = 1
+      if ( Exit .or. Iop(30).ne.0 ) return
+      call udbs(X)
+      call twrite(ioptgr,X,loptgr,1,loptgr,1,0)
+      call twrite(igrdnt,Energy,lgrdnt,1,lgrdnt,1,0)
+      JUMP = 0
+      return
+C
+      end
+@* INDEX.
