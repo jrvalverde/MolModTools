@@ -1,0 +1,115 @@
+@* pinput.
+
+\begin{verbatim}
+format for reading in pseudopotential data
+C
+1)ipoint(i)  (35i2)
+      specify one potential per atom via pointer as follows:
+      0 ... use default internally stored chf potential
+      1-6 ... use stored potential of type 1-6 (note: at
+              present ,6-5-78, there are none)
+      7 ... read the potential for this atom from cards
+      9 ... do not put a potential on this atom
+            note: for the stored chf potentials H and He default
+            to no potential
+2)type,max,icor  (a8,2x,i5,i5)
+      for each potential to be read from cards
+      (ie.ipoint(i)=7),type names the potential.if the type
+      is the atomic symbol followed by chf (eg. lichf),the
+      internally stored corelesss hartree-fock pseudopotential
+      will be loaded.if the type is blank no pseudopotential
+      will be expected for this atom (or used).if the type
+      is the same as that of a previously read in potential
+      this one will be set to the earlier one.
+      in either of these three cases no further input is required
+      for this atom, and one can read a new card 2).
+
+      max:the maximum l value of this potential (usually 2)
+      icor:the number of core electrons replaced by the pot.
+2a) for i=1,max , starting at lmax and then in increasing order
+                  of l. eg. for max=2 first read in the d compon-
+                  ent,then s-d,then p-d.
+    i)title (15a4)
+                  any title will do ie.not used
+    ii)nbf (i3)
+                  number of terms in this component
+    iia) for j=1,nbf:
+         nval,expon,coef  (i3,2x,2d15.7)
+
+            nval-2 is the power of r for the r**n factor
+            expon is the exponent
+            coef is the coefficient
+
+jprinp=0  print only on card input
+jprinp=1  print always
+jprinp=2  don/t print
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] IAN                                                       
+\item[PASSED:] C                                                         
+\item[PASSED:] NAE                                                       
+\item[PASSED:] NBE                                                       
+\item[PASSED:] NE                                                        
+\item[PASSED:] ATMCHG                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IPRIN                                                  
+\item[Transmits as argument]  NLP                                                    
+\item[Uses]  IOUT    IPRIN   JPRINP  JREADP  NLP                    
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SETPOT  TWRITE                                         
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine pinput(NATOMS,IAN,C,NAE,NBE,NE,ATMCHG)
+      implicit none
+      double precision ATMCHG , C , Clp , Zlp
+      integer IAN , In , Iout , Iprin , Ipunch , iread , Jprinp , 
+     &        Jpseud , Jreadp , Jsubp , Kfirst , Klast , Lmax , Lpskip , 
+     &        NAE , NATOMS , NBE , NE , Nfroz , Nlp
+      dimension IAN(*) , C(*) , ATMCHG(*)
+      common /io    / In , Iout , Ipunch
+      common /lp2   / Nlp(400) , Clp(400) , Zlp(400) , Kfirst(35,5) , 
+     &                Klast(35,5) , Lmax(35) , Lpskip(35) , Nfroz(35)
+      common /cprint/ Iprin
+      common /potpar/ Jpseud , Jreadp , Jprinp , Jsubp
+C
+C
+C
+C
+99001 format (1x,131(1H=),/,1x,26HPSEUDOPOTENTIAL PARAMETERS,/,1x,
+     &        131(1H=),/,2x,6HCENTER,5x,6HATOMIC,6x,7HVALENCE,6x,
+     &        7HANGULAR,6x,5HPOWER,55x,11HCOORDINATES)
+99002 format (2x,6HNUMBER,5x,6HNUMBER,5x,9HELECTRONS,5x,8HMOMENTUM,5x,
+     &        4HOF R,6x,8HEXPONENT,8x,11HCOEFFICIENT,16x,1HX,11x,1HY,
+     &        11x,1HZ,/,1x,131(1H=))
+99003 format (1x,131(1H=))
+C
+C
+      iread = Jreadp
+      if ( iread.ne.7 ) then
+C
+         Iprin = 0
+         if ( Jprinp.eq.1 ) Iprin = 1
+      else
+         Iprin = 1
+         if ( Jprinp.eq.9 ) Iprin = 0
+      endif
+      if ( (Iprin.ne.0) .or. (iread.eq.7) ) then
+         write (Iout,99001)
+         write (Iout,99002)
+      endif
+      call setpot(NATOMS,IAN,C,NAE,NBE,NE,ATMCHG)
+      if ( (Iprin.ne.0) .or. (iread.eq.7) ) write (Iout,99003)
+      call twrite(12,Nlp,1210,1,1210,1,0)
+      return
+C
+      end
+@* INDEX.

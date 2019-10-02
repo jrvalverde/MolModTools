@@ -1,0 +1,222 @@
+@* bprint.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] KOP                                                       
+\item[OUTPUT:] NPRIMS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  AON     AOS     C1      C2      C3      C4      EXX    
+             IFBP    IOUT    JAN     NSHELL  SCALE   SHELLA  SHELLC 
+             SHELLN  SHELLT  SHLADF  X       Y       Z              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD                                                   
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine bprint(KOP,NPRIMS)
+      implicit none
+      double precision C1 , C2 , C3 , c3a , C4 , c4a , diff , Exx , 
+     &                 exxi , Scale , scalei , thr1 , X , x1 , x2 , x3 , 
+     &                 Y , Z , zero
+      integer i , ia , Ifbp , igauss , In , incr , iord , Iout , ip , 
+     &        Ipunch , ishell , iskip , j , Jan , jp , k , KOP , LENB , 
+     &        maxan , MAXPRM
+      integer MAXS21 , MAXSH1 , MAXSHL , Maxtyp , ndiff , nend , 
+     &        ngauss , NPRIMS , Nshell , nstart
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon , Shladf
+      integer skip1 , skip2 , star , star2
+      character*12 iatom(87) , dummy , qmarks
+C      dimension shladf(80),c4(80)
+      dimension incr(4,3)
+Cc     +       aos(80),aon(80),nshell,maxtyp,ipdum(30)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /io    / In , Iout , Ipunch
+      common /scale / Scale(MAXSHL)
+      common /ifbp  / Ifbp
+      data thr1/1.0D-8/
+      data incr/4*0 , 0 , 1 , 4 , 10 , 2*0 , 4 , 10/
+      data (iatom(k),k=1,31)/'  Hydrogen  ' , '  Helium    ' , 
+     &      '  Lithium   ' , '  Beryllium ' , '  Boron     ' , 
+     &      '  Carbon    ' , '  Nitrogen  ' , '  Oxygen    ' , 
+     &      '  Fluorine  ' , '  Neon      ' , '  Sodium    ' , 
+     &      '  Magnesium ' , '  Aluminium ' , '  Silicon   ' , 
+     &      '  Phosphorus' , '  Sulphur   ' , '  Chlorine  ' , 
+     &      '  Argon     ' , '  Potassium ' , '  Calcium   ' , 
+     &      '  Scandium  ' , '  Titanium  ' , '  Vanadium  ' , 
+     &      '  Chromium  ' , '  Manganese ' , '  Iron      ' , 
+     &      '  Cobalt    ' , '  Nickel    ' , '  Copper    ' , 
+     &      '  Zinc      ' , '  Gallium   '/
+      data (iatom(k),k=32,87)/'  Germanium ' , '  Arsenic   ' , 
+     &      '  Selenium  ' , '  Bromine   ' , '  Krypton   ' , 
+     &      '  Rubidium  ' , '  Strontium ' , '  Yttrium   ' , 
+     &      '  Zirconium ' , '  Niobium   ' , '  Molybdenum' , 
+     &      '  Technicium' , '  Ruthenium ' , '  Rhodium   ' , 
+     &      '  Palladium ' , '  Silver    ' , '  Cadmium   ' , 
+     &      '  Indium    ' , '  Tin       ' , '  Antimony  ' , 
+     &      '  Tellurium ' , '  Iodine    ' , '  Xenon     ' , 
+     &      '  Cesium    ' , '  Barium    ' , '  Lanthanum ' , 
+     &      14*' Lanthanide ' , '  Hafnium   ' , '  Tantalum  ' , 
+     &      '  Tungsten  ' , '  Rhenium   ' , '  Osmium    ' , 
+     &      '  Iridium   ' , '  Platinum  ' , '  Gold      ' , 
+     &      '  Mercury   ' , '  Thallium  ' , '  Lead      ' , 
+     &      '  Bismuth   ' , '  Polonium  ' , '  Astatine  ' , 
+     &      '  Radon     ' , '  BANQUO    '/
+      data maxan/86/
+      data qmarks/'????????????'/
+      data zero/0.0D0/
+C
+C
+C
+C
+C
+C
+99001 format (' *',76('-'),'*')
+99002 format (' *',a12,3F9.5,38x,'*')
+99003 format (2A1,45x,i3,3x,a6,5x,f5.2,62x,a1)
+99004 format (2A1,41x,i3,'-',i3,3x,a6,5x,f5.2,62x,a1)
+99005 format (2A1,69x,5D12.6,a1)
+99006 format (1x,77('*'))
+99007 format (2H *,13x,13HATOMIC CENTER,13x,1H*,8x,14HATOMIC ORBITAL,7x,
+     &        1H*,21x,18HGAUSSIAN FUNCTIONS,20x,1H*)
+99008 format (2H *,39x,1H*,1x,8HFUNCTION,4x,5HSHELL,4x,5HSCALE,2x,1H*,
+     &        59x,1H*)
+99009 format (2H *,4x,4HATOM,3x,7HX-COORD,2x,7HY-COORD,2x,7HZ-COORD,3x,
+     &        1H*,2x,6HNUMBER,5x,4HTYPE,5x,6HFACTOR,1x,1H*,2x,
+     &        8HEXPONENT,4x,6HS-COEF,6x,6HP-COEF,6x,6HD-COEF,6x,
+     &        6HF-COEF,3x,1H*)
+99010 format (2H *,129x,1H*)
+99011 format (' THERE ARE',i4,' PRIMITIVE GAUSSIANS.',/)
+C
+C     test for printing of b-table.
+      if ( (KOP.eq.2) .or. (KOP.eq.0 .and. Ifbp.eq.0) ) then
+C
+C     in no-print mode, merely determine the number of primitive
+C     gaussians.
+         NPRIMS = 0
+         do 50 ishell = 1 , Nshell
+            i = Shellt(ishell) + 1
+            j = Shellc(ishell) + 1
+            ip = Shellt(ishell+1) + 1
+            jp = Shellc(ishell+1) + 1
+            NPRIMS = NPRIMS + 
+     &               ((Aos(ishell+1)-1+incr(ip,jp))-(Aos(ishell)
+     &               +incr(i,j))+1)*Shelln(ishell)
+ 50      continue
+      else
+         write (Iout,99006)
+         write (Iout,99007)
+         write (Iout,99006)
+         write (Iout,99008)
+         write (Iout,99009)
+         write (Iout,99006)
+C
+         NPRIMS = 0
+C
+C     commence loop over shells.
+         do 100 ishell = 1 , Nshell
+C
+C     test for first pass through loop.  in the first pass,
+C     we must process the first atom.
+            if ( ishell.ne.1 ) then
+C
+C     not first pass, compute diff and test for step to new atom.
+               diff = dabs(x1-X(ishell)) + dabs(x2-Y(ishell))
+     &                + dabs(x3-Z(ishell))
+               if ( diff.le.thr1 ) goto 60
+            endif
+C
+C     step to new atom.
+C     obtain atomic number and test for banquo atom.
+            ia = Jan(ishell)
+            if ( ia.eq.0 ) ia = maxan + 1
+C     obtain coordinates.
+            x1 = X(ishell)
+            x2 = Y(ishell)
+            x3 = Z(ishell)
+C     do not print minus line if ishell=1.
+            if ( ishell.gt.1 ) write (Iout,99001)
+C     print atom name and coordinates.
+C   60     write (iout,9010) iatom(ia,1),iatom(ia,2),x1,x2,x3
+C     fill up atom name if it is not in the table
+            dummy = qmarks
+            if ( ia.le.(maxan+1) ) dummy = iatom(ia)
+            write (Iout,99002) dummy , x1 , x2 , x3
+C     set skip1 to suppress line skipping later on.
+            skip1 = iord('+')
+            star = iord('*')
+            iskip = 0
+C
+C     processing for shell information line.
+C     obtain indices for nstart increment.
+ 60         i = Shellt(ishell) + 1
+            j = Shellc(ishell) + 1
+            ip = Shellt(ishell+1) + 1
+            jp = Shellc(ishell+1) + 1
+C
+C     obtain nstart and nend.
+C     note that nstart is incremented according to the shell type and
+C     shell constraint.
+            nstart = Aos(ishell) + incr(i,j)
+            nend = Aos(ishell+1) - 1 + incr(ip,jp)
+            ndiff = nend - nstart + 1
+C     print of shell information line depends on whether
+C     nstart=nend.
+            scalei = Scale(ishell)
+            if ( nstart.ne.nend ) then
+C
+               write (Iout,99004) skip1 , star , nstart , nend , 
+     &                            Aon(ishell) , scalei , star
+            else
+               write (Iout,99003) skip1 , star , nstart , Aon(ishell) , 
+     &                            scalei , star
+            endif
+            skip1 = iord(' ')
+            star = iord('*')
+            iskip = 1
+C
+C     output the gaussian function information.
+            ngauss = Shelln(ishell)
+            i = Shella(ishell) - 1
+            j = Shladf(ishell)
+            do 80 igauss = 1 , ngauss
+               skip2 = iord(' ')
+               star2 = iord('*')
+               if ( igauss.eq.1 ) then
+                  skip2 = iord('+')
+                  star2 = iord(' ')
+               endif
+C     correct printed exponent.
+               exxi = Exx(igauss+i)/(scalei**2)
+               c3a = zero
+               c4a = zero
+               if ( j.gt.0 ) then
+                  c3a = C3(j)
+                  c4a = C4(j)
+                  j = j + 1
+               endif
+               write (Iout,99005) skip2 , star2 , exxi , C1(igauss+i) , 
+     &                            C2(igauss+i) , c3a , c4a , star2
+ 80         continue
+C
+            NPRIMS = NPRIMS + ndiff*ngauss
+ 100     continue
+         write (Iout,99006)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

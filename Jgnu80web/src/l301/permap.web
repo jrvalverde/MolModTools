@@ -1,0 +1,65 @@
+@* permap.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NSHELL                                                    
+\item[INPUT:] SHELLT                                                    
+\item[INPUT:] SHELLC                                                    
+\item[INPUT:] COORD                                                     
+\item[INPUT:] I56D                                                      
+\item[OUTPUT:] MAPPER                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   BLDMAP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine permap(NSHELL,SHELLT,SHELLC,COORD,I56D,MAPPER)
+      implicit none
+      integer i , I56D , j , MAXSHL , nao , natoms , nfnct , NSHELL
+C ----------------------------------------------------------------------
+      parameter (MAXSHL=100)
+      integer SHELLT(*) , SHELLC(*) , MAPPER(100)
+      double precision COORD(MAXSHL,3) , cloc(3) , thrsh
+      dimension nfnct(3,4)
+      data thrsh/1.0D-4/
+      data nfnct/1 , 1 , 1 , 4 , 3 , 4 , 9 , 5 , 5 , 7 , 7 , 7/
+C          this routine builds a "map" for use in permuting basis
+C     functions attached to nuclei which are permuted.  essentially,
+C     a vector is built in "mapper" (of length natoms) which gives the
+C     number of the first basis function on each center.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+C
+      natoms = 1
+      nao = 0
+      MAPPER(1) = 1
+      cloc(1) = COORD(1,1)
+      cloc(2) = COORD(1,2)
+      cloc(3) = COORD(1,3)
+C
+C                        loop over shells.
+      do 100 i = 1 , NSHELL
+         if ( dabs(cloc(1)-COORD(i,1)).ge.thrsh .or. 
+     &        dabs(cloc(2)-COORD(i,2)).ge.thrsh .or. 
+     &        dabs(cloc(3)-COORD(i,3)).ge.thrsh ) then
+            natoms = natoms + 1
+            MAPPER(natoms) = nao + 1
+            do 20 j = 1 , 3
+               cloc(j) = COORD(i,j)
+ 20         continue
+         endif
+         nao = nao + nfnct(SHELLC(i)+1,SHELLT(i)+1)
+         if ( SHELLT(i).eq.2 .and. I56D.eq.1 ) nao = nao + 1
+ 100  continue
+      return
+C
+      end
+@* INDEX.

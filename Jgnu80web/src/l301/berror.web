@@ -1,0 +1,52 @@
+@* berror.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IERR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   D6311   EONE    ETHREE  ETWO    EZERO   FC6311  GBASIS 
+             LEEAO   N21G    S2SP    STO     TYPCON                 
+                                                                    
+\end{description}
+@a
+      subroutine berror(IERR)
+      implicit none
+      integer IERR , In , Iout , Ipunch
+      double precision ibasis , jbasis
+      dimension ibasis(8) , jbasis(8)
+      common /io    / In , Iout , Ipunch
+      data ibasis/6H     M , 6H    EX , 6H LP--M , 6HLP--EX , 6H       , 
+     &     6HN-21G  , 6H       , 6H     G/
+      data jbasis/6HINIMAL , 6HTENDED , 6HINIMAL , 6HTENDED , 6H6-311G , 
+     &     6HBASIS  , 6H       , 6HENERAL/
+C
+C
+C***********************************************************************
+C     routine to force error termination when basis related errors
+C     arise.  calling sequence:
+C
+C     call berror(ierr)
+C
+C     where ierr signifies the basis in error. (usually iop(5)).
+C***********************************************************************
+C
+C
+C
+C
+C
+99001 format ('1ERROR TERMINATION IN BERROR, K=',i9/' BASIS IN ERROR: ',
+     &        2A6)
+C
+      write (Iout,99001) IERR , ibasis(IERR) , jbasis(IERR)
+      call lnk1e
+      stop
+C
+      end
+@* INDEX.

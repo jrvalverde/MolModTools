@@ -1,0 +1,96 @@
+@* prgbas.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  C1      C2      C3      EXX     IOUT    JAN     NSHELL 
+             SHELLA  SHELLC  SHELLN  SHELLT  SHLADF                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine prgbas
+      implicit none
+      integer i , iatom , In , Iout , Ipunch , j , LENB , mm , mmdf , 
+     &        name , namesh
+C
+C     print the contents of common/b/ as almost gbasis input.
+C      no attempt is made to scan for atoms which have the same basis,
+C      all atoms have their basis output
+C
+      common /io    / In , Iout , Ipunch
+      integer MAXSHL , MAXPRM , MAXSH1 , MAXS21 , Jan , Shella , 
+     &        Shelln , Shellt , Shellc , Shladf , Aos , Aon , Nshell , 
+     &        Maxtyp
+      real*8 Exx , C1 , C2 , C3 , C4 , X , Y , Z
+C
+C these parameters are for common /b/ and related matters
+C     maxshl is the maximum number of shells
+C     maxprm is the maximum number of primitives
+C     lenb is the length of /b/ (in units of 8 bytes)
+C     maxsh1 and maxs21 are sillies for equivalencing
+C
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+C
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      dimension namesh(4,3)
+      save namesh
+      data namesh/3H  S , 3H SP , 3HSPD , 3H??? , 3H??? , 3H  P , 
+     &     3H  D , 3H??? , 3H  S , 3H SP , 3H  D , 3H  F/
+99001 format (' ****')
+99002 format (10I2)
+99003 format (11x,a3,i2,' 1.00')
+99004 format (4D18.10)
+99005 format (
+     &' BASIS SET in a form almost suitable for GEN input;         CHECK
+     & IT',/)
+99006 format (' ****',/)
+C
+      write (Iout,99005)
+      iatom = 0
+      do 100 i = 1 , Nshell
+C output the asterisks at the end of each shell
+         if ( i.gt.1 .and. Jan(i).ne.Jan(i-1) ) write (Iout,99001)
+C output the atom number for the following shells;
+C this does not work if two successive atoms have the same atomic number!!
+         if ( i.eq.1 .or. Jan(i).ne.Jan(i-1) ) then
+            iatom = iatom + 1
+            write (Iout,99002) iatom
+         endif
+C
+         name = namesh(Shellt(i)+1,Shellc(i)+1)
+         write (Iout,99003) name , Shelln(i)
+         mm = Shella(i)
+         mmdf = Shladf(i)
+         do 50 j = 1 , Shelln(i)
+C this is for qcpe446 where all three coefficients are required
+C sometime homogenise gnu80 and qcpe446
+            write (Iout,99004) Exx(mm) , C1(mm) , C2(mm) , C3(mmdf)
+C              if(shellt(i).eq.0) write(iout,1030) exx(mm), c1(mm)
+C              if(shellt(i).eq.1.and.shellc(i).eq.1)
+C     $            write(iout,1030) exx(mm), c2(mm)
+C              if(shellt(i).eq.1.and.shellc(i).ne.1)
+C     $            write(iout,1030) exx(mm), c1(mm), c2(mm)
+C              if(shellt(i).eq.2.and.shellc(i).eq.0)
+C     $            write(iout,1030) exx(mm), c1(mm), c2(mm), c3(mmdf)
+C              if(shellt(i).eq.2.and.shellc(i).ne.0)
+C     $            write(iout,1030) exx(mm), c3(mmdf)
+C              if(shellt(i).eq.3) write(iout,1030) exx(mm), c4(mmdf)
+            mm = mm + 1
+            mmdf = mmdf + 1
+ 50      continue
+ 100  continue
+      write (Iout,99006)
+      return
+      end
+@* INDEX.

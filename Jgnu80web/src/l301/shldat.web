@@ -1,0 +1,70 @@
+@* shldat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] MYFSHL                                                    
+\item[OUTPUT:] MYNSHL                                                    
+\item[INPUT:] NSHELL                                                    
+\item[INPUT:] X                                                         
+\item[INPUT:] Y                                                         
+\item[INPUT:] Z                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   BASSYM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine shldat(MYFSHL,MYNSHL,NSHELL,X,Y,Z)
+      implicit none
+      integer iatom , ishell , jshell , MYFSHL , MYNSHL , n , NSHELL
+      double precision X , Y , Z
+      logical newatm
+      dimension MYFSHL(*) , MYNSHL(*)
+      dimension X(*) , Y(*) , Z(*)
+C
+C
+C      input--
+C           nshell-- number of shells in the molecule, from common/b/.
+C           x(i), y(i), z(i)-- cartesian coordinates of shell i, also
+C                              from common/b/.
+C      output--
+C            myfshl(i) is the number of the first shell on atom i.
+C            mynshl(i) is the number of shells on atom i.
+C      algorithm--
+C            compare the coordinates of the shells in order.  a
+C            change in coordinates indicates a new atom.
+C
+C
+C
+C     data tol/1.0d-06/
+C
+C
+      MYFSHL(1) = 1
+      iatom = 1
+      n = 1
+      do 100 ishell = 2 , NSHELL
+         jshell = ishell - 1
+         newatm = (X(ishell).ne.X(jshell)) .or. (Y(ishell).ne.Y(jshell))
+     &            .or. (Z(ishell).ne.Z(jshell))
+         if ( newatm ) then
+C
+            MYNSHL(iatom) = n
+            n = 1
+            iatom = iatom + 1
+            MYFSHL(iatom) = ishell
+         else
+            n = n + 1
+         endif
+ 100  continue
+      MYNSHL(iatom) = n
+C
+      return
+C
+      end
+@* INDEX.

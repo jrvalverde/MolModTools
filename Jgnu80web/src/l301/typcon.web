@@ -1,0 +1,57 @@
+@* typcon.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ITYPE                                                     
+\item[OUTPUT:] STYPE                                                     
+\item[OUTPUT:] SCON                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BERROR  KILLER                                         
+\item[Called by]   GBASIS                                                 
+                                                                    
+\end{description}
+@a
+C   dbc sto goes here
+      subroutine typcon(ITYPE,STYPE,SCON)
+      implicit none
+      integer i , isc , ist , itest , ITYPE
+      integer STYPE , SCON
+      dimension itest(6) , ist(6) , isc(6)
+      data itest/4H   S , 4H   P , 4H   D , 4H   F , 4H  SP , 4H SPD/
+      data ist/0 , 1 , 2 , 3 , 1 , 2/ , isc/2 , 1 , 2 , 2 , 2 , 0/
+C
+C***********************************************************************
+C     subroutine to determine the numeric values of the shell type
+C     and the shell constraint given the alphameric equivalent.
+C***********************************************************************
+C
+C
+C       itype  shellt  shellc
+C       -----  ------  ------
+C     1   s       0       2
+C     2   p       1       1
+C     3   d       2       2
+C     4   f       3       2
+C     5  sp       1       2
+C     6 spd       2       0
+C
+      do 100 i = 1 , 6
+         if ( ITYPE.eq.itest(i) ) then
+            STYPE = ist(i)
+            SCON = isc(i)
+            return
+         endif
+C
+ 100  continue
+      call berror(8)
+      call killer
+      stop
+C
+      end
+@* INDEX.

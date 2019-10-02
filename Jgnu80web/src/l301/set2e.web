@@ -1,0 +1,260 @@
+@* set2e.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IOP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DBASD   DBASE   DCOUNT  IBASD   IBASE   ICON    ICOUNT 
+             IFIL    INTCNT  IQ      IRESET  ISMODE  ISTAT   ISYM2E 
+             ITOTAL  IUX     KNTT1   KNTT2   LAST    LIMINT  MODE   
+             NRPEXT  NWIIB   NWPI                                   
+\item[Uses]  DBASD   DBASE   I2E     IBASD   IBASE   ICON    IFIL   
+             INTCNT  IOUT    IQ      IRESET  ISMODE  ISTAT   ISYM2E 
+             ITOTAL  IUX     KNTT1   KNTT2   LAST    LIMINT  MODE   
+             NRPEXT  NTX     NWIIB   NWPI                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ILSW    LNK1E   TWRITE                                 
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine set2e(IOP)
+      implicit none
+      integer i , I2e , Ibasd , Ibase , Ibf , Icon , Icount , Ifil , 
+     &        In , Intcnt , IOP , Iout , Ipunch , Iq , Ireset , irwibf , 
+     &        Ismode , Istat , Isym2e , Itotal
+      integer Iudum , Iunit , Iux , Kntt1 , Kntt2 , Last , lenibf , 
+     &        Limint , Mode , nosym , Nrpext , Ntx , Nwiib , Nwpi
+      integer Dbase , Dbasd , Dcount
+      integer onoff
+      dimension IOP(50)
+      dimension Ibf(1)
+      common /io    / In , Iout , Ipunch
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Isym2e
+      common /munit / Iunit(11) , I2e , Iudum(8)
+      equivalence (Ismode,Ibf(1))
+      equivalence (Kntt1,Icount) , (Kntt2,Dcount)
+      data irwibf/8/ , lenibf/15/
+C
+C
+C***********************************************************************
+C     routine to perform initialization functions for the files and
+C     logic associated with the two-electron integral storage.
+C***********************************************************************
+C
+C
+C
+C
+C
+99001 format (12H RAFFENETTI ,i1,17H INTEGRAL FORMAT.)
+99002 format (25H REGULAR INTEGRAL FORMAT.)
+99003 format (' DUMP FROM IBF:'/' ISMODE=',i1,'   MODE=',i1,'   ISTAT=',
+     &        i1,'   LAST=',i2)
+99004 format (' NTX=',i1,'   IUX(1-5)=',5I3,'   ICON=',i6,'   NRPEXT=',
+     &        i4)
+99005 format (' KNTT1=',i4,'   KNTT2=',i4/' IBASE=',i4,'   IBASD(1-2)=',
+     &        2I5,' DBASE=',i4,'   DBASD(1-2)=',2I5/' IRESET(1-2)=',2I5)
+99006 format (' IQ=',i1,'   IFIL=',i4,'   INTCNT=',i2,'   ITOTAL=',i3)
+99007 format (' LIMINT=',i5,'   NWPI=',i1,'   NWIIB=',i5,'   ISYM2E=',
+     &        i1)
+99008 format (' SET2E ... FATAL ... NWIIB IS ODD:',i9)
+99009 format (' TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.')
+99010 format (' TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED OFF.')
+C
+C***********************************************************************
+C     define 'hard-wired' constants.  these include the following,
+C
+C     nwiib  ... number of words in and integral buffer.
+C     iux    ... table of logical units for integral i/o.
+C     icon   ... maximum number of records permitted on each
+C                of the last four logical units.
+C     nrpext ... the number of blocks per extend operation while
+C                writing integrals.
+C***********************************************************************
+      Nwiib = 4760
+      Iux(1) = 19
+      Iux(2) = I2e
+      Iux(3) = 4
+      Iux(4) = 8
+      Iux(5) = 9
+      Icon = 100000
+      Nrpext = 20
+C
+C*********************************************************************
+C     define /ibf/ variables present on the first card.
+C
+C     ismode ... defines format for current calculation.
+C     0 ... regular integral format.
+C     1 ... raffenetti type 1.
+C     2 ... raffenetti type 2.
+C     3 ... raffenetti type 3.
+C
+C     mode   ... this variable is simply ismode+1 and is useful
+C                for the various computed go to's in the program.
+C
+C     istat  ... status of integral file.
+C     0 ... undefined.
+C     1 ... opened, but no integrals have yet been written out.
+C           (for example, we are between l301 and the first
+C           two-electron link.)
+C     2 ... two-electron integral evaluation in progress.  some
+C           integrals may be present in the incomplete integral
+C           buffer.
+C     3 ... two-electron integral evaluation is complete and the
+C           integrals are available for processing.
+C
+C     last   ... link number (last two-digits please) of the last
+C                two-electron integral link.  this specifies the
+C                link responsible for closing the two-electron
+C                file.
+C***********************************************************************
+C
+      call ilsw(2,1,i)
+      i = mod(i,2)
+      if ( IOP(11).ne.9 ) Ismode = IOP(11)
+      if ( IOP(11).eq.9 .and. i.eq.0 ) Ismode = 1
+      if ( IOP(11).eq.9 .and. i.eq.1 ) Ismode = 2
+C  for direct scf "noraff" is compulsory:
+      if ( IOP(45).ne.0 ) Ismode = 0
+      if ( IOP(45).ne.0 ) IOP(11) = 0
+C
+      Mode = Ismode + 1
+      Istat = 1
+      Last = IOP(25)
+C
+C***********************************************************************
+C     prepare variables associated with counting of integrals
+C     and counting of records created.
+C
+C     iq     ... buffer indicator for double buffering.  this variable
+C                is scratch storage for routines that write integrals
+C                out and routines that process integrals.
+C
+C     ifil   ... counts the number of integral records written out.
+C
+C     intcnt ... scratch counter for the number of integrals during
+C                processing.
+C
+C     itotal ... count of total number of labels generated by the
+C                integral programs.  this can be used by integral
+C                processing routines to ensure that all integrals
+C                have been processed.
+C***********************************************************************
+      Iq = 0
+      Ifil = 0
+      Intcnt = 0
+      Itotal = 0
+C
+C***********************************************************************
+C     prepare remaining variables.  this step is ismode dependent.
+C     thus, the initialization is done separately for ismode=0
+C     and ismode .ne. 0.
+C
+C     in the following, all information is derived from nwiib, defined
+C     above.  note that nwiib must be an even number for this
+C     routine to succeed.
+C
+C     given ismode, we compute nwpi (the number of words per integral)
+C     and via nwiib the number of integrals that can be stored in
+C     one record (limint).  at this point, note that nwiib must be
+C     even for set2e to work properly.
+C
+C     armed with this information, the remaining variables are
+C     initialized.
+C
+C     kntt1  ... used in buffer indexing in out2e and for communication
+C                between labint, labscf and higher level routines.
+C     kntt2  ... same as kntt1.
+C     ibase  ... used to specify the base index for labels in the
+C                current buffer.
+C     dbase  ... used to specify the base index for integrals in
+C                the current buffer.
+C     ibasd()... starting values for ibase for the two buffers.
+C     dbasd()... starting values for dbase for the two buffers.
+C     ireset ... reset values for kntt1 and kntt2 in out2e and
+C                used by processing routines for the non-raffenetti
+C                formats.
+C***********************************************************************
+C
+C     ensure that nwiib is even before continuing.
+      if ( mod(Nwiib,2).ne.0 ) then
+         write (Iout,99008) Nwiib
+         call lnk1e
+      endif
+C
+      if ( Ismode.le.0 ) then
+C
+C     non-raffenetti setup.
+         Nwpi = 3
+         Limint = (Nwiib-1)/Nwpi
+         Kntt1 = 1
+         Kntt2 = Nwiib - mod((Nwiib-1),Nwpi) - Nwpi
+         Ibasd(1) = 1
+         Ibasd(2) = Ibasd(1) + Nwiib
+         Dbasd(1) = 0
+         Dbasd(2) = 0
+         Ibase = Ibasd(1)
+         write (Iout,99002)
+      else
+C
+C     raffenetti setup.
+         Nwpi = 1 + 2*Ismode
+         Limint = (Nwiib-1)/Nwpi
+         Ibasd(1) = 1
+         Ibasd(2) = Ibasd(1) + Nwiib
+         Dbasd(1) = (Limint+2)/2
+         Dbasd(2) = Dbasd(1) + (Nwiib/2)
+         Ibase = Ibasd(1)
+         Dbase = Dbasd(1)
+         Dcount = 1
+         Icount = 1
+         write (Iout,99001) Ismode
+      endif
+      Ireset(1) = Kntt1
+      Ireset(2) = Kntt2
+C
+C***********************************************************************
+C     determine isym2e.  this variable controls use of abelian
+C     point group symmetry with the two-electron integrals.
+C
+C     isym2e = 0 ... symmetry is not being used.
+C     isym2e = 1 ... symmetry is turned on.
+C
+C     presently (11 sep 79) this option works only with
+C     the raffenetti storage mode.
+C***********************************************************************
+C
+C     if  nosym.ne.0  then
+C          isym2e=0
+C     else  if  iop(30)=1 then
+C          isym2e=1
+C     endif
+      call ilsw(2,26,nosym)
+      Isym2e = 0
+      if ( nosym.eq.0 ) then
+C     turn on symmetry use in 2-electron integrals.
+         if ( IOP(30).eq.1 ) Isym2e = 1
+      endif
+      if ( Isym2e.eq.0 ) write (Iout,99010)
+      if ( Isym2e.eq.1 ) write (Iout,99009)
+C     possible debug dump.
+      if ( IOP(34).ne.0 ) then
+         write (Iout,99003) Ismode , Mode , Istat , Last
+         write (Iout,99004) Ntx , Iux , Icon , Nrpext
+         write (Iout,99005) Kntt1 , Kntt2 , Ibase , Ibasd , Dbase , 
+     &                      Dbasd , Ireset
+         write (Iout,99006) Iq , Ifil , Intcnt , Itotal
+         write (Iout,99007) Limint , Nwpi , Nwiib , Isym2e
+      endif
+      call twrite(irwibf,Ismode,lenibf,1,lenibf,1,0)
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,263 @@
+@* sfopti.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DELVAR  EXX     IDONE   IFLINF  ISECT   ISFMAP  ISTATS 
+             ITYPE   NCYC    NCYCLS  NCYTOT  NORUNS  NPAR    NVAR   
+             POOL0   POOL1                                          
+\item[Transmits as argument]  INF                                                    
+\item[Uses]  DELVAR  EXX     IN      INF     IOUT    ISFMAP  NPAR   
+             NSHELL  NVAR    POOL0   SCALE   SHELLA  SHELLN         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FPDUMP  ILSW    LNK1E   TQUERY  TREAD   TWRITE         
+\item[Called by]   GBASIS                                                 
+                                                                    
+\end{description}
+@a
+      subroutine sfopti(IOP)
+      implicit none
+      double precision Alpha , C1 , C2 , C3 , C4 , Convrg , D1var , 
+     &                 D1vold , D2var , defdel , Delvar , Exx , F , F1 , 
+     &                 Fzero , H , one , Pool0 , Pool1 , rescal
+      double precision Scale , Tcurcy , Telcur , Teltot , temp , temp1 , 
+     &                 Tlstcy , Vname , X , Xi , Y , Yold , Z , zero
+      integer i , Idone , iend , iflg , Iflinf , Ihflag , In , Incldh , 
+     &        Index , Inf , Intent , iofp , Iold , IOP , Iout , Ipunch , 
+     &        irwbv , isave , Isect , Isfmap
+      integer isfo , ishell , istart , Istats , Ititle , Itype , Jan , 
+     &        K , Lambda , len , LENB , lenfp , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , Mode , Ncyc , Ncycls
+      integer Ncytot , Noinch , Noruns , Npar , nsfvar , Nshell , 
+     &        Nstep , Nvar , nvarmx
+      real Tmax
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      dimension IOP(50)
+      dimension Inf(2394) , Isfmap(30,2)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /scale / Scale(MAXSHL)
+      common /io    / In , Iout , Ipunch
+C      common /fpinfo/pool0(30),pool1(30),delvar(30),yold(30),d1var(30),
+C     +       d2var(30),d1vold(30),xi(30),fzero,f1(4),f,alpha,convrg,
+C     +       ieltot,ielcur,ilstcy,tmax,icurcy,iflinf,k,nvar,npar,itype,
+C     +       ncycls,isect,ncyc,noruns,ncytot,ititle(8),mode,nstep,index,
+C     +       lambda,ihflag,idone,h(30,30),noinch,incldh,vname(30),istats
+C     +       ,intent
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      equivalence (Inf(1),Pool0(1))
+C      equivalence (istats,inf(800))
+      equivalence (Iold,Tmax)
+C      equivalence (istart,inf(738))
+      equivalence (Isfmap(1,1),Inf(382))
+C      equivalence (nsfvar,inf(442))
+C      equivalence (idone,inf(737))
+      data zero/0.0D0/ , one/1.0D0/ , nvarmx/30/
+      data defdel/0.01D0/ , iofp/510/ , lenfp/1563/
+      data irwbv/550/
+C
+C***********************************************************************
+C     routine to initialize for a scale-factor optimization.
+C     this routine accepts as input the following rw-files and
+C     common blocks:
+C
+C     /b/      ... basis set common.
+C     /scale/  ... common containing scale factors.
+C     iofp     ... fletcher-powell common from rw-files.
+C
+C     this routine performs the following actions:
+C     1.  verify that unity scale factors have been read in as the
+C         initial basis set.  this must be done to eliminate any
+C         undesired scaling performed by gbasis.
+C     2.  attempt to read in iofp:
+C         a.  if it exists, then merge our data with the data already
+C             residing in iofp.  it is assumed that all variables were
+C             read in whenever iofp was initialized.
+C         b.  if it doesn't exist, then this is a scale-factor only
+C             optimization.  in this case, set up iofp so that
+C             when the fletcher-powell program is entered, it will
+C             already have the first energy.
+C
+C     this routine always sets the isfo (scale-factor optimization)
+C     bit in ilsw.
+C
+C***********************************************************************
+C
+C
+C
+99001 format (' UN-SCALING REQUIRED FOR SHELL ',i3,'   SCALE=',d20.10)
+99002 format (2I4)
+99003 format (' UNACCEPTABLE VALUE OF NSFVAR:',i6)
+99004 format (' SCALE-FACTOR VARIBLE MAP'/' ************************')
+99005 format (6x,2I6)
+99006 format (2D20.10)
+99007 format (1x,2D20.10)
+99008 format (6x,' POOL OF VARIABLES AND CONSTANTS'/6x,
+     &        ' *******************************')
+99009 format (' SFOPTI DONE,  NVAR=',i2,'   NPAR=',i2)
+99010 format (' SORRY ... SCALE FACTOR OPTIMIZATIONS ARE NOT'/
+     &        '           IMPLEMENTED FOR NVAR .GT. 0',i6)
+C
+C***********************************************************************
+C     post processing of common/b/.  make sure that the user has input
+C     unity scale factors in the gbasis input.  it is intended by the
+C     optimization logic that the virgin copy of /b/ be unscaled.  in
+C     this manner, scale factors can be easily applied.
+C***********************************************************************
+C
+C
+C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+C                                                  !
+C  warning!! /fpinfo/ is not correct               !
+C  (among other things)                            !
+C                                                  !
+C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+C
+C      j = i / 0
+      iflg = 0
+      do 100 ishell = 1 , Nshell
+         if ( Scale(ishell).ne.one ) then
+            iflg = 1
+C
+C     the current shell requires un-scaling.  print a message letting
+C     the user know this.
+            write (Iout,99001) ishell , Scale(ishell)
+C     pick up the necessary loop variables.
+            istart = Shella(ishell)
+            iend = istart + Shelln(ishell) - 1
+C     compute re-scale quantity.
+            rescal = one/(Scale(ishell)**2)
+C     loop over the functions in this shell, re-scaling.
+            do 20 i = istart , iend
+               Exx(i) = Exx(i)*rescal
+ 20         continue
+         endif
+ 100  continue
+C     if necessary, update the virgin copy of /b/.
+      if ( iflg.eq.1 ) call twrite(irwbv,Exx(1),LENB,1,LENB,1,0)
+C
+C***********************************************************************
+C     inform the world that this is at least a fletcher-powell
+C     scale-factor optimization.
+C***********************************************************************
+      call ilsw(1,isfo,1)
+C
+C     see if the fletcher-powell common exists.
+      istart = 0
+      call tquery(iofp,len)
+      if ( len.ne.0 ) then
+C
+C
+C     the first step is to recover the fletcher-powell common.
+         call tread(iofp,Inf(1),lenfp,1,lenfp,1,0)
+C
+C     this routine will not be able to succeed if there are
+C     any parameters in the fp common.
+         if ( Npar.le.0 ) then
+            write (Iout,99010) Npar
+            call lnk1e
+         endif
+C
+C     set istart so that the information read in by this routine
+C     will be appended to the information already in /fpinfo/.
+C     enter the read-in code.
+         istart = Nvar
+      else
+C
+C***********************************************************************
+C     the common does not exist.  perform enough initizlization to
+C     keep the ooptimization program going.
+C***********************************************************************
+C
+C     specify the maximum number of cycles and the convergence type.
+         Ncycls = 5
+         Itype = 2
+C
+C     set
+C     idone   ... controls inputing of energies.
+C     istats  ... specifies continuation or intialization.
+C     isect   ... tells how we will enter the fp program.
+C     timers  ... nyi.
+C     ncyc    ... number of cycles in this run.
+C     ncytot  ... total number of cycles (spans multiple runs).
+C     noruns  ... number of distinct runs.
+C
+         Idone = 0
+         Iflinf = 10
+         Istats = 0
+         Isect = 2
+         Ncyc = 0
+         Ncytot = 0
+         Noruns = 0
+      endif
+C
+C***********************************************************************
+C     read in the map, the pool of variables and any constants.
+C***********************************************************************
+      write (Iout,99004)
+      i = 0
+ 200  i = i + 1
+      read (In,99002) Isfmap(i,1) , Isfmap(i,2)
+      write (Iout,99005) Isfmap(i,1) , Isfmap(i,2)
+      if ( Isfmap(i,1).gt.0 ) goto 200
+      nsfvar = i - 1
+      if ( nsfvar.le.nvarmx ) goto 400
+ 300  write (Iout,99003) nsfvar
+      call lnk1e
+ 400  if ( nsfvar.le.0 ) goto 300
+C
+C     read in the pool of variables and constants.
+      write (Iout,99008)
+      i = istart
+ 500  i = i + 1
+      read (In,99006) temp , temp1
+      if ( temp.eq.zero ) then
+C     if we get a blank card on the first read, assume that someone
+C     else has set up /fpinfo/.
+         if ( i.eq.(istart+1) ) goto 800
+      endif
+      Pool0(i) = temp
+      Delvar(i) = temp1
+      if ( Delvar(i).eq.zero ) Delvar(i) = defdel
+      write (Iout,99007) Pool0(i) , Delvar(i)
+      if ( Pool0(i).ne.zero ) goto 500
+      Nvar = i - 1
+      isave = i
+      i = Nvar
+ 600  i = i + 1
+      read (In,99006) Pool0(i)
+      write (Iout,99007) Pool0(i)
+      if ( Pool0(i).ne.zero ) goto 600
+      Npar = i - Nvar - 1
+      write (Iout,99009) Nvar , Npar
+C
+C     copy the variables into pool1.
+      do 700 i = 1 , Nvar
+         Pool1(i) = Pool0(i)
+ 700  continue
+C
+C     return to caller.
+ 800  if ( IOP(34).ne.0 ) call fpdump
+      call twrite(iofp,Inf(1),lenfp,1,lenfp,1,0)
+      return
+C
+      end
+@* INDEX.

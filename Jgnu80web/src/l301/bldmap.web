@@ -1,0 +1,73 @@
+@* bldmap.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] C                                                         
+\item[PASSED:] SHELLT                                                    
+\item[PASSED:] SHELLC                                                    
+\item[PASSED:] NSHELL                                                    
+\item[PASSED:] I56D                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  MAPPER  MAPROT  NROT                                   
+\item[Uses]  MAPPER  MAPROT  NROT                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       PERMAP  ROTMAP  TWRITE                                 
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine bldmap(C,SHELLT,SHELLC,NSHELL,I56D)
+      implicit none
+      integer I56D , irwmap , lrwmap , Mapper , Maprot , MAXATM , 
+     &        MAXBAS , Nrot , NSHELL
+C ----------------------------------------------------------------------
+      parameter (MAXBAS=150,MAXATM=100)
+      double precision C(*)
+      integer SHELLT(*) , SHELLC(*)
+      common /maps  / Nrot , Maprot(MAXBAS) , Mapper(MAXATM)
+      data irwmap/559/ , lrwmap/125/
+C          this routine builds and "twrite"'s some basis-set related
+C     data which is needed by the orbital symmetry assignment routines.
+C     this data just describes the types of functions in the basis and
+C     which atom they are attached to.  for details, see the routines
+C     called (below) by this one:  "permap" and "rotmap".
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C2maps
+C
+C     common/maps/nrot,maprot(maxbas),mapper(maxatm)
+C
+C          a common block to help in performing symmetry operations
+C     on the wave function.  this is done to assign ofbital symmetries.
+C     the uses of the values in /maps/ are:
+C
+C          nrot .... the number of "groups" in maprot (below).
+C          maprot .. a map of the orbitals which can be mixed by
+C               mixed by rotations.  for instance, p-functions can
+C               be mixed with and only with each other.  thus,
+C               maprot(i)=j means that there are "j" orbitals
+C               in the "i-th" group.  "j" may be 1, 3, 5, 6, or 7,
+C               meaning s, p, 5d, 6d, 7f, respectively.
+C          mapper .. used to do the center permutations in the
+C               symmetry operation.  mapper(i) contains the number
+C               of the first basis function on the i-th atom.
+C2
+C ----------------------------------------------------------------------
+C=    dimension statement is toegevoegd
+C
+C                        form the permutation map.
+      call permap(NSHELL,SHELLT,SHELLC,C,I56D,Mapper)
+C
+C                        form the transformation map.
+      call rotmap(NSHELL,SHELLT,SHELLC,I56D,Maprot,Nrot)
+C
+C                        twrite the result.
+      call twrite(irwmap,Nrot,lrwmap,1,lrwmap,1,0)
+      return
+C
+      end
+@* INDEX.

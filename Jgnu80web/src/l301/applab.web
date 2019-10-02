@@ -1,0 +1,76 @@
+@* applab.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] ELEMNT                                                    
+\item[INPUT:] N                                                         
+\item[PASSED:] STR                                                       
+\item[PASSED:] LABEL                                                     
+\item[INPUT:] LCURSR                                                    
+\item[INPUT:] MOD                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DECCHR  LNK1E   PAD     PUTB    PUTCHR  PUTDEL         
+\item[Called by]   PUTLBL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine applab(ELEMNT,N,STR,LABEL,LCURSR,MOD)
+C ----------------------------------------------------------------------
+      implicit none
+      integer ELEMNT , In , Iout , Ipunch , LABEL , LCURSR , MOD , N , 
+     &        STR , tcur
+      integer modify(3)
+      dimension ELEMNT(*) , LABEL(*) , STR(*)
+      common /io    / In , Iout , Ipunch
+      data modify/'(I)' , '(M)' , '(O)'/
+C          routine to append a basis function label to the list,
+C     "label" (with cursor lcursr).  "elemnt" is the center name, and
+C     this is erased by this routine after it is used.  "n" is the
+C     principal quantum number of the basis function.  "str" is the
+C     three character label for the basis function.  "mod" indicates
+C     what kind of additional information is to be appended to the
+C     function name:
+C               1 ... none.
+C               2 ... (i).
+C               3 ... (m).
+C               4 ... (o).
+C     the label is appended to the string "label" as a section.
+C     r. a. whiteside - february 1980
+C ----------------------------------------------------------------------
+C test for limits in /label/
+      if ( LCURSR.gt.3890 ) then
+         write (Iout,*) 'APPLAB; Not Enough ROOM in /LABEL/'
+         call lnk1e
+      endif
+C                        put the center name into label.
+      call putb(ELEMNT,6,LABEL,LCURSR)
+C
+C                        erase the center name.
+      tcur = 0
+      call pad(ELEMNT,tcur,6,1H )
+C
+C                        put the principal quantum number.
+      if ( N.lt.10 ) call putchr(' ',LABEL,LCURSR)
+      if ( N.eq.0 ) call putchr(' ',LABEL,LCURSR)
+      if ( N.ne.0 ) call decchr(N,LABEL,LCURSR)
+C
+C                        now, the function name.
+      call putb(STR,3,LABEL,LCURSR)
+C
+C                        .. and the modifier.
+      if ( MOD.eq.2 ) call putb(modify(1),3,LABEL,LCURSR)
+      if ( MOD.eq.3 ) call putb(modify(2),3,LABEL,LCURSR)
+      if ( MOD.eq.4 ) call putb(modify(3),3,LABEL,LCURSR)
+C
+C                        put the delimiter.
+      call putdel(2,LABEL,LCURSR)
+      return
+C
+      end
+@* INDEX.

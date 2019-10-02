@@ -1,0 +1,86 @@
+@* getngr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NGR                                                       
+\item[OUTPUT:] NUMGR                                                     
+\item[INPUT:] NROT                                                      
+\item[INPUT:] MAPPER                                                    
+\item[INPUT:] MAPROT                                                    
+\item[INPUT:] JAT                                                       
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] NBASIS                                                    
+\item[OUTPUT:] NOSYM                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   BASSYM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine getngr(NGR,NUMGR,NROT,MAPPER,MAPROT,JAT,NATOMS,NBASIS,
+     &                  NOSYM)
+      implicit none
+      integer igr , In , Iout , Ipunch , JAT , MAPPER , MAPROT , 
+     &        NATOMS , NBASIS , nbefor , nextat , nfunc , NGR , NOSYM , 
+     &        NROT , numfun , NUMGR
+      dimension NGR(*) , MAPROT(*) , MAPPER(*)
+      common /io    / In , Iout , Ipunch
+C
+C
+C      the contents of maprot (see subroutine bldmap) for the current
+C      atom (jat) are put into ngr.  numgr is the number of groups
+C      on jat.  nosym is an error flag.
+C
+C
+C
+C
+99001 format (1H0,'ALIGNMENT PROBLEM 1 IN GETNGR'/)
+99002 format (1H0,'ALIGNMENT PROBLEM 2 IN GETNGR'/)
+C
+C
+C                                    nbefor: total number of functions
+C                                            on atoms before jat.
+C                                    numfun: number of functions on jat.
+C
+      nbefor = MAPPER(JAT) - 1
+      nextat = MAPPER(JAT+1) - 1
+      if ( JAT.eq.NATOMS ) nextat = NBASIS
+      numfun = nextat - nbefor
+C                                    spool thru maprot until we're
+C                                    pointed at jat.
+C
+      igr = 1
+      nfunc = 0
+ 100  if ( nfunc.eq.nbefor ) then
+C
+C                                   move elements from maprot to ngr for
+C                                   jat.
+C
+         nfunc = 0
+         NUMGR = 1
+ 150     NGR(NUMGR) = MAPROT(igr)
+         nfunc = nfunc + NGR(NUMGR)
+         if ( nfunc.eq.numfun ) return
+         igr = igr + 1
+         NUMGR = NUMGR + 1
+         if ( igr.le.NROT ) goto 150
+      else
+         nfunc = nfunc + MAPROT(igr)
+         igr = igr + 1
+         if ( igr.lt.NROT+1 ) goto 100
+         NOSYM = 1
+         write (Iout,99001)
+         return
+      endif
+      NOSYM = 1
+      write (Iout,99002)
+      return
+C
+      end
+@* INDEX.

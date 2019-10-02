@@ -1,0 +1,509 @@
+@* ginput.
+\begin{verbatim}
+   use nonstandard scaling factors
+   for the sto-ng bases the scale factors pertain to the following
+   orbitals
+   1s 2sp 3sp
+   and for the 4-31g series of bases
+   for hydrogen
+   1s 1s*
+   for first row atoms
+   1s 2sp 2sp*
+   and for second row atoms
+   1s 2sp 3sp 3sp*
+   note ... the fifth scale factor is never used
+   read in:
+   atom numbers (maximum of 15), 
+   scale factors for each shell
+   (maximum of 5) starting with the innermost  (15i2,5g10.4)
+   read in as many of the above cards as required
+   the list is terminated by a blank card
+   note ... initial scale factors must be read in for a scale
+   factor optimization  run.  if standard scale factors are to
+   be used as the initial values, just put in a blank card.
+   as all atoms are preset with standard scale factors it is only
+   required to read in alterations for those atoms which require
+   non-standard scaling factors
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DEXPB   DEXPBE  DEXPLI  DGEN    I2EDSC  I2ESF   I5D6D  
+             IBASIS  IBMOD   IBPR    IOSC    IPT     IROT    JPRINP 
+             JPSEUD  JPUNCH  JREADP  JSUBP   LLINK   MAXTYP  NAE    
+             NBE     NE      NGIC    NUMD    PDEXP   PDEXP1  PDEXP2 
+             PPEXP   SCAL1   SCAL1X  SCAL2   SCAL2X  SCAL3   SCAL3X 
+             SCAL4   SCAL4X  SHELLC                                 
+\item[Transmits as argument]  ATMCHG  C       EXX     IAN     IOP     LABEL   NATOMS 
+             NBASIS  NSHELL  PSAVE   SHELLT  X       Y       Z      
+\item[Uses]  ATMCHG  C       DGEN    EXX     I5D6D   IAN     IBASIS 
+             IBMOD   IBPR    ICHARG  IN      IOP     IOSC    IOUT   
+             IPT     IROT    ITITLE  JPSEUD  JPUNCH  LABEL   MAXTYP 
+             MULTIP  NAE     NATOMS  NBASIS  NBE     NE      NGIC   
+             NSHELL  NUMD    PSAVE   SCAL1   SHELLC  SHELLT  X      
+             Y       Z                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  BASPRT  BASSYM  BDUMP   BINWT   BLDMAP  BPRINT 
+             DRUM    FC6311  GBASIS  ILSW    LEEAO   LNK1E   LOSBAS 
+             N21G    NEXTOV  PINPUT  PRGBAS  RENORM  REPULS  ROTCOR 
+             SET2E   STO     TWRITE                                 
+\item[Called by]   L301                                                   
+                                                                    
+\end{description}
+@a
+      subroutine ginput(JUMP)
+      implicit none
+      double precision Atmchg , b1 , b3 , b4 , C , C1 , C2 , C3 , C4 , 
+     &                 Dexpb , Dexpbe , Dexpli , Dgen , dtemp , dtemp1 , 
+     &                 dtemp2 , enr , Exx , Pdexp , Pdexp1
+      double precision Pdexp2 , Ppexp , ptemp , rone , Scal1 , Scal1x , 
+     &                 Scal2 , Scal2x , Scal3 , Scal3x , Scal4 , 
+     &                 Scal4x , Scale , Shladf , thr , X , x1 , x2 , 
+     &                 x3 , x4
+      double precision x5 , Y , Z , zero
+      integer i , I2edsc , I2esf , I5d6d , ia , iabort , Ian , Iao , 
+     &        Iaos , Ibasis , Ibmod , Ibpr , ic , icent , Icharg , 
+     &        Icount , id , ideriv , iel , Ifbp
+      integer iff , ifpol , ii , In , iobas , iolbl , Iop , Iosc , 
+     &        ioscal , Iout , Ipt , Ipunch , Irot , Irtcrd , irwgen , 
+     &        Iscal , Ititle , Jan , Jprinp , Jpseud
+      integer Jpunch , Jreadp , Jsubp , JUMP , Label , LENB , Llink , 
+     &        MAXPRM , MAXS21 , MAXSH1 , MAXSHL , Maxtyp , Multip , 
+     &        Nae , Natoms , Nbasis , Nbe , nchain , Ne , nextov
+      integer Ngic , nosym , nprims , Nshell , Numd , numf
+      integer Psave
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      integer*4 basnam
+      dimension b1(36,4) , b3(36,2) , b4(36,2)
+      dimension basnam(4)
+      dimension ic(15) , id(4)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /scalsp/ Scal1(35) , Scal1x(35) , Scal2(35) , Scal2x(35) , 
+     &                Scal3(35) , Scal3x(35) , Scal4(35) , Scal4x(35) , 
+     &                Iscal(35) , Icount
+      common /iao   / Iao(4)
+      common /io    / In , Iout , Ipunch
+      common /scale / Scale(MAXSHL)
+      common /numd  / Numd
+      common /iaos  / Iaos(MAXSHL)
+      common /polexp/ Ppexp , Pdexp , Pdexp1 , Pdexp2
+      common /ops301/ Ibasis , Ngic , Ipt , I5d6d , Iosc , Ibmod , 
+     &                Ibpr , Llink , I2edsc , Irot , Jpunch , I2esf
+      common /libeb / Dexpli , Dexpbe , Dexpb
+      common /label / Label(1000) , Ititle(100) , Irtcrd(100)
+      common /psave / Psave
+      common /ifbp  / Ifbp
+      common /potpar/ Jpseud , Jreadp , Jprinp , Jsubp
+      common /gen   / Dgen(47)
+      data id/5 , 6 , 5 , 6/
+      data thr/1.D-8/
+      data b1/1.24D0 , 1.69D0 , 2.69D0 , 3.68D0 , 4.68D0 , 5.67D0 , 
+     &     6.67D0 , 7.66D0 , 8.65D0 , 9.64D0 , 10.61D0 , 11.59D0 , 
+     &     12.56D0 , 13.53D0 , 14.50D0 , 15.47D0 , 16.43D0 , 17.40D0 , 
+     &     18*0.0D0 , .00D0 , .00D0 , .80D0 , 1.15D0 , 1.50D0 , 1.72D0 , 
+     &     1.95D0 , 2.25D0 , 2.55D0 , 2.88D0 , 3.48D0 , 3.90D0 , 
+     &     4.36D0 , 4.83D0 , 5.31D0 , 5.79D0 , 6.26D0 , 6.74D0 , 
+     &     24*0.0D0 , .00D0 , .00D0 , .00D0 , .00D0 , 1.75D0 , 1.70D0 , 
+     &     1.70D0 , 1.75D0 , 1.90D0 , 2.05D0 , 2.10D0 , 2.33D0 , 
+     &     54*0.0D0/
+      data b3/1.2D0 , 17*1.0D0 , 18*0.0D0 , 1.15D0 , 17*1.0D0 , 
+     &     18*0.0D0/
+      data b4/1.20D0 , 1.00D0 , 1.03D0 , 1.03D0 , 1.03D0 , 1.00D0 , 
+     &     .99D0 , .99D0 , 1.00D0 , 1.00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .98D0 , .98D0 , 1.00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , 1.15D0 , 1.00D0 , 1.12D0 , 1.12D0 , 1.12D0 , 
+     &     1.04D0 , .98D0 , .98D0 , 1.00D0 , 1.00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , 1.02D0 , 1.01D0 , 1.01D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , .00D0 , 
+     &     .00D0 , .00D0 , .00D0/
+      data rone/1.0D0/
+      data basnam/'BASI' , 'S   ' , '    ' , '    '/
+      data zero/0.0D0/
+      data iolbl/502/
+      data ioscal/505/
+      data iobas/506/
+      data irwgen/501/
+C
+C
+C
+99001 format (1H1)
+99002 format (15I2,5D10.4)
+99003 format (4D20.10)
+99004 format (36H REPLACEMENT POLARIZATION EXPONENTS:/1x,4D19.10)
+99005 format (1x,i3,' BASIS FUNCTIONS',5x,i4,' PRIMITIVE GAUSSIANS'/1x,
+     &        i3,' ALPHA ELECTRONS',5x,i4,' BETA ELECTRONS'/1x,3x,
+     &        ' NUCLEAR REPULSION ENERGY ',f15.10,' HARTREES')
+99006 format (1x,'REPLACEMENT SCALE-FACTORS: '/1x,15I2,5F10.4)
+99007 format (1x,' *** ERROR TERMINATION: PROGRAM CANNOT ',/,1x,
+     &        '  PRESENTLY DO DERIVATIVES OF EFFECTIVE POTENTIAL',/,1x,
+     &        '  INTEGRALS BEYOND S P AND D BASIS FUNCTIONS ***')
+99008 format (' DUMP /LABEL/'/20(5x,25A4/))
+C
+C     initialise common /b/
+      call aclear(LENB,Exx)
+C
+C     preset common /io/
+      call drum
+      call ilsw(2,21,Psave)
+C     pick up options from blank common.
+      Ibasis = Iop(5)
+      Ngic = Iop(6)
+      Ipt = Iop(7)
+      I5d6d = Iop(8)
+      iff = Iop(9)
+      numf = 7
+      if ( iff.eq.2 ) numf = 10
+C     iosc=iop(9)
+      Iosc = 0
+      Ibmod = Iop(10)
+      Jpseud = Iop(16)
+      Jreadp = Iop(17)
+      Jprinp = Iop(18)
+      Jsubp = Iop(19)
+      I2esf = Iop(23)
+      Ibpr = Iop(24)
+      iabort = Iop(26)
+      if ( iabort.eq.1 .and. Ibpr.eq.0 ) Ibpr = 1
+      Llink = Iop(25)
+      I2edsc = Iop(27)
+      Irot = Iop(29)
+      Jpunch = Iop(32)
+C     process defaults for i5d6d and iosc.
+C     internal i5d6d:
+C     0 ... 5d,
+C     1 ... 6d.
+      I5d6d = I5d6d - 1
+      if ( I5d6d.lt.0 ) then
+         I5d6d = 0
+         if ( Ibasis.eq.1 .and. Ipt.gt.0 ) I5d6d = 1
+      endif
+C     process type of f-functions.
+      if ( iff.eq.0 ) call ilsw(1,16,0)
+      if ( iff.eq.1 ) call ilsw(1,16,0)
+      if ( iff.eq.2 ) call ilsw(1,16,1)
+C
+C     update the inter-link status word.
+C
+      call ilsw(1,2,I5d6d)
+      call ilsw(1,3,Ibasis)
+      if ( Ibasis.eq.7 ) call ilsw(1,3,2)
+      ifpol = 0
+      if ( Ipt.eq.1 ) ifpol = 6
+      if ( Ipt.eq.2 ) ifpol = 7
+      call ilsw(1,4,ifpol)
+C
+C     initialize shellc.
+C
+C          shellc             constraints
+C            0                s, s=p, or s=p=d
+C            1                 s, p, or d
+C            2                s, s=p, or d
+C
+      ii = Iosc
+      if ( Iosc.eq.0 ) ii = 2
+      if ( Iosc.eq.2 ) ii = 0
+      do 100 i = 1 , 80
+         Shellc(i) = ii
+ 100  continue
+      call basprt
+      Numd = id(I5d6d+1)
+      Ppexp = 1.1D0
+      Pdexp = 0.8D0
+      Pdexp1 = 0.09E0
+      Pdexp2 = 0.39E0
+      if ( Ibmod.ge.2 .and. Ibasis.ne.7 ) then
+C     ******************************************************************
+C     read in replacement polarization exponents.  read 1 card in
+C     4e20.10 format.
+C
+C     field    replacement
+C     -----    -----------
+C       1      n-31g** hydrogen p exponent.
+C       2      n-31g* first row atom d-dexponent.
+C       3      sto-ng* na or mg d expoment.
+C       4      sto-ng* d exponent for al to cl.
+C
+C     note that  the appropriate exponent is modified only if different
+C     from zero.
+C     ******************************************************************
+         read (In,99003) ptemp , dtemp , dtemp1 , dtemp2
+         write (Iout,99004) ptemp , dtemp , dtemp1 , dtemp2
+         if ( ptemp.ge.thr ) Ppexp = ptemp
+         if ( dtemp.ge.thr ) Pdexp = dtemp
+         if ( dtemp1.ge.thr ) Pdexp1 = dtemp1
+         if ( dtemp2.ge.thr ) Pdexp2 = dtemp2
+      endif
+      Dexpli = 0.2D0
+      Dexpbe = 0.4D0
+      Dexpb = 0.6D0
+      if ( Irot.ne.0 ) then
+         call rotcor(Natoms,C)
+         write (Iout,99001)
+      endif
+      if ( Ibasis.ne.7 ) then
+C
+         if ( Ibasis.ne.4 ) then
+C     test for access to n-21g basis.
+            if ( Ibasis.ne.5 ) then
+C     preset with standard scale factors
+               if ( Ibasis.gt.0 ) then
+                  if ( Ibasis.ne.2 ) then
+C     extended 4-31g,5-31g,6-31g bases
+C     only valence shell scale factors non unity
+                     if ( Ibasis.eq.6 ) goto 120
+                     if ( Ibasis.eq.3 ) goto 120
+C
+                     do 102 i = 1 , Natoms
+                        ia = Ian(i)
+                        if ( ia.le.2 ) then
+                           Scal1(i) = b4(ia,1)
+                           Scal1x(i) = b4(ia,2)
+                        else
+C
+                           Scal1(i) = rone
+                           if ( ia.le.10 ) then
+                              Scal2(i) = b4(ia,1)
+                              Scal2x(i) = b4(ia,2)
+                           else
+C
+                              Scal2(i) = rone
+                              if ( ia.le.18 ) then
+                                 Scal3(i) = b4(ia,1)
+                                 Scal3x(i) = b4(ia,2)
+                              else
+C
+                                 Scal3(i) = rone
+                                 Scal4(i) = b4(ia,1)
+                                 Scal4x(i) = b4(ia,2)
+                              endif
+                           endif
+                        endif
+ 102                 continue
+                     goto 150
+                  endif
+               endif
+C     sto basis
+               do 110 i = 1 , Natoms
+                  ia = Ian(i)
+                  Scal1(i) = b1(ia,1)
+                  Scal2(i) = b1(ia,2)
+                  Scal3(i) = b1(ia,3)
+                  Scal4(i) = b1(ia,4)
+ 110           continue
+               goto 150
+            else
+               call n21g(Iop,Natoms,Ian,C,Nbasis)
+               goto 200
+            endif
+C
+C     lp-n1g basis
+C
+ 120        do 140 i = 1 , Natoms
+               ia = Ian(i)
+               if ( ia.le.2 ) then
+                  Scal1(i) = b3(ia,1)
+                  Scal1x(i) = b3(ia,2)
+               else
+C
+                  Scal1(i) = zero
+                  if ( ia.le.10 ) then
+                     Scal2(i) = b3(ia,1)
+                     Scal2x(i) = b3(ia,2)
+                  else
+C
+                     Scal2(i) = zero
+                     if ( ia.le.18 ) then
+                        Scal3(i) = b3(ia,1)
+                        Scal3x(i) = b3(ia,2)
+                     else
+C
+                        Scal3(i) = zero
+                        Scal4(i) = b3(ia,1)
+                        Scal4x(i) = b3(ia,2)
+                     endif
+                  endif
+               endif
+ 140        continue
+         else
+            call fc6311(Iop,Natoms,Ian,C,Nbasis)
+            goto 200
+         endif
+ 150     if ( Ibmod.eq.3 .or. Ibmod.eq.1 ) then
+ 160        read (In,99002) (ic(i),i=1,15) , x1 , x2 , x3 , x4 , x5
+            do 180 i = 1 , 15
+               if ( ic(i).eq.-0 ) ic(i) = 0
+ 180        continue
+            write (Iout,99006) (ic(i),i=1,15) , x1 , x2 , x3 , x4 , x5
+            if ( ic(1).ne.0 ) then
+               do 190 i = 1 , 15
+                  if ( ic(i).eq.0 ) goto 160
+                  icent = ic(i)
+                  Scal1(icent) = x1
+                  if ( Iop(5).le.0 ) then
+                     Scal2(icent) = x2
+                     Scal3(icent) = x3
+                     Scal4(icent) = x4
+C
+                  elseif ( Ian(icent).le.2 ) then
+                     Scal1x(icent) = x2
+C
+                  elseif ( Ian(icent).le.10 ) then
+                     Scal2(icent) = x2
+                     Scal2x(icent) = x3
+C
+                  elseif ( Ian(icent).le.18 ) then
+                     Scal2(icent) = x2
+                     Scal3(icent) = x3
+                     Scal3x(icent) = x4
+                  else
+C
+                     Scal2(icent) = x2
+                     Scal3(icent) = x3
+                     Scal4(icent) = x4
+                     Scal4x(icent) = x5
+                  endif
+ 190           continue
+            endif
+         endif
+C     write scaling factors on rwtape (drum) for possible future use
+         call twrite(ioscal,Scal1,298,1,298,1,0)
+         if ( Ibasis.le.0 ) then
+C     slater type orbitals ... least squares fitted by gaussian function
+C     j.chem.phys. 51, 2657 (1969)
+C     j.chem.phys. 52, 2769 (1970)
+C
+            call sto(Iop(5),Natoms,Ian,C,Nbasis,Ngic,Ipt)
+         elseif ( Ibasis.ne.2 ) then
+C     least energy extended atomic orbitals (4-31g etc.)
+C     j.chem.phys. 54, 724 (1971)
+C     j.chem.phys. 56, xxxx (1972)
+            if ( Ibasis.eq.1 ) then
+C
+               call leeao(Natoms,Ian,C,Nbasis)
+            else
+C   dbc mod to make the default pseudopotential basis
+C   leevao for first row and los alamos for all others.
+C      call leevao(natoms,ian,c,nbasis)
+C      ipolar = 0
+Cc  ones labelled cc are working set
+Cc      ngicl = 1
+C
+C  ngicl = 1 is the code for the split-valence bases:
+C  lp-31g for first row and los alamos split valence for all others.
+C
+C   iop(5) = 6 chooses los alamos
+C
+C    ngic = iopt(6):
+C           0 no potential on 1st. row atoms and sto-3g basis
+c           1          "                         d95v basis
+C           2 chf potential on 1st. row atoms and sto-3gval basis
+C           3          "
+C
+C
+C  end of dbc mod
+               call losbas(Ngic,Ipt,Numd,numf,Natoms,Ian,C,Nbasis)
+            endif
+         else
+            call sto(Iop(5),Natoms,Ian,C,Nbasis,Ngic,Ipt)
+         endif
+      else
+         call gbasis(Iop,C,Ian,Natoms,Nbasis)
+      endif
+C     possible bypass of printing of gaussian function table
+C     print table
+C if iopt(24) is 10 output the basis in a form more-or-less
+C ready for input via the gen command; i.e. compatible with
+C gbasis input
+C
+ 200  if ( Ibpr.eq.10 ) call prgbas
+C
+C bprint does not print the basis if it has been output by prgbas
+      call bprint(Ibpr,nprims)
+C     calculate number of electrons and occupation numbers nae,nbe
+      Ne = 0
+      do 300 i = 1 , Natoms
+         Ne = Ne + Ian(i)
+ 300  continue
+      Ne = Ne - Icharg
+      Nae = (Ne+Multip-1)/2
+      Nbe = (Ne-Multip+1)/2
+C     normalize scaled gaussian functions
+      call renorm
+C     determine maxtyp ... largest principle quantum number in basis
+      Maxtyp = Shellt(1)
+      do 400 i = 2 , Nshell
+         Maxtyp = max0(Maxtyp,Shellt(i))
+ 400  continue
+C     write out gaussian basis set specifications
+C     on the drum that is
+      call twrite(iobas,Exx,LENB,1,LENB,1,0)
+      call twrite(iolbl,Label,600,1,600,1,0)
+      if ( Iop(34).ne.0 ) write (Iout,99008) Ititle , Label , iel
+C     return to system
+      if ( Iop(34).ge.2 ) call bdump(2)
+C
+C
+C     write out common/b/ via binwt.
+C
+      if ( Jpunch.ne.0 ) call binwt(Exx,2962,basnam,Nbasis)
+C
+C
+      if ( Jpseud.ne.0 ) call pinput(Natoms,Ian,C,Nae,Nbe,Ne,Atmchg)
+      if ( Jpseud.ne.0 ) then
+         call ilsw(2,23,ideriv)
+         if ( ideriv.ne.0 ) then
+            if ( Maxtyp.ge.3 ) then
+               write (6,99007)
+               call lnk1e
+            endif
+         endif
+      endif
+C     compute the nuclear repulsion energy.
+      call repuls(Natoms,Atmchg,C,enr)
+C     and insert it into common/gen/.
+C=    call tread(irwgen,dgen(1),47,1,47,1,0)
+      Dgen(41) = enr
+      call twrite(irwgen,Dgen(1),47,1,47,1,0)
+      write (Iout,99005) Nbasis , nprims , Nae , Nbe , enr
+C
+C     build maps for orbital symmetry assignments.
+      call bldmap(X,Shellt,Shellc,Nshell,I5d6d)
+C                       build permutation arrays over shells and basis
+C                       functions.
+      call ilsw(2,26,nosym)
+      if ( nosym.eq.0 ) call bassym(Natoms,Iop,Nbasis,Nshell,X,Y,Z)
+C                       initialize 2e integral output routine.
+C unless iop(50) is set. this allows the use of a previously-
+C    calculated integral file. set2e would re-initialise the file.
+      if ( Iop(50).eq.0 ) call set2e(Iop)
+C     ..............
+      JUMP = 0
+      if ( iabort.ne.1 ) return
+      nchain = nextov(JUMP)
+      write (Iout,99009)
+C
+99009 format (' *** gnu80 STOPS EXECUTING, THIS WAS A TEST JOB')
+C
+      stop 301
+C
+      end
+@* INDEX.

@@ -1,0 +1,210 @@
+@* etwo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] E1                                                        
+\item[OUTPUT:] E2                                                        
+\item[OUTPUT:] E3                                                        
+\item[OUTPUT:] CS1                                                       
+\item[OUTPUT:] CS2                                                       
+\item[OUTPUT:] CS3                                                       
+\item[OUTPUT:] CP2                                                       
+\item[OUTPUT:] CP3                                                       
+\item[INPUT:] NGAUSS                                                    
+\item[UNUSED:] NSPLIT                                                    
+\item[INPUT:] IA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BERROR                                                 
+\item[Called by]   LEEAO                                                  
+                                                                    
+\end{description}
+@a
+      subroutine etwo(E1,E2,E3,CS1,CS2,CS3,CP2,CP3,NGAUSS,NSPLIT,IA)
+      implicit none
+      double precision CP2 , CP3 , CS1 , CS2 , CS3 , E1 , E2 , E3
+      integer IA , NGAUSS , NSPLIT
+      dimension E1(6) , E2(6) , E3(6) , CS1(6) , CS2(6) , CS3(6) , 
+     &          CP2(6) , CP3(6)
+C
+      if ( IA.eq.1 .or. IA.eq.2 .or. IA.eq.3 .or. IA.eq.4 .or. 
+     &     IA.eq.5 .or. IA.eq.6 .or. IA.eq.7 .or. IA.eq.8 .or. 
+     &     IA.eq.9 .or. IA.eq.10 .or. IA.eq.18 ) goto 800
+      if ( IA.eq.12 ) then
+      elseif ( IA.eq.13 ) then
+         goto 100
+      elseif ( IA.eq.14 ) then
+C     silicon
+         call berror(2)
+         goto 200
+      elseif ( IA.eq.15 ) then
+         goto 200
+      elseif ( IA.eq.16 ) then
+         goto 400
+      elseif ( IA.eq.17 ) then
+         goto 600
+      else
+C     sodium.
+         call berror(2)
+      endif
+C     magnesium.
+      call berror(2)
+C     alumininium
+ 100  call berror(2)
+      call berror(2)
+C     phosphorous
+ 200  if ( NGAUSS.eq.1 ) then
+      elseif ( NGAUSS.eq.2 ) then
+      elseif ( NGAUSS.eq.4 ) then
+         goto 300
+      elseif ( NGAUSS.eq.5 ) then
+C
+         call berror(2)
+         goto 400
+      elseif ( NGAUSS.eq.6 ) then
+         call berror(2)
+         goto 400
+      endif
+C
+      call berror(2)
+C     44-31g
+ 300  E1(1) = 3.018671780D03
+      CS1(1) = 1.852131370D-02
+      E1(2) = 4.551271210D02
+      CS1(2) = 1.299048640D-01
+      E1(3) = 1.023147300D02
+      CS1(3) = 4.551002880D-01
+      E1(4) = 2.761784730D01
+      CS1(4) = 5.331318610D-01
+      E2(1) = 1.144294010D02
+      CS2(1) = -2.475029610D-02
+      CP2(1) = 2.741400250D-02
+      E2(2) = 2.658229590D01
+      CS2(2) = -1.350924600D-01
+      CP2(2) = 1.690791420D-01
+      E2(3) = 7.871888900D00
+      CS2(3) = 2.277360800D-01
+      CP2(3) = 4.691020890D-01
+      E2(4) = 2.487857250D00
+      CS2(4) = 8.755931160D-01
+      CP2(4) = 5.181530590D-01
+      E3(1) = 5.075061900D01
+      CS3(1) = -4.511922300D-02
+      CP3(1) = 3.779071180D-03
+      E3(2) = 1.672862420D00
+      CS3(2) = -8.504729900D-01
+      CP3(2) = -4.634384050D-02
+      E3(3) = 6.210974120D-01
+      CS3(3) = 1.596285850D00
+      CP3(3) = 1.033944290D00
+      E3(4) = 1.670160070D-01
+      CS3(4) = 1.000000000D00
+      CP3(4) = 1.000000000D00
+      return
+C     sulfur
+ 400  if ( NGAUSS.eq.1 ) then
+      elseif ( NGAUSS.eq.2 ) then
+      elseif ( NGAUSS.eq.4 ) then
+         goto 500
+      elseif ( NGAUSS.eq.5 ) then
+C
+         call berror(2)
+         goto 600
+      elseif ( NGAUSS.eq.6 ) then
+         call berror(2)
+         goto 600
+      endif
+C
+      call berror(2)
+C     44-31g
+ 500  E1(1) = 3.442124410D03
+      CS1(1) = 1.849212360D-02
+      E1(2) = 5.189131000D02
+      CS1(2) = 1.298220220D-01
+      E1(3) = 1.166909030D02
+      CS1(3) = 4.550417870D-01
+      E1(4) = 3.157164720D01
+      CS1(4) = 5.330083560D-01
+      E2(1) = 1.274405760D02
+      CS2(1) = -2.726461060D-02
+      CP2(1) = 2.915199950D-02
+      E2(2) = 2.974766730D01
+      CS2(2) = -1.424834150D-01
+      CP2(2) = 1.779596760D-01
+      E2(3) = 8.834664280D00
+      CS2(3) = 2.597043520D-01
+      CP2(3) = 4.836237120D-01
+      E2(4) = 2.817389820D00
+      CS2(4) = 8.525472950D-01
+      CP2(4) = 4.942553020D-01
+      E3(1) = 3.729185370D00
+      CS3(1) = -2.775315230D-01
+      CP3(1) = -3.375092630D-02
+      E3(2) = 1.406770170D00
+      CS3(2) = -4.576434550D-01
+      CP3(2) = 1.457110450D-01
+      E3(3) = 5.481099690D-01
+      CS3(3) = 1.431684270D00
+      CP3(3) = 8.982887430D-01
+      E3(4) = 1.703809050D-01
+      CS3(4) = 9.999999990D-01
+      CP3(4) = 1.000000000D00
+      return
+C     chlorine
+ 600  if ( NGAUSS.eq.1 ) then
+      elseif ( NGAUSS.eq.2 ) then
+      elseif ( NGAUSS.eq.4 ) then
+         goto 700
+      elseif ( NGAUSS.eq.5 ) then
+C
+         call berror(2)
+         goto 800
+      elseif ( NGAUSS.eq.6 ) then
+         call berror(2)
+         goto 800
+      endif
+C
+      call berror(2)
+C     44-31g
+ 700  E1(1) = 3.910302690D03
+      CS1(1) = 1.837943110D-02
+      E1(2) = 5.895518070D02
+      CS1(2) = 1.291401230D-01
+      E1(3) = 1.325939240D02
+      CS1(3) = 4.540448900D-01
+      E1(4) = 3.590354250D01
+      CS1(4) = 5.344394360D-01
+      E2(1) = 1.477653530D02
+      CS2(1) = -2.674332300D-02
+      CP2(1) = 2.886446880D-02
+      E2(2) = 3.450607530D01
+      CS2(2) = -1.446911820D-01
+      CP2(2) = 1.779646700D-01
+      E2(3) = 1.028647150D01
+      CS2(3) = 2.517035690D-01
+      CP2(3) = 4.869998070D-01
+      E2(4) = 3.311147380D00
+      CS2(4) = 8.598203810D-01
+      CP2(4) = 4.890184500D-01
+      E3(1) = 4.280284910D00
+      CS3(1) = -2.703962750D-01
+      CP3(1) = -3.670288510D-02
+      E3(2) = 1.641016670D00
+      CS3(2) = -3.416297190D-01
+      CP3(2) = 1.918492420D-01
+      E3(3) = 6.144785030D-01
+      CS3(3) = 1.350024480D00
+      CP3(3) = 8.643376810D-01
+      E3(4) = 1.956594110D-01
+      CS3(4) = 9.999999990D-01
+      CP3(4) = 1.000000000D00
+      return
+ 800  return
+C
+      end
+@* INDEX.

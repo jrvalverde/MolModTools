@@ -1,0 +1,242 @@
+@* basprt.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IFBP                                                   
+\item[Transmits as argument]  IOUT                                                   
+\item[Uses]  I2EDSC  I2ESF   I5D6D   IBASIS  IBMOD   IOSC    IOUT   
+             IPT     NGIC                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DECCHR  ILSW    LNK1E   PUTICR  PUTSTR  STROUT         
+\item[Called by]   GINPUT                                                 
+                                                                    
+\end{description}
+@a
+ 
+      subroutine basprt
+      implicit none
+      double precision ften8 , ten , x
+      integer I2edsc , I2esf , I5d6d , i6311 , Ibasis , iblnk5 , Ibmod , 
+     &        Ibpr , id21g , id31g , idee , ieff , Ifbp , igbs , igee , 
+     &        igo , In , Iosc , Iout , ip
+      integer Ipt , Ipunch , Irot , isep , isepe , istar , istd , 
+     &        istong , ival , Jpunch , left , Llink , losdz , loslp3 , 
+     &        losmin , losstv , lp31g , lp41g , mix , nd
+      integer nf , ng , Ngic
+      integer cursor , string(100)
+      dimension istd(16) , istong(4) , ival(8) , lp31g(6) , lp41g(6) , 
+     &          mix(18)
+      dimension i6311(6) , igbs(31) , iblnk5(5) , left(4) , isep(5) , 
+     &          idee(3)
+      dimension ieff(2) , ip(3) , isepe(4) , id31g(4) , id21g(4)
+      dimension losmin(25) , losdz(32) , loslp3(31) , losstv(26)
+      common /io    / In , Iout , Ipunch
+      common /ifbp  / Ifbp
+      common /ops301/ Ibasis , Ngic , Ipt , I5d6d , Iosc , Ibmod , 
+     &                Ibpr , Llink , I2edsc , Irot , Jpunch , I2esf
+      data istar/'*'/
+      data igee/'G'/
+      data istd/'S' , 'T' , 'A' , 'N' , 'D' , 'A' , 'R' , 'D' , ' ' , 
+     &     'B' , 'A' , 'S' , 'I' , 'S' , ':' , ' '/
+      data istong/'S' , 'T' , 'O' , '-'/
+      data id31g/'-' , '3' , '1' , 'G'/
+      data id21g/'-' , '2' , '1' , 'G'/
+      data ival/' ' , 'V' , 'A' , 'L' , 'E' , 'N' , 'C' , 'E'/
+      data loslp3/'L' , 'o' , 's' , ' ' , 'A' , 'l' , 'a' , 'm' , 'o' , 
+     &     's' , ' ' , 'S' , 'p' , 'l' , 'i' , 't' , ' ' , 'V' , 'a' , 
+     &     'l' , 'e' , 'n' , 'c' , 'e' , ':' , 'L' , 'P' , '-' , '3' , 
+     &     '1' , 'G'/
+      data losdz/'L' , 'o' , 's' , ' ' , 'A' , 'l' , 'a' , 'm' , 'o' , 
+     &     's' , ' ' , 'S' , 'p' , 'l' , 'i' , 't' , ' ' , 'V' , 'a' , 
+     &     'l' , 'e' , 'n' , 'c' , 'e' , ':' , 'L' , 'A' , 'N' , 'L' , 
+     &     '1' , 'D' , 'Z'/
+      data lp31g/'L' , 'P' , '-' , '3' , '1' , 'G'/
+      data lp41g/'L' , 'P' , '-' , '4' , '1' , 'G'/
+      data mix/'L' , 'P' , '-' , 'N' , '1' , 'G' , ' ' , '(' , 'N' , 
+     &     '=' , '3' , '/' , '4' , ' ' , 'M' , 'I' , 'X' , ')'/
+      data i6311/'6' , '-' , '3' , '1' , '1' , 'G'/
+      data igbs/'G' , 'E' , 'N' , 'E' , 'R' , 'A' , 'L' , ' ' , 'B' , 
+     &     'A' , 'S' , 'I' , 'S' , ':' , ' ' , 'I' , 'N' , 'P' , 'U' , 
+     &     'T' , ' ' , 'F' , 'R' , 'O' , 'M' , ' ' , 'C' , 'A' , 'R' , 
+     &     'D' , 'S'/
+      data losmin/'L' , 'o' , 's' , ' ' , 'A' , 'l' , 'a' , 'm' , 'o' , 
+     &     's' , ' ' , 'M' , 'i' , 'n' , 'i' , 'm' , 'a' , 'l' , ':' , 
+     &     'S' , 'T' , 'O' , '-' , '3' , 'G'/
+      data losstv/'L' , 'o' , 's' , ' ' , 'A' , 'l' , 'a' , 'm' , 'o' , 
+     &     's' , ' ' , 'M' , 'i' , 'n' , 'i' , 'm' , 'a' , 'l' , ':' , 
+     &     'S' , 'T' , 'O' , '-' , 'V' , 'A' , 'L'/
+      data iblnk5/5*' '/
+      data left/'(' , 'S' , ',' , ' '/
+      data isep/'S' , '=' , 'P' , ',' , ' '/
+      data idee/'D' , ',' , ' '/
+      data ieff/'F' , ')'/
+      data ip/'P' , ',' , ' '/
+      data isepe/'S' , '=' , 'P' , '='/
+      data ten/10.0D0/ , ften8/1.0D08/
+C
+C
+C      print the basis set designation.  a string of characters is
+C      built and then printed.  if some special options are turned on
+C      then this fact will be noted on the ouput.
+C
+C
+C
+C
+C
+99001 format (1x,'UNRECOGNIZED BASIS IN BASPRT, IBASIS=',i10)
+99002 format (1x,'UNRECOGNIZED LP-N1G BASIS IN BASPRT, NGIC=',i10)
+99003 format (1x,'UNRECOGNIZED SHELL CONSTRAINT IN BASPRT, IOSC=',i10)
+99004 format (1x,'MODIFICATION OF INTERNAL BASIS')
+99005 format (1x,'NON-STANDARD 2E SCALE FACTOR: ',d8.1)
+99006 format (1x,'2-ELECTRON INTEGRAL CUTOFF IS ',d10.3)
+C
+C
+      cursor = 0
+      Ifbp = 0
+C      if (ibasis.ge.0 .and. ibasis.le.7 .and. ibasis.ne.6) go to 10
+      if ( Ibasis.ge.0 .and. Ibasis.le.7 ) then
+C
+C                                          test for general basis set.
+         if ( Ibasis.eq.7 ) then
+C                                          general basis
+            call putstr(igbs,31,string,cursor)
+            Ifbp = 1
+         else
+            call putstr(istd,16,string,cursor)
+            igo = Ibasis + 1
+            if ( igo.eq.2 ) then
+C                                          n-31g
+               ng = Ngic
+               if ( ng.eq.0 ) ng = 4
+               call decchr(ng,string,cursor)
+               call putstr(id31g,4,string,cursor)
+               if ( Ipt.ge.1 ) call puticr(istar,string,cursor)
+               if ( Ipt.ge.2 ) call puticr(istar,string,cursor)
+            elseif ( igo.eq.3 ) then
+C                                          sto-ng valence
+               call putstr(istong,4,string,cursor)
+               ng = Ngic
+               if ( ng.eq.0 ) ng = 3
+               call decchr(ng,string,cursor)
+               call puticr(igee,string,cursor)
+               if ( Ipt.ne.0 ) call puticr(istar,string,cursor)
+               call putstr(ival,8,string,cursor)
+            elseif ( igo.eq.4 ) then
+C                                          lp-n1g
+               ng = Ngic
+               if ( ng.eq.0 ) ng = 3
+               if ( ng.eq.8 ) ng = 1
+               if ( ng.eq.1 ) call putstr(mix,18,string,cursor)
+               if ( ng.eq.3 ) call putstr(lp31g,6,string,cursor)
+               if ( ng.eq.4 ) call putstr(lp41g,6,string,cursor)
+               if ( ng.ne.1 .and. ng.ne.3 .and. ng.ne.4 ) then
+                  write (Iout,99002) Ngic
+                  call lnk1e
+               endif
+               if ( Ipt.ge.1 ) call puticr(istar,string,cursor)
+               if ( Ipt.ge.2 ) call puticr(istar,string,cursor)
+            elseif ( igo.eq.5 ) then
+C                                          6-311g
+               call putstr(i6311,6,string,cursor)
+               if ( Ipt.ge.1 ) call puticr(istar,string,cursor)
+               if ( Ipt.ge.2 ) call puticr(istar,string,cursor)
+            elseif ( igo.eq.6 ) then
+C                                          n-21g
+               ng = Ngic
+               if ( ng.eq.0 ) ng = 3
+               call decchr(ng,string,cursor)
+               call putstr(id21g,4,string,cursor)
+               if ( Ipt.ge.1 ) call puticr(istar,string,cursor)
+               if ( Ipt.ge.2 ) call puticr(istar,string,cursor)
+            elseif ( igo.eq.7 ) then
+               ng = Ngic
+C los alamos minimal basis; roughly equivalent to sto-3g valence
+C for atoms beyond the first row (it is sto-3g for 1st row)
+C los alamos 'dz' is d95v for 1st. row with no potentials for
+C 1st.-row atoms
+               if ( ng.eq.0 ) call putstr(losmin,25,string,cursor)
+               if ( ng.eq.1 ) call putstr(losdz,32,string,cursor)
+C these are the bases to be used with the combination of
+C  los alamos and chf potentials; sto-3gval for 'minimal'
+C  and lp-31g for 'dz'
+               if ( ng.eq.2 ) call putstr(losstv,26,string,cursor)
+               if ( ng.eq.3 ) call putstr(loslp3,31,string,cursor)
+            else
+C                                          sto-ng
+               call putstr(istong,4,string,cursor)
+               ng = Ngic
+               if ( ng.eq.0 ) ng = 3
+               call decchr(ng,string,cursor)
+               call puticr(igee,string,cursor)
+               if ( Ipt.ne.0 ) call puticr(istar,string,cursor)
+            endif
+         endif
+C                                          shell constraints,
+C                                          5d/6d, 7f/10f
+         if ( Iosc.ge.0 .and. Iosc.le.2 ) then
+C
+            nd = 5 + I5d6d
+            call ilsw(2,16,nf)
+            if ( nf.eq.0 ) nf = 7
+            if ( nf.eq.1 ) nf = 10
+            igo = Iosc + 1
+            call putstr(iblnk5,5,string,cursor)
+            call putstr(left,4,string,cursor)
+            if ( igo.eq.2 ) then
+C                                          s, p, nd, nf
+               call putstr(ip,3,string,cursor)
+               call decchr(nd,string,cursor)
+               call putstr(idee,3,string,cursor)
+               call decchr(nf,string,cursor)
+               call putstr(ieff,2,string,cursor)
+            elseif ( igo.eq.3 ) then
+C                                          s, s=p=nd, f
+               call putstr(isepe,4,string,cursor)
+               call decchr(nd,string,cursor)
+               call putstr(idee,3,string,cursor)
+               call decchr(nf,string,cursor)
+               call putstr(ieff,2,string,cursor)
+            else
+C                                          s, s=p, nd, nf
+               call putstr(isep,5,string,cursor)
+               call decchr(nd,string,cursor)
+               call putstr(idee,3,string,cursor)
+               call decchr(nf,string,cursor)
+               call putstr(ieff,2,string,cursor)
+            endif
+C                                          output the string
+            call strout(Iout,string,cursor,1)
+C                                          special prints
+            if ( Ibmod.gt.0 ) then
+               write (Iout,99004)
+               Ifbp = 1
+            endif
+C
+            if ( I2esf.gt.0 ) then
+               write (6,*) ten , ften8 , I2esf
+               x = ften8*(ten**I2esf)
+               write (Iout,99005) x
+            endif
+C
+            if ( I2edsc.gt.0 ) then
+               x = ten**(-I2edsc)
+               write (Iout,99006) x
+            endif
+         else
+            write (Iout,99003) Iosc
+            call strout(Iout,string,cursor,1)
+C      write(6,259)
+            return
+         endif
+      else
+         write (Iout,99001) Ibasis
+C      write(6,259)
+         return
+      endif
+C
+C
+      return
+C
+      end
+@* INDEX.

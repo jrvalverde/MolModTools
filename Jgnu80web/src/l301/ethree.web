@@ -1,0 +1,43 @@
+@* ethree.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] E1                                                        
+\item[UNUSED:] E2                                                        
+\item[UNUSED:] E3                                                        
+\item[UNUSED:] E4                                                        
+\item[UNUSED:] CS1                                                       
+\item[UNUSED:] CS2                                                       
+\item[UNUSED:] CS3                                                       
+\item[UNUSED:] CS4                                                       
+\item[UNUSED:] CP2                                                       
+\item[UNUSED:] CP3                                                       
+\item[UNUSED:] CP4                                                       
+\item[UNUSED:] CD4                                                       
+\item[UNUSED:] NGAUSS                                                    
+\item[UNUSED:] NSPLIT                                                    
+\item[UNUSED:] IA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BERROR                                                 
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine ethree(E1,E2,E3,E4,CS1,CS2,CS3,CS4,CP2,CP3,CP4,CD4,
+     &                  NGAUSS,NSPLIT,IA)
+      implicit none
+      real CD4 , CP2 , CP3 , CP4 , CS1 , CS2 , CS3 , CS4 , E1 , E2 , 
+     &     E3 , E4
+      integer IA , NGAUSS , NSPLIT
+C
+      call berror(2)
+      return
+C
+      end
+@* INDEX.

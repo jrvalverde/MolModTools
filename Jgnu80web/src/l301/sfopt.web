@@ -1,0 +1,134 @@
+@* sfopt.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    EXX     SCALE                                          
+\item[Transmits as argument]  INF                                                    
+\item[Uses]  EXX     INF     ISFMAP  POOL0   SHELLA  SHELLN         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TREAD                                                  
+\item[Called by]   GBASIS                                                 
+                                                                    
+\end{description}
+@a
+      subroutine sfopt
+      implicit none
+      double precision Alpha , C1 , C2 , C3 , C4 , Convrg , D1var , 
+     &                 D1vold , D2var , Delvar , Exx , F , F1 , Fzero , 
+     &                 H , Pool0 , Pool1 , sc , Scale , Tcurcy
+      double precision Telcur , Teltot , Tlstcy , Tmax , Vname , X , 
+     &                 Xi , Y , Yold , Z
+      integer i , Idone , iend , Iflinf , Ihflag , imap , In , Incldh , 
+     &        Index , Inf , Intent , iofp , Iold , Iout , Ipunch , 
+     &        Isect , Isfmap , ishell , istart , Istats
+      integer Ititle , Itype , ivar , Jan , K , Lambda , lenfps , 
+     &        MAXPRM , MAXS21 , MAXSH1 , MAXSHL , Maxtyp , Mode , Ncyc , 
+     &        Ncycls , Ncytot , Noinch , Noruns , Npar , nsfvar
+      integer Nshell , Nstep , Nvar
+C      real tmax
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+C inf was 3126 when fpinfo was bigger
+      dimension Inf(2394) , Isfmap(30,2)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /scale / Scale(MAXSHL)
+      common /io    / In , Iout , Ipunch
+C dbc change to make /fpinfo/ agree with over102.f
+C  note that this use of fp for scaling factors is not the same
+C  usage as for geometry!!
+C this will not work but is done to get past the loader.
+C      common /fpinfo/pool0(30),pool1(30),delvar(30),yold(30),d1var(30),
+C     +       d2var(30),d1vold(30),xi(30),fzero,f1(4),f,alpha,convrg,
+C     +       ieltot,ielcur,ilstcy,tmax,icurcy,iflinf,k,nvar,npar,itype,
+C     +       ncycls,isect,ncyc,noruns,ncytot,ititle(8),mode,nstep,index,
+C     +       lambda,ihflag,idone,h(30,30),noinch,incldh,vname(30),istats
+C     +       , intent
+      common /fpinfo/ Pool0(30) , Pool1(30) , Delvar(30) , Yold(30) , 
+     &                D1var(30) , D2var(30) , D1vold(30) , Xi(30) , 
+     &                Fzero , F1(4) , F , Alpha , Convrg , Teltot , 
+     &                Telcur , Tlstcy , Tmax , Tcurcy , Iflinf , K , 
+     &                Nvar , Npar , Itype , Ncycls , Isect , Ncyc , 
+     &                Noruns , Ncytot , Ititle(8) , Mode , Nstep , 
+     &                Index , Lambda , Ihflag , Idone , H(30,30) , 
+     &                Noinch , Incldh , Vname(30) , Istats , Intent
+      equivalence (Inf(1),Pool0(1))
+C      equivalence (istats,inf(800))
+      equivalence (Iold,Tmax)
+C      equivalence (istart,inf(738))
+      equivalence (Isfmap(1,1),Inf(382))
+C      equivalence (nsfvar,inf(442))
+C      equivalence (idone,inf(737))
+      data iofp/510/ , lenfps/400/
+C
+C***********************************************************************
+C
+C     routine to install variables from the fletcher-powell common
+C     into common /b/.  this routine expects the following inputs.
+C
+C     /b/     ... must contain a virgin copy (ie. unscaled) of the
+C                 basis.
+C     /scale/ ... common that will contain the scale-factors actually
+C                 updated on output.
+C     iofp    ... rw file containing the fletcher-powell common.
+C
+C***********************************************************************
+C
+C
+C
+C***********************************************************************
+C     loop over the scale-factor varialbles.  for each variable,
+C     determine the shell and install the scale-factors.  the exponents
+C     are re-scaled at this point.
+C***********************************************************************
+C
+C
+C     first, however, recover the first 400 words of the fp common.
+      call tread(iofp,Inf(1),lenfps,1,lenfps,1,0)
+C     write(6,9001)nsfvar,nvar,npar
+C     write(6,9002)(pool0(i),i=1,10)
+C     write(6,9003)(isfmap(i,1),isfmap(i,2),i=1,10)
+C
+C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+C                                                  !
+C  warning!! /fpinfo/ is not correct               !
+C  (among other things)                            !
+C                                                  !
+C!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+C
+C      j = i / 0
+      do 100 imap = 1 , nsfvar
+C     examine the current map entry.  the format is
+C     isfmap(i,1)=the shell number.
+C     isfmap(i,2)=the variable number.
+         ishell = Isfmap(imap,1)
+         ivar = Isfmap(imap,2)
+C     get the shell parameters.
+         istart = Shella(ishell)
+         iend = Shella(ishell) + Shelln(ishell) - 1
+C     get the scale factor.
+         sc = Pool0(ivar)
+C     install this value into /scale/.
+         Scale(ishell) = sc
+C     loop over the exponents in this shell.
+         do 50 i = istart , iend
+            Exx(i) = Exx(i)*sc*sc
+ 50      continue
+ 100  continue
+C
+C     return to caller.
+      return
+C
+99001 format (' IN SFOPT, NSFVAR,NVAR,NPAR=',3I6)
+99002 format (' POOL0'/(1x,d20.10))
+99003 format (' ISFMAP'/(1x,2I6))
+C
+      end
+@* INDEX.

@@ -1,0 +1,164 @@
+@* putlbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] N                                                         
+\item[INPUT:] LTYPE                                                     
+\item[INPUT:] MOD                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LABEL                                                  
+\item[Uses]  LABEL                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       APPLAB  DECCHR  ILSW    PAD     PUTB    TREAD          
+\item[Called by]   FC6311  GBASIS  LEEAO   LEEVAO  LOSBAS  N21G    STO    
+                                                                    
+\end{description}
+@a
+      subroutine putlbl(N,LTYPE,MOD)
+C ----------------------------------------------------------------------
+      implicit none
+      integer blank , elemnt , i , iatnam , Irtcrd , Ititle , jmp , 
+     &        Label , lcursr , LTYPE , MOD , N , nelmnt , tcur
+      logical sixd
+      integer orblab(22)
+      dimension iatnam(105) , elemnt(8)
+      save sixd , lcursr , tcur , nelmnt , elemnt
+      common /label / Label(1000) , Ititle(100) , Irtcrd(100)
+      data blank/1H /
+C      data iatnam/'bq',2hh ,2hhe,2hli,2hbe,2hb ,2hc ,2hn ,
+C     +     2ho ,2hf ,2hne,2hna,
+C     +     2hmg,2hal,2hsi,2hp ,2hs ,2hcl,2har,2hk ,2hca,2hsc,2hti,2hv ,
+C     +     2hcr,2hmn,2hfe,2hco,2hni,2hcu,2hzn,2hga,2hge,2has,2hse,2hbr,
+C     +     2hkr,'rb','sr','y ','zr','nb','mo','tc','ru','rh','pd','ag',
+C     +     'cd','in','sn','sb','te','i ','xe'/
+      data iatnam/'BQ' , 'H ' , 'HE' , 'LI' , 'BE' , 'B ' , 'C ' , 
+     &     'N ' , 'O ' , 'F ' , 'NE' , 'NA' , 'MG' , 'AL' , 'SI' , 
+     &     'P ' , 'S ' , 'CL' , 'AR' , 'K ' , 'CA' , 'SC' , 'TI' , 
+     &     'V ' , 'CR' , 'MN' , 'FE' , 'CO' , 'NI' , 'CU' , 'ZN' , 
+     &     'GA' , 'GE' , 'AS' , 'SE' , 'BR' , 'KR' , 'RB' , 'SR' , 
+     &     'Y ' , 'ZR' , 'NB' , 'MO' , 'TC' , 'RU' , 'RH' , 'PD' , 
+     &     'AG' , 'CD' , 'IN' , 'SN' , 'SB' , 'TE' , 'I ' , 'XE' , 
+     &     'CS' , 'BA' , 'LA' , 'CE' , 'PR' , 'ND' , 'PM' , 'SM' , 
+     &     'EU' , 'GD' , 'TB' , 'DY' , 'HO' , 'ER' , 'TM' , 'YB' , 
+     &     'LU' , 'HF' , 'TA' , 'W ' , 'RE' , 'OS' , 'IR' , 'PT' , 
+     &     'AU' , 'HG' , 'TL' , 'PB' , 'BI' , 'PO' , 'AT' , 'RN' , 
+     &     'FR' , 'RA' , 'AC' , 'TH' , 'PA' , 'U ' , 'NP' , 'PU' , 
+     &     'AM' , 'CM' , 'BK' , 'CF' , 'ES' , 'FM' , 'MD' , 'NO' , 
+     &     'LR' , 'KY'/
+      data orblab/'S  ' , 'PX ' , 'PY ' , 'PZ ' , 'XX ' , 'YY ' , 
+     &     'ZZ ' , 'XY ' , 'XZ ' , 'YZ ' , 'D 0' , 'D+1' , 'D-1' , 
+     &     'D+2' , 'D-2' , 'F 0' , 'F+1' , 'F-1' , 'F+2' , 'F-2' , 
+     &     'F+3' , 'F-3'/
+C          a routine to append basis function labels to the list in
+C     /label/.  the meaning of the arguments depends upon the value of
+C     "mod":
+C
+C     mod = -1 ... initialization.  the other arguments are not used.
+C
+C     mod = 0 .... specification of a new center.  "ltype" contains the
+C          atomic number of the new center.
+C
+C     mod > 0 .... a group of basis functions.  in this case, the
+C          arguments have the following meanings:
+C          n ..... principal quantum number.
+C          ltype . angular quantum number.  0 for s-functions,
+C               "1" for p-functions, "2" for d-functions, ect.
+C          mod ... type of modifier to append to function name:
+C               1 ... none,
+C               2 ... (i).
+C               3 ... (m).
+C               4 ... (o).
+C ----------------------------------------------------------------------
+C
+C
+C
+      if ( MOD.eq.-1 ) then
+C
+C                              initialization.
+         call tread(2,Label,600,1,600,1,0)
+         do 50 i = 1 , 1000
+            Label(i) = blank
+ 50      continue
+C                  find out whether 5/6 d-functions.
+         call ilsw(2,2,i)
+         sixd = .true.
+         if ( i.eq.0 ) sixd = .false.
+C
+         lcursr = 0
+         tcur = 0
+         call pad(elemnt,tcur,8,blank)
+         nelmnt = 0
+         return
+C
+C                              new center name.  this is stored
+C                              into "elemnt".
+      elseif ( MOD.ne.0 ) then
+C
+C                              build function label.
+         jmp = LTYPE + 1
+         if ( jmp.eq.2 ) then
+C
+C                        p functions.
+C      call applab(elemnt,n,3hpx ,label,lcursr,mod)
+C      call applab(elemnt,n,3hpy ,label,lcursr,mod)
+C      call applab(elemnt,n,3hpz ,label,lcursr,mod)
+            call applab(elemnt,N,orblab(2),Label,lcursr,MOD)
+            call applab(elemnt,N,orblab(3),Label,lcursr,MOD)
+            call applab(elemnt,N,orblab(4),Label,lcursr,MOD)
+            return
+         elseif ( jmp.eq.3 ) then
+C
+C                        d-functions.
+            if ( .not.sixd ) then
+C
+               call applab(elemnt,N,orblab(11),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(12),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(13),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(14),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(15),Label,lcursr,MOD)
+               return
+            else
+               call applab(elemnt,N,orblab(5),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(6),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(7),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(8),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(9),Label,lcursr,MOD)
+               call applab(elemnt,N,orblab(10),Label,lcursr,MOD)
+               return
+            endif
+         elseif ( jmp.ne.4 ) then
+C
+C                        s function.
+C      call applab(elemnt,n,3hs  ,label,lcursr,mod)
+            call applab(elemnt,N,orblab(1),Label,lcursr,MOD)
+            return
+         endif
+      else
+         nelmnt = nelmnt + 1
+C                        clear elemnt.
+         tcur = 0
+         call pad(elemnt,tcur,8,blank)
+C                        store center number.
+         tcur = 0
+         call decchr(nelmnt,elemnt,tcur)
+C                        store element name.
+         tcur = 4
+         call putb(iatnam(LTYPE+1),2,elemnt,tcur)
+         return
+      endif
+C
+C                        f-functions.
+      call applab(elemnt,N,orblab(16),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(17),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(18),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(19),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(20),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(21),Label,lcursr,MOD)
+      call applab(elemnt,N,orblab(22),Label,lcursr,MOD)
+      return
+C
+      end
+@* INDEX.

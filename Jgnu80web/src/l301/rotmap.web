@@ -1,0 +1,70 @@
+@* rotmap.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NSHELL                                                    
+\item[INPUT:] SHELLT                                                    
+\item[INPUT:] SHELLC                                                    
+\item[INPUT:] I56D                                                      
+\item[OUTPUT:] MAPROT                                                    
+\item[OUTPUT:] NROT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   BLDMAP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rotmap(NSHELL,SHELLT,SHELLC,I56D,MAPROT,NROT)
+C ----------------------------------------------------------------------
+      implicit none
+      integer i , I56D , igo , MAPROT , NROT , NSHELL , SHELLC , SHELLT
+      dimension SHELLT(*) , SHELLC(*) , MAPROT(*)
+C          this routine builds a "map" of the basis functions which
+C     describes the groups which will be mixed by symmetry operations.
+C     it is a vector (of length no greater than nbasis) containing
+C     integers indicating the number of functions in each group.
+C     thus, the functions in sto-3g carbon atom would be described
+C     by: 1,1,3.  a "5" or a "6" indicates d-functions, and "7"
+C     is for f-functions.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      NROT = 0
+C                              main loop over shells.
+      do 100 i = 1 , NSHELL
+         NROT = NROT + 1
+         igo = SHELLT(i) + 1
+         if ( igo.eq.2 ) then
+C                  p-functions.
+            if ( SHELLC(i).ne.1 ) then
+               MAPROT(NROT) = 1
+               NROT = NROT + 1
+            endif
+            MAPROT(NROT) = 3
+         elseif ( igo.eq.3 ) then
+C                  d-functions.
+            if ( SHELLC(i).eq.0 ) then
+               MAPROT(NROT) = 1
+               MAPROT(NROT+1) = 3
+               NROT = NROT + 2
+            endif
+            if ( I56D.eq.0 ) MAPROT(NROT) = 5
+            if ( I56D.ne.0 ) MAPROT(NROT) = 6
+         elseif ( igo.eq.4 ) then
+C                  f-functions.
+            MAPROT(NROT) = 7
+         else
+C                  s-function.
+            MAPROT(NROT) = 1
+         endif
+ 100  continue
+      return
+C
+      end
+@* INDEX.

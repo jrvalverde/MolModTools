@@ -1,0 +1,102 @@
+@* prnpot.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] C                                                         
+\item[INPUT:] NVAL                                                      
+\item[INPUT:] COEF                                                      
+\item[INPUT:] EXPON                                                     
+\item[INPUT:] KF                                                        
+\item[INPUT:] KL                                                        
+\item[INPUT:] MAX                                                       
+\item[INPUT:] LSKP                                                      
+\item[INPUT:] ICOR                                                      
+\item[INPUT:] I                                                         
+\item[INPUT:] IFLAG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SETPOT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine prnpot(IAN,C,NVAL,COEF,EXPON,KF,KL,MAX,LSKP,ICOR,I,
+     &                  IFLAG)
+      implicit none
+      double precision C , COEF , EXPON
+      integer I , IAN , ICOR , IFLAG , In , ind , Iout , ipass , 
+     &        Ipunch , istart , istop , ivalen , j , jm1 , k , KF , KL , 
+     &        lorb , LSKP , MAX
+      integer mx1 , negn , nterms , NVAL
+      dimension IAN(*) , C(*)
+      dimension lorb(5)
+      dimension NVAL(40) , COEF(40) , EXPON(40) , KF(5) , KL(5)
+      common /io    / In , Iout , Ipunch
+      data lorb/1HS , 1HP , 1HD , 1HF , 1HG/
+C
+C
+C
+C
+C
+99001 format (2x,i3,8x,i3,82x,3F10.6)
+99002 format (12x,'NO PSEUDOPOTENTIAL ON THIS CENTER')
+99003 format (2x,i3,8x,i3,10x,i3,69x,3F10.6)
+99004 format (1x,a1,'ANDUP',/,i4)
+99005 format (1x,a1,'-',a1,/,i4)
+99006 format (1x,i2,5x,f12.7,4x,f14.8)
+99007 format (1x,i2,5x,f12.7,4x,f14.8)
+99008 format (12x,'PSEUDOPOTENTIAL SAME AS ON CENTER',2x,i3)
+C
+C
+      mx1 = MAX + 1
+      if ( LSKP.ne.1 ) then
+C
+         ivalen = IAN(I) - ICOR
+         write (Iout,99003) I , IAN(I) , ivalen , (C(3*I-3+j),j=1,3)
+         if ( IFLAG.ne.0 ) then
+            write (Iout,99008) IFLAG
+            return
+         endif
+      else
+         write (Iout,99001) I , IAN(I) , (C(3*I-3+j),j=1,3)
+         write (Iout,99002)
+         return
+      endif
+C
+      ipass = 0
+      do 100 j = 1 , mx1
+         nterms = KL(j) - KF(j) + 1
+         ipass = ipass + 1
+         if ( ipass.le.1 ) then
+            write (Iout,99004) lorb(mx1) , nterms
+         else
+C
+            jm1 = j - 1
+            write (Iout,99005) lorb(jm1) , lorb(mx1) , nterms
+         endif
+         ind = 0
+         istart = KF(j)
+         istop = KL(j)
+         do 50 k = istart , istop
+            ind = ind + 1
+            negn = -(2-NVAL(k))
+            if ( negn*(-999).lt.1 ) negn = 0
+            negn = negn + 2
+            if ( ind.le.1 ) then
+               write (Iout,99006) negn , EXPON(k) , COEF(k)
+            else
+C
+               write (Iout,99007) negn , EXPON(k) , COEF(k)
+            endif
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.
