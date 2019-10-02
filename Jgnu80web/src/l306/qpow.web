@@ -1,0 +1,57 @@
+@* qpow.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] L                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  ALPHA   DFAC    EXPAB   RK      SQPI2   T              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QCOMP                                                  
+                                                                    
+\end{description}
+@a
+      function qpow(N,L)
+      implicit none
+      real*8 Alpha , Argab , cutoff , Dfac , Expab , f4d14 , Fpi , one , 
+     &       Pi , Pi3haf , Pi5hf2 , Piqurt , prefac , Q , qpow , Rk , 
+     &       Sqpi , Sqpi2 , sum , T
+      real*8 term , two , Twopi , xden , xj , xkp , xnum , zero
+      integer L , N
+C     power series for q(n,l).......
+C
+      common /argab / Argab , Expab
+      common /dfac  / Dfac(23)
+      common /qstore/ Q(9,7) , Alpha , Rk , T
+      common /pifac / Pi , Twopi , Fpi , Pi3haf , Pi5hf2 , Piqurt , 
+     &                Sqpi , Sqpi2
+      save zero , one , two , cutoff , f4d14
+      data zero/0.0D0/ , one/1.0D0/ , two/2.0D0/ , cutoff/1.0D-14/ , 
+     &     f4d14/0.4D-14/
+C
+      if ( L.eq.0 ) xkp = one
+      if ( L.ne.0 ) xkp = Rk**L
+      prefac = Expab*xkp/sqrt((two*Alpha)**(N+L+1))
+      xnum = L + N - 1
+      xden = L + L + 1
+      term = Dfac(L+N+1)/Dfac(L+L+3)
+      sum = term
+      xj = zero
+ 100  xnum = xnum + two
+      xden = xden + two
+      xj = xj + one
+      term = term*T*xnum/(xj*xden)
+      sum = sum + term
+      if ( (term/sum).gt.cutoff ) goto 100
+      qpow = prefac*sum
+      if ( mod((L+N),2).eq.0 ) qpow = qpow*Sqpi2
+C    following stmt corrects for truncation error.
+      qpow = qpow*(one+xj*f4d14)
+      return
+      end
+@* INDEX.

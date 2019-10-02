@@ -1,0 +1,214 @@
+@* qqrad.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] L                                                         
+\item[INPUT:] LMALO                                                     
+\item[INPUT:] LMAHI                                                     
+\item[INPUT:] LMBLO                                                     
+\item[INPUT:] LMBHI                                                     
+\item[INPUT:] NHI                                                       
+\item[INPUT:] NP                                                        
+\item[INPUT:] ALPP                                                      
+\item[INPUT:] DP                                                        
+\item[INPUT:] NTCNT                                                     
+\item[OUTPUT:] QQ                                                        
+\item[UNUSED:] XNORM                                                     
+\item[INPUT:] MAXI2                                                     
+\item[INPUT:] MAXP2                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    F                                                      
+\item[Uses]  CA      CB      EXX     F       FPI     IGBEGN  IGEND  
+             JGBEGN  JGEND   NPTS    PT      PTPOW   SQPI           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  PTPREP  QUADR   RECUR2  RECURF                 
+\item[Called by]   PSEUD2                                                 
+                                                                    
+\end{description}
+@a
+      subroutine qqrad(L,LMALO,LMAHI,LMBLO,LMBHI,NHI,NP,ALPP,DP,NTCNT,
+     &                 QQ,XNORM,MAXI2,MAXP2)
+      implicit none
+      real*8 alpa , alpb , alpha , ALPP , arg , argsum , bessa , bessb , 
+     &       Ca , Ca2 , Cax , Cay , Caz , Cb , Cb2 , Cbx , Cby , Cbz , 
+     &       DP , eps1
+      real*8 exparg , F , f100 , fka , fkb , four , Fpi , one , Pi , 
+     &       Pi3haf , Pi5hf2 , Piqurt , Pt , Ptpow , qlim , QQ , qtemp , 
+     &       rc , rka , rkb
+      real*8 Sqpi , Sqpi2 , two , Twopi , XNORM , zero
+      integer i , igauss , Igbegn , Igdf , Igend , ihi , ilo , In , 
+     &        Iout , iprim , Ipun , j , jgauss , Jgbegn , Jgdf , Jgend , 
+     &        L , la , lalop2 , lama
+      integer lamb , latru , lb , lblop2 , lbtru , LMAHI , lmahm1 , 
+     &        LMALO , LMBHI , lmbhm1 , LMBLO , MAXI2 , MAXP2 , n , NHI , 
+     &        nhim1 , nlim , NP , npi , Npts
+      integer NTCNT
+C
+C     evaluate the type 2 radial integrals.
+C
+      common /dist  / Cax , Cay , Caz , Ca , Ca2 , Cbx , Cby , Cbz , 
+     &                Cb , Cb2
+      common /ptwtdt/ Ptpow(50,7) , F(50,7,7) , Pt(50) , Npts
+      common /prims / Igbegn , Igend , Jgbegn , Jgend , Igdf , Jgdf
+      integer MAXSHL , MAXPRM , MAXSH1 , MAXS21 , Jan , Shella , 
+     &        Shelln , Shellt , Shellc , Shladf , Aos , Aon , Nshell , 
+     &        Maxtyp
+      real*8 Exx , C1 , C2 , C3 , C4 , X , Y , Z
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /pifac / Pi , Twopi , Fpi , Pi3haf , Pi5hf2 , Piqurt , 
+     &                Sqpi , Sqpi2
+      common /io    / In , Iout , Ipun
+      dimension NP(*) , ALPP(*) , DP(*) , NTCNT(*)
+      dimension QQ(7,7,7,*) , XNORM(MAXP2,MAXI2)
+      dimension qtemp(7,7,7)
+      save eps1 , f100 , zero , one , two , four
+      data eps1/1.E-15/ , f100/100.0D0/ , zero/0.0D0/ , one/1.0D0/ , 
+     &     two/2.0D0/ , four/4.0D0/
+C
+      ilo = NTCNT(L)
+      ihi = NTCNT(L+1) - 1
+      iprim = 0
+C
+C     loop over primitive gaussians.
+      do 100 igauss = Igbegn , Igend
+         alpa = Exx(igauss)
+         rka = two*alpa*Ca
+C
+         do 50 jgauss = Jgbegn , Jgend
+            alpb = Exx(jgauss)
+            rkb = two*alpb*Cb
+C
+            iprim = iprim + 1
+            call aclear(343,QQ(1,1,1,iprim))
+C
+C     loop over terms in the projector.
+            do 40 i = ilo , ihi
+               npi = NP(i)
+               alpha = alpa + alpb + ALPP(i)
+               argsum = ((rka+rkb)*(rka+rkb))/(two*alpha)
+C     determine which method is to be used to compute radial integrals.
+               if ( argsum.lt.f100 ) then
+C
+C     pts and wts method on (0,inf) to be used.
+                  exparg = exp(-alpa*Ca*Ca-alpb*Cb*Cb)*DP(i)/sqrt(alpha)
+               else
+C
+C     pts and wts method on (-inf,inf) to be used.
+C     result includes a factor exp(-(xka+xkb)**2/(four*alpha)) to prevent
+C     overflow.
+                  arg = (-alpa*alpb*(Ca-Cb)*(Ca-Cb)-ALPP(i)
+     &                  *(alpa*Ca*Ca+alpb*Cb*Cb))/alpha
+                  exparg = exp(arg)*DP(i)/sqrt(alpha)
+C     determine limit for radial integrals and skip evaluation if less
+C     than threshold eps1.
+                  rc = (rka+rkb)/(two*alpha)
+                  if ( rc.lt.one ) nlim = npi
+                  if ( rc.gt.one ) nlim = NHI + npi - 1
+                  bessa = one
+                  if ( rka.ne.zero ) bessa = one/(two*rc*rka)
+                  bessb = one
+                  if ( rkb.ne.zero ) bessb = one/(two*rc*rkb)
+                  qlim = rc**nlim*Sqpi*bessa*bessb
+                  if ( (qlim*Fpi*abs(exparg)).lt.eps1 ) goto 40
+               endif
+C
+               lmahm1 = max0(LMAHI-1,1)
+               lmbhm1 = max0(LMBHI-1,1)
+               nhim1 = NHI - 1
+               call aclear(343,qtemp(1,1,1))
+C     check for special cases.
+               if ( rka.ne.zero .and. rkb.ne.zero ) then
+C     general three center case.
+                  call ptprep(npi,NHI,lmahm1,LMAHI,lmbhm1,LMBHI,alpha,
+     &                        rka,rkb,argsum)
+                  call recurf(LMALO,LMAHI,LMBLO,LMBHI,rka,rkb)
+                  call quadr(LMALO,LMAHI,LMBLO,LMBHI,1,1,qtemp(1,1,1))
+                  if ( NHI.gt.1 ) then
+                     call quadr(lmahm1,LMAHI,lmbhm1,LMBHI,2,NHI,
+     &                          qtemp(1,1,1))
+                     if ( LMAHI.gt.2 .or. LMBHI.gt.2 )
+     &                    call recur2(nhim1,LMALO,LMAHI,LMBLO,LMBHI,rka,
+     &                    rkb,qtemp(1,1,1))
+                  endif
+               elseif ( rka.ne.zero .or. rkb.ne.zero ) then
+C     two center case.
+                  if ( rka.ne.zero ) then
+                     call ptprep(npi,NHI,lmahm1,LMAHI,1,1,alpha,rka,rkb,
+     &                           argsum)
+                     if ( LMBLO.eq.1 ) then
+                        call quadr(lmahm1,LMAHI,1,1,1,NHI,qtemp(1,1,1))
+                        if ( LMAHI.gt.2 ) then
+                           fka = one/rka
+                           lalop2 = LMALO + 2
+                           do 6 la = LMAHI , lalop2 , -1
+                              latru = la - 1
+                              do 2 j = 1 , Npts
+                                 F(j,la-2,1) = F(j,la,1) + (2*latru-1)
+     &                              *(fka/Pt(j))*F(j,la-1,1)
+                                 qtemp(1,la-2,1) = qtemp(1,la-2,1)
+     &                              + Ptpow(j,1)*F(j,la-2,1)
+ 2                            continue
+                              do 4 n = 1 , nhim1
+                                 qtemp(n+1,la-2,1) = qtemp(n+1,la,1)
+     &                              + (2*latru-1)*fka*qtemp(n,la-1,1)
+ 4                            continue
+ 6                         continue
+                        endif
+                     endif
+                  elseif ( LMALO.eq.1 ) then
+                     call ptprep(npi,NHI,1,1,lmbhm1,LMBHI,alpha,rka,rkb,
+     &                           argsum)
+                     call quadr(1,1,lmbhm1,LMBHI,1,NHI,qtemp(1,1,1))
+                     if ( LMBHI.gt.2 ) then
+                        fkb = one/rkb
+                        lblop2 = LMBLO + 2
+                        do 12 lb = LMBHI , lblop2 , -1
+                           lbtru = lb - 1
+                           do 8 j = 1 , Npts
+                              F(j,1,lb-2) = F(j,1,lb) + (2*lbtru-1)
+     &                           *(fkb/Pt(j))*F(j,1,lb-1)
+                              qtemp(1,1,lb-2) = qtemp(1,1,lb-2)
+     &                           + Ptpow(j,1)*F(j,1,lb-2)
+ 8                         continue
+                           do 10 n = 1 , nhim1
+                              qtemp(n+1,1,lb-2) = qtemp(n+1,1,lb)
+     &                           + (2*lbtru-1)*fkb*qtemp(n,1,lb-1)
+ 10                        continue
+ 12                     continue
+                     endif
+                  endif
+C     one center case.
+               elseif ( (LMALO.eq.1) .and. (LMBLO.eq.1) ) then
+                  call ptprep(npi,NHI,1,1,1,1,alpha,rka,rkb,argsum)
+                  call quadr(1,1,1,1,1,NHI,qtemp(1,1,1))
+               endif
+C
+               do 20 lama = LMALO , LMAHI
+                  do 15 lamb = LMBLO , LMBHI
+                     do 14 n = 1 , NHI
+                        QQ(n,lama,lamb,iprim) = QQ(n,lama,lamb,iprim)
+     &                     + qtemp(n,lama,lamb)*exparg
+ 14                  continue
+ 15               continue
+ 20            continue
+ 40         continue
+C     end projector loop.
+ 50      continue
+ 100  continue
+C     end primitives loop.
+C
+C
+      return
+      end
+@* INDEX.

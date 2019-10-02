@@ -1,0 +1,26 @@
+@* l305.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       NEXTOV                                                 
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l305(NCHAIN)
+      implicit none
+      integer NCHAIN , jump
+      integer nextov
+      jump = 0
+      NCHAIN = nextov(jump)
+      return
+      end
+@* INDEX.

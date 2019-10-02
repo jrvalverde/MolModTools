@@ -1,0 +1,34 @@
+@* imove.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] INVEC                                                     
+\item[OUTPUT:] OUTVEC                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LDATA                                                  
+                                                                    
+\end{description}
+@a
+      subroutine imove(N,INVEC,OUTVEC)
+      implicit none
+      integer i
+C
+C     copy n elements of invec to outvec.
+C
+      integer N , INVEC , OUTVEC
+      dimension INVEC(*) , OUTVEC(*)
+      if ( N.lt.1 ) return
+      do 100 i = 1 , N
+         OUTVEC(i) = INVEC(i)
+ 100  continue
+      return
+      end
+@* INDEX.

@@ -1,0 +1,61 @@
+@* qcomp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] L                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ARGAB   EXPAB                                          
+\item[Uses]  ARGAB   T                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       QALT    QASY    QPOW                                   
+\item[Called by]   QPASY   RECUR1                                         
+                                                                    
+\end{description}
+@a
+      function qcomp(N,L)
+      implicit none
+      real*8 Alpha , Argab , Dfac , Expab , f15 , Q , qalt , qasy , 
+     &       qcomp , qpow , Rk , T , tmin
+      integer L , N
+C
+C     this routine controls the computation of q(n,l)......
+C     arguments are alpha, xk, and t=xk**2/(4.*alpha).
+C     there are no restrictions on the magnitude of t.
+C     in order to prevent overflow the result returned in qcomp
+C     is actually exp(-t)*q(n,l).
+C     qalt and qpow are restricted to (n+l).le.22, (2l).le.20,
+C     but this may be increased by simply increasing the dfac array.
+C     qasy is valid for arbitrary (n,l).
+C
+      common /dfac  / Dfac(23)
+      common /qstore/ Q(9,7) , Alpha , Rk , T
+      common /argab / Argab , Expab
+      dimension tmin(9)
+      save tmin , f15
+      data tmin/31.0D0 , 28.0D0 , 25.0D0 , 23.0D0 , 22.0D0 , 20.0D0 , 
+     &     19.0D0 , 18.0D0 , 15.0D0/ , f15/15.0D0/
+C
+      Argab = -T
+      Expab = exp(Argab)
+      if ( iand(N+L,1).eq.0 ) then
+c     if (((n+l).and.1).ne.0) go to 10
+         if ( N.gt.L ) then
+            qcomp = qalt(N,L)
+            return
+         endif
+      endif
+      if ( N.lt.9 ) then
+         if ( T.lt.tmin(N+1) ) goto 100
+      elseif ( T.lt.f15 ) then
+         goto 100
+      endif
+      qcomp = qasy(N,L)
+      return
+ 100  qcomp = qpow(N,L)
+      return
+      end
+@* INDEX.

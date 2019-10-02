@@ -1,0 +1,46 @@
+@* quadr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] LMALO                                                     
+\item[INPUT:] LMAHI                                                     
+\item[INPUT:] LMBLO                                                     
+\item[INPUT:] LMBHI                                                     
+\item[INPUT:] NLO                                                       
+\item[INPUT:] NHI                                                       
+\item[OUTPUT:] QQ                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  F       NPTS    PTPOW                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QQRAD                                                  
+                                                                    
+\end{description}
+@a
+      subroutine quadr(LMALO,LMAHI,LMBLO,LMBHI,NLO,NHI,QQ)
+      implicit none
+      real*8 F , Pt , Ptpow , QQ
+      integer i , la , lb , LMAHI , LMALO , LMBHI , LMBLO , n , NHI , 
+     &        NLO , Npts
+      common /ptwtdt/ Ptpow(50,7) , F(50,7,7) , Pt(50) , Npts
+      dimension QQ(7,7,7)
+C
+C     this routine evaluates the integral by quadrature.
+C
+      do 100 lb = LMBLO , LMBHI
+         do 50 la = LMALO , LMAHI
+            do 20 n = NLO , NHI
+               do 10 i = 1 , Npts
+                  QQ(n,la,lb) = QQ(n,la,lb) + Ptpow(i,n)*F(i,la,lb)
+ 10            continue
+ 20         continue
+ 50      continue
+ 100  continue
+C
+      return
+      end
+@* INDEX.

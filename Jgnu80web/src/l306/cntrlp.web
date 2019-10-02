@@ -1,0 +1,114 @@
+@* cntrlp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] XPS                                                       
+\item[INPUT:] SP                                                        
+\item[OUTPUT:] XNORM                                                     
+\item[PASSED:] QQ                                                        
+\item[INPUT:] MAXI2                                                     
+\item[INPUT:] MAXP2                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CA      CA2     CAX     CAY     CAZ     CB      CB2    
+             CBX     CBY     CBZ                                    
+\item[Transmits as argument]  CCA     CCB     CLP     IGBEGN  IGDF    ITYPE   JGBEGN 
+             JGDF    JTYPE   LMAX    NLP     NTPSE   ZLP            
+\item[Uses]  CA2     CAX     CAY     CAZ     CB2     CBX     CBY    
+             CBZ     CCA     CCB     CLP     FPI     IATOM   IEND   
+             IGBEGN  IGDF    IGEND   ISTART  ITYPE   JEND    JGBEGN 
+             JGDF    JGEND   JSTART  JTYPE   KFIRST  KLAST   LMAX   
+             NLP     NTPSE   XA      XB      XC      YA      YB     
+             YC      ZA      ZB      ZC      ZLP                    
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ACLEAR  FILLC   PSEUD1  PSEUD2                         
+\item[Called by]   GLPINT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine cntrlp(XPS,SP,XNORM,QQ,MAXI2,MAXP2)
+      implicit none
+      real*8 Ca , Ca2 , Cax , Cay , Caz , Cb , Cb2 , Cbx , Cby , Cbz , 
+     &       Cca , Ccb , Cdummy , Clp , Fpi , Pi , Pi3haf , Pi5hf2 , 
+     &       Piqurt , QQ
+      real*8 SP , Sqpi , Sqpi2 , Twopi , Xa , Xb , Xc , XNORM , XPS , 
+     &       Ya , Yb , Yc , Za , Zb , Zc , Zlp
+      integer Iatom , idps2 , Iend , igauss , Igbegn , Igdf , Igend , 
+     &        ii , iii , Imj , intc , intps , iprim , Irange , Istart , 
+     &        Itype , Jend , jgauss , Jgbegn , Jgdf
+      integer Jgend , Jnktyp , Jrange , Jstart , Jtype , Kfirst , 
+     &        Klast , Lentq , Limitd , Lmax , Lpskip , MAXATM , MAXI2 , 
+     &        MAXP2 , Nfroz , Nlp , nprim , Ntpse
+      parameter (MAXATM=100)
+C
+C     controls computation of pseudopotential integrals.
+C     details of the method are presented in
+C         l.e. mcmurchie and e.r. davidson, j. comp. phys.,44,289(1981).
+C         r.l. martin, to be published.
+C
+      common /pseud / Ntpse(7,MAXATM)
+      common /lp2   / Nlp(400) , Clp(400) , Zlp(400) , Kfirst(35,5) , 
+     &                Klast(35,5) , Lmax(35) , Lpskip(35) , Nfroz(35)
+      common /centre/ Xa , Ya , Za , Xb , Yb , Zb , Xc , Yc , Zc , Iatom
+      common /dist  / Cax , Cay , Caz , Ca , Ca2 , Cbx , Cby , Cbz , 
+     &                Cb , Cb2
+      common /pifac / Pi , Twopi , Fpi , Pi3haf , Pi5hf2 , Piqurt , 
+     &                Sqpi , Sqpi2
+      common /contr / Cca(20) , Ccb(20) , Cdummy(40)
+      common /prims / Igbegn , Igend , Jgbegn , Jgend , Igdf , Jgdf
+      common /limit / Imj , Istart , Jstart , Iend , Jend , Irange , 
+     &                Jrange , Lentq , Limitd(11)
+      common /type  / Itype , Jtype , Jnktyp(10)
+      dimension XPS(*) , SP(MAXP2,MAXI2) , XNORM(MAXP2,MAXI2) , QQ(*)
+C
+      Cax = Xc - Xa
+      Cay = Yc - Ya
+      Caz = Zc - Za
+      Ca2 = Cax*Cax + Cay*Cay + Caz*Caz
+      Cbx = Xc - Xb
+      Cby = Yc - Yb
+      Cbz = Zc - Zb
+      Cb2 = Cbx*Cbx + Cby*Cby + Cbz*Cbz
+      Ca = sqrt(Ca2)
+      Cb = sqrt(Cb2)
+C
+C     compute normalization constants and initialize temporary storage.
+      call aclear(MAXI2*MAXP2,SP)
+      iprim = 0
+      do 100 igauss = Igbegn , Igend
+         call fillc(Itype,Igbegn,igauss,Igdf,Cca)
+         do 50 jgauss = Jgbegn , Jgend
+            call fillc(Jtype,Jgbegn,jgauss,Jgdf,Ccb)
+            iprim = iprim + 1
+            intc = 0
+            do 20 ii = Istart , Iend
+               do 10 iii = Jstart , Jend
+                  intc = intc + 1
+                  XNORM(iprim,intc) = Fpi*Cca(ii)*Ccb(iii)
+ 10            continue
+ 20         continue
+ 50      continue
+ 100  continue
+      nprim = (Igend-Igbegn+1)*(Jgend-Jgbegn+1)
+      idps2 = Kfirst(Iatom,1)
+      intps = Klast(Iatom,1) - Kfirst(Iatom,1) + 1
+      call pseud1(intps,Nlp(idps2),Zlp(idps2),Clp(idps2),SP,XNORM,MAXI2,
+     &            MAXP2)
+      call pseud2(Lmax(Iatom),Ntpse(1,Iatom),Nlp,Zlp,Clp,SP,XNORM,QQ,
+     &            MAXI2,MAXP2)
+C
+C     apply normalization.
+      intc = 0
+      do 200 ii = Istart , Iend
+         do 150 iii = Jstart , Jend
+            intc = intc + 1
+            do 120 iprim = 1 , nprim
+               XPS(intc) = XPS(intc) + SP(iprim,intc)*XNORM(iprim,intc)
+ 120        continue
+ 150     continue
+ 200  continue
+      return
+      end
+@* INDEX.
