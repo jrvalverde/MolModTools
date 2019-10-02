@@ -1,0 +1,62 @@
+@* elim.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IC                                                     
+\item[Uses]  IC                                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ELIMIJ  ELIMIK  ELIMKL                                 
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine elim
+      implicit none
+      integer i , Ic , j
+      common /shdups/ Ic(256,5)
+C
+C***********************************************************************
+C     routine to fill /shdups/ with the appropriate flag arrays.
+C     the cases are as folows (this routine is compatible with the
+C     function ishdup).
+C     0 ... no shell duplicates (not treated here).
+C     1 ... kshell=lshell only.
+C     2 ... ishell=jshell only.
+C     3 ... ishell=jshell and kshell=lshell.
+C     4 ... ishell=kshell and jshell=lshell.
+C     5 ... all equal.
+C     the arrays in /shdup/ are filled such that a zero implies
+C     that the appropriate integral should be eliminated and one
+C     that it should be retained.
+C***********************************************************************
+C
+      do 100 j = 1 , 5
+         do 50 i = 1 , 256
+            Ic(i,j) = 1
+ 50      continue
+ 100  continue
+C
+C     case 1 ... kshell=lshell only.
+      call elimkl(Ic(1,1))
+C
+C     case 2 ... ishell=jshell only.
+      call elimij(Ic(1,2))
+C
+C     case 3 ... ishell=jshell and kshell=lshell.
+      call elimij(Ic(1,3))
+      call elimkl(Ic(1,3))
+C
+C     case 4 ... ishell=kshell and jshell=lshell.
+      call elimik(Ic(1,4))
+C
+C     case 5 ... ishell=jshell=kshell=lshell.
+      call elimij(Ic(1,5))
+      call elimkl(Ic(1,5))
+      call elimik(Ic(1,5))
+C
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,34 @@
+@* elimkl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IC                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ELIM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine elimkl(IC)
+      implicit none
+      integer i , IC
+      dimension IC(*)
+C
+      do 100 i = 1 , 16
+         IC(16*i-14) = 0
+         IC(16*i-13) = 0
+         IC(16*i-12) = 0
+         IC(16*i-9) = 0
+         IC(16*i-8) = 0
+         IC(16*i-4) = 0
+ 100  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,47 @@
+@* ishdup.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ISHELL                                                    
+\item[INPUT:] JSHELL                                                    
+\item[INPUT:] KSHELL                                                    
+\item[INPUT:] LSHELL                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      integer function ishdup(ISHELL,JSHELL,KSHELL,LSHELL)
+      implicit none
+      integer ij , ikjl , ISHELL , JSHELL , kl , KSHELL , LSHELL
+C
+C***********************************************************************
+C     function to accept four shell numbers and return value of shell
+C     coincidence flag.
+C     0 ... no shell coincidences.
+C     1 ... kshell=lshell only.
+C     2 ... ishell=jshell only.
+C     3 ... ishell=jshell and kshell=lshell.
+C     4 ... ishell=kshell and jshell=lshell.
+C     5 ... all equal.
+C***********************************************************************
+C
+      ij = 0
+      kl = 0
+      ikjl = 0
+      if ( ISHELL.eq.JSHELL ) ij = 1
+      if ( KSHELL.eq.LSHELL ) kl = 1
+      if ( ISHELL.eq.KSHELL .and. JSHELL.eq.LSHELL ) ikjl = 1
+      ishdup = min0(4*ikjl+2*ij+kl,5)
+C
+      return
+C
+      end
+@* INDEX.

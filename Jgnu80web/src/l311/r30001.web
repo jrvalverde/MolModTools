@@ -1,0 +1,42 @@
+@* r30001.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    X2      X3      X4                                     
+\item[Uses]  P11     P12     P13     P21     P22     P23     P31    
+             P32     P33     X2      X3      X4                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine r30001
+      implicit none
+      double precision Ax , Ay , Az , Bx , By , Bz , Cx , Cy , Cz , Dx , 
+     &                 Dy , Dz , P11 , P12 , P13 , P21 , P22 , P23 , 
+     &                 P31 , P32
+      double precision P33 , Q11 , Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , 
+     &                 Q32 , Q33 , Rab , Rabsq , Rcd , Rcdsq , t1 , t2 , 
+     &                 t3 , X , X1 , X2
+      double precision X3 , X4
+      common /cgeom / Ax , Ay , Az , Bx , By , Bz , Cx , Cy , Cz , Dx , 
+     &                Dy , Dz , Rab , Rabsq , Rcd , Rcdsq , P11 , P12 , 
+     &                P13 , P21 , P22 , P23 , P31 , P32 , P33 , Q11 , 
+     &                Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , Q32 , Q33
+      common /gout  / X1 , X2 , X3 , X4 , X(252)
+C
+C
+C
+C
+      t1 = X2
+      t2 = X3
+      t3 = X4
+      X2 = P11*t1 + P21*t2 + P31*t3
+      X3 = P12*t1 + P22*t2 + P32*t3
+      X4 = P13*t1 + P23*t2 + P33*t3
+      return
+C
+      end
+@* INDEX.

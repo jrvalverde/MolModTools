@@ -1,0 +1,139 @@
+@* pinf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] SYMFAC                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    APP     BPP     CONP    DP00P   DP01P   DP10P   DP11P  
+             EP      GA      GAB     GB      GP      ISMLP          
+\item[Uses]  AG      APP     BG      BPP     CMAXA   CMAXB   CPA    
+             CPB     CSA     CSB     DP00P   DP01P   DP10P   DP11P  
+             ERROR1  ERROR2  GA      GAB     GB      JTYPE   NGA    
+             NGB     PITO52  RAB     RABSQ                          
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine pinf(SYMFAC)
+      implicit none
+      double precision Ag , App , Ax , Ay , Az , Bg , Bpp , Bx , By , 
+     &                 Bz , Cg , Cmax , Cmaxa , Cmaxb , Cmaxc , Cmaxd , 
+     &                 Conp , Const , Cpa , cpai
+      double precision Cpb , Cpc , Cpd , Csa , csai , Csb , Csc , Csd , 
+     &                 Cx , Cy , Cz , Dg , Dp00p , Dp01p , Dp10p , 
+     &                 Dp11p , Dx , Dy , Dz , eab
+      double precision Ep , Error1 , Error2 , Ga , Gab , Gb , gbeab , 
+     &                 Gc , Gcd , Gd , Gp , one , P11 , P12 , P13 , 
+     &                 P21 , P22 , P23 , P31 , P32
+      double precision P33 , Pa , Pb , Pc , Pd , Pidiv4 , Pito52 , Q11 , 
+     &                 Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , Q32 , Q33 , 
+     &                 Rab , Rabsq , Rcd , Rcdsq
+      double precision Sa , Sb , Sc , Sd , sixty , SYMFAC , x , xqq , 
+     &                 xx , xxtest , zero
+      integer i , ind , Isml , Ismlp , Ismlq , Itype , j , Jnktyp , 
+     &        Jtype , La , Lb , Lc , Ld , Mab , Mcd , Nga , Ngangb , 
+     &        Ngb , Ngc , Ngd
+      common /cconst/ Const , Conp(100)
+      common /shlinf/ Nga , La , Ag(10) , Csa(10) , Cpa(10) , Ngb , Lb , 
+     &                Bg(10) , Csb(10) , Cpb(10) , Ngc , Lc , Cg(10) , 
+     &                Csc(10) , Cpc(10) , Ngd , Ld , Dg(10) , Csd(10) , 
+     &                Cpd(10)
+      common /misc  / Mab , Mcd , Ngangb
+      common /cgeom / Ax , Ay , Az , Bx , By , Bz , Cx , Cy , Cz , Dx , 
+     &                Dy , Dz , Rab , Rabsq , Rcd , Rcdsq , P11 , P12 , 
+     &                P13 , P21 , P22 , P23 , P31 , P32 , P33 , Q11 , 
+     &                Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , Q32 , Q33
+      common /pgeom / Gp(100) , Ep(100) , Dp00p(100) , Dp01p(100) , 
+     &                Dp10p(100) , Dp11p(100) , App(100) , Bpp(100)
+      common /ginf  / Ga , Gb , Gc , Gd , Sa , Sb , Sc , Sd , Pa , Pb , 
+     &                Pc , Pd , Gab , Gcd
+      common /type  / Itype , Jtype , Jnktyp(10)
+      common /maxc  / Cmax(240) , Cmaxa(10) , Cmaxb(10) , Cmaxc(10) , 
+     &                Cmaxd(10) , Ismlp(100) , Ismlq , Isml , Error1 , 
+     &                Error2
+      common /picon / Pito52 , Pidiv4
+      data zero/0.0D0/ , one/1.0D0/ , sixty/60.0D0/
+C
+C
+C     fills pgeom with information about p in preliminary p-loop
+C     also takes symfac (the symmetry factor to be applied to all
+C     integrals) and combines it with the basic integral multiplier.
+C
+C
+C
+C
+      ind = 0
+      do 100 i = 1 , Nga
+         Ga = Ag(i)
+         csai = Csa(i)
+         cpai = Cpa(i)
+         do 50 j = 1 , Ngb
+            ind = ind + 1
+            Gb = Bg(j)
+            Gab = Ga + Gb
+            Gp(ind) = Gab
+            eab = one/Gab
+            Ep(ind) = eab
+            gbeab = Gb*eab
+            App(ind) = gbeab*Rab
+            Bpp(ind) = App(ind) - Rab
+            xqq = Ga*gbeab*Rabsq
+            if ( xqq.le.sixty ) then
+C
+               xx = dexp(-xqq)*eab
+               xxtest = Cmaxa(i)*Cmaxb(j)*xx
+               if ( xxtest.gt.Error1 ) then
+                  Ismlp(ind) = 0
+C
+               elseif ( xxtest.le.Error2 ) then
+C
+                  Ismlp(ind) = 2
+               else
+                  Ismlp(ind) = 1
+               endif
+C     apply symfac to all integrals at this point.
+               x = Pito52*xx/SYMFAC
+               Dp00p(ind) = x*csai*Csb(j)
+C     for types 0000,0001,0011 only dp00 needed
+               if ( Jtype.gt.3 ) then
+                  Dp01p(ind) = x*csai*Cpb(j)
+                  if ( Jtype.le.5 ) then
+                     Conp(ind) = Dp01p(ind)*eab
+                     Dp00p(ind) = Dp00p(ind)*Gab/Dp01p(ind)
+                     Bpp(ind) = Bpp(ind)*Gab
+                  else
+C
+                     Dp10p(ind) = x*cpai*Csb(j)
+                     Dp11p(ind) = x*cpai*Cpb(j)
+                     Conp(ind) = Dp11p(ind)
+                     Dp00p(ind) = Dp00p(ind)/Dp11p(ind)
+                     Dp01p(ind) = Dp01p(ind)/Dp11p(ind)
+                     Dp10p(ind) = Dp10p(ind)/Dp11p(ind)
+                  endif
+               endif
+            else
+               Ismlp(ind) = 2
+               Dp00p(ind) = zero
+               if ( Jtype.gt.3 ) then
+                  Dp01p(ind) = zero
+                  Conp(ind) = zero
+                  if ( Jtype.le.5 ) then
+                     Bpp(ind) = Bpp(ind)*Gab
+                  else
+C
+                     Dp10p(ind) = zero
+                     Dp11p(ind) = zero
+                  endif
+               endif
+            endif
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

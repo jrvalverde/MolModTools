@@ -1,0 +1,58 @@
+@* f.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] J                                                         
+\item[INPUT:] L                                                         
+\item[INPUT:] M                                                         
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  BINOM   LIND    ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GETF                                                   
+                                                                    
+\end{description}
+@a
+      double precision function f(J,L,M,A,B)
+      implicit none
+      double precision A , B , Binom , F15 , Five , Four , One , term , 
+     &                 Three , Two , Zero
+      integer i , i0p , ifp , ip , J , L , li , Lind , M , mjmi
+      dimension A(*) , B(*)
+      common /lind  / Lind(20)
+      common /binom / Binom(28)
+      common /con310/ Zero , One , Two , Three , Four , Five , F15
+C
+C***********************************************************************
+C     this routine computes the binomial coefficients as outlined in
+C     the paper by clementi and davis, equation 3.2.
+C     the notation used here is similar to that in the paper, and the
+C     interested person is referred to the paper for further details.
+C***********************************************************************
+C
+C
+C
+C     on input, a and b should contain the powers of a and b.
+C
+      i0p = max(0,J-M) + 1
+      ifp = min(J,L) + 1
+      term = Zero
+C
+      do 100 ip = i0p , ifp
+         i = ip - 1
+         li = Lind(L+1) + i + 1
+         mjmi = Lind(M+1) + J - i + 1
+         term = term + Binom(li)*Binom(mjmi)*A(L-i+1)*B(M+i-J+1)
+ 100  continue
+C
+      f = term
+      return
+C
+      end
+@* INDEX.

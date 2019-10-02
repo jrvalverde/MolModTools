@@ -1,0 +1,726 @@
+@* shell.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] D                                                         
+\item[PASSED:] F                                                         
+\item[INPUT:] IOP                                                       
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    AQX     AQZ     COSP    CQ      DQ      DQ00    DQ01   
+             DQ10    DQ11    ECD     GC      GCD     GD      GOUT   
+             GSTORE  INEW    ISHELL  ISMLQ   ITYPE   JNEW    JSHELL 
+             JTYPE   KNEW    KSHELL  LA      LAT     LB      LBT    
+             LC      LCT     LD      LDT     LNEW    LSHELL  PC     
+             PD      PIDIV4  PITO52  QPERP   QPERP2  SC      SD     
+             SINP                                                   
+\item[Transmits as argument]  DBUF2E  EXX     IBUF2E  IRWB    IRWFM   ISYM2E  TTT    
+\item[Uses]  ACX     ACY     ACY2    ACZ     AOS     AQX     CG     
+             CMAXC   CMAXD   COSG    CPC     CPD     CQ      CSC    
+             CSD     DBUF2E  DG      DQ      ECD     ERROR1  ERROR2 
+             EXX     GC      GCD     GD      GOUT    GSTORE  IBUF2E 
+             IC      INEW    IRWB    IRWFM   ISHELL  ISMODE  ISYM2E 
+             ITYPE   IVEC    JNEW    JSHELL  JTYPE   JVEC    KNEW   
+             KSHELL  KVEC    LA      LAT     LB      LBT     LC     
+             LCT     LD      LDT     LNEW    LSHELL  LVEC    NGC    
+             NGD     NSHELL  PC      PD      PIDIV4  QPERP   QPERP2 
+             RCD     SC      SD      SHELLT  SING    TTT            
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BDUMP   ELIM    FILMAX  ISHDUP  ISYMGO  OUT2E   PINF   
+             R30001  R30011  R30101  R30111  R31111  ROT2    SGEOM  
+             SINFO   SP0000  SP0001  SP0011  SP0101  SP0111  SP1111 
+             TQ0011  TQ0101  TQ0111  TQ1111  TREAD                  
+\item[Called by]   DIRCLO  L311                                           
+                                                                    
+\end{description}
+
+\begin{verbatim}
+     program shell
+
+
+     gaussian two electron integral package
+     main loop over shells ... see explanation in program ginput ...
+     link 301
+      accepts numbers of four shells
+     ishell  jshell  kshell  lshell
+     finds their angular quantum numbers
+     and
+     based on this orders shells in a standard manner
+     inew  jnew  knew  lnew
+     only possibilities allowed for angular quantum numbers are then
+     0000  0001  0011  0101  0111  1111
+     determines type of integral set based on the above numbers
+     calls the following routines in the order given
+     shlout
+     first time to preset output routines
+     filmax
+     to preset integral accurcy limits
+     sinfo
+     obtains geometrical information about the four centers
+     finds two sets of local axes
+     for centers
+     a and b  p set
+     c and d  q set
+     pinf
+     obtains information about gaussian functions connected with the p
+     set of axes
+     at this point
+     shell obtains information about the gaussian functions connected
+     with the q set of axes
+     sp0000 to sp1111
+     obtains up to 88 integrals referred to axes a b and q
+     rot2
+     rotates these integrals to up to 160 integrals on a b and q
+     tq0011 to tq1111
+     translates these integrals on a b and q to up to 256 integrals on
+     a b c and d
+     r30001 to r31111
+     rotates up to 256 integrals on a b c and d to the same number
+     referred to the fixed space axes
+     shell detects shell coincidences and eliminates duplicates
+     integrals are transferred to routine shlout to be put on drum
+     or tape
+     a final call to shlout closes the output buffer
+
+     ******************************************************************
+     options ... iop( )     see program ginput ... segment 301
+     *****************************************************************
+
+
+
+
+
+=    save place the table is read in again. (instead of declaring
+=    one common table in the root).
+
+     dimension gint(combinations,sets)
+
+     data p00005/5.0d-5/
+=    data irwb/506/,irwfm/503/,irwicb/509/
+     data ivec/1,1,1,1,3,1,1,1,3,2,2,2,3,3,4,1,
+    $          1,2,1,1,1,1,1,1,2,2,4,2,4,3,4,1,
+    $          1,1,2,1,1,1,1,1,2,3,2,2,3,3,4,1/
+     data jvec/2,2,2,2,4,2,2,2,4,1,1,1,4,4,3,2,
+    $          4,3,4,4,4,4,4,4,3,3,1,3,1,2,1,4,
+    $          3,3,4,3,3,3,3,3,4,1,4,4,1,1,2,3/
+     data kvec/3,3,4,3,1,3,4,3,2,3,4,3,1,1,1,3,
+    $          2,1,2,2,3,3,2,2,4,1,2,1,3,1,2,2,
+    $          2,2,1,2,4,2,4,2,3,2,1,1,4,2,1,2/
+     data lvec/4,4,3,4,2,4,3,4,1,4,3,4,2,2,2,4,
+    $          3,4,3,3,2,2,3,3,1,4,3,4,2,4,3,3,
+    $          4,4,3,4,2,4,2,4,1,4,3,3,2,4,3,4/
+\end{verbatim}
+
+
+@a
+      subroutine shell(D,F,IOP,JUMP)
+      implicit none
+      double precision Acx , Acy , Acy2 , Acz , Ag , Ap , App , Aqx , 
+     &                 Aqz , Auxvar , Ax , Ay , Az , Bg , Bp , Bpp , 
+     &                 Bx , By , Bz , C
+      double precision C1 , C11 , C12 , C13 , C2 , C21 , C22 , C23 , 
+     &                 C3 , C31 , C32 , C33 , Cg , Cmax , Cmaxa , 
+     &                 Cmaxb , Cmaxc , Cmaxd , Conp , Const
+      double precision Cosg , Cosp , Cpa , Cpb , Cpc , Cpd , Cq , Csa , 
+     &                 Csb , Csc , Csd , Cx , Cy , Cz , Dbuf2e , Dg , 
+     &                 Dp00 , Dp00p , Dp01 , Dp01p
+      double precision Dp10 , Dp10p , Dp11 , Dp11p , Dq , Dq00 , Dq01 , 
+     &                 Dq10 , Dq11 , Dx , Dy , Dz , Eab , Ecd , Ep , 
+     &                 Error1 , Error2 , Exx , four , g1
+      double precision g11 , g12 , g13 , g2 , g21 , g22 , g23 , g3 , 
+     &                 g31 , g32 , g33 , Ga , Gab , Gb , Gc , Gcd , Gd , 
+     &                 gint , Gout , Gp
+      double precision Gstore , one , P11 , P12 , P13 , P21 , P22 , 
+     &                 P23 , P31 , P32 , P33 , Pa , Pb , Pc , Pd , pi , 
+     &                 Pidiv4 , Pito52 , Pq1 , Pq2
+      double precision Pq3 , pt25 , Px , Py , Pz , Q11 , Q12 , Q13 , 
+     &                 Q21 , Q22 , Q23 , Q31 , Q32 , Q33 , Qperp , 
+     &                 Qperp2 , Qx , Qy , Qz , Rab
+      double precision Rabsq , Rcd , Rcdsq , Rpq , Rpqsq , Sa , Sb , 
+     &                 Sc , Sd , Sing , Sinp , sixty , symfac , tenm12 , 
+     &                 Ttt , two , twopt5 , v , Var1 , Var2
+      double precision X , xqq , xxtest , Y , Z , zero
+      integer i , iacc , Ibf , Ibuf2e , Ic , idcout , iitype , ijkl , 
+     &        ijkld , ikjld , iljkd , In , indv , Inew , Iout , Ipunch , 
+     &        iret , Irwb , Irwfm , Irwibf
+      integer Irwicb , isdupe , iset , ish , ishdup , Ishell , isite1 , 
+     &        isite2 , isite3 , Isml , Ismlp , Ismlq , Ismode , istart , 
+     &        Isym2e , isymm , isytmp , Itype , iv11 , iv12
+      integer iv13 , iv14 , iv21 , iv22 , iv23 , iv24 , iv31 , iv32 , 
+     &        iv33 , iv34 , Ivec , ivectr , j , Jan , jndv , Jnew , 
+     &        Jnktyp , jsh , Jshell , jstart
+      integer jtdat , Jtype , JUMP , Jvec , k , kndv , Knew , ksh , 
+     &        Kshell , kstart , Kvec , l , La , lambda , Lat , Lb , 
+     &        Lbt , Lc , Lct , Ld
+      integer Ldt , LENB , Lenibf , lenneq , lndv , Lnew , loi , lsh , 
+     &        Lshell , lstart , Lvec , Mab , MAXPRM , MAXS21 , MAXSH1 , 
+     &        MAXSHL , Maxtyp , Mcd , Mode , mu
+      integer neq , neqshl , nf , nfa , nfb , nfc , nfd , Nga , Ngangb , 
+     &        Ngb , Ngc , Ngd , ngdat , ngout , ngsave , nset , Nshell , 
+     &        nsymop , nu , numd
+      integer IOP(*)
+      double precision D(*) , F(*)
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      integer sigma
+      logical dbuf , reject
+      dimension ivectr(4) , ngsave(3) , loi(4) , nf(2) , isytmp(2)
+      dimension ngdat(16) , jtdat(16)
+      dimension Ibuf2e(1)
+      dimension gint(3,3)
+      dimension isdupe(3)
+C      common /iop/iop(50)
+      common /cconst/ Const , Conp(100)
+C=> cconst was const, but there is a other common with the same name
+      common /shlnos/ Ishell , Jshell , Kshell , Lshell , Inew , Jnew , 
+     &                Knew , Lnew
+      common /shlinf/ Nga , La , Ag(10) , Csa(10) , Cpa(10) , Ngb , Lb , 
+     &                Bg(10) , Csb(10) , Cpb(10) , Ngc , Lc , Cg(10) , 
+     &                Csc(10) , Cpc(10) , Ngd , Ld , Dg(10) , Csd(10) , 
+     &                Cpd(10)
+      common /lt    / Lat , Lbt , Lct , Ldt
+      common /misc  / Mab , Mcd , Ngangb
+      common /cgeom / Ax , Ay , Az , Bx , By , Bz , Cx , Cy , Cz , Dx , 
+     &                Dy , Dz , Rab , Rabsq , Rcd , Rcdsq , P11 , P12 , 
+     &                P13 , P21 , P22 , P23 , P31 , P32 , P33 , Q11 , 
+     &                Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , Q32 , Q33
+C=> common cgeom was geom, but there is a subroutine with that name.
+      common /pqgeom/ Ap , Bp , Cq , Dq , Px , Py , Pz , Qx , Qy , Qz , 
+     &                Rpq , Rpqsq , Pq1 , Pq2 , Pq3 , C11 , C12 , C13 , 
+     &                C21 , C22 , C23 , C31 , C32 , C33
+      common /ginf  / Ga , Gb , Gc , Gd , Sa , Sb , Sc , Sd , Pa , Pb , 
+     &                Pc , Pd , Gab , Gcd
+      common /type  / Itype , Jtype , Jnktyp(10)
+      common /gout  / Gout(256)
+      common /pgeom / Gp(100) , Ep(100) , Dp00p(100) , Dp01p(100) , 
+     &                Dp10p(100) , Dp11p(100) , App(100) , Bpp(100)
+      common /eabecd/ Eab , Ecd
+      common /dpq   / Dp00 , Dp01 , Dp10 , Dp11 , Dq00 , Dq01 , Dq10 , 
+     &                Dq11
+      common /cos   / C
+      common /phi   / Cosp , Sinp
+      common /qgeom / Acx , Acy , Acz , Acy2 , Cosg , Sing , Aqx , Aqz , 
+     &                Qperp , Qperp2
+      common /maxc  / Cmax(240) , Cmaxa(10) , Cmaxb(10) , Cmaxc(10) , 
+     &                Cmaxd(10) , Ismlp(100) , Ismlq , Isml , Error1 , 
+     &                Error2
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension neqshl(MAXSHL,8)
+      common /auxvar/ Auxvar , Var1 , Var2
+      common /ctable/ Ttt(6000)
+C=> ctable was table. these are the same commons, but in order to
+      common /io    / In , Iout , Ipunch
+      common /picon / Pito52 , Pidiv4
+      common /irw311/ Irwb , Irwfm , Irwicb , Irwibf , Lenibf
+      common /gstore/ Gstore(256,3)
+      common /idat  / Ivec(16,3) , Jvec(16,3) , Kvec(16,3) , Lvec(16,3)
+      common /shdups/ Ic(256,5)
+      common /ibf   / Ibf(30)
+      common /buf2e / Dbuf2e(4760)
+      equivalence (g11,gint(1,1)) , (g12,gint(1,2)) , (g13,gint(1,3))
+      equivalence (g21,gint(2,1)) , (g22,gint(2,2)) , (g23,gint(2,3))
+      equivalence (g31,gint(3,1)) , (g32,gint(3,2)) , (g33,gint(3,3))
+      equivalence (Ismode,Ibf(1)) , (Mode,Ibf(2))
+      equivalence (ijkld,isdupe(1)) , (iljkd,isdupe(2)) , 
+     &             (ikjld,isdupe(3))
+      equivalence (Ibuf2e(1),Dbuf2e(1))
+      equivalence (Isym2e,Ibf(30))
+      data zero/0.0D0/ , one/1.0D0/
+      data sixty/60.0D0/
+      data four/4.0D0/ , two/2.0D0/ , twopt5/2.5D0/
+      data tenm12/1.0D-12/
+      data pt25/0.25D0/ , nf/1 , 4/
+      data jtdat/1 , 2 , 2 , 3 , 2 , 4 , 4 , 5 , 2 , 4 , 4 , 5 , 3 , 5 , 
+     &     5 , 6/
+      data ngdat/1 , 4 , 4 , 16 , 4 , 64 , 64 , 64 , 4 , 64 , 64 , 64 , 
+     &     16 , 64 , 64 , 256/
+      data dbuf/.true./ , idcout/11/
+      data isymm/551/ , neq/565/
+      iacc = IOP(28)
+C     if iop(28) is not clear all integrals are produced elsewhere
+      if ( iacc.eq.0 ) then
+         Pidiv4 = datan(one)
+         pi = four*Pidiv4
+         Pito52 = two*pi**twopt5
+C     read in basis set specifications
+         call tread(Irwb,Exx(1),LENB,1,LENB,1,0)
+         if ( IOP(34).ge.2 ) call bdump(2)
+C     read in error function interpolation table.
+         call tread(Irwfm,Ttt(1),6000,1,6000,1,0)
+C     preset output routine
+C     not that the call to out2e fills /ibf/.  this common contains
+C     the control variable for 2-e integral symmetry (isym2e).
+         call out2e(-1,mu,nu,lambda,sigma,gint,dbuf,Ibuf2e,Dbuf2e,iret,
+     &              idcout,IOP,D,F)
+         if ( iret.eq.0 ) then
+C     fill common maxc ... used in discarding small (less than 10**-6)
+C     integrals before they are fully evaluated
+            call filmax
+C     generate shell duplicate masks.
+            call elim
+C
+C     initialize the symmetry information.
+C     obtain nsymop.
+            if ( Isym2e.eq.1 ) then
+               call tread(isymm,isytmp,1,1,1,1,0)
+               nsymop = isytmp(1)
+C     obtain the list of symmetry equivalent shells.
+               lenneq = 4*MAXSHL
+               call tread(neq,neqshl(1,1),lenneq,1,lenneq,1,0)
+            endif
+C
+C
+C
+            do 60 ish = 1 , Nshell
+               do 50 jsh = 1 , ish
+                  do 45 ksh = 1 , jsh
+                     do 40 lsh = 1 , ksh
+                        Ishell = ish
+                        Jshell = jsh
+                        Kshell = ksh
+                        Lshell = lsh
+C
+C     perform preliminary switches.
+C     note ... consider the shell case (aabc).
+C     with switch       without switch
+C     -----------       --------------
+C 1     (aabc)            (cbaa)
+C 2     (acab)            (caba)
+C 3     (abac)            (caba)
+C
+C     with the preliminary switch, sets 2 and 3 are really identical.
+C     without it, sets 2 and three  are related by a transposition.
+C     this becomes important below where the sets are replicated
+C     instead of being computed.  that is, without the switch, it
+C     would be necessary to permute the suffixes when replicating.
+                        if ( ish.eq.jsh .and. ksh.ne.lsh ) then
+C
+                           Ishell = lsh
+                           Jshell = ksh
+                           Kshell = jsh
+                           Lshell = ish
+                        endif
+                        ivectr(1) = Ishell
+                        ivectr(2) = Jshell
+                        ivectr(3) = Kshell
+                        ivectr(4) = Lshell
+C
+C     access isymgo to see if symmetry is in effect, determine
+C     symfac and set reject.
+                        call isymgo(Ishell,Jshell,Kshell,Lshell,nsymop,
+     &                              neqshl,Isym2e,reject,symfac)
+C     if rejected, skip out.
+                        if ( .not.(reject) ) then
+C
+                           Lat = Shellt(Ishell)
+                           Lbt = Shellt(Jshell)
+                           Lct = Shellt(Kshell)
+                           Ldt = Shellt(Lshell)
+C     before going any further, determine if any d-functions are present
+C     if so, skip out as other routines will handle these integrals.
+                           numd = Lat/2 + Lbt/2 + Lct/2 + Ldt/2
+                           if ( numd.eq.0 ) then
+                              Itype = 8*Lat + 4*Lbt + 2*Lct + Ldt + 1
+C
+                              nset = 3
+C   zeroise ijkld etc. while nset is still 3 dbc mod.
+                              do 2 iset = 1 , nset
+                                 isdupe(iset) = 0
+ 2                            continue
+C
+                              if ( Ishell.eq.Jshell .or. 
+     &                             Jshell.eq.Kshell .or. 
+     &                             Kshell.eq.Lshell ) nset = 2
+                              if ( Ishell.eq.Kshell .or. 
+     &                             Jshell.eq.Lshell ) nset = 1
+C
+C
+                              do 12 iset = 1 , nset
+C
+C
+C     fill inew, etc. and la, etc. using itype and iset.
+                                 indv = Ivec(Itype,iset)
+                                 jndv = Jvec(Itype,iset)
+                                 kndv = Kvec(Itype,iset)
+                                 lndv = Lvec(Itype,iset)
+C
+                                 Inew = ivectr(indv)
+                                 Jnew = ivectr(jndv)
+                                 Knew = ivectr(kndv)
+                                 Lnew = ivectr(lndv)
+C
+C     generate shell duplicate test flags.
+                                 isdupe(iset)
+     &                              = ishdup(Inew,Jnew,Knew,Lnew)
+C
+                                 La = Shellt(Inew)
+                                 Lb = Shellt(Jnew)
+                                 Lc = Shellt(Knew)
+                                 Ld = Shellt(Lnew)
+                                 iitype = 8*La + 4*Lb + 2*Lc + Ld + 1
+C     only 6 standard types remain. 0000,0001,0011,0101,0111,1111
+C     specify these by jtype
+                                 Jtype = jtdat(iitype)
+                                 ngout = ngdat(iitype)
+C
+C     empty common gout
+                                 do 4 i = 1 , ngout
+                                    Gout(i) = zero
+ 4                               continue
+                                 call sinfo
+                                 call sgeom
+C     preliminary p loop
+                                 call pinf(symfac)
+C     if 0000 use special routine
+                                 if ( Jtype.le.1 ) then
+                                    call sp0000
+                                 else
+C     begin q loop
+                                    do 8 k = 1 , Ngc
+                                       Gc = Cg(k)
+                                       do 6 l = 1 , Ngd
+                                         Gd = Dg(l)
+                                         Gcd = Gc + Gd
+                                         Ecd = one/Gcd
+                                         Cq = Gd*Ecd*Rcd
+                                         Dq = Cq - Rcd
+                                         xqq = Cq*Dq*Gcd
+                                         if ( xqq+sixty.lt.0 ) then
+                                         v = zero
+                                         else
+C
+                                         v = dexp(xqq)*Ecd
+                                         endif
+                                         xxtest = Cmaxc(k)*Cmaxd(l)*v
+                                         if ( xxtest.le.Error1 ) then
+C
+                                         if ( xxtest.le.Error2 ) goto 6
+                                         Ismlq = 1
+                                         else
+                                         Ismlq = 0
+                                         endif
+                                         Sc = Csc(k)
+                                         Sd = Csd(l)
+                                         Pc = Cpc(k)
+                                         Pd = Cpd(l)
+                                         Dq00 = Sc*Sd*v
+                                         Dq01 = Sc*Pd*v
+                                         Dq10 = Pc*Sd*v
+                                         Dq11 = Pc*Pd*v
+C     find coordinates of q relative to axes at a
+C     qperp is perpendicular from q to ab
+                                         Aqx = Acx + Sing*Cq
+                                         Aqz = Acz + Cosg*Cq
+                                         Qperp2 = Aqx*Aqx + Acy2
+                                         Qperp = dsqrt(Qperp2)
+C     phi is 180 - azimuthal angle for aq in ab local axis system
+                                         if ( Qperp.le.tenm12 ) then
+C
+                                         Cosp = one
+                                         Sinp = zero
+                                         else
+                                         Cosp = -Aqx/Qperp
+                                         Sinp = -Acy/Qperp
+                                         endif
+C     use special fast routine fer inner loop for 0101
+                                         if ( Jtype.eq.4 ) then
+                                         call sp0101
+C
+                                         elseif ( Jtype.eq.5 ) then
+                                         call sp0111
+C
+C     begin p loop
+C     use special fast routines for inner loops for 0001 and 0011
+                                         elseif ( Jtype.lt.3 ) then
+                                         call sp0001
+                                         goto 6
+                                         elseif ( Jtype.eq.3 ) then
+C
+                                         call sp0011
+                                         else
+C
+                                         call sp1111
+                                         endif
+                                         call rot2
+                                         if ( Jtype.eq.1 .or. 
+     &                                      Jtype.eq.2 ) then
+                                         elseif ( Jtype.eq.4 ) then
+C
+                                         call tq0101
+                                         elseif ( Jtype.eq.5 ) then
+C
+                                         call tq0111
+                                         elseif ( Jtype.eq.6 ) then
+C
+                                         call tq1111
+                                         else
+C
+                                         call tq0011
+                                         endif
+ 6                                     continue
+ 8                                  continue
+                                    if ( Jtype.eq.1 ) then
+                                    elseif ( Jtype.eq.3 ) then
+C
+                                       call r30011
+                                    elseif ( Jtype.eq.4 ) then
+C
+                                       call r30101
+                                    elseif ( Jtype.eq.5 ) then
+C
+                                       call r30111
+                                    elseif ( Jtype.eq.6 ) then
+C
+                                       call r31111
+                                    else
+C
+                                       call r30001
+                                    endif
+                                 endif
+C
+C     transfer ngout integrals into /gstore/ and save inew, etc.
+                                 do 10 i = 1 , ngout
+                                    Gstore(i,iset) = Gout(i)
+ 10                              continue
+                                 ngsave(iset) = ngout
+ 12                           continue
+C
+C
+C     integrals accumulated into gstore.
+C     process them out.
+C
+C
+C     perform chores independent of ismode.
+C
+C     set up master duplicate flag.
+                              ijkl = ijkld + iljkd + ikjld
+C
+C     determine the number of functions at the various centers.
+                              nfa = nf(Lat+1)
+                              nfb = nf(Lbt+1)
+                              nfc = nf(Lct+1)
+                              nfd = nf(Ldt+1)
+C
+C     fill local indices.
+                              iv11 = Ivec(Itype,1)
+                              iv12 = Jvec(Itype,1)
+                              iv13 = Kvec(Itype,1)
+                              iv14 = Lvec(Itype,1)
+                              iv21 = Ivec(Itype,2)
+                              iv22 = Jvec(Itype,2)
+                              iv23 = Kvec(Itype,2)
+                              iv24 = Lvec(Itype,2)
+                              iv31 = Ivec(Itype,3)
+                              iv32 = Jvec(Itype,3)
+                              iv33 = Kvec(Itype,3)
+                              iv34 = Lvec(Itype,3)
+C
+C     get orbital starting addresses.
+                              istart = Aos(Ishell) - 1
+                              jstart = Aos(Jshell) - 1
+                              kstart = Aos(Kshell) - 1
+                              lstart = Aos(Lshell) - 1
+C
+C     select particular fill code based on ismode.
+                              if ( Ismode.le.0 ) then
+C
+                                 do 22 i = 1 , nfa
+                                    loi(1) = i - 1
+                                    mu = i + istart
+                                    do 20 j = 1 , nfb
+                                       loi(2) = j - 1
+                                       nu = j + jstart
+                                       do 18 k = 1 , nfc
+                                         loi(3) = k - 1
+                                         lambda = k + kstart
+                                         do 16 l = 1 , nfd
+                                         loi(4) = l - 1
+                                         sigma = l + lstart
+C
+                                         isite1 = 64*loi(iv11)
+     &                                      + 16*loi(iv12) + 4*loi(iv13)
+     &                                      + loi(iv14) + 1
+                                         isite2 = 64*loi(iv21)
+     &                                      + 16*loi(iv22) + 4*loi(iv23)
+     &                                      + loi(iv24) + 1
+                                         isite3 = 64*loi(iv31)
+     &                                      + 16*loi(iv32) + 4*loi(iv33)
+     &                                      + loi(iv34) + 1
+C
+                                         g11 = Gstore(isite1,1)
+                                         g12 = Gstore(isite2,2)
+                                         g13 = Gstore(isite3,3)
+C
+C     eliminate shell duplicates (if necessary).
+                                         if ( ijkl.gt.0 ) then
+                                         if ( nset.eq.1 ) goto 14
+                                         if ( nset.ne.2 ) then
+C
+                                         if ( ikjld.gt.0 ) then
+                                         if ( Ic(isite3,ikjld).eq.0 )
+     &                                      g13 = zero
+                                         endif
+                                         endif
+                                         if ( iljkd.gt.0 ) then
+                                         if ( Ic(isite2,iljkd).eq.0 )
+     &                                      g12 = zero
+                                         endif
+ 14                                      if ( ijkld.gt.0 ) then
+                                         if ( Ic(isite1,ijkld).eq.0 )
+     &                                      g11 = zero
+                                         endif
+                                         endif
+C
+C     pass integrals to output routine.
+                                         call out2e(nset,mu,nu,lambda,
+     &                                      sigma,gint,dbuf,Ibuf2e,
+     &                                      Dbuf2e,iret,idcout,IOP,D,F)
+C              ,e2fubd,e2fubi,fubd,tnig,amgis,adbmal,un,um,tesn(e2tuo ll
+ 16                                      continue
+ 18                                    continue
+ 20                                 continue
+ 22                              continue
+                              else
+C
+C
+C     process integrals via raffenetti format.
+C     replicate necessary integrals.
+                                 if ( nset.eq.2 ) then
+C
+C     nset=2.  determine which copy code to use.  (testing jshell=kshell
+C     is sufficient).
+                                    if ( Jshell.ne.Kshell ) then
+C
+C     gamma=beta.
+                                       ngout = ngsave(2)
+                                       do 24 i = 1 , ngout
+                                         Gstore(i,3) = Gstore(i,2)
+ 24                                    continue
+                                    else
+C
+C     gamma=alpha.
+                                       ngout = ngsave(1)
+                                       do 26 i = 1 , ngout
+                                         Gstore(i,3) = Gstore(i,1)
+ 26                                    continue
+                                    endif
+                                 elseif ( nset.ne.3 ) then
+C
+C     nset=1, beta=gamma=alpha.
+                                    ngout = ngsave(1)
+                                    do 28 i = 1 , ngout
+                                       Gstore(i,2) = Gstore(i,1)
+                                       Gstore(i,3) = Gstore(i,1)
+ 28                                 continue
+                                 endif
+C
+C     loop over all possible functions on abcd.
+                                 do 38 i = 1 , nfa
+                                    loi(1) = i - 1
+                                    mu = i + istart
+                                    do 36 j = 1 , nfb
+                                       loi(2) = j - 1
+                                       nu = j + jstart
+                                       do 34 k = 1 , nfc
+                                         loi(3) = k - 1
+                                         lambda = k + kstart
+                                         do 32 l = 1 , nfd
+                                         loi(4) = l - 1
+                                         sigma = l + lstart
+C
+                                         isite1 = 64*loi(iv11)
+     &                                      + 16*loi(iv12) + 4*loi(iv13)
+     &                                      + loi(iv14) + 1
+                                         isite2 = 64*loi(iv21)
+     &                                      + 16*loi(iv22) + 4*loi(iv23)
+     &                                      + loi(iv24) + 1
+                                         isite3 = 64*loi(iv31)
+     &                                      + 16*loi(iv32) + 4*loi(iv33)
+     &                                      + loi(iv34) + 1
+C
+                                         g1 = Gstore(isite1,1)
+                                         g2 = Gstore(isite2,2)
+                                         g3 = Gstore(isite3,3)
+C
+                                         g31 = g3 - g2
+                                         g21 = g2 + g3
+                                         g11 = g1 - pt25*g21
+                                         g32 = g1 - g3
+                                         g22 = g1 + g3
+                                         g12 = g2 - pt25*g22
+                                         g33 = g1 - g2
+                                         g23 = g1 + g2
+                                         g13 = g3 - pt25*g23
+C
+C     eliminate shell duplicates (if necessary).
+                                         if ( ijkl.ne.0 ) then
+                                         if ( nset.eq.1 ) goto 30
+                                         if ( nset.ne.2 ) then
+C
+                                         if ( ikjld.ne.0 ) then
+                                         if ( Ic(isite3,ikjld).eq.0 )
+     &                                      then
+                                         g13 = zero
+                                         g23 = zero
+                                         g33 = zero
+                                         endif
+                                         endif
+                                         endif
+                                         if ( iljkd.ne.0 ) then
+                                         if ( Ic(isite2,iljkd).eq.0 )
+     &                                      then
+                                         g12 = zero
+                                         g22 = zero
+                                         g32 = zero
+                                         endif
+                                         endif
+ 30                                      if ( ijkld.ne.0 ) then
+                                         if ( Ic(isite1,ijkld).eq.0 )
+     &                                      then
+                                         g11 = zero
+                                         g21 = zero
+                                         g31 = zero
+                                         endif
+                                         endif
+                                         endif
+C
+C     pass final integrals to output routine.
+                                         call out2e(nset,mu,nu,lambda,
+     &                                      sigma,gint,dbuf,Ibuf2e,
+     &                                      Dbuf2e,iret,idcout,IOP,D,F)
+ 32                                      continue
+ 34                                    continue
+ 36                                 continue
+ 38                              continue
+                              endif
+                           endif
+                        endif
+ 40                  continue
+ 45               continue
+ 50            continue
+ 60         continue
+C     reset output routine
+            call out2e(0,mu,nu,lambda,sigma,gint,dbuf,Ibuf2e,Dbuf2e,
+     &                 iret,idcout,IOP,D,F)
+         endif
+      endif
+C
+C     ..............
+      JUMP = 0
+C     ..............
+C
+99001 format (3(10x,4I3,d20.13))
+99002 format (3(10x,12x,d20.13))
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,63 @@
+@* getf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] LAMAX                                                     
+\item[INPUT:] LBMAX                                                     
+\item[PASSED:] PAXP                                                      
+\item[PASSED:] PBXP                                                      
+\item[OUTPUT:] FIP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  INDF                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       F                                                      
+\item[Called by]   GENL2E                                                 
+                                                                    
+\end{description}
+@a
+      subroutine getf(LAMAX,LBMAX,PAXP,PBXP,FIP)
+      implicit none
+      double precision f , FIP , PAXP , PBXP
+      integer ind , Indf , ip , ipmax , ipp , la , LAMAX , lap , lb , 
+     &        LBMAX , lbp
+      dimension PAXP(*) , PBXP(*) , FIP(*)
+      common /indf  / Indf(16)
+C
+C
+C***********************************************************************
+C     routine to accumulate the required f's.
+C     based on lamax and lbmax, this routine loops over all required
+C     values of lap and lbp to generate the required binomial
+C     coefficients.
+C     the index array indf is used to determine where in fip that
+C     the particular coefficients are to be placed.
+C     the array indf is generated simply by consideration of the
+C     form of the coefficients.
+C***********************************************************************
+C
+C
+      do 100 lap = 1 , LAMAX
+         la = lap - 1
+C
+         do 50 lbp = 1 , LBMAX
+            lb = lbp - 1
+C
+            ind = Indf(4*la+lb+1)
+            ipmax = la + lb + 1
+C
+            do 20 ipp = 1 , ipmax
+               ip = ipp - 1
+               FIP(ind) = f(ip,la,lb,PAXP,PBXP)
+               ind = ind + 1
+ 20         continue
+ 50      continue
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

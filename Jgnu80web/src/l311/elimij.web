@@ -1,0 +1,35 @@
+@* elimij.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IC                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ELIM                                                   
+                                                                    
+\end{description}
+@a
+      subroutine elimij(IC)
+      implicit none
+      integer i , IC
+      dimension IC(*)
+C
+      do 100 i = 17 , 64
+         IC(i) = 0
+ 100  continue
+      do 200 i = 97 , 128
+         IC(i) = 0
+ 200  continue
+      do 300 i = 177 , 192
+         IC(i) = 0
+ 300  continue
+      return
+C
+      end
+@* INDEX.

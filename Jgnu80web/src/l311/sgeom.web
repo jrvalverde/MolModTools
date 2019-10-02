@@ -1,0 +1,162 @@
+@* sgeom.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ACX     ACY     ACY2    ACZ     COSG    P11     P12    
+             P13     P21     P22     P23     P31     P32     P33    
+             Q11     Q12     Q13     Q21     Q22     Q23     Q31    
+             Q32     Q33     RAB     RABSQ   RCD     RCDSQ   SING   
+\item[Uses]  ACY     AX      AY      AZ      BX      BY      BZ     
+             COSG    CX      CY      CZ      DX      DY      DZ     
+             P11     P12     P13     P21     P22     P23     P31    
+             P32     P33     Q21     Q22     Q23     Q31     Q32    
+             Q33     RAB     RABSQ   RCD     RCDSQ   SING           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine sgeom
+      implicit none
+      double precision abx , aby , abz , Acx , Acy , Acy2 , Acz , Aqx , 
+     &                 Aqz , Ax , Ay , Az , Bx , By , Bz , cdx , cdy , 
+     &                 cdz , Cosg , Cx
+      double precision Cy , Cz , Dx , Dy , Dz , one , P11 , P12 , P13 , 
+     &                 p2 , P21 , P22 , P23 , P31 , p3131 , P32 , P33 , 
+     &                 p3333 , pmq1 , pmq2
+      double precision pmq3 , ppq1 , ppq2 , ppq3 , pt0001 , pt5 , pt7 , 
+     &                 pt9 , Q11 , Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , 
+     &                 Q32 , Q33 , Qperp , Qperp2 , Rab
+      double precision Rabsq , Rcd , Rcdsq , Sing , sinp , temp , 
+     &                 tenm12 , zero
+      integer Itype , Jnktyp , Jtype
+      common /cgeom / Ax , Ay , Az , Bx , By , Bz , Cx , Cy , Cz , Dx , 
+     &                Dy , Dz , Rab , Rabsq , Rcd , Rcdsq , P11 , P12 , 
+     &                P13 , P21 , P22 , P23 , P31 , P32 , P33 , Q11 , 
+     &                Q12 , Q13 , Q21 , Q22 , Q23 , Q31 , Q32 , Q33
+      common /type  / Itype , Jtype , Jnktyp(10)
+      common /qgeom / Acx , Acy , Acz , Acy2 , Cosg , Sing , Aqx , Aqz , 
+     &                Qperp , Qperp2
+      data zero/0.0D0/ , pt0001/1.0D-4/ , one/1.0D0/
+      data pt9/0.9D0/ , pt5/0.5D0/ , tenm12/1.0D-12/ , pt7/0.7D0/
+C
+C
+C     finds direction cosines of penultimate axes from coordinates of ab
+C     p11,p12,....are direction cosines of axes at p.  z-axis along ab
+C     q11,q12,....are direction cosines of axes at q.  z-axis along cd
+C
+C
+C
+C
+C     caution ... the variable crit may be machine sensitive.  the
+C     present value is suitable for a 72 bit word.
+C     find rab etc.
+      abx = Bx - Ax
+      aby = By - Ay
+      abz = Bz - Az
+      Rabsq = abx**2 + aby**2 + abz**2
+      Rab = dsqrt(Rabsq)
+      cdx = Dx - Cx
+      cdy = Dy - Cy
+      cdz = Dz - Cz
+      Rcdsq = cdx**2 + cdy**2 + cdz**2
+      Rcd = dsqrt(Rcdsq)
+C     find direction cosines of ab and cd. these are local z-axes.
+C     if indeterminate take along space z-axis
+      if ( Rab.ne.0 ) then
+         P31 = abx/Rab
+         P32 = aby/Rab
+         P33 = abz/Rab
+      else
+C
+         P31 = zero
+         P32 = zero
+         P33 = one
+      endif
+      if ( Rcd.ne.0 ) then
+         Q31 = cdx/Rcd
+         Q32 = cdy/Rcd
+         Q33 = cdz/Rcd
+      else
+C
+         Q31 = zero
+         Q32 = zero
+         Q33 = one
+      endif
+C     find local y-axis as common perpendicular to ab and cd
+C     if indeterminate take perpendicular to ab and space z-axis
+C     if still indeterminate take perpendicular to ab and space x-axis
+      Cosg = P31*Q31 + P32*Q32 + P33*Q33
+      Cosg = dmin1(one,Cosg)
+      Cosg = dmax1(-one,Cosg)
+      Sing = dsqrt(one-Cosg*Cosg)
+C     modified rotation testing.
+C     this fix  cures the small angle problem.
+      if ( dabs(Cosg).le.pt9 ) then
+         P21 = (P32*Q33-P33*Q32)/Sing
+         P22 = (P33*Q31-P31*Q33)/Sing
+         P23 = (P31*Q32-P32*Q31)/Sing
+      else
+C     calculate (p-q)*(p+q), etc.
+         ppq1 = P31 + Q31
+         ppq2 = P32 + Q32
+         ppq3 = P33 + Q33
+         pmq1 = P31 - Q31
+         pmq2 = P32 - Q32
+         pmq3 = P33 - Q33
+         P21 = pmq2*ppq3 - ppq2*pmq3
+         P22 = pmq3*ppq1 - ppq3*pmq1
+         P23 = pmq1*ppq2 - ppq1*pmq2
+         p2 = dsqrt(P21*P21+P22*P22+P23*P23)
+         Sing = pt5*p2
+         if ( Sing.ge.tenm12 ) then
+            temp = one/p2
+            P21 = P21*temp
+            P22 = P22*temp
+            P23 = P23*temp
+C
+         elseif ( dabs(P31).le.pt7 ) then
+C
+            p3131 = P31*P31
+            p3131 = dmin1(one,p3131)
+            sinp = dsqrt(one-p3131)
+            P21 = zero
+            P22 = P33/sinp
+            P23 = -P32/sinp
+         else
+C
+            p3333 = P33*P33
+            p3333 = dmin1(one,p3333)
+            sinp = dsqrt(one-p3333)
+            P21 = P32/sinp
+            P22 = -P31/sinp
+            P23 = zero
+         endif
+      endif
+      Q21 = P21
+      Q22 = P22
+      Q23 = P23
+C     find direction cosines of local x-axes
+      P11 = P22*P33 - P23*P32
+      P12 = P23*P31 - P21*P33
+      P13 = P21*P32 - P22*P31
+      Q11 = Q22*Q33 - Q23*Q32
+      Q12 = Q23*Q31 - Q21*Q33
+      Q13 = Q21*Q32 - Q22*Q31
+C     find coordinates of c relative to local axes at a
+      Acx = (Cx-Ax)*P11 + (Cy-Ay)*P12 + (Cz-Az)*P13
+      Acy = (Cx-Ax)*P21 + (Cy-Ay)*P22 + (Cz-Az)*P23
+C     set acy=0  if close
+      if ( dabs(Acy).le.pt0001 ) Acy = zero
+      Acz = (Cx-Ax)*P31 + (Cy-Ay)*P32 + (Cz-Az)*P33
+      Acy2 = Acy*Acy
+C     *****************************************************************
+C     direction cosines of cd local axes with respect to ab local axes
+C     (cosg,0,-sing)  (0,1,0)  (sing,0,cosg)
+C     *****************************************************************
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,1144 @@
+@* gpurdf.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] INTC                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IEND    JEND    KEND    LEND    TQNEW                  
+\item[Uses]  IEND    IMJ     IMKJML  IPURE   IRANGE  ISTART  JEND   
+             JPURE   JRANGE  JSTART  KEND    KML     KPURE   KRANGE 
+             KSTART  LAMAX   LBMAX   LCMAX   LDMAX   LEND    LENTQ  
+             LPURE   LR1     LRANGE  LSTART  PT5     R1      R2     
+             R3      R3OV2   R4      TQ      TQNEW   UBOUND  ULPURE 
+             Z1      Z2      Z3                                     
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GENL2E                                                 
+                                                                    
+\end{description}
+
+\begin{verbatim}
+***********************************************************************
+     routine to transform (in a step-wise fashion) the 6d integrals
+     to the five pure d integrals.
+     this routine will also transform 10f to seven f.
+     this routine is divided roughly into three sections.
+     1.  initialization -- the various indexing arrays are filled,
+         and some common variables are computed.
+     2.  restoration of shell duplicates -- in this phase, the
+         shell duplicates are restored.  this essentially un-does
+         the work done by the if-checks in the a. o. loop in the
+         main program.  it is undoubtedly more efficient to compute
+         the minimum number of integrals, because generally the
+         restoration process does not require multiplies.  there are
+         six restoration cases, and they are explained in detail below.
+         this section was filched from the xuncon program of
+         g-73 (l312).  this section was coded and extensively checked
+         around christmas 1975.
+     3.  transformation -- the final section is devoted to the actual
+         transformation.  as most of the transformation is a unit
+         transformation, it is pretty much explicitely written out.
+         this section differs from the xuncon counterpart in that
+         it does not require the intermediate compression steps, and
+         is therefore more efficient.  the actual transformation steps
+         have been optimized so as to reduce the total number
+         of multiplications.  the functions are ordered in increasing
+         m-combination, with the plus combination always first.
+         the routine is capable of performing mixed transformations,
+         ie. pure-d, third-order, and vice-versa.  at the end of this
+         section, the shell duplicates are compressed out, along with
+         extraneous integrals.
+         note that this routine modifies iend, jend, kend and
+         lend.  this may be improtant if this routine is incorporated
+         into other overlays.  where possible (everywhere)
+         running indices are used rather than computed indices to re-
+         duce the required number of multiplications.
+
+     in general, this routine deviates from the genl2e tradition in
+     that it has been coded as efficiently as possible.
+***********************************************************************
+
+
+     input comes in through intc and the following
+     labeled commons.
+
+
+\end{verbatim}
+
+@a
+      subroutine gpurdf(INTC)
+      implicit none
+      double precision Dbuf2e , dx2 , dy2 , dz2 , fx2y , fx2z , fx3 , 
+     &                 fxy2 , fxz2 , fy2z , fy3 , fyz2 , fz3 , Pt5 , 
+     &                 R1 , R2 , R3 , R3ov2 , R4 , Root15
+      double precision Root3 , Root5 , Tq , Tqnew , Z1 , Z2 , Z3
+      integer i , Iend , iendp , iflag , Ifpure , iind , ij , ijk , 
+     &        Imj , Imk , Imkjml , In , ind , indis , indjs , indks , 
+     &        inds , inds1 , inds2 , indx
+      integer indx1 , indx2 , indx3 , inew , INTC , intcnt , Iout , 
+     &        Ipunch , Ipurd , Ipure , Ipurf , Irange , irm1 , irmi , 
+     &        irngp , irp1 , isj , Istart , istm1 , itemp
+      integer Itype , j , Jend , jendp , jind , jklr1 , jklr2 , jklr3 , 
+     &        jklr4 , jklr5 , jklr6 , jklr7 , jklr8 , jklr9 , jlim , 
+     &        Jml , jnd , jnew , Jpure , Jrange
+      integer jrngp , jsksl , Jstart , jstm1 , jtemp , Jtype , k , 
+     &        Kend , kendp , kind , kl , klim , klr1 , klr2 , klr3 , 
+     &        klr4 , klr5 , klr6 , klr7 , klr8
+      integer klr9 , klrp , Kml , knd , knew , Kpure , Krange , krm1 , 
+     &        krmk , krngp , krp1 , ksl , Kstart , kstm1 , ktemp , 
+     &        Ktype , l , Lamax , Lbmax , Lbound
+      integer Lcmax , Ldmax , Lend , lendp , Lentq , limij , limijk , 
+     &        llim , lnd , lnew , Lpmax , Lpqmax , Lpure , Lqmax , Lr1 , 
+     &        lr2 , lr3 , lr4 , lr5 , lr6
+      integer lr7 , lr8 , lr9 , Lrange , lrngp , Lstart , lstm1 , 
+     &        Ltype , lwatq , lwatqn , N10ord , N5ord , N6ord , N7ord , 
+     &        Nordr , ntt , Numdf
+      integer Ubound , Ulpure
+      dimension Tqnew(10000)
+      dimension iind(20) , jind(20) , kind(20)
+      common /io    / In , Iout , Ipunch
+      common /twbuf2/ Tq(10000) , Dbuf2e(4760)
+      common /cfact / Pt5 , R3ov2 , Root3 , Root5 , Root15 , R1 , R2 , 
+     &                R3 , R4 , Z1 , Z2 , Z3
+      common /limit / Imj , Imk , Jml , Kml , Imkjml , Istart , Jstart , 
+     &                Kstart , Lstart , Iend , Jend , Kend , Lend , 
+     &                Irange , Jrange , Krange , Lrange , Lentq , Numdf
+      common /stypes/ Itype , Jtype , Ktype , Ltype
+      common /order / Nordr(20) , N6ord(10) , N5ord(9) , N10ord(10) , 
+     &                N7ord(7) , Lbound(4,3) , Ubound(4) , Ulpure(4)
+      common /max   / Lamax , Lbmax , Lcmax , Ldmax , Lpmax , Lqmax , 
+     &                Lpqmax
+      common /ipure / Ipurd , Ipurf
+      common /jpure / Ifpure(4,4) , Ipure , Jpure , Kpure , Lpure
+      equivalence (Tqnew(1),Tq(1))
+      equivalence (irp1,krp1) , (irm1,krm1) , (irmi,krmk)
+      equivalence (krmk,llim)
+      equivalence (Lr1,Lrange) , (klr1,ksl) , (jklr1,jsksl)
+C
+C***********************************************************************
+C     initialization section.
+C***********************************************************************
+C
+C     recover jend, etc. (iend is never destroyed by shell coincidence
+C     tests).
+      if ( iabs(Ipure)+iabs(Jpure)+iabs(Kpure)+iabs(Lpure).ne.0 ) then
+         Jend = Ubound(Lbmax)
+         Kend = Ubound(Lcmax)
+         Lend = Ubound(Ldmax)
+C
+C     indexing ranges are picked up from /limit/.
+C     compute range products and indexing biases.
+C
+         ksl = Krange*Lrange
+         jsksl = Jrange*ksl
+         isj = Irange*Jrange
+         istm1 = Istart - 1
+         jstm1 = Jstart - 1
+         kstm1 = Kstart - 1
+         lstm1 = Lstart - 1
+C
+C     compute indexing arrays.
+C     these arrays give the proper index into the array as dimensioned
+C     by the maximum ranges in a particular shell combination.
+C
+         itemp = 0
+         do 50 k = Kstart , Kend
+            kind(k) = itemp
+            itemp = itemp + Lrange
+ 50      continue
+         itemp = 0
+         do 100 j = Jstart , Jend
+            jind(j) = itemp
+            itemp = itemp + ksl
+ 100     continue
+         itemp = 0
+         do 150 i = Istart , Iend
+            iind(i) = itemp
+            itemp = itemp + jsksl
+ 150     continue
+C
+C
+C***********************************************************************
+C     second section, restore shell duplicates.
+C***********************************************************************
+C
+C
+C     in what follows, there are 6 cases to be considered.
+C
+C        case  condition          relation of ishell, etc.
+C        ----  ---------          ------------------------
+C
+C          1   none               all distinct, ie. no two shells are
+C                                 the same.
+C
+C          2   a                  ishell=jshell only (eg. (33,21)).
+C
+C          3   b                  kshell=lshell only (eg. (32,11)).
+C          4   c                  ishell=kshell and jshell=lshell only
+C                                 (eg. (21,21)).
+C
+C          5   ab                 ishell=jshell and kshell=lshell,
+C                                 (eg. (22,11)).
+C
+C          6   abc, ac, bc        all equal (eg. (22,22)).
+C
+C
+C     case 1 is the most frequently occurring case, and is tested for
+C     first.  the other cases are tested for essentially in that
+C     manner that reduces the number of if-statements.
+C
+C     if the product is non-zero, we have case 1.
+C
+         if ( Imj*Kml*Imkjml.eq.0 ) then
+C
+C     entry at this point implies that at least one of the 3
+C     possible shell coincidence flags is zero.
+C     the all equal case is easiest to detect.
+C
+            if ( Imj+Imkjml.eq.0 ) then
+C
+C
+C     ******************************************************************
+C     case 6, all shell indices are equal.
+C     ******************************************************************
+C
+C     the techniques of case 4 are employed.
+C     this case involves the most overhead, but is the least fre-
+C     quently executed part (less than or equal to nshell times
+C     per integral evaluation).
+C
+               indx1 = Lentq
+               indx2 = INTC + 1
+               ind = Iend + 1
+               do 170 i = Istart , Iend
+                  ind = ind - 1
+                  jnd = Jend + 1
+                  do 165 j = Jstart , Jend
+                     jnd = jnd - 1
+                     knd = Kend + 1
+                     do 160 k = Kstart , Kend
+                        knd = knd - 1
+                        lnd = Lend + 1
+                        do 158 l = Lstart , Lend
+                           lnd = lnd - 1
+C     now have all four indices (ind,jnd,knd,lnd).
+C     iflag is for determining where to pull the next integral from.
+C     iflag=0, integral comes from tqnew.
+C     iflag=1, integral comes from tq.
+C     indx2 steps backwards through tq.  it is decremented only when
+C     an integral is actually copied.
+C     indx1 steps input into tqnew.  it is always decremented.
+C     indx3 steps output from tqnew into tqnew.
+C     this index is computed on demand.
+C     note that in the following, ind, etc. are sorted.
+                           iflag = 1
+                           inew = ind
+                           jnew = jnd
+                           knew = knd
+                           lnew = lnd
+                           if ( inew.lt.jnew ) then
+C     switch (ij), and set iflag.
+                              itemp = inew
+                              inew = jnew
+                              jnew = itemp
+                              iflag = 0
+                           endif
+C     switch (kl) and set iflag.
+                           if ( knew.lt.lnew ) then
+                              itemp = knew
+                              knew = lnew
+                              lnew = itemp
+                              iflag = 0
+                           endif
+                           if ( inew.lt.knew ) then
+                           elseif ( inew.eq.knew ) then
+                              if ( jnew.ge.lnew ) goto 152
+                           else
+                              goto 152
+                           endif
+C     switch (ij) and (kl) and set iflag.
+                           itemp = inew
+                           inew = knew
+                           knew = itemp
+                           itemp = jnew
+                           jnew = lnew
+                           lnew = itemp
+                           goto 154
+C
+ 152                       if ( iflag.ne.0 ) then
+C     copy from tq to tqnew.
+                              indx2 = indx2 - 1
+                              Tqnew(indx1) = Tq(indx2)
+                              goto 156
+                           endif
+C     copy from tqnew to tqnew.
+ 154                       indx3 = iind(inew) + jind(jnew) + kind(knew)
+     &                             + lnew - lstm1
+                           Tqnew(indx1) = Tq(indx3)
+C     always decrement indx1.
+ 156                       indx1 = indx1 - 1
+ 158                    continue
+ 160                 continue
+ 165              continue
+ 170           continue
+C
+C     entry at this point implies that one or both of imj, imkjml
+C     is non-zero.
+C     therefore, imkjml=0 implies case 4.
+C
+            elseif ( Imkjml.eq.0 ) then
+C
+C
+C
+C     ******************************************************************
+C     case 4, ishell=kshell and jshell=lshell.
+C     ******************************************************************
+C
+C     this case (and also case 6) is somewhat complicated and a
+C     substantial amount of overhead is incurred.
+C
+C     the procedure is as follows.
+C
+C     we step backwards through (i,j,k,l), using the full possible
+C     range.
+C     inside the l-loop, the four indices are examined.  the following
+C     limits apply to the integrals in tq,
+C
+C        i.ge.k
+C        when i=k, j.ge.l
+C
+C     the four indices are tested against these conditions and
+C     either
+C
+C        1.  the conditions are met, in which case, the next
+C            sequentially decrementing integral is copied from tq to
+C            tqnew and the appropriate counters (indices) are
+C            decremented.
+C
+C        2.  the conditions are not satisfied.  in this case, due to the
+C            nature of the copy, the desired integral already resides
+C            in tqnew.
+C            it is transferred, and again
+C            indexing is done.
+C
+C     indx1 indexes in tqnew, and starts at lentq.
+C     indx2 indexes in tq, and starts at intc.
+C     indx3 indexes in tqnew when copying form tqnew to tqnew.  this
+C           index must be computed.
+C
+               indx1 = Lentq
+               indx2 = INTC + 1
+               ind = Iend + 1
+               do 190 i = Istart , Iend
+                  ind = ind - 1
+                  itemp = kind(ind) - jstm1
+                  jnd = Jend + 1
+                  do 180 j = Jstart , Jend
+                     jnd = jnd - 1
+                     jtemp = itemp + jnd
+                     knd = Kend + 1
+                     do 178 k = Kstart , Kend
+                        knd = knd - 1
+                        ktemp = jtemp + iind(knd)
+                        lnd = Lend + 1
+                        do 176 l = Lstart , Lend
+                           lnd = lnd - 1
+C     now in l-loop, perform tests.
+                           if ( ind.lt.knd ) then
+                           elseif ( ind.eq.knd ) then
+                              if ( jnd.ge.lnd ) goto 172
+                           else
+                              goto 172
+                           endif
+C     copy from tqnew to tqnew after computing indx3.
+                           indx3 = ktemp + jind(lnd)
+                           Tqnew(indx1) = Tqnew(indx3)
+                           goto 174
+C     copy next sequential integral from tq to tqnew.
+ 172                       indx2 = indx2 - 1
+                           Tqnew(indx1) = Tq(indx2)
+ 174                       indx1 = indx1 - 1
+ 176                    continue
+ 178                 continue
+ 180              continue
+C
+C     end of case 4.
+C
+ 190           continue
+C
+C     at this point, either imj or kml (or both) is (are) zero.
+C     test for both simultaneously zero.
+C
+            elseif ( Imj+Kml.ne.0 ) then
+C
+C     at this point, both are not zero together.
+C     (imj*imkjml*kml)=0 and the previous two tests  mean that at
+C     least one is zero.
+C     therefore, only test for one of them (imj).
+C
+               if ( Imj.ne.0 ) then
+C
+C
+C     ******************************************************************
+C     case 3, kshell=lshell only.
+C     ******************************************************************
+C
+C     currently, tq contains irange*jrange symmetric matrices
+C     ((krange*(krange+1))/2 elements in each).
+C     we desire to expand k.ge.l for each pair (ij) throughout.
+C     thus, tqnew will contain irange*jrange square matrices.
+C
+C     the tactic here is to fall backwards through all pairs (ij)
+C     and to perform a simple linear to square conversion
+C     for each.
+C     this process is accomplished in 2 stages for each pair (ij).
+C     first, the existing elements of the symmetric matrix are
+C     transferred to the appropriate places in tqnew.
+C     second, the matrix is expanded to square form in place in
+C     tqnew.
+C
+C     in any pass through the ij-loop, the lwatqn for the ntt word
+C     transfer is computed from indx1, a running index starting at lentq
+C     similarly, lwatq is maintained in indx2, a running index that
+C     starts at intc.
+C
+C     this unpack is bypassed if krange and lrange=1.
+C     since kshell=lshell, it follows that krange=lrange, and
+C     it is sufficient to test just krange.
+C
+                  if ( Krange.gt.1 ) then
+C     perform necessary initialization.
+                     ntt = (Krange*(Krange+1))/2
+                     krp1 = Krange + 1
+                     krm1 = Krange - 1
+                     lwatq = INTC
+                     lwatqn = Lentq
+                     do 200 ij = 1 , isj
+                        indx1 = lwatqn
+                        indx2 = lwatq
+                        lwatq = lwatq - ntt
+                        lwatqn = lwatqn - ksl
+C     perform ntt-word transfer.
+                        do 194 k = 1 , Krange
+                           llim = krp1 - k
+                           do 192 l = 1 , llim
+                              Tqnew(indx1) = Tq(indx2)
+                              indx2 = indx2 - 1
+                              indx1 = indx1 - 1
+ 192                       continue
+                           indx1 = indx1 - k
+ 194                    continue
+C     perform expansion of (kl) in place in tqnew.
+                        indx1 = lwatqn + 2
+                        indx2 = lwatqn + krp1
+                        do 198 k = 1 , krm1
+C     use inds1 and inds2 to preserve indx1 and indx2.
+                           inds1 = indx1
+                           inds2 = indx2
+                           krmk = Krange - k
+                           do 196 l = 1 , krmk
+                              Tqnew(indx1) = Tqnew(indx2)
+                              indx1 = indx1 + 1
+                              indx2 = indx2 + Krange
+ 196                       continue
+                           indx1 = inds1 + krp1
+                           indx2 = inds2 + krp1
+ 198                    continue
+C
+C     end of case 3.
+C
+ 200                 continue
+                  endif
+C
+C     all possible cases have been eliminated.
+C
+C
+C     ******************************************************************
+C     case 1, no operation required, integrals are ready for trans-
+C     formation.
+C     ******************************************************************
+C
+C
+C     ******************************************************************
+C     case 2, ishell=jshell.
+C     ******************************************************************
+C
+C     tq contains (irange*(irange+1))/2 rectangular matrices
+C     with each containing (lrange*krange) integrals.
+C     we desire to expand (ij) throughout into tqnew.
+C     to do this, we fall backwards through tq.
+C     the ploy is as follows,
+C        select a pair (ij) in decrementing mode.
+C        there are two possibilities,
+C             1. i.ge.j, here, the desired rectangular array
+C             is located in tq.
+C             it is copied to tqnew in descending mode, using running
+C             indices.
+C             2. i.lt.j, here, the desired array is already in tqnew.
+C             it is copied, again in descending mode, to its new
+C             resting place in tqnew.
+C
+C     note that if kshell=lshell, this case degenrates to a series
+C     of single element copies.
+C
+C     bypass expansion if irange=1.
+C     since ishell=jshell, it is only necessary to test irange.
+C
+               elseif ( Irange.gt.1 ) then
+C
+C     perform initialization.
+C     lwatq is picked up from intc   (indx2).
+C     lwatqn is picked up form mend   (indx1)
+C     these are maintained as running indices.
+C     thus, in any given pass, the only index that must be
+C     computed  is indx3 (based on ind and jnd).
+C
+                  indx1 = Lentq + 1
+                  indx2 = INTC + 1
+                  ind = Iend + 1
+                  do 210 i = Istart , Iend
+                     ind = ind - 1
+                     jnd = Jend + 1
+                     do 206 j = Jstart , Jend
+                        jnd = jnd - 1
+C     now have a pair (ind,jnd).  make tests and branch to
+C     particular copy code.
+                        if ( ind.lt.jnd ) then
+C     jnd.gt.ind.
+C     here, copy from tqnew to tqnew, using computed index indx3.
+                           indx3 = iind(jnd) + jind(ind) + ksl
+                           do 202 kl = 1 , ksl
+                              indx1 = indx1 - 1
+                              Tqnew(indx1) = Tqnew(indx3)
+                              indx3 = indx3 - 1
+ 202                       continue
+                        else
+C     preferred case, ind.ge.jnd.
+C     here, we copy from tq to tqnew sequentially backwards.
+                           do 204 kl = 1 , ksl
+                              indx1 = indx1 - 1
+                              indx2 = indx2 - 1
+                              Tqnew(indx1) = Tq(indx2)
+ 204                       continue
+                        endif
+ 206                 continue
+C
+C     end of case 2.
+C
+ 210              continue
+               endif
+C
+C
+C     ******************************************************************
+C     case 5, ishell=jshell and kshell=lshell.
+C     ******************************************************************
+C
+C     this case is essentially the same as cases 2 and 3 combined.
+C     lwa in tq is most conveniently specified by intc (maintained in
+C     indx2).
+C     lwa in tqnew is iind(ind)+jind(jnd)+ksl, or starting at
+C     mend, it is decremented by ksl on each pass.
+C
+C     for each pair (ind,jnd) we either
+C        (ind.ge.jnd) copy from tq to tqnew and then expand (kl) in
+C                     place in tqnew.
+C        (ind.lt.jnd) copy (still decrementing) directly from tqnew
+C                     to tqnew.
+C
+C     note that if  krange and lrange are 1, an alternative procedure
+C     must be used .
+C
+            elseif ( Krange.ne.1 ) then
+               lwatq = INTC
+               lwatqn = Lentq
+               ntt = (Krange*(Krange+1))/2
+               krp1 = Krange + 1
+               krm1 = Krange - 1
+               ind = Iend + 1
+               do 230 i = Istart , Iend
+                  ind = ind - 1
+                  jnd = Jend + 1
+                  do 225 j = Jstart , Jend
+                     jnd = jnd - 1
+C     test (ind,jnd) to determine the action to be taken.
+                     if ( ind.lt.jnd ) then
+C
+C     (ind.lt.jnd), desired array already resides in tqnew.
+C                   find it and copy it out.
+C     this is done by copy sequentially in reverse from tqnew to
+C     tqnew.
+C     indx1 steps input into tqnew.
+C     indx2 steps output from tqnew.
+C     determine indx1 from lwatqn, and decrement lwatqn.
+C     lwatqn (output) is computed from the standard indexing arrays.
+C
+                        indx1 = lwatqn
+                        lwatqn = lwatqn - ksl
+                        indx2 = iind(jnd) + jind(ind) + ksl
+C     copy over kl.
+                        do 212 kl = 1 , ksl
+                           Tqnew(indx1) = Tqnew(indx2)
+                           indx1 = indx1 - 1
+                           indx2 = indx2 - 1
+ 212                    continue
+                     else
+C     ind.ge.jnd, do as in case 3.
+C     copy ntt integrals from tq to tqnew with correct placement.
+                        indx2 = lwatq
+                        indx1 = lwatqn
+                        lwatq = lwatq - ntt
+                        lwatqn = lwatqn - ksl
+                        do 216 k = 1 , Krange
+                           llim = krp1 - k
+                           do 214 l = 1 , llim
+                              Tqnew(indx1) = Tq(indx2)
+                              indx2 = indx2 - 1
+                              indx1 = indx1 - 1
+ 214                       continue
+                           indx1 = indx1 - k
+ 216                    continue
+C     execute expansion of (kl).
+                        indx1 = lwatqn + 2
+                        indx2 = lwatqn + krp1
+                        do 220 k = 1 , krm1
+                           inds1 = indx1
+                           inds2 = indx2
+                           krmk = Krange - k
+                           do 218 l = 1 , krmk
+                              Tqnew(indx1) = Tqnew(indx2)
+                              indx1 = indx1 + 1
+                              indx2 = indx2 + Krange
+ 218                       continue
+                           indx1 = inds1 + krp1
+                           indx2 = inds2 + krp1
+ 220                    continue
+                     endif
+ 225              continue
+C
+ 230           continue
+            else
+C
+C     in case 5 (ishell=jshell and kshell=lshell), it is necessary
+C     to proceed differently if krange and lrange equal one.
+C     in this case, since numd.ne.0, we have what amounts to a symmetric
+C     matrix in (ij).  the dimension is either 6, 10, or 9.
+C     in any event, we merely perform a linear to square conversion.
+C
+C     the lwa in tq is clearly specified by intc.   (indx2)
+C     the lwa in tqnew is mend.   (indx1)
+C
+               indx1 = Lentq
+               indx2 = INTC
+               irp1 = Irange + 1
+               irm1 = Irange - 1
+C     arrange the ntt existing elements.
+               do 240 i = 1 , Irange
+                  jlim = irp1 - i
+                  do 235 j = 1 , jlim
+                     Tqnew(indx1) = Tq(indx2)
+                     indx2 = indx2 - 1
+                     indx1 = indx1 - 1
+ 235              continue
+                  indx1 = indx1 - i
+ 240           continue
+C     expand over (ij).
+C     the fwa is assumed to be 1.
+               indx1 = 2
+               indx2 = irp1
+               do 250 i = 1 , irm1
+                  inds1 = indx1
+                  inds2 = indx2
+                  irmi = Irange - i
+                  do 245 j = 1 , irmi
+                     Tqnew(indx1) = Tqnew(indx2)
+                     indx1 = indx1 + 1
+                     indx2 = indx2 + Jrange
+ 245              continue
+                  indx1 = inds1 + irp1
+                  indx2 = inds2 + irp1
+C
+C     end of case 5.
+C
+ 250           continue
+            endif
+         endif
+C
+C     end case 6.
+C
+C
+C
+C***********************************************************************
+C     transformation section.
+C***********************************************************************
+C
+C     we are finally ready to do, in a stepwise fashion, the 6d to 5d
+C     conversion.  at this point, it is appropriate to clean up the
+C     notation.
+C
+C     the loop order is (outermost) i, j, k, l (innermost).
+C
+C     the i-loop goes over the functions at center a.
+C     the j-loop goes over the functions at center b.
+C     the k-loop goes over the functions at center c.
+C     the l-loop goes over the functions at center d.
+C
+C     at least one center contains a d-function (ie. second-order
+C     gaussian).
+C
+C
+C     the transformation to pure d-functions is done step-wise,
+C     using the following transformation matrix.
+C
+C
+C        ( 1  0  0  0  0  0  0  0  0  0 ) ( s    )   ( s           )
+C        (                              ) (      )   (             )
+C        ( 0  1  0  0  0  0  0  0  0  0 ) ( x    )   ( x           )
+C        (                              ) (      )   (             )
+C        ( 0  0  1  0  0  0  0  0  0  0 ) ( y    )   ( y           )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  1  0  0  0  0  0  0 ) ( z    )   ( z           )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  0 -h -h  1  0  0  0 ) ( x**2 ) = ( 3*z**2-r**2 )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  0  r -r  0  0  0  0 ) ( y**2 )   ( x**2-y**2   )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  0  0  0  0  1  0  0 ) ( z**2 )   ( xy          )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  0  0  0  0  0  1  0 ) ( xy   )   ( xz          )
+C        (                              ) (      )   (             )
+C        ( 0  0  0  0  0  0  0  0  0  1 ) ( xz   )   ( yz          )
+C                                         (      )
+C                                         ( yz   )
+C
+C
+C     where h=0.5, and r=gsqrt(3.0)/2.0.
+C     since this transformation is close to an identity transformation,
+C     only the required steps are actually carried out.
+C
+C
+C     the transformation matrix for obtaining the pure f-functions
+C     is to complicated to depict here.  see the jb94 programming notes.
+C
+C
+C     the number of words in tqnew is equal to (irange*jrange*krange*
+C     lrange).
+C
+C     all further operations take place entirely in tqnew.
+C     the current order of functions is
+C
+C         1,2,3,4,5,   6,   7,   8, 9, 10
+C        (s,x,y,z,x**2,y**2,z**2,xy,xz,yz)
+C
+C     initialization section.
+C
+C     accumulate all increments for possible d-transformation at
+C     all 4 centers.
+         lr2 = Lr1 + Lr1
+         lr3 = lr2 + Lr1
+         lr4 = lr3 + Lr1
+         lr5 = lr4 + Lr1
+         klr2 = klr1 + klr1
+         klr3 = klr2 + klr1
+         klr4 = klr3 + klr1
+         klr5 = klr4 + klr1
+         jklr2 = jklr1 + jklr1
+         jklr3 = jklr2 + jklr1
+         jklr4 = jklr3 + jklr1
+         jklr5 = jklr4 + jklr1
+C
+C     set pure end-points and pure ranges.
+         iendp = Iend
+         if ( Ipure.ne.0 ) iendp = Ulpure(Lamax)
+         jendp = Jend
+         if ( Jpure.ne.0 ) jendp = Ulpure(Lbmax)
+         kendp = Kend
+         if ( Kpure.ne.0 ) kendp = Ulpure(Lcmax)
+         lendp = Lend
+         if ( Lpure.ne.0 ) lendp = Ulpure(Ldmax)
+         irngp = iendp - istm1
+         jrngp = jendp - jstm1
+         krngp = kendp - kstm1
+         lrngp = lendp - lstm1
+C
+C     set end-points for combined loops.
+         limij = Irange*Jrange
+         limijk = limij*Krange
+         klrp = krngp*lrngp
+C
+C
+C     determine transformation mode at center d.
+         if ( Lpure.lt.0 ) then
+C
+C     perform 6d to 5d transform at center d.
+C     the starting address is specified by 5-lstart+1 because the first
+C     d-function is nr. 5 (x**2).
+C     the index is stepped by lrange to get to the next set.
+C     this transformation is executed (irange*jrange*krange) times.
+C
+            indx = 5 - lstm1
+C
+            do 260 ijk = 1 , limijk
+C
+C     one triple (ijk) has been specified, do transformation at d.
+C     pick up the squared functions.
+               dx2 = Tqnew(indx)
+               dy2 = Tqnew(indx+1)
+               dz2 = Tqnew(indx+2)
+C
+C     compute transformed functions and fill into tqnew.
+               Tqnew(indx) = dz2 - Pt5*(dx2+dy2)
+               Tqnew(indx+1) = Tqnew(indx+4)
+               Tqnew(indx+2) = Tqnew(indx+5)
+               Tqnew(indx+4) = Tqnew(indx+3)
+               Tqnew(indx+3) = R3ov2*(dx2-dy2)
+C
+               indx = indx + Lrange
+C
+C     branch to test for next center.
+ 260        continue
+         elseif ( Lpure.ne.0 ) then
+C
+C
+C
+C     perform 10f to 7f transformation at center d.
+C
+C     here we have only the possibility of pure f, indx starts at 1.
+C     indx is incremented by lrange.
+            indx = 1
+C
+            do 280 ijk = 1 , limijk
+C
+C     one triple (ijk) has been specified, do f-transformation at d.
+C     pick functions at d.
+               fx3 = Tqnew(indx)
+               fy3 = Tqnew(indx+1)
+               fz3 = Tqnew(indx+2)
+               fxy2 = Tqnew(indx+3)
+               fx2y = Tqnew(indx+4)
+               fx2z = Tqnew(indx+5)
+               fxz2 = Tqnew(indx+6)
+               fyz2 = Tqnew(indx+7)
+               fy2z = Tqnew(indx+8)
+C
+C     perform transformation and fill into tqnew.
+               Tqnew(indx) = fz3 - R2*(fx2z+fy2z)
+               Tqnew(indx+1) = R4*(Z1*fxz2-fx3-Z2*fxy2)
+               Tqnew(indx+2) = R4*(Z1*fyz2-fy3-Z2*fx2y)
+               Tqnew(indx+3) = R3*(fx2z-fy2z)
+               Tqnew(indx+4) = Tqnew(indx+9)
+               Tqnew(indx+5) = R1*(fx3-Z3*fxy2)
+               Tqnew(indx+6) = R1*(Z3*fx2y-fy3)
+C
+               indx = indx + Lrange
+ 280        continue
+         endif
+C
+C
+C
+C     test for possible d or f transformation at center c.
+         if ( Kpure.lt.0 ) then
+C
+C     perform d-transformation at center c.
+C
+C     loop over all pairs (ij), and then step over all l.
+C     indx starts at (5-kstart)*lrange+1 to step past possible non-d
+C     functions at c.
+C     indx is maintained in inds, which is incremented by ksl.
+            inds = (5-Kstart)*Lrange + 1
+C
+C     commence loop over all pairs.
+            do 300 ij = 1 , limij
+C
+C     a pair (ij) has been specified, perform loop over functions at d.
+               indx = inds
+               do 290 l = 1 , lrngp
+C
+C     pick up squared functions.
+                  dx2 = Tqnew(indx)
+                  dy2 = Tqnew(indx+Lr1)
+                  dz2 = Tqnew(indx+lr2)
+C
+C     compute pure d-functions and fill into tqnew.
+                  Tqnew(indx) = dz2 - Pt5*(dx2+dy2)
+                  Tqnew(indx+Lr1) = Tqnew(indx+lr4)
+                  Tqnew(indx+lr2) = Tqnew(indx+lr5)
+                  Tqnew(indx+lr4) = Tqnew(indx+lr3)
+                  Tqnew(indx+lr3) = R3ov2*(dx2-dy2)
+C
+                  indx = indx + 1
+ 290           continue
+               inds = inds + ksl
+C
+C     go to test for center b.
+ 300        continue
+         elseif ( Kpure.ne.0 ) then
+C
+C
+C
+C     perform 10f to 7f transformation at center c.
+C     accumulate additional increments.
+            lr6 = lr5 + Lr1
+            lr7 = lr6 + Lr1
+            lr8 = lr7 + Lr1
+            lr9 = lr8 + Lr1
+C
+C     set initial index.
+            inds = 1
+C
+C     commence loop over all (ij)-pairs.
+            do 320 ij = 1 , limij
+C     set running index.
+               indx = inds
+C     loop over possible functions at d.
+               do 310 l = 1 , lrngp
+C     pick up third-order integrals.
+                  fx3 = Tqnew(indx)
+                  fy3 = Tqnew(indx+Lr1)
+                  fz3 = Tqnew(indx+lr2)
+                  fxy2 = Tqnew(indx+lr3)
+                  fx2y = Tqnew(indx+lr4)
+                  fx2z = Tqnew(indx+lr5)
+                  fxz2 = Tqnew(indx+lr6)
+                  fyz2 = Tqnew(indx+lr7)
+                  fy2z = Tqnew(indx+lr8)
+C
+C     compute pure-f integrals and fill into tqnew.
+                  Tqnew(indx) = fz3 - R2*(fx2z+fy2z)
+                  Tqnew(indx+Lr1) = R4*(Z1*fxz2-fx3-Z2*fxy2)
+                  Tqnew(indx+lr2) = R4*(Z1*fyz2-fy3-Z2*fx2y)
+                  Tqnew(indx+lr3) = R3*(fx2z-fy2z)
+                  Tqnew(indx+lr4) = Tqnew(indx+lr9)
+                  Tqnew(indx+lr5) = R1*(fx3-Z3*fxy2)
+                  Tqnew(indx+lr6) = R1*(Z3*fx2y-fy3)
+C
+                  indx = indx + 1
+ 310           continue
+               inds = inds + ksl
+ 320        continue
+         endif
+C
+C
+C
+C     test for possible transformation at center b.
+         if ( Jpure.lt.0 ) then
+C
+C     perform 6d to 5d transformation at center b.
+C
+C     for each value of i, loop over all values at c and d.
+C     inds starts at (5-jstart)*ksl+1 to step past possible non-d
+C     functions at b.
+C
+            indis = (5-Jstart)*ksl + 1
+C
+C     commence loop over possible values of i.
+            do 340 i = 1 , Irange
+               indks = indis
+C
+C     loop over all k and l values, performing transformation.
+               do 330 k = 1 , krngp
+                  indx = indks
+                  do 325 l = 1 , lrngp
+C
+C     pick up squared functions.
+                     dx2 = Tqnew(indx)
+                     dy2 = Tqnew(indx+klr1)
+                     dz2 = Tqnew(indx+klr2)
+C
+C     compute transformed functions and fill into tqnew.
+                     Tqnew(indx) = dz2 - Pt5*(dx2+dy2)
+                     Tqnew(indx+klr1) = Tqnew(indx+klr4)
+                     Tqnew(indx+klr2) = Tqnew(indx+klr5)
+                     Tqnew(indx+klr4) = Tqnew(indx+klr3)
+                     Tqnew(indx+klr3) = R3ov2*(dx2-dy2)
+C
+                     indx = indx + 1
+ 325              continue
+                  indks = indks + Lrange
+ 330           continue
+               indis = indis + jsksl
+C
+C     go to test for transformation at center a.
+ 340        continue
+         elseif ( Jpure.ne.0 ) then
+C
+C
+C     perform f-transformation at center b.
+C
+C     obtain additional increments.
+            klr6 = klr5 + klr1
+            klr7 = klr6 + klr1
+            klr8 = klr7 + klr1
+            klr9 = klr8 + klr1
+C
+C     loop over all values of i.  note that the starting
+C     index is one (if we are here, this must be puref).
+C
+            indis = 1
+            do 360 i = 1 , Irange
+               indks = indis
+               do 350 k = 1 , krngp
+                  indx = indks
+                  do 345 l = 1 , lrngp
+C
+C     pick up functions.
+                     fx3 = Tqnew(indx)
+                     fy3 = Tqnew(indx+klr1)
+                     fz3 = Tqnew(indx+klr2)
+                     fxy2 = Tqnew(indx+klr3)
+                     fx2y = Tqnew(indx+klr4)
+                     fx2z = Tqnew(indx+klr5)
+                     fxz2 = Tqnew(indx+klr6)
+                     fyz2 = Tqnew(indx+klr7)
+                     fy2z = Tqnew(indx+klr8)
+C
+C     perform transformation to pure f-functions and fill into tqnew.
+                     Tqnew(indx) = fz3 - R2*(fx2z+fy2z)
+                     Tqnew(indx+klr1) = R4*(Z1*fxz2-fx3-Z2*fxy2)
+                     Tqnew(indx+klr2) = R4*(Z1*fyz2-fy3-Z2*fx2y)
+                     Tqnew(indx+klr3) = R3*(fx2z-fy2z)
+                     Tqnew(indx+klr4) = Tqnew(indx+klr9)
+                     Tqnew(indx+klr5) = R1*(fx3-Z3*fxy2)
+                     Tqnew(indx+klr6) = R1*(Z3*fx2y-fy3)
+C
+                     indx = indx + 1
+ 345              continue
+                  indks = indks + Lrange
+ 350           continue
+               indis = indis + jsksl
+ 360        continue
+         endif
+C
+C
+C
+C     test for possible transformation at center a.
+         if ( Ipure.lt.0 ) then
+C
+C
+C     perform d-transformation at center a.
+C     loop over all values of jkl.  the starting index
+C     must be set to step past possible non-d functions at a.
+            indjs = (5-Istart)*jsksl + 1
+C
+C     loop over all integrals at b, c, and d.
+            do 380 j = 1 , jrngp
+               indks = indjs
+               do 370 k = 1 , krngp
+                  indx = indks
+                  do 365 l = 1 , lrngp
+C
+C     pick up squared functions.
+                     dx2 = Tqnew(indx)
+                     dy2 = Tqnew(indx+jklr1)
+                     dz2 = Tqnew(indx+jklr2)
+C
+C     perform transformation and fill into tqnew.
+                     Tqnew(indx) = dz2 - Pt5*(dx2+dy2)
+                     Tqnew(indx+jklr1) = Tqnew(indx+jklr4)
+                     Tqnew(indx+jklr2) = Tqnew(indx+jklr5)
+                     Tqnew(indx+jklr4) = Tqnew(indx+jklr3)
+                     Tqnew(indx+jklr3) = R3ov2*(dx2-dy2)
+C
+                     indx = indx + 1
+ 365              continue
+                  indks = indks + Lrange
+ 370           continue
+               indjs = indjs + ksl
+C
+C     skip past f-transformation at a.
+ 380        continue
+         elseif ( Ipure.ne.0 ) then
+C
+C
+C
+C     perform f-transformation at center a.
+C     accumulate extra increments.
+            jklr6 = jklr5 + jklr1
+            jklr7 = jklr6 + jklr1
+            jklr8 = jklr7 + jklr1
+            jklr9 = jklr8 + jklr1
+C
+C     set starting index.
+            indjs = 1
+C
+C     commence f-transformation at center a.
+            do 400 j = 1 , jrngp
+               indks = indjs
+               do 390 k = 1 , krngp
+                  indx = indks
+                  do 385 l = 1 , lrngp
+C
+C     pick up functions.
+                     fx3 = Tqnew(indx)
+                     fy3 = Tqnew(indx+jklr1)
+                     fz3 = Tqnew(indx+jklr2)
+                     fxy2 = Tqnew(indx+jklr3)
+                     fx2y = Tqnew(indx+jklr4)
+                     fx2z = Tqnew(indx+jklr5)
+                     fxz2 = Tqnew(indx+jklr6)
+                     fyz2 = Tqnew(indx+jklr7)
+                     fy2z = Tqnew(indx+jklr8)
+C
+C     perform f-transformation and fill into tqnew.
+                     Tqnew(indx) = fz3 - R2*(fx2z+fy2z)
+                     Tqnew(indx+jklr1) = R4*(Z1*fxz2-fx3-Z2*fxy2)
+                     Tqnew(indx+jklr2) = R4*(Z1*fyz2-fy3-Z2*fx2y)
+                     Tqnew(indx+jklr3) = R3*(fx2z-fy2z)
+                     Tqnew(indx+jklr4) = Tqnew(indx+jklr9)
+                     Tqnew(indx+jklr5) = R1*(fx3-Z3*fxy2)
+                     Tqnew(indx+jklr6) = R1*(Z3*fx2y-fy3)
+C
+                     indx = indx + 1
+ 385              continue
+                  indks = indks + Lrange
+ 390           continue
+               indjs = indjs + ksl
+ 400        continue
+         endif
+C
+C
+C
+C     transformation at all four centers is now complete.
+C     the last step is to compress the integral array and eliminate
+C     (if necessary) the shell duplicates.
+C     this phase is always executed, because at this point,
+C     at least one center has been transformed, and even if there
+C     are no shell duplicates, it is necessary to clean up after the
+C     transformations.
+         intcnt = 0
+         jlim = jendp
+         klim = kendp
+         do 450 i = Istart , iendp
+            itemp = iind(i) - lstm1
+            if ( Imj.eq.0 ) jlim = i
+            if ( Imkjml.eq.0 ) klim = i
+            do 420 j = Jstart , jlim
+               jtemp = itemp + jind(j)
+               do 410 k = Kstart , klim
+                  ktemp = jtemp + kind(k)
+                  llim = lendp
+                  if ( Kml.eq.0 ) llim = k
+                  if ( Imkjml+iabs(i-k).eq.0 ) llim = j
+                  do 405 l = Lstart , llim
+                     intcnt = intcnt + 1
+                     Tqnew(intcnt) = Tqnew(ktemp+l)
+ 405              continue
+ 410           continue
+ 420        continue
+ 450     continue
+C
+C
+C     update iend, etc. in /limit/.
+         Iend = iendp
+         Jend = jendp
+         Kend = kendp
+         Lend = lendp
+      endif
+C
+C
+      return
+C
+      end
+@* INDEX.

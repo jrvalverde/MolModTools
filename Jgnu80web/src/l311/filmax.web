@@ -1,0 +1,64 @@
+@* filmax.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CMAX    ERROR1  ERROR2  VAR1    VAR2                   
+\item[Uses]  C1      C2      ERROR1  NSHELL  SHELLA  SHELLN         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SHELL                                                  
+                                                                    
+\end{description}
+@a
+      subroutine filmax
+      implicit none
+      double precision a1 , a2 , Auxvar , C1 , C2 , C3 , Cmax , Cmaxa , 
+     &                 Cmaxb , Cmaxc , Cmaxd , Error1 , Error2 , Exx , 
+     &                 fiften , five , pt0001 , Var1 , Var2 , X
+      double precision Y , Z
+      integer i , Isml , Ismlp , Ismlq , j , Jan , l , MAXPRM , MAXS21 , 
+     &        MAXSH1 , MAXSHL , Maxtyp , n , Nshell
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      common /auxvar/ Auxvar , Var1 , Var2
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      common /maxc  / Cmax(240) , Cmaxa(10) , Cmaxb(10) , Cmaxc(10) , 
+     &                Cmaxd(10) , Ismlp(100) , Ismlq , Isml , Error1 , 
+     &                Error2
+      data five/5.0D0/ , fiften/15.0D0/
+      data pt0001/1.0D-4/
+C
+C
+C     finds maximum value of s and p coefficients
+C     also sets limits determining how accurately a set of integrals
+C     need be evaluated in order to guarantee an overall integral
+C     accuracy of 10**-6
+C
+C
+C
+C
+C
+C
+      do 100 i = 1 , Nshell
+         l = Shella(i)
+         n = l + Shelln(i) - 1
+         do 50 j = l , n
+            a1 = dabs(C1(j))
+            a2 = dabs(C2(j))
+            Cmax(j) = dmax1(a1,a2)
+ 50      continue
+ 100  continue
+      Error1 = pt0001
+      Var1 = fiften
+      Var2 = five
+      Error2 = Error1*Error1
+      return
+C
+      end
+@* INDEX.

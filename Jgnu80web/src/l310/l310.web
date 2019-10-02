@@ -1,0 +1,37 @@
+@* l310.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOP3                                                   
+\item[Transmits as argument]  IOP                                                    
+\item[Uses]  IOP                                                    
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GENL2E  NEXTOV                                         
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l310(NCHAIN)
+      implicit none
+      integer i , Iop , Iop3 , jump , NCHAIN , nextov
+C
+C  d,f and iop3 are to be used for direct calculations
+      double precision d(1) , f(1)
+      common /iop   / Iop(50)
+      common /iop3  / Iop3(50)
+      do 100 i = 1 , 50
+         Iop3(i) = Iop(i)
+ 100  continue
+C  compute the integrals here if not direct
+      jump = 0
+      if ( Iop(45).eq.0 ) call genl2e(d,f,Iop,jump)
+      NCHAIN = nextov(jump)
+      return
+C
+      end
+@* INDEX.
