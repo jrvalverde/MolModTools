@@ -1,0 +1,59 @@
+@*bdfind.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IAT
+\item[INPUT:] JAT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  IBXM    LABEL   NBAS
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FNDMOL  IHTYP
+
+\end{description}
+@a
+C*****************************************************************************
+      function bdfind(IAT,JAT)
+C*****************************************************************************
+      implicit none
+      integer IAT , Iathy , ib , ibas , Ibxm , Ispin , JAT , k , Label ,
+     &        Larc , lstar , Lstocc , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Naoctr , Naol
+      integer Natoms , Nbas , Ndim
+      logical bdfind , ifound , jfound
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      data lstar/1H*/
+C
+C  set bdfind=.true. if there is at least one bond between atoms iat and jat
+C
+      do 100 ibas = 1 , Nbas
+         ib = Ibxm(ibas)
+         if ( Label(ib,2).ne.lstar ) then
+            if ( Label(ib,3).eq.1 ) then
+               ifound = .false.
+               jfound = .false.
+               do 10 k = 4 , 6
+                  if ( Label(ib,k).eq.IAT ) ifound = .true.
+                  if ( Label(ib,k).eq.JAT ) jfound = .true.
+ 10            continue
+               if ( ifound .and. jfound ) goto 200
+            endif
+         endif
+ 100  continue
+      bdfind = .false.
+      return
+ 200  bdfind = .true.
+      return
+      end
+@* INDEX.

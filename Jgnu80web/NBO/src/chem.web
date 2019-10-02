@@ -1,0 +1,125 @@
+@*chem.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] NAT
+\item[INPUT:] NATOMS
+\item[OUTPUT:] LISTA
+\item[OUTPUT:] NL
+\item[OUTPUT:] ISTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       DEBYTE  IDIGIT  NAMEAT
+\item[Called by]   NBOSUM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine chem(NAT,NATOMS,LISTA,NL,ISTR)
+C*****************************************************************************
+      implicit none
+      integer iat , iblnk , ibyte , ic , ih , il , ileft , inum ,
+     &        iright , ISTR , itemp , jat , LISTA , MAXD , nameat ,
+     &        NAT , NATOMS , nd , NL
+      dimension LISTA(NATOMS,2) , ISTR(80)
+C
+      parameter (MAXD=4)
+      dimension inum(MAXD) , ibyte(4)
+      data ic , ih , iblnk , ileft , iright/'C' , 'H' , ' ' , '(' , ')'/
+C
+C  build the chemical formula from the list of atoms in lista:
+C
+C  get chemical symbols:
+C
+      do 100 iat = 1 , NAT
+         LISTA(iat,1) = nameat(LISTA(iat,1))
+ 100  continue
+C
+C  alphabetize these symbols:
+C
+      do 200 iat = 1 , NAT - 1
+         do 150 jat = 1 , NAT - iat
+            if ( LISTA(jat,1).gt.LISTA(jat+1,1) ) then
+               itemp = LISTA(jat,1)
+               LISTA(jat,1) = LISTA(jat+1,1)
+               LISTA(jat+1,1) = itemp
+               itemp = LISTA(jat,2)
+               LISTA(jat,2) = LISTA(jat+1,2)
+               LISTA(jat+1,2) = itemp
+            endif
+ 150     continue
+ 200  continue
+C
+C  build chemical formula in istr:
+C
+C  first carbon...
+C
+      NL = 1
+      ISTR(NL) = ileft
+      do 300 iat = 1 , NAT
+         call debyte(LISTA(iat,1),ibyte)
+         if ( ibyte(1).eq.iblnk .and. ibyte(2).eq.ic ) then
+            NL = NL + 1
+            ISTR(NL) = ic
+            if ( LISTA(iat,2).ne.1 ) then
+               call idigit(LISTA(iat,2),inum,nd,MAXD)
+               do 210 il = 1 , nd
+                  NL = NL + 1
+                  ISTR(NL) = inum(il)
+ 210           continue
+            endif
+            LISTA(iat,2) = 0
+         endif
+ 300  continue
+C
+C  then hydrogen...
+C
+      do 400 iat = 1 , NAT
+         call debyte(LISTA(iat,1),ibyte)
+         if ( ibyte(1).eq.iblnk .and. ibyte(2).eq.ih ) then
+            NL = NL + 1
+            ISTR(NL) = ih
+            if ( LISTA(iat,2).ne.1 ) then
+               call idigit(LISTA(iat,2),inum,nd,MAXD)
+               do 310 il = 1 , nd
+                  NL = NL + 1
+                  ISTR(NL) = inum(il)
+ 310           continue
+            endif
+            LISTA(iat,2) = 0
+         endif
+ 400  continue
+C
+C  and now the rest...
+C
+      do 500 iat = 1 , NAT
+         if ( LISTA(iat,2).ne.0 ) then
+            call debyte(LISTA(iat,1),ibyte)
+            if ( ibyte(1).ne.iblnk ) then
+               NL = NL + 1
+               ISTR(NL) = ibyte(1)
+            endif
+            if ( ibyte(2).ne.iblnk ) then
+               NL = NL + 1
+               ISTR(NL) = ibyte(2)
+            endif
+            if ( LISTA(iat,2).ne.1 ) then
+               call idigit(LISTA(iat,2),inum,nd,MAXD)
+               do 410 il = 1 , nd
+                  NL = NL + 1
+                  ISTR(NL) = inum(il)
+ 410           continue
+            endif
+            LISTA(iat,2) = 0
+         endif
+ 500  continue
+      NL = NL + 1
+      ISTR(NL) = iright
+      return
+      end
+@* INDEX.

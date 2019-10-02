@@ -1,0 +1,42 @@
+@*febas.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] NSHELL
+\item[OUTPUT:] NEXP
+\item[INPUT:] ISCR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBINQR  NBREAD
+\item[Called by]   WRARC   WRBAS
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine febas(NSHELL,NEXP,ISCR)
+C*****************************************************************************
+      implicit none
+      integer ISCR , len , NEXP , nfile , NSHELL
+      dimension ISCR(*)
+C
+C  febas:  fetches the basis set info
+C
+      nfile = 5
+      call nbinqr(nfile)
+      if ( nfile.gt.0 ) then
+         call nbread(ISCR,1,nfile)
+         NSHELL = ISCR(1)
+         NEXP = ISCR(2)
+         len = 1 + (3*NSHELL+1)/2 + 5*NEXP
+         call nbread(ISCR,len,nfile)
+      else
+         NSHELL = 0
+      endif
+      return
+      end
+@* INDEX.

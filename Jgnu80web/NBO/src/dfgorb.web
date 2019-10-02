@@ -1,0 +1,556 @@
+@*dfgorb.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] RENORM
+\item[OUTPUT:] DM
+\item[OUTPUT:] T
+\item[OUTPUT:] ITRAN
+\item[INPUT:] IWCUBF
+\item[INPUT:] ITOPT
+\item[INPUT:] LFNPR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LIST    LORB
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  LIST    LORB    LORBC   NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       LIMTRN  TRNSPO
+\item[Called by]   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine dfgorb(RENORM,DM,T,ITRAN,IWCUBF,ITOPT,LFNPR)
+C*****************************************************************************
+      implicit none
+      double precision a , b , DM , eight , four , one , renor ,
+     &                 RENORM , rij , six , T , three , two , x , zero
+      integer i , ibas , id , idif , idtran , ifblk , iftran , igblk ,
+     &        igtran , Ispin , it , ITOPT , ITRAN , IWCUBF , j , l ,
+     &        lang , Larc , Lbl , lf
+      integer lf1 , lf1t , lf2 , lf3 , lfcub , lfcubt , LFNPR , lft ,
+     &        lg , lg1 , lg2 , lg3 , lgt , List , Lorb , Lorbc ,
+     &        Lstemt , Lstocc , m , MAXATM
+      integer MAXBAS , Munit , Mxao , Mxaolm , Mxbo , n1 , n2 , n3 ,
+     &        n4 , n5 , n6 , Naoctr , Naol , Natoms , Nbas , Ndim
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / List(6,MAXBAS) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      dimension T(Ndim,Ndim) , DM(Ndim,Ndim) , a(6,6) , b(6) , m(6) ,
+     &          RENORM(Ndim) , lf(3,3) , lfcub(3,3) , lft(3,3) ,
+     &          lfcubt(3,3) , lg(3,3) , lgt(3,3)
+      data lf/301 , 304 , 306 , 302 , 307 , 309 , 303 , 308 , 310/
+      data lfcub/306 , 304 , 301 , 309 , 302 , 307 , 303 , 308 , 310/
+      data lft/151 , 356 , 352 , 152 , 357 , 353 , 153 , 354 , 351/
+      data lfcubt/151 , 355 , 351 , 152 , 356 , 352 , 153 , 357 , 353/
+      data lg/402 , 407 , 409 , 403 , 408 , 410 , 405 , 412 , 414/
+      data lgt/251 , 455 , 459 , 252 , 452 , 456 , 253 , 453 , 457/
+      data zero , one , two , three , four , six , eight/0.0D0 , 1.0D0 ,
+     &     2.0D0 , 3.0D0 , 4.0D0 , 6.0D0 , 8.0D0/
+C**********************************************************************
+C
+C     subroutine to transform the overlap and density matrices if d, f, g
+C  orbitals are present, or transform a transformation matrix so that it
+C  starts from the raw AO instead of the pure ao basis
+C  this transformation will not work if dm is the bond-order matrix.
+C
+C         list(6,maxbas): the list of functions to be transformed
+C               list(1,i),list(2,i),list(3,i) are corresponding sets of
+C               d,f, or g functions.  it is assumed that, for example,
+C               the third dx2 function found in the angular momenta list "lorb"
+C               corresponds to the third dy2 and the third dz2 functions in
+C               the list of basis functions!
+C         itran=idtran+iftran+igtran
+C         idtran: the number of sets of cartesian d orbitals found
+C         iftran: the number of sets of cartesian f orbitals found
+C         igtran: the number of sets of cartesian g orbitals found
+C         a     : the transformation matrix
+C
+C         itopt : if zero, transform dm and s (in t) from raw AO to pure
+C                                                                   AO basis
+C                 if one,  pre-multiply t by the AO to pure ao transf.
+C                        --- this converts a transf. that starts from pure aos
+C                            to a transf. that starts from the raw aos
+C
+C         renorm: renormalization vector for cartesian to pure transform.
+C                 (produced if itopt=0, used as input if itopt=1)
+C
+C**********************************************************************
+      do 100 i = 1 , Nbas
+         Lorb(i) = 0
+ 100  continue
+      idtran = 0
+      n1 = 0
+      n2 = 0
+      n3 = 0
+      n4 = 0
+      n5 = 0
+      n6 = 0
+C...construct list:
+      do 200 ibas = 1 , Nbas
+C   dx2:
+         if ( Lorbc(ibas).eq.201 ) then
+            n1 = n1 + 1
+            List(1,n1) = ibas
+C   dy2:
+         elseif ( Lorbc(ibas).eq.204 ) then
+            n2 = n2 + 1
+            List(2,n2) = ibas
+C   dz2:
+         elseif ( Lorbc(ibas).eq.206 ) then
+            n3 = n3 + 1
+            List(3,n3) = ibas
+C   label dxy:
+         elseif ( Lorbc(ibas).eq.202 ) then
+            n4 = n4 + 1
+            Lorb(ibas) = 251
+C   label dxz:
+         elseif ( Lorbc(ibas).eq.203 ) then
+            n5 = n5 + 1
+            Lorb(ibas) = 252
+C   label dyz:
+         elseif ( Lorbc(ibas).eq.205 ) then
+            n6 = n6 + 1
+            Lorb(ibas) = 253
+         endif
+ 200  continue
+      if ( n1.eq.n2 .and. n1.eq.n3 ) then
+         if ( n1.eq.n4 .and. n1.eq.n5 .and. n1.eq.n6 ) then
+            idtran = n1
+            if ( idtran.ne.0 ) then
+C set up transform. coeff:
+C  s=r2=x2+y2+z2:
+               a(1,1) = one
+               a(2,1) = one
+               a(3,1) = one
+C  d(x2-y2):
+               a(1,2) = one
+               a(2,2) = -one
+               a(3,2) = zero
+C  d(3z2-r2)=-x2-y2+2z2:
+               a(1,3) = -one
+               a(2,3) = -one
+               a(3,3) = two
+               if ( ITOPT.ne.0 ) then
+                  do 205 j = 1 , 3
+                     renor = RENORM(List(j,1))
+                     do 202 i = 1 , 3
+                        a(i,j) = a(i,j)*renor
+ 202                 continue
+ 205              continue
+                  call trnspo(a,6,3)
+               endif
+C...loop over d sets in dlist:
+               do 210 id = 1 , idtran
+                  m(1) = List(1,id)
+                  m(2) = List(2,id)
+                  m(3) = List(3,id)
+C...transform s and dm:
+                  if ( ITOPT.ne.0 )
+     &                 call limtrn(T,m,a,b,Ndim,Nbas,6,3,-1)
+                  if ( ITOPT.eq.0 ) then
+                     call limtrn(T,m,a,b,Ndim,Nbas,6,3,0)
+                     call limtrn(DM,m,a,b,Ndim,Nbas,6,3,0)
+C...set the orbital labels for the 3 orbitals transformed:
+                     Lorb(m(1)) = 51
+                     Lorb(m(2)) = 254
+                     Lorb(m(3)) = 255
+                  endif
+ 210           continue
+            endif
+C**********************************************************************
+C  f orbitals
+            iftran = 0
+            do 240 ifblk = 1 , 3
+               n1 = 0
+               n2 = 0
+               n3 = 0
+               if ( IWCUBF.ne.0 ) then
+                  lf1 = lfcub(1,ifblk)
+                  lf2 = lfcub(2,ifblk)
+                  lf3 = lfcub(3,ifblk)
+               else
+                  lf1 = lf(1,ifblk)
+                  lf2 = lf(2,ifblk)
+                  lf3 = lf(3,ifblk)
+               endif
+C...construct the list:
+               do 220 ibas = 1 , Nbas
+                  if ( Lorbc(ibas).eq.lf1 ) then
+                     n1 = n1 + 1
+                     List(1,n1) = ibas
+                  elseif ( Lorbc(ibas).eq.lf2 ) then
+                     n2 = n2 + 1
+                     List(2,n2) = ibas
+                  elseif ( Lorbc(ibas).eq.lf3 ) then
+                     n3 = n3 + 1
+                     List(3,n3) = ibas
+                  endif
+ 220           continue
+               if ( n1.ne.n2 .or. n1.ne.n3 ) goto 500
+               if ( ifblk.eq.1 ) iftran = n1
+               if ( (ifblk.ne.1) .and. (iftran.ne.n1) ) goto 500
+               if ( iftran.eq.0 ) goto 280
+               if ( IWCUBF.ne.0 ) then
+C set up transform. coeff, cubic f orbitals
+C  px=x*r2, py=y*r2, pz=z*z2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  fx(z2-y2), fy(z2-x2), fz(x2-y2)
+                  a(1,2) = one
+                  a(2,2) = -one
+                  a(3,2) = zero
+C  fx(5z2-3r2), fy(5y2-3r2), fz(5z2-3r2)
+                  a(1,3) = -three
+                  a(2,3) = -three
+                  a(3,3) = two
+               elseif ( ifblk.le.1 ) then
+C set up transform. coeff, for first f block
+C  px=x*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  fx(x2-3y2)
+                  a(1,2) = one
+                  a(2,2) = -three
+                  a(3,2) = zero
+C  fx(5z2-r2)
+                  a(1,3) = -one
+                  a(2,3) = -one
+                  a(3,3) = four
+               elseif ( ifblk.eq.3 ) then
+C set up transform. coeff, for third f block
+C  pz z*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  fz(x2-y2)
+                  a(1,2) = one
+                  a(2,2) = -one
+                  a(3,2) = zero
+C  fz(5z2-3r2)
+                  a(1,3) = -three
+                  a(2,3) = -three
+                  a(3,3) = two
+               else
+C set up transform. coeff, for second f block
+C  py=y*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  fy(3x2-y2)
+                  a(1,2) = three
+                  a(2,2) = -one
+                  a(3,2) = zero
+C  fy(5z2-r2)
+                  a(1,3) = -one
+                  a(2,3) = -one
+                  a(3,3) = four
+               endif
+               if ( ITOPT.ne.0 ) then
+                  do 225 j = 1 , 3
+                     renor = RENORM(List(j,1))
+                     do 222 i = 1 , 3
+                        a(i,j) = a(i,j)*renor
+ 222                 continue
+ 225              continue
+                  call trnspo(a,6,3)
+               endif
+C...loop over f sets in list:
+               do 230 it = 1 , iftran
+                  m(1) = List(1,it)
+                  m(2) = List(2,it)
+                  m(3) = List(3,it)
+C...transform s and dm, or t (if itopt.ne.0)
+                  if ( ITOPT.ne.0 )
+     &                 call limtrn(T,m,a,b,Ndim,Nbas,6,3,-1)
+                  if ( ITOPT.eq.0 ) then
+                     call limtrn(T,m,a,b,Ndim,Nbas,6,3,0)
+                     call limtrn(DM,m,a,b,Ndim,Nbas,6,3,0)
+                  endif
+C...fix the orbital labels for the 3 orbitals transformed:
+                  if ( IWCUBF.ne.0 ) then
+                     Lorb(m(1)) = lfcubt(1,ifblk)
+                     Lorb(m(2)) = lfcubt(2,ifblk)
+                     Lorb(m(3)) = lfcubt(3,ifblk)
+                  else
+                     Lorb(m(1)) = lft(1,ifblk)
+                     Lorb(m(2)) = lft(2,ifblk)
+                     Lorb(m(3)) = lft(3,ifblk)
+                  endif
+ 230           continue
+ 240        continue
+C   search for fxyz and relabel:
+            lf1 = 305
+            lf1t = 355
+            if ( IWCUBF.ne.0 ) lf1t = 354
+            n1 = 0
+            do 260 ibas = 1 , Nbas
+               if ( Lorbc(ibas).eq.lf1 ) then
+                  n1 = n1 + 1
+                  Lorb(ibas) = lf1t
+               endif
+ 260        continue
+            if ( iftran.ne.n1 ) goto 500
+C  g orbitals
+ 280        igtran = 0
+            do 320 igblk = 1 , 3
+               n1 = 0
+               n2 = 0
+               n3 = 0
+               lg1 = lg(1,igblk)
+               lg2 = lg(2,igblk)
+               lg3 = lg(3,igblk)
+C...construct the list:
+               do 290 ibas = 1 , Nbas
+                  lang = Lorbc(ibas)
+                  if ( lang.eq.lg1 ) then
+                     n1 = n1 + 1
+                     List(1,n1) = ibas
+                  elseif ( lang.eq.lg2 ) then
+                     n2 = n2 + 1
+                     List(2,n2) = ibas
+                  elseif ( lang.eq.lg3 ) then
+                     n3 = n3 + 1
+                     List(3,n3) = ibas
+                  endif
+ 290           continue
+               if ( n1.ne.n2 .or. n1.ne.n3 ) goto 600
+               if ( igblk.eq.1 ) igtran = n1
+               if ( (igblk.ne.1) .and. (igtran.ne.n1) ) goto 600
+               if ( igtran.eq.0 ) goto 380
+               if ( igblk.le.1 ) then
+C set up transform. coeff, for first g block
+C  dxy=xy*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  g(2s)
+                  a(1,2) = one
+                  a(2,2) = -one
+                  a(3,2) = six
+C  g(4s)
+                  a(1,3) = one
+                  a(2,3) = -one
+                  a(3,3) = zero
+               elseif ( igblk.eq.3 ) then
+C set up transform. coeff, for third g block
+C  dyz=yz*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  g(1s)
+                  a(1,2) = -three
+                  a(2,2) = -three
+                  a(3,2) = four
+C  g(3s)
+                  a(1,3) = three
+                  a(2,3) = -one
+                  a(3,3) = zero
+               else
+C set up transform. coeff, for second g block
+C  dxz=xz*r2
+                  a(1,1) = one
+                  a(2,1) = one
+                  a(3,1) = one
+C  g(1c)
+                  a(1,2) = -three
+                  a(2,2) = -three
+                  a(3,2) = four
+C  g(3c)
+                  a(1,3) = one
+                  a(2,3) = -three
+                  a(3,3) = zero
+               endif
+               if ( ITOPT.ne.0 ) then
+                  do 295 j = 1 , 3
+                     renor = RENORM(List(j,1))
+                     do 292 i = 1 , 3
+                        a(i,j) = a(i,j)*renor
+ 292                 continue
+ 295              continue
+                  call trnspo(a,6,3)
+               endif
+C...loop over g sets in list:
+               do 300 it = 1 , igtran
+                  m(1) = List(1,it)
+                  m(2) = List(2,it)
+                  m(3) = List(3,it)
+C...transform s and dm, or t (if itopt.ne.0)
+                  if ( ITOPT.ne.0 )
+     &                 call limtrn(T,m,a,b,Ndim,Nbas,6,3,-1)
+                  if ( ITOPT.eq.0 ) then
+                     call limtrn(T,m,a,b,Ndim,Nbas,6,3,0)
+                     call limtrn(DM,m,a,b,Ndim,Nbas,6,3,0)
+                  endif
+C...fix the orbital labels for the 3 orbitals transformed:
+                  Lorb(m(1)) = lgt(1,igblk)
+                  Lorb(m(2)) = lgt(2,igblk)
+                  Lorb(m(3)) = lgt(3,igblk)
+ 300           continue
+ 320        continue
+C  g orbitals --- fourth (6x6) block
+            n1 = 0
+            n2 = 0
+            n3 = 0
+            n4 = 0
+            n5 = 0
+            n6 = 0
+C...construct the list:
+            do 340 ibas = 1 , Nbas
+               lang = Lorbc(ibas)
+               if ( lang.eq.401 ) then
+                  n1 = n1 + 1
+                  List(1,n1) = ibas
+               elseif ( lang.eq.411 ) then
+                  n2 = n2 + 1
+                  List(2,n2) = ibas
+               elseif ( lang.eq.415 ) then
+                  n3 = n3 + 1
+                  List(3,n3) = ibas
+               elseif ( lang.eq.404 ) then
+                  n4 = n4 + 1
+                  List(1,n4) = ibas
+               elseif ( lang.eq.406 ) then
+                  n5 = n5 + 1
+                  List(2,n5) = ibas
+               elseif ( lang.eq.413 ) then
+                  n6 = n6 + 1
+                  List(3,n6) = ibas
+               endif
+ 340        continue
+            if ( igtran.ne.n1 .or. n1.ne.n2 .or. n1.ne.n3 ) goto 600
+            if ( n1.ne.n4 .or. n1.ne.n5 .or. n1.ne.n6 ) goto 600
+C set up transform. coeff, for fourth g block
+C  s=(r2)2
+            a(1,1) = one
+            a(2,1) = one
+            a(3,1) = one
+            a(4,1) = two
+            a(5,1) = two
+            a(6,1) = two
+C  d(3z2-r2)
+            a(1,2) = -one
+            a(2,2) = -one
+            a(3,2) = two
+            a(4,2) = -two
+            a(5,2) = one
+            a(6,2) = one
+C  d(x2-y2)
+            a(1,3) = one
+            a(2,3) = -one
+            a(3,3) = zero
+            a(4,3) = zero
+            a(5,3) = one
+            a(6,3) = -one
+C  g(0)
+            a(1,4) = three
+            a(2,4) = three
+            a(3,4) = eight
+            a(4,4) = six
+            a(5,4) = -six*four
+            a(6,4) = -six*four
+C  g(2c)
+            a(1,5) = -one
+            a(2,5) = -one
+            a(3,5) = zero
+            a(4,5) = six
+            a(5,5) = -six
+            a(6,5) = zero
+C  g(4c)
+            a(1,6) = one
+            a(2,6) = one
+            a(3,6) = zero
+            a(4,6) = -six
+            a(5,6) = zero
+            a(6,6) = zero
+            if ( ITOPT.ne.0 ) then
+               do 350 j = 1 , 6
+                  renor = RENORM(List(j,1))
+                  do 345 i = 1 , 6
+                     a(i,j) = a(i,j)*renor
+ 345              continue
+ 350           continue
+               call trnspo(a,6,6)
+            endif
+            if ( ITOPT.ne.0 ) call trnspo(a,6,6)
+C...loop over g sets in list:
+            do 360 it = 1 , igtran
+               m(1) = List(1,it)
+               m(2) = List(2,it)
+               m(3) = List(3,it)
+               m(4) = List(4,it)
+               m(5) = List(5,it)
+               m(6) = List(6,it)
+C...transform s and dm:
+C...transform s and dm, or t (if itopt.ne.0)
+               if ( ITOPT.ne.0 ) call limtrn(T,m,a,b,Ndim,Nbas,6,6,-1)
+               if ( ITOPT.eq.0 ) then
+                  call limtrn(T,m,a,b,Ndim,Nbas,6,6,0)
+                  call limtrn(DM,m,a,b,Ndim,Nbas,6,6,0)
+               endif
+C...change the orbital labels for the 3 orbitals transformed:
+               Lorb(m(1)) = 51
+               Lorb(m(2)) = 254
+               Lorb(m(3)) = 255
+               Lorb(m(4)) = 451
+               Lorb(m(5)) = 454
+               Lorb(m(6)) = 458
+ 360        continue
+C  renormalization, itopt=0 :
+ 380        ITRAN = idtran + iftran + igtran
+            if ( ITOPT.ne.0 ) return
+            if ( ITRAN.ne.0 ) then
+               do 390 i = 1 , Nbas
+                  x = T(i,i)
+                  RENORM(i) = one/sqrt(x)
+ 390           continue
+               do 400 i = 1 , Nbas
+                  do 395 j = 1 , Nbas
+                     rij = RENORM(i)*RENORM(j)
+                     T(i,j) = T(i,j)*rij
+                     DM(i,j) = DM(i,j)*rij
+ 395              continue
+ 400           continue
+            endif
+C  relabelling of non-transformed orbitals:
+            do 420 i = 1 , Nbas
+               if ( Lorb(i).eq.0 ) then
+                  lang = Lorbc(i)
+                  Lorb(i) = lang
+                  l = lang/100
+                  idif = lang - l*100
+                  if ( idif.le.50 ) Lorb(i) = Lorb(i) + 50
+               endif
+ 420        continue
+            return
+         endif
+      endif
+C  error messages:
+      write (LFNPR,99001)
+99001 format (' Unequal numbers of d function components were',
+     &        ' found in the input.',/,
+     &        ' These cannot be properly transformed-',
+     &        '-perhaps they were improperly labelled.')
+      stop
+ 500  write (LFNPR,99002)
+99002 format (' Unequal numbers of f function components were',
+     &        ' found in the input.',/,
+     &        ' These cannot be properly transformed-',
+     &        '-perhaps they were improperly labelled.')
+      stop
+ 600  write (LFNPR,99003)
+99003 format (' Unequal numbers of g function components were',
+     &        ' found in the input.',/,
+     &        ' These cannot be properly transformed-',
+     &        '-perhaps they were improperly labelled.')
+      stop
+      end
+@* INDEX.

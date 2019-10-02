@@ -1,0 +1,39 @@
+@*equal.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IA
+\item[INPUT:] IB
+\item[INPUT:] L
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   CHSDRV  CHSINP  CORINP  DELETE  DELINP  FNDFLD  GENINP
+             HFLD    NBOINP
+
+\end{description}
+@a
+C*****************************************************************************
+      function equal(IA,IB,L)
+C*****************************************************************************
+      implicit none
+      integer i , IA , IB , L
+      logical equal
+C
+      dimension IA(L) , IB(L)
+C
+C  test if the first l elements of vectors ia and ib are equal:
+C
+      equal = .false.
+      do 100 i = 1 , L
+         if ( IA(i).ne.IB(i) ) goto 200
+ 100  continue
+      equal = .true.
+ 200  return
+      end
+@* INDEX.

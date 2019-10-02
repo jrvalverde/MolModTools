@@ -1,0 +1,115 @@
+@*factor.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[OUTPUT:] W
+\item[OUTPUT:] D
+\item[OUTPUT:] IPIVOT
+\item[INPUT:] N
+\item[INPUT:] NDIM
+\item[INPUT:] ZERTOL
+\item[OUTPUT:] IFLAG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       COPY
+\item[Called by]   LINEQ
+
+\end{description}
+@a
+C*****************************************************************************
+C*** JR ***
+C With Sun fortran factor clashes with another symbol
+C as this is only used in lineq.web, we may as well change its name
+      subroutine dofactor(A,W,D,IPIVOT,N,NDIM,ZERTOL,IFLAG)
+C*** JR ***
+C      subroutine factor(A,W,D,IPIVOT,N,NDIM,ZERTOL,IFLAG)
+C*****************************************************************************
+      implicit none
+      double precision A , colmax , D , one , rowmax , temp , W , zero ,
+     &                 ZERTOL
+      integer i , IFLAG , IPIVOT , istar , itemp , j , k , N , NDIM
+      dimension A(NDIM,NDIM) , W(NDIM,NDIM) , D(NDIM) , IPIVOT(NDIM)
+      data zero , one/0.0D0 , 1.0D0/
+C
+C  initial iflag.  if iflag is 1, then an even number of interchanges
+C  has been carried out.  if equal to -1, then an odd number of inter-
+C  changes have taken place.  if iflag is set to zero on return to the
+C  calling routine, then the matrix is not invertible:
+C
+      IFLAG = 1
+C
+C  copy coefficient matrix a to w:
+C
+      call copy(A,W,NDIM,N,N)
+C
+C  initialize d and ipivot:
+C
+      do 100 i = 1 , N
+         IPIVOT(i) = i
+         rowmax = zero
+         do 50 j = 1 , N
+            if ( abs(W(i,j)).gt.rowmax ) rowmax = abs(W(i,j))
+ 50      continue
+         if ( rowmax.le.ZERTOL ) then
+            IFLAG = 0
+            rowmax = one
+         endif
+         D(i) = rowmax
+ 100  continue
+      if ( N.eq.1 ) return
+C
+C  loop over rows, factorizing matrix w:
+C
+      do 200 k = 1 , N - 1
+C
+C  determine the pivot row istar:
+C
+         colmax = abs(W(k,k))/D(k)
+         istar = k
+         do 150 i = k + 1 , N
+            temp = abs(W(i,k))/D(k)
+            if ( temp.gt.colmax ) then
+               colmax = temp
+               istar = i
+            endif
+ 150     continue
+         if ( colmax.eq.zero ) then
+            IFLAG = 0
+         else
+            if ( istar.gt.k ) then
+                                 
+C interchange rows k and istar
+               IFLAG = -IFLAG
+               itemp = IPIVOT(istar)
+               IPIVOT(istar) = IPIVOT(k)
+               IPIVOT(k) = itemp
+               temp = D(istar)
+               D(istar) = D(k)
+               D(k) = temp
+               do 160 j = 1 , N
+                  temp = W(istar,j)
+                  W(istar,j) = W(k,j)
+                  W(k,j) = temp
+ 160           continue
+            endif
+C
+C  eliminate x(k) from rows k+1,...,n:
+C
+            do 180 i = k + 1 , N
+               W(i,k) = W(i,k)/W(k,k)
+               do 170 j = k + 1 , N
+                  W(i,j) = W(i,j) - W(i,k)*W(k,j)
+ 170           continue
+ 180        continue
+         endif
+ 200  continue
+      if ( abs(W(N,N)).le.ZERTOL ) IFLAG = 0
+      return
+      end
+@* INDEX.

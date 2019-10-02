@@ -1,0 +1,686 @@
+@*feaoin.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] CORE
+\item[OUTPUT:] ICORE
+\item[INPUT:] NBOOPT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    AUHF    CI      COMPLX  IATNO   IPSEUD  IWCUBF  IWFOCK
+             IZNUC   JAN     LANG    LCTR    MCSCF   MUNIT   NATOMS
+             NBAS    NDIM    NFROZ   OPEN    ORTHO   ROHF    UHF
+\item[Transmits as argument]  EXX     NLP
+\item[Uses]  ATMCHG  AUHF    C       C1      C2      C3      C4
+             CI      COMPLX  EXX     IAN     IATNO   IWFOCK  IZNUC
+             JAN     LANG    LCTR    LFNPR   MCSCF   MULTIP  MUNIT
+             NATOM   NATOMS  NBAS    NBASIS  NDIM    NFROZ   NLP
+             NSHELL  OPEN    ORTHO   ROHF    SHELLA  SHELLC  SHELLN
+             SHELLT  SHLADF  UHF     X       Y       Z
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       ILSW    ITQRY   NBWRIT  PACK    TREAD
+\item[Called by]   NBO
+
+\end{description}
+@a
+C***********************************************************************
+C
+C
+C                          gnu80  n  b  o
+C
+C
+C                    gnu80  version of NBO program
+C
+C
+C  driver routines:
+C
+C      subroutine runnbo(core,memory,iop,icontr)
+C           runs the main program nbo
+C      subroutine feaoin(core,icore,nboopt)
+C           reads the gnu80 rwf and gets info for nbo
+C      subroutine delscf(core,icore,nboopt)
+C           does the energy analysis
+C
+C************************************************************************
+      subroutine feaoin(CORE,ICORE,NBOOPT)
+      implicit none
+      double precision Atmchg , C , C1 , C2 , C3 , C4 , Clp , CORE ,
+     &                 crit , eps , Exx , toang , X , xa , xc , Y , ya ,
+     &                 yc , Z , za
+      double precision zc , zero , Zlp
+      integer i , i5d6d , i7f10f , iaind , Ian , Iatcr , Iatno , iatom ,
+     &        ibas , Icharg , Ichoos , icnstr , ICORE , iexist , ihold ,
+     &        ii , imax , Ino , Iprint , Ipseud
+      integer iptr , irohf , iscf , ishell , Ispin , itqry , Iw3c ,
+     &        Iwapol , Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs ,
+     &        Iwmulp , Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Iznuc , j
+      integer Jan , Jcore , Jprint , kd , kf , Kfirst , Klast , Kopt ,
+     &        kp , ks , l2 , l3 , Lang , Lctr , len , LENB , Lfnao ,
+     &        Lfnarc , Lfndaf , Lfndef
+      integer Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , listd , listf , listp , lists , Ll , Lmax
+      integer Lpskip , lptr , Lu , MAXATM , MAXBAS , maxl , MAXPRM ,
+     &        MAXS21 , MAXSH1 , MAXSHL , Maxtyp , mptr , Multip ,
+     &        Munit , Mxao , Mxaolm , Mxbo , Nae , Natom , Natoms
+      integer Nbas , Nbasis , Nbe , NBOOPT , nctr , Ndim , Ne , nexp ,
+     &        nfile , Nfroz , Nlp , Norbs , Nshell
+      dimension CORE(*) , ICORE(*) , NBOOPT(10)
+      dimension listp(3) , listd(6,2) , listf(10,2)
+C
+      data lists/1/
+      data listp/101 , 102 , 103/
+      data listd/255 , 252 , 253 , 254 , 251 , 0 , 201 , 204 , 206 ,
+     &     202 , 203 , 205/
+      data listf/351 , 352 , 353 , 354 , 355 , 356 , 357 , 0 , 0 , 0 ,
+     &     301 , 307 , 310 , 304 , 302 , 303 , 306 , 309 , 308 , 305/
+C-----------------------------------------------------------------------
+C
+C  routine feaoin accesses the following records of the rwfs:
+C
+C        203  ---   CI density matrix (alpha)
+C        204  ---   CI density matrix (beta)
+C        501  ---   total energy
+C        502  ---   job title
+C        506  ---   basis set information
+C        512  ---   effective core potential information
+C        514  ---   AO overlap matrix
+C        518  ---   x dipole integrals
+C        519  ---   y dipole integrals
+C        520  ---   z dipole integrals
+C        524  ---   MO coefficients (alpha)
+C        526  ---   MO coefficients (beta)
+C        528  ---   SCF density matrix (alpha)
+C        530  ---   SCF density matrix (beta)
+C        536  ---   AO fock matrix (alpha)
+C        538  ---   AO fock matrix (beta)
+C
+C ----------------------------------------------------------------------
+C
+C  NBO common blocks
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbao  / Lctr(MAXBAS) , Lang(MAXBAS)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+C dbc
+C these parameters are for common /b/ and related matters in gnu80
+C     maxshl is the maximum number of shells
+C     maxprm is the maximum number of primitives
+C     lenb is the length of /b/ (in units of 8 bytes)
+C     maxsh1 and maxs21 are sillies for equivalencing
+C
+      integer Shella , Shelln , Shellt , Shellc , Shladf , Aos , Aon
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+C
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) ,
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+C
+C note that /mol/ has natom not natoms because of a clash with
+C an NBO common block /nbinfo/
+C
+      common /mol   / Natom , Icharg , Multip , Nae , Nbe , Ne ,
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+C
+      common /lp2   / Nlp(400) , Clp(400) , Zlp(400) , Kfirst(35,5) ,
+     &                Klast(35,5) , Lmax(35) , Lpskip(35) , Nfroz(35)
+ 
+C
+C  obtain the following information:
+C
+C    rohf        =.true. if rhf open shell wavefunction
+C                =.false. otherwise
+C
+C    uhf         =.true. if uhf wavefunction
+C                =.false. otherwise
+C
+C    auhf        =.true. if spin-annihilated uhf wavefunction
+C                =.false. otherwise
+C
+C    CI          =.true. if CI wavefunction
+C                =.false. otherwise
+C
+C    open        =.true. if open shell wavefunction
+C                =.false. otherwise
+C
+C    complx      =.true. if complex wavefunction
+C                =.false. otherwise
+C                (note: the program is not capable of handling this.)
+C
+C    natoms      number of atomic centers
+C
+C    ndim        dimension of matrices (overlap and density)
+C
+C    nbas        number of basis functions (.le.ndim)
+C
+C    ipseud      set to one if pseudopotentials are used.
+C
+C    iwcubf      this pertains only basis sets with f functions.
+C
+C                if cartesian f functions are input, set iwcubf to:
+C                    0,  if these are to be transformed to the
+C                        standard set of pure f functions
+C                    1,  if these are to be transformed to the
+C                        cubic set of pure f functions
+C
+C                if pure f functions are input, set to iwcubf to:
+C                    0,  if these are standard f functions
+C                    1,  if these are cubic f functions
+C
+C    iatno(i),i=1,natoms
+C                list of atomic numbers
+C
+C    lctr(i),i=1,nbas
+C                list of atomic centers of the basis functions
+C                (lctr(3)=2 if basis function 3 is on atom 2)
+C
+C    lang(i),i=1,nbas
+C                list of angular symmetry information for the AO basis
+C
+      data zero/0.0D0/
+      data toang/0.529177249/
+C
+C  store job title on nbodaf:
+C
+C dbc hack for title length, see gnu80 l101.f for specification
+C       of file 502
+      len = 600
+      call tread(502,ICORE,len,1,len,1,0)
+      nfile = 2
+C   the job title is preceded by label(1000)
+      call nbwrit(ICORE(1001),10,nfile)
+C
+C  get the number of atoms from nat and store the atomic numbers in
+C  iatno and nuclear charges in iznuc.  (note: atomic numbers and
+C  nuclear charges may not be equivalent if effective core potentials
+C  (ecp) are used.)
+C
+      len = 0
+      iexist = itqry(512)
+      if ( iexist.gt.0 ) then
+C  dbc hack for fixed length of /lp2/ nfroz(i) not used in gnu80
+         len = 1210
+         call tread(512,Nlp,len,1,len,1,0)
+      endif
+      Natoms = Natom
+      do 100 i = 1 , Natoms
+         Iatno(i) = Ian(i)
+C dbc hack which is redundant since iznuc(i) = atmchg(i)
+         eps = 0.001D00
+         Nfroz(i) = Ian(i) - int(Atmchg(i)+eps)
+C end of dbc hack
+         if ( iexist.gt.0 ) then
+            Iznuc(i) = Iatno(i) - Nfroz(i)
+            if ( Nfroz(i).ne.0 ) Ipseud = 1
+         else
+            Iznuc(i) = Iatno(i)
+         endif
+ 100  continue
+C
+C  restore the basis set to common/b/:
+C
+C dbc use of parameter
+      len = LENB
+      call tread(506,Exx,len,1,len,1,0)
+C replace jan by the new jan dbc
+C
+C     loop over ishell to get centres of shells
+C       and store in jan (c.f. jan in g90)
+C
+      do 200 ishell = 1 , Nshell
+         xa = X(ishell)
+         ya = Y(ishell)
+         za = Z(ishell)
+         do 150 iatom = 1 , Natom
+            iaind = 3*(iatom-1)
+            xc = C(1+iaind)
+            yc = C(2+iaind)
+            zc = C(3+iaind)
+            if ( (abs(xa-xc).lt.crit) .and. (abs(ya-yc).lt.crit) .and.
+     &           (abs(za-zc).lt.crit) ) Jan(ishell) = iatom
+ 150     continue
+ 200  continue
+C end of hack to get jan right
+C
+C
+C  the gaussian programs do not use cubic f basis functions.
+C  determine which set of d and f functions are being used,
+C  cartesian or pure):
+C
+      Iwcubf = 0
+      call ilsw(2,2,i5d6d)
+      call ilsw(2,16,i7f10f)
+C
+C  construct the AO information lists: lctr and lang
+C
+      ibas = 0
+      do 300 ishell = 1 , MAXSHL
+         if ( ibas.eq.Nbasis ) goto 400
+         nctr = Jan(ishell)
+         maxl = Shellt(ishell)
+         icnstr = Shellc(ishell)
+C
+C  is an s orbital in the shell?
+C
+         ks = 0
+         if ( maxl.eq.0 ) ks = 1
+         if ( maxl.eq.1 .and. icnstr.ne.1 ) ks = 1
+         if ( maxl.eq.2 .and. icnstr.eq.0 ) ks = 1
+         if ( ks.ne.0 ) then
+C
+C  s orbital:
+C
+            ibas = ibas + 1
+            Lctr(ibas) = nctr
+            Lang(ibas) = lists
+         endif
+C
+C  is a set of p orbitals in the shell?
+C
+         kp = 0
+         if ( maxl.ne.0 ) then
+            if ( maxl.eq.1 ) kp = 1
+            if ( maxl.eq.2 .and. icnstr.eq.0 ) kp = 1
+            if ( kp.ne.0 ) then
+C
+C  p orbitals:
+C
+               do 210 i = 1 , 3
+                  ibas = ibas + 1
+                  Lctr(ibas) = nctr
+                  Lang(ibas) = listp(i)
+ 210           continue
+            endif
+C
+C  d orbitals:
+C
+            if ( maxl.eq.2 ) then
+               imax = i5d6d + 5
+               kd = i5d6d + 1
+               do 220 i = 1 , imax
+                  ibas = ibas + 1
+                  Lctr(ibas) = nctr
+                  Lang(ibas) = listd(i,kd)
+ 220           continue
+C
+C  f orbitals:
+C
+            elseif ( maxl.eq.3 ) then
+               imax = 7
+               if ( i7f10f.eq.1 ) imax = 10
+               kf = i7f10f + 1
+               do 230 i = 1 , imax
+                  ibas = ibas + 1
+                  Lctr(ibas) = nctr
+                  Lang(ibas) = listf(i,kf)
+ 230           continue
+            endif
+         endif
+ 300  continue
+ 400  Ndim = Nbasis
+      Nbas = Nbasis
+C
+C  determine the type of wave function the density matrix is from:
+C
+      if ( Multip.gt.1 ) Open = .true.
+      if ( NBOOPT(2).ne.0 ) then
+         Ci = .true.
+      else
+         call ilsw(2,1,iscf)
+         call ilsw(2,22,irohf)
+         if ( iscf.eq.1 ) Uhf = .true.
+         if ( Uhf ) Open = .true.
+         if ( irohf.eq.1 ) Rohf = .true.
+         if ( irohf.eq.2 ) Rohf = .true.
+         if ( irohf.eq.3 ) Mcscf = .true.
+         if ( iscf.gt.1 ) Complx = .true.
+         if ( Complx ) then
+C
+            write (Lfnpr,99001)
+            return
+C
+99001       format (/1x,
+     &              'The NBO program is not set up to handle complex ',
+     &              'wave functions')
+         endif
+      endif
+      if ( NBOOPT(5).eq.1 ) Auhf = .true.
+      Ortho = .false.
+C
+C  no fock matrices for rohf, mcscf, or CI wavefunctions:
+C
+      if ( Rohf .or. Mcscf .or. Ci ) Iwfock = 0
+C
+C  expectation values of the fock operator are in atomic units:
+C
+      Munit = 0
+C
+C  store natoms, ndim, nbas, munit, wavefunction flags, iswean:
+C
+      ICORE(1) = Natoms
+      ICORE(2) = Ndim
+      ICORE(3) = Nbas
+      ICORE(4) = Munit
+      ICORE(5) = 0
+      if ( Rohf ) ICORE(5) = 1
+      ICORE(6) = 0
+      if ( Uhf ) ICORE(6) = 1
+      ICORE(7) = 0
+      if ( Ci ) ICORE(7) = 1
+      ICORE(8) = 0
+      if ( Open ) ICORE(8) = 1
+      ICORE(9) = 0
+      if ( Mcscf ) ICORE(9) = 1
+      ICORE(10) = 0
+      if ( Auhf ) ICORE(10) = 1
+      ICORE(11) = 0
+      if ( Ortho ) ICORE(11) = 1
+      ICORE(12) = 1
+      nfile = 3
+      call nbwrit(ICORE,6,nfile)
+C
+C  store iatno, iznuc, lctr, and lang on NBO daf:
+C
+      ii = 0
+      do 500 i = 1 , Natoms
+         ii = ii + 1
+         ICORE(ii) = Iatno(i)
+ 500  continue
+      do 600 i = 1 , Natoms
+         ii = ii + 1
+         ICORE(ii) = Iznuc(i)
+ 600  continue
+      do 700 i = 1 , Nbas
+         ii = ii + 1
+         ICORE(ii) = Lctr(i)
+ 700  continue
+      do 800 i = 1 , Nbas
+         ii = ii + 1
+         ICORE(ii) = Lang(i)
+ 800  continue
+      nfile = 4
+      call nbwrit(ICORE,Natoms+Nbas,nfile)
+C
+C  fetch the total energy from the rwf and store it on the nbodaf:
+C
+      call tread(501,CORE,32,1,32,1,0)
+      CORE(1) = CORE(32)
+      CORE(2) = CORE(32)
+      nfile = 8
+      call nbwrit(CORE,2,nfile)
+C
+C  store the atomic coordinates on the NBO daf: (note that these
+C  coordinates are used in the calculation of dipole moments.)
+C
+      do 900 i = 1 , 3*Natoms
+         CORE(i) = C(i)*toang
+ 900  continue
+      nfile = 9
+      call nbwrit(CORE,3*Natoms,nfile)
+C
+C  store the overlap matrix on the nbodaf:
+C
+      l2 = Ndim*(Ndim+1)/2
+      call tread(514,CORE,Ndim,Ndim,Nbas,Nbas,1)
+      call pack(CORE,Ndim,Nbas,l2)
+      nfile = 10
+      call nbwrit(CORE,l2,nfile)
+C
+C  store the density matrices on the nbodaf:
+C
+      l2 = Ndim*(Ndim+1)/2
+      if ( Ci ) then
+         call tread(203,CORE,Ndim,Ndim,Nbas,Nbas,1)
+         call pack(CORE,Ndim,Nbas,l2)
+         nfile = 20
+         call nbwrit(CORE,l2,nfile)
+         if ( Open ) then
+            call tread(204,CORE,Ndim,Ndim,Nbas,Nbas,1)
+            call pack(CORE,Ndim,Nbas,l2)
+            nfile = 21
+            call nbwrit(CORE,l2,nfile)
+         endif
+      else
+         call tread(528,CORE,Ndim,Ndim,Nbas,Nbas,1)
+         call pack(CORE,Ndim,Nbas,l2)
+         nfile = 20
+         call nbwrit(CORE,l2,nfile)
+         if ( Open ) then
+            call tread(530,CORE,Ndim,Ndim,Nbas,Nbas,1)
+            call pack(CORE,Ndim,Nbas,l2)
+            nfile = 21
+            call nbwrit(CORE,l2,nfile)
+         endif
+      endif
+C
+C  store the fock matrices on the nbodaf:
+C
+      if ( Iwfock.ne.0 ) then
+         iexist = itqry(536)
+         if ( iexist.gt.0 ) then
+            l2 = Ndim*(Ndim+1)/2
+            call tread(536,CORE,Ndim,Ndim,Nbas,Nbas,1)
+            call pack(CORE,Ndim,Nbas,l2)
+            nfile = 30
+            call nbwrit(CORE,l2,nfile)
+         endif
+C
+         if ( Open ) then
+            iexist = itqry(538)
+            if ( iexist.gt.0 ) then
+               l2 = Ndim*(Ndim+1)/2
+               call tread(538,CORE,Ndim,Ndim,Nbas,Nbas,1)
+               call pack(CORE,Ndim,Nbas,l2)
+               nfile = 31
+               call nbwrit(CORE,l2,nfile)
+            endif
+         endif
+      endif
+C
+C  store the AO to MO transformation matrices on the nbodaf:
+C
+      iexist = itqry(524)
+      if ( iexist.gt.0 ) then
+         l3 = Ndim*Ndim
+         call tread(524,CORE,Ndim,Ndim,Nbas,Nbas,0)
+         nfile = 40
+         call nbwrit(CORE,l3,nfile)
+      endif
+C
+      if ( Open ) then
+         iexist = itqry(526)
+         if ( iexist.gt.0 ) then
+            l3 = Ndim*Ndim
+            call tread(526,CORE,Ndim,Ndim,Nbas,Nbas,0)
+            nfile = 41
+            call nbwrit(CORE,l3,nfile)
+         endif
+      endif
+C
+C  store the x,y,z dipole integrals on the nbodaf:
+C
+      iexist = itqry(518)
+      iexist = min(iexist,itqry(519))
+      iexist = min(iexist,itqry(520))
+      if ( iexist.gt.0 ) then
+         l2 = Ndim*(Ndim+1)/2
+         call tread(518,CORE(1),l2,1,l2,1,0)
+         call tread(519,CORE(l2+1),l2,1,l2,1,0)
+         call tread(520,CORE(2*l2+1),l2,1,l2,1,0)
+         do 950 i = 1 , 3*l2
+            CORE(i) = CORE(i)*toang
+ 950     continue
+         nfile = 50
+         call nbwrit(CORE,l2,nfile)
+         nfile = 51
+         call nbwrit(CORE(l2+1),l2,nfile)
+         nfile = 52
+         call nbwrit(CORE(2*l2+1),l2,nfile)
+      endif
+C
+C  store the AO basis set info on the NBO daf:  (note that two integers
+C  and three integer arrays are stored first.  also remember that icore
+C  and core occupy the same memory.)
+C
+      ICORE(1) = Nshell
+C
+      nexp = 0
+      do 1000 i = 1 , 240
+         if ( Exx(i).ne.zero ) nexp = i
+ 1000 continue
+      ICORE(2) = nexp
+C
+C  determine if cartesian or pure d and f functions are used:
+C
+      call ilsw(2,2,i5d6d)
+      call ilsw(2,16,i7f10f)
+C
+C  ncomp(i) -- the number of components in the ith shell:
+C
+      ii = 2
+      do 1100 i = 1 , Nshell
+         ii = ii + 1
+         ICORE(ii) = 0
+         maxl = Shellt(i)
+         icnstr = Shellc(i)
+C
+C  determine if an s orbital is in the shell:
+C
+         ks = 0
+         if ( maxl.eq.0 ) ks = 1
+         if ( maxl.eq.1 .and. icnstr.ne.1 ) ks = 1
+         if ( maxl.eq.2 .and. icnstr.eq.0 ) ks = 1
+C
+C  s orbital:
+C
+         if ( ks.ne.0 ) ICORE(ii) = ICORE(ii) + 1
+C
+C  determine if a set of p orbitals is in the shell:
+C
+         kp = 0
+         if ( maxl.ne.0 ) then
+            if ( maxl.eq.1 ) kp = 1
+            if ( maxl.eq.2 .and. icnstr.eq.0 ) kp = 1
+C
+C  p orbital:
+C
+            if ( kp.ne.0 ) ICORE(ii) = ICORE(ii) + 3
+C
+C  if maxl is less than 2 then there are no d or f orbitals:
+C  if maxl is greater than 2 then there must be f orbitals:
+C
+            if ( maxl.ge.2 ) then
+               if ( maxl.le.2 ) then
+C
+C  d orbital:
+C
+                  imax = i5d6d + 5
+                  ICORE(ii) = ICORE(ii) + imax
+               endif
+C
+C  if maxl is less than 3 then there are no f orbitals:
+C
+               if ( maxl.ge.3 ) then
+C
+C  f orbital:
+C
+                  imax = 7
+                  if ( i7f10f.eq.1 ) imax = 10
+                  ICORE(ii) = ICORE(ii) + imax
+               endif
+            endif
+         endif
+C
+C  skip here when no more orbitals are found:
+C
+ 1100 continue
+C
+C  nprim(i) -- the number of gaussian primitives in the ith shell:
+C
+      do 1200 i = 1 , Nshell
+         ii = ii + 1
+         ICORE(ii) = Shelln(i)
+ 1200 continue
+C
+C  nptr(i) -- pointer for the ith shell into the gaussian parameters,
+C             exp, cs, cp, etc.:
+C
+      do 1300 i = 1 , Nshell
+         ii = ii + 1
+         ICORE(ii) = Shella(i)
+ 1300 continue
+C
+      if ( mod(ii,2).eq.1 ) then
+         ii = ii + 1
+         ICORE(ii) = 0
+      endif
+      ii = ii/2
+C
+C  exp(i) -- orbital exponents indexed by nptr:
+C
+      do 1400 i = 1 , nexp
+         ii = ii + 1
+         CORE(ii) = Exx(i)
+ 1400 continue
+C
+C  cs,cp -- orbital coefficients:
+C
+      do 1500 i = 1 , nexp
+         ii = ii + 1
+         CORE(ii) = C1(i)
+ 1500 continue
+      do 1600 i = 1 , nexp
+         ii = ii + 1
+         CORE(ii) = C2(i)
+ 1600 continue
+C
+C  zero cd and cf arrays:
+C
+      ihold = ii
+      do 1700 i = 1 , 2*nexp
+         ii = ii + 1
+         CORE(ii) = zero
+ 1700 continue
+C
+C  build cd and cf from c3 and c4:
+C
+      do 1800 i = 1 , Nshell
+         iptr = Shladf(i)
+         if ( iptr.gt.0 ) then
+            do 1720 j = 1 , Shelln(i)
+               lptr = j + Shella(i) + ihold - 1
+               mptr = j + iptr - 1
+               CORE(lptr) = C3(mptr)
+               CORE(lptr+nexp) = C4(mptr)
+ 1720       continue
+         endif
+ 1800 continue
+      nfile = 5
+      call nbwrit(CORE,ii,nfile)
+      return
+      end
+@* INDEX.

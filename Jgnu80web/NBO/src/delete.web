@@ -1,0 +1,648 @@
+@*delete.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] F
+\item[OUTPUT:] TRF
+\item[INPUT:] NDIM
+\item[OUTPUT:] IDEL
+\item[INPUT:] LEN
+\item[OUTPUT:] ITYPE
+\item[OUTPUT:] NDEL
+\item[OUTPUT:] NTRUNC
+\item[OUTPUT:] DONE
+\item[INPUT:] ISPIN
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    ISCR1   ISCR2
+\item[Uses]  IBXM    ISCR1   ISCR2   LABEL   LFNPR   NBOTYP  NBOUNI
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   HFLD    IFLD    IHTYP   ORDERR
+\item[Called by]   NBODEL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine delete(F,TRF,NDIM,IDEL,LEN,ITYPE,NDEL,NTRUNC,DONE,
+     &                  ISPIN)
+C*****************************************************************************
+      implicit none
+      double precision F , TRF , zero
+      integer i , i1 , i2 , iat , Iatno , ib , ibas , Ibxm , id , IDEL ,
+     &        idst , iff , ihtyp , ii , indx , iout , Iscr1 , Iscr2 ,
+     &        ISPIN , istar
+      integer itmp , ITYPE , iunit , iunit1 , iunit2 , ivic , j , j1 ,
+     &        j2 , jat , jb , jbas , jd , jj , jout , k , keywd ,
+     &        Label , lalpha , lalt
+      integer latom , lbeta , lblo , ldel , ldeloc , ldestr , lele ,
+     &        LEN , lend , leng , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo
+      integer Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , lg , lnogem , lnostr , lnovic , lorb ,
+     &        lsame , lv , lzero , MAXATM , MAXBAS , mset1 , mset2
+      integer mstart , mstrt2 , mtot , nacc , Nbotyp , Nbouni , nchemu ,
+     &        NDEL , ndel2 , ndel4 , NDIM , nl , nread , nset1 , nset2 ,
+     &        nstart , nstrt2 , ntot , NTRUNC , nu
+      integer nunit , nunits
+      logical error , DONE , equal
+      logical donor , accptr , list1 , list2
+      dimension keywd(6) , F(1) , TRF(NDIM,NDIM) , IDEL(LEN)
+      dimension lorb(3) , lele(3) , lblo(3) , ldel(3) , lzero(4) ,
+     &          lsame(4) , lend(3) , ldestr(6) , ldeloc(5) , lnostr(6) ,
+     &          latom(4) , lnogem(5) , lnovic(5) , lalt(4)
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Iatno(MAXBAS) , Ibxm(MAXBAS) , Iscr1(2*MAXBAS) ,
+     &                Iscr2(2*MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      data zero/0.0D0/ , istar/1H*/
+      data ldel/1HD , 1HE , 1HL/ , lzero/1HZ , 1HE , 1HR , 1HO/ ,
+     &     lend/1HE , 1HN , 1HD/
+      data lalpha , lbeta/1HA , 1HB/ , lsame/1HS , 1HA , 1HM , 1HE/
+      data lorb , lele , lblo/1HO , 1HR , 1HB , 1HE , 1HL , 1HE , 1HB ,
+     &     1HL , 1HO/
+      data ldestr/1HD , 1HE , 1HS , 1HT , 1HA , 1HR/
+      data lnostr/1HN , 1HO , 1HS , 1HT , 1HA , 1HR/
+      data ldeloc/1HD , 1HE , 1HL , 1HO , 1HC/ , latom/1HA , 1HT , 1HO ,
+     &     1HM/
+      data lnovic/1HN , 1HO , 1HV , 1HI , 1HC/ , lnogem/1HN , 1HO ,
+     &     1HG , 1HE , 1HM/
+      data lalt/1H$ , 1HE , 1HN , 1HD/
+      data lg , lv/'g' , 'v'/
+C
+C   this subroutine is called at the start of each deletion and reads
+C    in from lfnin the instructions for this deletion
+C
+C   ntrunc= dimension of fock matrix after deletions:
+      NTRUNC = NDIM
+      write (Lfnpr,99019)
+C  count up number of molecular units, nchemu:
+      nchemu = 0
+      do 100 i = 1 , NDIM
+         nunit = Nbouni(i)
+         if ( nunit.gt.nchemu ) nchemu = nunit
+ 100  continue
+      if ( ISPIN.ne.0 ) then
+C  if open shell, look for first letter of "alpha" or "beta" keyword:
+         leng = 3
+         call hfld(keywd,leng,DONE)
+         if ( equal(keywd,lend,3) ) DONE = .true.
+         if ( equal(keywd,lalt,3) ) DONE = .true.
+         if ( DONE ) return
+         if ( (ISPIN.eq.2) .and. (keywd(1).ne.lalpha) ) then
+            write (Lfnpr,99001)
+99001       format (1x,
+     &              'Keyword ALPHA (or A) not found to start alpha NBO',
+     &              ' deletion input.')
+            stop
+         elseif ( (ISPIN.eq.-2) .and. (keywd(1).ne.lbeta) ) then
+            write (Lfnpr,99002)
+99002       format (1x,'Keyword BETA (or B) not found to start beta NBO'
+     &              ,' deletion input.')
+            goto 1100
+         else
+            if ( ISPIN.eq.2 ) write (Lfnpr,99003)
+            if ( ISPIN.eq.-2 ) write (Lfnpr,99004)
+         endif
+      endif
+C  search for first 3 letters of "delete", "zero", "same", "destar",
+C    "nostar", "nogem", "novic", or an end mark '**':
+      leng = 3
+      call hfld(keywd,leng,DONE)
+      if ( equal(keywd,lend,3) ) DONE = .true.
+      if ( equal(keywd,lalt,3) ) DONE = .true.
+      if ( DONE ) return
+C  if beta deletions are the same as the alpha deletions already read in,
+C    skip to 100:
+      if ( .not.((ISPIN.eq.-2) .and. equal(keywd,lsame,3)) ) then
+         if ( equal(keywd,lzero,3) ) then
+C  delete intersection in fock matrix between pairs of sets of orbitals:
+            ITYPE = 3
+C  start by filling trf with full NBO fock matrix:
+            ii = 0
+            do 120 i = 1 , NDIM
+               do 110 j = 1 , i
+                  ii = ii + 1
+                  TRF(i,j) = F(ii)
+                  TRF(j,i) = F(ii)
+ 110           continue
+ 120        continue
+C  read in number of pairs of sets of orbitals, ndel:
+            call ifld(NDEL,error)
+            if ( error ) goto 1100
+            leng = 5
+C  check the next word to see if it is "delocalization" instead of "block":
+C  (if so, the block will be specified by molecular units instead of by blocks)
+            call hfld(keywd,leng,DONE)
+            if ( equal(keywd,ldeloc,5) ) then
+C
+C  zeroing of delocalization within or between molecular units.
+C
+C   use the NBO molecular unit (nbouni) and NBO type (nbotyp) lists.
+               nstart = 0
+               do 140 k = 1 , NDEL
+C  skip the next word ("from"):
+                  call hfld(keywd,leng,DONE)
+C  read in the number of the first molecular unit, iunit1:
+                  call ifld(iunit1,error)
+                  if ( error ) goto 1100
+C  skip the "to" and read in iunit2:
+                  call hfld(keywd,leng,DONE)
+                  call ifld(iunit2,error)
+                  if ( error ) goto 1100
+                  write (Lfnpr,99005) iunit1 , iunit2
+                  nstart = nstart + 2
+C  find all of the nonstar (core/"lone pair"/bond) nbos on unit iunit1:
+                  nset1 = 0
+                  do 125 ibas = 1 , NDIM
+                     if ( Nbouni(ibas).eq.iunit1 ) then
+                        if ( Nbotyp(ibas).le.20 ) then
+                           nset1 = nset1 + 1
+                           IDEL(nstart+nset1) = ibas
+                        endif
+                     endif
+ 125              continue
+                  IDEL(nstart-1) = nset1
+C  find all of the star (rydberg/antibond) nbos on unit iunit2:
+                  nset2 = 0
+                  nstrt2 = nstart + nset1
+                  do 130 ibas = 1 , NDIM
+                     if ( Nbouni(ibas).eq.iunit2 ) then
+                        if ( Nbotyp(ibas).ge.10 ) then
+                           nset2 = nset2 + 1
+                           IDEL(nstrt2+nset2) = ibas
+                        endif
+                     endif
+ 130              continue
+                  IDEL(nstart) = nset2
+                  ntot = nset1 + nset2
+C  now, zero all intersecting elements between the two sets:
+                  do 135 i = 1 , nset1
+                     id = IDEL(nstart+i)
+                     do 132 j = 1 , nset2
+                        jd = IDEL(nstrt2+j)
+                        if ( id.ne.jd ) then
+                           TRF(id,jd) = zero
+                           TRF(jd,id) = zero
+                        endif
+ 132                 continue
+ 135              continue
+                  nstart = nstart + ntot
+ 140           continue
+C  check the word to see if it is "atom" instead of "block":
+C   (if so, the block will be specified by orbitals on groups of atoms)
+            elseif ( equal(keywd,latom,4) ) then
+C
+C   zeroing of delocalization between groups of atoms
+C
+C   use the NBO type (nbotyp) and NBO label (label) lists.
+               mstart = 0
+               nstart = 0
+C  skip the 'blocks' before nset1:
+               call hfld(keywd,leng,DONE)
+               do 180 k = 1 , NDEL
+C  read in the number of atoms in each set of the pair, nset1 and nset2:
+C    (skip the 'by' between nset1 and nset2)
+                  call ifld(mset1,error)
+                  if ( error ) goto 1100
+                  call hfld(keywd,leng,DONE)
+                  call ifld(mset2,error)
+                  if ( error ) goto 1100
+                  mstart = mstart + 2
+                  Iscr1(mstart-1) = mset1
+                  Iscr1(mstart) = mset2
+C  read in the atoms of both sets:
+                  mtot = mset1 + mset2
+                  do 145 i = 1 , mtot
+                     call ifld(Iscr1(mstart+i),error)
+                     if ( error ) goto 1100
+ 145              continue
+                  mstrt2 = mstart + mset1
+                  write (Lfnpr,99006)
+                  write (Lfnpr,99016) (Iscr1(mstart+i),i=1,mset1)
+                  write (Lfnpr,99007)
+                  write (Lfnpr,99016) (Iscr1(mstrt2+i),i=1,mset2)
+                  write (Lfnpr,99008)
+C  construct the list of the two sets of orbitals from the atom lists,
+C    placing the orbital list in idel in the standard manner for itype=3:
+                  nstart = nstart + 2
+                  nset1 = 0
+                  nset2 = 0
+                  do 160 jbas = 1 , NDIM
+                     donor = .false.
+                     accptr = .false.
+                     if ( Nbotyp(jbas).lt.20 ) donor = .true.
+                     if ( Nbotyp(jbas).ge.10 ) accptr = .true.
+                     list1 = .false.
+                     list2 = .false.
+C    remember to consult ibxm before getting info from label!
+                     jb = Ibxm(jbas)
+                     do 148 j = 4 , 6
+                        jat = Label(jb,j)
+                        if ( jat.ne.0 ) then
+                           do 146 i = 1 , mset1
+                              iat = Iscr1(mstart+i)
+                              if ( iat.eq.jat ) goto 148
+ 146                       continue
+                           goto 150
+                        endif
+ 148                 continue
+                     list1 = .true.
+ 150                 do 154 j = 4 , 6
+                        jat = Label(jb,j)
+                        if ( jat.ne.0 ) then
+                           do 152 i = 1 , mset2
+                              iat = Iscr1(mstrt2+i)
+                              if ( iat.eq.jat ) goto 154
+ 152                       continue
+                           goto 156
+                        endif
+ 154                 continue
+                     list2 = .true.
+ 156                 if ( .not.(list1 .and. list2) ) then
+                        if ( .not.(.not.list1 .and. .not.list2) ) then
+                           if ( .not.(list1 .and. .not.donor) ) then
+                              if ( .not.(list2 .and. .not.accptr) ) then
+                                 if ( list2 ) then
+C   list2.and.accptr=.true. case:
+                                    nset2 = nset2 + 1
+                                    Iscr2(nset2) = jbas
+                                 else
+C   list1.and.donor=.true. case:
+                                    nset1 = nset1 + 1
+                                    IDEL(nstart+nset1) = jbas
+                                 endif
+                              endif
+                           endif
+                        endif
+                     endif
+ 160              continue
+C
+                  IDEL(nstart-1) = nset1
+                  IDEL(nstart) = nset2
+                  ntot = nset1 + nset2
+C  place orbital set 2 in idel:
+                  nstrt2 = nstart + nset1
+                  do 165 i = 1 , nset2
+                     IDEL(nstrt2+i) = Iscr2(i)
+ 165              continue
+C  now, zero all intersecting elements between the two sets of orbitals:
+                  do 170 i = 1 , nset1
+                     id = IDEL(nstart+i)
+                     do 166 j = 1 , nset2
+                        jd = IDEL(nstrt2+j)
+                        TRF(id,jd) = zero
+                        TRF(jd,id) = zero
+ 166                 continue
+ 170              continue
+                  mstart = mstart + ntot
+                  nstart = nstart + ntot
+ 180           continue
+            else
+               nstart = 0
+               do 200 k = 1 , NDEL
+C  read in the number of orbitals in each set of the pair, nset1 and nset2:
+C    (skip the 'by' between nset1 and nset2)
+                  call ifld(nset1,error)
+                  if ( error ) goto 1100
+                  call hfld(keywd,leng,DONE)
+                  call ifld(nset2,error)
+                  if ( error ) goto 1100
+                  nstart = nstart + 2
+                  IDEL(nstart-1) = nset1
+                  IDEL(nstart) = nset2
+C  read in the orbitals of both sets
+                  ntot = nset1 + nset2
+                  do 185 i = 1 , ntot
+                     call ifld(IDEL(nstart+i),error)
+                     if ( error ) goto 1100
+ 185              continue
+C  now, zero all intersecting elements between the two sets:
+                  nstrt2 = nstart + nset1
+                  do 190 i = 1 , nset1
+                     id = IDEL(nstart+i)
+                     do 186 j = 1 , nset2
+                        jd = IDEL(nstrt2+j)
+                        if ( id.ne.jd ) then
+                           TRF(id,jd) = zero
+                           TRF(jd,id) = zero
+                        endif
+ 186                 continue
+ 190              continue
+                  nstart = nstart + ntot
+ 200           continue
+            endif
+            goto 800
+         elseif ( equal(keywd,lnovic,3) ) then
+C
+C  delete all vicinal or geminal delocalizations:
+C
+            ivic = 1
+                
+C remove vicinal delocalizations
+            write (Lfnpr,99011)
+            goto 500
+         elseif ( equal(keywd,lnogem,3) ) then
+            ivic = 0
+                
+C remove geminal delocalizations
+            write (Lfnpr,99012)
+            goto 500
+         elseif ( equal(keywd,ldestr,3) ) then
+C  delete all the "star" nbos on one or more molecules:
+C   (set itype=1 for orbital deletions)
+            ITYPE = 1
+C  read in the number of molecular units to "destar":
+            call ifld(nunits,error)
+            if ( error ) goto 1100
+C  skip the keyword "units":
+            leng = 3
+            call hfld(keywd,leng,DONE)
+C  read in the numbers of the units to destar, finding the star orbitals
+C   from the lists nbouni and nbotyp:
+            NDEL = 0
+            do 220 i = 1 , nunits
+               call ifld(iunit,error)
+               if ( error ) goto 1100
+               write (Lfnpr,99009) iunit
+               do 210 ibas = 1 , NDIM
+                  if ( Nbouni(ibas).eq.iunit ) then
+                     if ( Label(ibas,2).eq.istar ) then
+                        NDEL = NDEL + 1
+                        IDEL(NDEL) = ibas
+                     endif
+                  endif
+ 210           continue
+C  go and do the deletions of the ndel orbitals that are now in idel:
+ 220        continue
+         elseif ( equal(keywd,lnostr,3) ) then
+C
+C  delete all star nbos:
+            ITYPE = 1
+            NDEL = 0
+            write (Lfnpr,99010)
+            do 240 ibas = 1 , NDIM
+               if ( Label(ibas,2).eq.istar ) then
+                  NDEL = NDEL + 1
+                  IDEL(NDEL) = ibas
+               endif
+C  go and do the deletions of the ndel orbitals that are now in idel:
+ 240        continue
+C
+99003       format (1x,
+     &              ' ----------- Alpha spin NBO deletions ----------- '
+     &              /)
+99004       format (1x,
+     &              ' ----------- Beta  spin NBO deletions ----------- '
+     &              /)
+99005       format (1x,'Zero delocalization from unit ',i2,' to unit ',
+     &              i2)
+99006       format (1x,
+     &              'Zero delocalization from NBOs localized on atoms:')
+99007       format (1x,'to NBOs localized on atoms:')
+99008       format (1x,'    (NBOs in common to the two groups of atoms '
+     &              ,'left out)')
+99009       format (1x,'DESTAR unit ',i2,
+     &              ': Delete all Rydberg/antibond',
+     &              ' NBOs from this unit')
+99010       format (1x,'NOSTAR: Delete all Rydberg/antibond NBOs')
+99011       format (1x,'NOVIC: Delete all vicinal delocalizations')
+99012       format (1x,'NOGEM: Delete all geminal delocalizations')
+99013       format (1x,'Deletion of the following orbitals ',
+     &              'from the NBO Fock matrix:',(/1x,20I4))
+99014       format (1x,'Deletion of the following NBO Fock matrix ',
+     &              'elements:',/(7(2x,'(',i3,',',i3,')')))
+99015       format (1x,'Deletion of the NBO Fock matrix elements ',
+     &              'between orbitals:')
+99016       format (1x,20I4)
+99017       format (1x,'and orbitals:')
+99018       format (1x,'Deletion of the following NBO Fock matrix ',
+     &              'blocks:',/(2(2x,'(',i3,'-',i3,'/',i3,'-',i3,')')))
+99019       format (/)
+         elseif ( .not.equal(keywd,ldel,3) ) then
+C
+C  error messages:
+            write (Lfnpr,99020) (keywd(i),i=1,3)
+99020       format (1x,'First character string does not have the',
+     &              ' first three letters of DELETE or ZERO:',/1x,3A1)
+            stop
+         else
+C  read in number of items to delete, ndel:
+            call ifld(NDEL,error)
+            if ( error ) then
+               write (Lfnpr,99021)
+99021          format (1x,
+     &            'Non-integer was input for number of items to delete.'
+     &            )
+               stop
+            else
+C  read in type of deletion and determine if it is orbital, element, or block:
+C   (itype stores the deletion type)
+               call hfld(keywd,leng,DONE)
+               if ( leng.lt.3 ) goto 1000
+               if ( equal(keywd,lorb,3) ) then
+                  ITYPE = 1
+               elseif ( .not.equal(keywd,lele,3) ) then
+                  if ( .not.equal(keywd,lblo,3) ) goto 1000
+                  ITYPE = 4
+               else
+                  ITYPE = 2
+               endif
+C  nread=number of numbers that must be read
+               nread = NDEL*ITYPE
+C  read in orbitals,elements, or blocks:
+               do 250 i = 1 , nread
+                  call ifld(IDEL(i),error)
+                  if ( error ) goto 1100
+ 250           continue
+            endif
+         endif
+      endif
+C
+      if ( ITYPE.ne.1 ) then
+C  element or block deletions: start by filling trf with full NBO fock matrix:
+         ii = 0
+         do 300 i = 1 , NDIM
+            do 260 j = 1 , i
+               ii = ii + 1
+               TRF(i,j) = F(ii)
+               TRF(j,i) = F(ii)
+ 260        continue
+ 300     continue
+         if ( ITYPE.ne.2 ) then
+            if ( ITYPE.ne.4 ) stop
+C  zero requested matrix blocks:
+            do 320 id = 1 , NDEL
+               idst = (id-1)*4
+               j1 = IDEL(idst+1)
+               j2 = IDEL(idst+2)
+               i1 = IDEL(idst+3)
+               i2 = IDEL(idst+4)
+               if ( j1.gt.j2 ) then
+                  IDEL(idst+2) = j1
+                  IDEL(idst+1) = j2
+                  j1 = IDEL(idst+1)
+                  j2 = IDEL(idst+2)
+               endif
+               if ( i1.gt.i2 ) then
+                  IDEL(idst+4) = i1
+                  IDEL(idst+3) = i2
+                  i1 = IDEL(idst+3)
+                  i2 = IDEL(idst+4)
+               endif
+               do 310 i = i1 , i2
+                  do 305 j = j1 , j2
+C  skip diagonal elements:
+                     if ( i.ne.j ) then
+                        TRF(i,j) = zero
+                        TRF(j,i) = zero
+                     endif
+ 305              continue
+ 310           continue
+ 320        continue
+            ndel4 = NDEL*4
+            write (Lfnpr,99018) (IDEL(i),i=1,ndel4)
+            return
+         else
+C  zero requested matrix elements:
+            ndel2 = NDEL*2
+            write (Lfnpr,99014) (IDEL(i),i=1,ndel2)
+            do 340 i = 1 , NDEL
+               i2 = 2*i
+               id = IDEL(i2-1)
+               jd = IDEL(i2)
+               TRF(id,jd) = zero
+               TRF(jd,id) = zero
+ 340        continue
+            return
+         endif
+      else
+C   delete ndel orbitals, adjusting ntrunc accordingly:
+         NTRUNC = NDIM - NDEL
+C   order the orbital numbers:
+         call orderr(Iscr1,IDEL,NDEL,NDIM,Iscr2)
+         write (Lfnpr,99013) (IDEL(i),i=1,NDEL)
+C   fill trf with truncated fock matrix, deleting requested orbitals:
+         iff = 0
+         iout = 1
+         ii = 0
+         do 400 i = 1 , NDIM
+            if ( iout.le.NDEL ) then
+               if ( i.eq.IDEL(iout) ) then
+                  iff = iff + i
+                  iout = iout + 1
+                  goto 400
+               endif
+            endif
+            ii = ii + 1
+            jout = 1
+            jj = 0
+            do 360 j = 1 , i
+               if ( jout.le.NDEL ) then
+                  if ( j.eq.IDEL(jout) ) then
+                     iff = iff + 1
+                     jout = jout + 1
+                     goto 360
+                  endif
+               endif
+               jj = jj + 1
+               iff = iff + 1
+               TRF(ii,jj) = F(iff)
+               TRF(jj,ii) = F(iff)
+ 360        continue
+ 400     continue
+         return
+      endif
+ 500  ITYPE = 3
+C
+C  start by filling trf with full NBO fock matrix:
+C
+      ii = 0
+      do 600 i = 1 , NDIM
+         do 550 j = 1 , i
+            ii = ii + 1
+            TRF(i,j) = F(ii)
+            TRF(j,i) = F(ii)
+ 550     continue
+ 600  continue
+C
+C  find the total number of blocks of the fock matrix to delete:
+C
+      NDEL = 0
+      nstart = 0
+      do 700 ibas = 1 , NDIM
+         ib = Ibxm(ibas)
+         if ( Label(ib,2).ne.istar ) then 
+C lewis orbital
+            nacc = 0
+            do 620 jbas = 1 , NDIM
+               jb = Ibxm(jbas)
+               if ( Label(jb,2).eq.istar ) then
+                                          
+C non-lewis orbital
+                  itmp = ihtyp(ibas,jbas)
+C
+C  vicinal delocalization:
+C
+                  if ( ivic.eq.1 .and. itmp.eq.lv ) then
+                     nacc = nacc + 1
+                     IDEL(nstart+nacc+3) = jbas
+C
+C  geminal delocalization:
+C
+                  elseif ( ivic.eq.0 .and. itmp.eq.lg ) then
+                     nacc = nacc + 1
+                     IDEL(nstart+nacc+3) = jbas
+                  endif
+               endif
+ 620        continue
+            if ( nacc.gt.0 ) then
+               NDEL = NDEL + 1
+               IDEL(nstart+1) = 1
+               IDEL(nstart+2) = nacc
+               IDEL(nstart+3) = ibas
+               do 630 jb = 1 , nacc
+                  jbas = IDEL(nstart+jb+3)
+                  if ( jbas.ne.ibas ) then
+                     TRF(ibas,jbas) = zero
+                     TRF(jbas,ibas) = zero
+                  endif
+ 630           continue
+               nstart = nstart + nacc + 3
+               if ( nstart.gt.LEN )
+     &               stop 'INCREASE DIMENSION OF ARRAY IDEL'
+            endif
+         endif
+ 700  continue
+C
+C  write out information from deletion, for itype=3:
+ 800  indx = 0
+      do 900 k = 1 , NDEL
+         nset1 = IDEL(indx+1)
+         nset2 = IDEL(indx+2)
+         indx = indx + 2
+         nl = indx + 1
+         nu = indx + nset1
+         write (Lfnpr,99015)
+         write (Lfnpr,99016) (IDEL(i),i=nl,nu)
+         write (Lfnpr,99017)
+         nl = indx + nset1 + 1
+         nu = indx + nset1 + nset2
+         write (Lfnpr,99016) (IDEL(i),i=nl,nu)
+         indx = nu
+ 900  continue
+      return
+ 1000 write (Lfnpr,99022) (keywd(i),i=1,3)
+99022 format (1x,'No match with first three letters of the keywords ',
+     &        'for deletion type'/' (ORBITAL,ELEMENT,BLOCK) found:',3A1)
+      stop
+ 1100 write (Lfnpr,99023)
+99023 format (' There is an error in the input of deletions.')
+      stop
+      end
+@* INDEX.

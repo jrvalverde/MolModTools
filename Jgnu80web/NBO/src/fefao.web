@@ -1,0 +1,55 @@
+@*fefao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] F
+\item[OUTPUT:] IWFOCK
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  BETA    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBINQR  NBREAD  UNPACK
+\item[Called by]   DMNAO   DMSIM   NAOANL  NAODRV  NAOSIM  NBODRV  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fefao(F,IWFOCK)
+C*****************************************************************************
+      implicit none
+      double precision F
+      integer Ispin , IWFOCK , l2 , Munit , Mxao , Mxaolm , Mxbo ,
+     &        Natoms , Nbas , Ndim , nfile , nfilea , nfileb
+      dimension F(1)
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      data nfilea , nfileb/30 , 31/
+C
+C  fefao:  fetches the AO fock matrix
+C          if alpha .eq. .true.  we want the alpha fock matrix
+C          if beta .eq. .true.  we want the beta fock matrix.
+C          if the requested matrix does not exist then iwfock = 0
+C
+      l2 = Ndim*(Ndim+1)/2
+      nfile = nfilea
+      if ( Beta ) nfile = nfileb
+      call nbinqr(nfile)
+      if ( nfile.gt.0 ) then
+         call nbread(F,l2,nfile)
+         call unpack(F,Ndim,Nbas,l2)
+      else
+         IWFOCK = 0
+      endif
+      return
+      end
+@* INDEX.

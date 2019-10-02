@@ -1,0 +1,88 @@
+@*corinp.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IESS
+\item[OUTPUT:] ICOR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  LFNIN
+\item[Uses]  LFNIN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   HFLD    STRTIN
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine corinp(IESS,ICOR)
+C*****************************************************************************
+      implicit none
+      integer ICOR , IESS , irep , kchs , kcor , kdel , keywd , knbo ,
+     &        len , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho
+      integer Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr
+      logical end , equal
+      dimension keywd(6) , kcor(4) , kchs(4) , kdel(4) , knbo(4)
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      data kcor/1H$ , 1HC , 1HO , 1HR/ , kchs/1H$ , 1HC , 1HH , 1HO/ ,
+     &     kdel/1H$ , 1HD , 1HE , 1HL/ , knbo/1H$ , 1HN , 1HB , 1HO/
+C
+C  if icor is set to -1, do not read in the $core keylist:
+C
+      if ( ICOR.eq.-1 ) return
+C
+C  if this is the gamess, hondo, or general version of the NBO program,
+C  rewind the input file before searching for $core:
+C
+      irep = 1
+      if ( IESS.eq.0 ) irep = 0
+      if ( IESS.eq.6 ) irep = 0
+      if ( IESS.eq.7 ) irep = 0
+      if ( irep.eq.0 ) rewind (Lfnin)
+C
+C  search input file for $core:
+C
+ 100  call strtin(Lfnin)
+      len = 6
+      call hfld(keywd,len,end)
+      if ( equal(keywd,kcor,4) ) then
+C
+C  $core found:
+C
+         ICOR = 1
+         return
+      else
+         if ( .not.(equal(keywd,knbo,4)) ) then
+            if ( .not.(equal(keywd,kchs,4)) ) then
+               if ( .not.(equal(keywd,kdel,4)) ) then
+                  if ( .not.(len.eq.0 .and. end) ) goto 100
+                  goto 200
+               endif
+            endif
+         endif
+C
+C  $nbo, $choose, $del -- discontinue the search for $core (gaussian, ampac)
+C                         continue searching for $core (gennbo, gamess, hondo)
+C
+         if ( irep.eq.0 ) goto 100
+         backspace (Lfnin)
+         ICOR = 0
+         return
+      endif
+C
+C  end of file encountered:
+C
+ 200  ICOR = 0
+      return
+      end
+@* INDEX.

@@ -1,0 +1,77 @@
+@*awrite.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] A
+\item[INPUT:] MR
+\item[INPUT:] NR
+\item[INPUT:] NC
+\item[INPUT:] TITLE
+\item[INPUT:] LFN
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  ALPHA   BETA    LFNPR   OPEN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FETITL
+\item[Called by]   AOUT
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine awrite(A,MR,NR,NC,TITLE,LFN)
+C*****************************************************************************
+      implicit none
+      double precision A
+      integer i , j , job , LFN , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , lfnout , Lfnpna , Lfnpnb , Lfnpnh
+      integer Lfnpnl , Lfnppa , Lfnpr , MR , NC , NR
+      dimension A(MR,1)
+      character*80 TITLE
+      dimension job(20)
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+C  write the matrix a to the external file abs(lfn).  include job title,
+C  matrix title, and specify the spin in needed:
+C
+      lfnout = abs(LFN)
+      if ( lfnout.eq.Lfnpr ) write (lfnout,99001)
+      if ( Alpha .or. .not.Open .or. lfnout.eq.Lfnpr ) then
+         call fetitl(job)
+         write (lfnout,99002) job
+         write (lfnout,99003) TITLE(1:79)
+      endif
+      if ( Alpha ) write (lfnout,99004)
+      if ( Beta ) write (lfnout,99005)
+C
+C  if this is a square matrix and nr is negative, only write the upper
+C  triangular portion.  otherwise, write out the full matrix:
+C
+      if ( abs(NR).eq.abs(NC) .and. NR.lt.0 ) then
+         write (lfnout,99006) ((A(i,j),i=1,j),j=1,abs(NR))
+      else
+         do 50 j = 1 , abs(NC)
+            write (lfnout,99006) (A(i,j),i=1,abs(NR))
+ 50      continue
+      endif
+      return
+C
+99001 format (/1x)
+99002 format (1x,19A4,a3)
+99003 format (1x,a79,/1x,79('-'))
+99004 format (1x,'ALPHA SPIN')
+99005 format (1x,'BETA  SPIN')
+99006 format (1x,5F15.9)
+      end
+@* INDEX.

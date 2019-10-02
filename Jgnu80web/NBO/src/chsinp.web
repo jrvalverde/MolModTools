@@ -1,0 +1,85 @@
+@*chsinp.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IESS
+\item[OUTPUT:] ICHS
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  LFNIN
+\item[Uses]  LFNIN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   HFLD    STRTIN
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine chsinp(IESS,ICHS)
+C*****************************************************************************
+      implicit none
+      integer ICHS , IESS , irep , kchs , kdel , keywd , knbo , len ,
+     &        Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo ,
+     &        Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm
+      integer Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr
+      logical end , equal
+      dimension keywd(6) , kchs(4) , kdel(4) , knbo(4)
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      data kchs/1H$ , 1HC , 1HH , 1HO/ , kdel/1H$ , 1HD , 1HE , 1HL/ ,
+     &     knbo/1H$ , 1HN , 1HB , 1HO/
+C
+C  if ichs is set to -1, do not search for the $choose keylist:
+C
+      if ( ICHS.eq.-1 ) return
+C
+C  if this is the gamess, hondo, or general version of the NBO program,
+C  rewind the input file before searching for $choose:
+C
+      irep = 1
+      if ( IESS.eq.0 ) irep = 0
+      if ( IESS.eq.6 ) irep = 0
+      if ( IESS.eq.7 ) irep = 0
+      if ( irep.eq.0 ) rewind (Lfnin)
+C
+C  search input file for $choose:
+C
+ 100  call strtin(Lfnin)
+      len = 6
+      call hfld(keywd,len,end)
+      if ( equal(keywd,kchs,4) ) then
+C
+C  $choose found:
+C
+         ICHS = 1
+         return
+      else
+         if ( .not.(equal(keywd,knbo,4)) ) then
+            if ( .not.(equal(keywd,kdel,4)) ) then
+               if ( .not.(len.eq.0 .and. end) ) goto 100
+               goto 200
+            endif
+         endif
+C
+C  $nbo, $del found -- discontinue the search for $choose (gaussian, ampac)
+C                      continue searching for $choose (gennbo, gamess, hondo)
+C
+         if ( irep.eq.0 ) goto 100
+         backspace (Lfnin)
+         ICHS = 0
+         return
+      endif
+C
+C  end of file encountered:
+C
+ 200  ICHS = 0
+      return
+      end
+@* INDEX.

@@ -1,0 +1,46 @@
+@*convrt.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] N
+\item[OUTPUT:] NC1
+\item[OUTPUT:] NC2
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   ANLYZE  DIPANL  FNBOAN  LMOANL  NBODEL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine convrt(N,NC1,NC2)
+      implicit none
+      integer int , isp , N , n1 , n2 , NC1 , NC2
+C*****************************************************************************
+C
+C  convert 2-digit integer 'n' to two literal characters 'nc1','nc2'.
+C
+      dimension int(10)
+      data isp , int/' ' , '1' , '2' , '3' , '4' , '5' , '6' , '7' ,
+     &     '8' , '9' , '0'/
+      NC1 = isp
+      NC2 = isp
+      if ( N.le.0 ) return
+      if ( N.lt.10 ) then
+         NC2 = int(N)
+         return
+      endif
+      n1 = N/10
+      if ( n1.gt.9 ) stop 'ROUTINE CONVRT'
+      NC1 = int(n1)
+      n2 = N - n1*10
+      if ( n2.eq.0 ) n2 = 10
+      NC2 = int(n2)
+      return
+      end
+@* INDEX.

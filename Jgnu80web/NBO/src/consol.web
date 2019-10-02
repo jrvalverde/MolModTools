@@ -1,0 +1,41 @@
+@*consol.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] AUT
+\item[INPUT:] ALT
+\item[INPUT:] NDIM
+\item[INPUT:] N
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine consol(AUT,ALT,NDIM,N)
+C*****************************************************************************
+      implicit none
+      double precision ALT , AUT
+      integer i , j , jp1 , N , NDIM , nm1
+C
+C  consolidate aut, alt to a single matrix, with aut as upper triangle
+C  (including diagonal) and alt as lower triangle.  store result in aut.
+C
+      dimension AUT(NDIM,NDIM) , ALT(NDIM,NDIM)
+      nm1 = N - 1
+      do 100 j = 1 , nm1
+         jp1 = j + 1
+         do 50 i = jp1 , N
+            AUT(i,j) = ALT(i,j)
+ 50      continue
+ 100  continue
+      return
+      end
+@* INDEX.

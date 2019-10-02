@@ -1,0 +1,70 @@
+@*dipele.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] DXYZ
+\item[INPUT:] C
+\item[PASSED:] T
+\item[OUTPUT:] SCR
+\item[INPUT:] ETA
+\item[INPUT:] NOCC
+\item[INPUT:] INDEX
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       COPY    FEDXYZ  SIMTRS
+\item[Called by]   DIPANL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine dipele(DXYZ,C,T,SCR,ETA,NOCC,INDEX)
+C*****************************************************************************
+      implicit none
+      double precision C , DXYZ , ETA , SCR , T
+      integer i , INDEX , Ispin , j , k , Munit , Mxao , Mxaolm , Mxbo ,
+     &        Natoms , Nbas , Ndim , NOCC
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension DXYZ(Ndim,Ndim) , C(Ndim,Ndim) , T(Ndim,Ndim) ,
+     &          SCR(Ndim,Ndim)
+C
+C
+C  compute the electronic contribution for the x (index=1), y (=2),
+C  and z (=3) components of the dipole:
+C
+C  get the AO dipole matrix and transform to the NBO basis:
+C
+      call fedxyz(DXYZ,INDEX)
+      if ( INDEX.eq.0 ) return
+      call simtrs(DXYZ,T,SCR,Ndim,Nbas)
+C
+C  compute the electronic contribution for doubly occupied, filled nbos:
+C
+      do 100 i = 1 , NOCC
+         SCR(i,i) = -ETA*DXYZ(i,i)
+ 100  continue
+C
+C  compute delocalization contributions for each filled nbo:
+C
+      do 200 i = 1 , NOCC
+         do 150 j = 1 , Nbas
+            if ( j.ne.i ) then
+               SCR(j,i) = C(j,i)*DXYZ(i,i) - C(i,i)*DXYZ(j,i)
+               do 110 k = 1 , Nbas
+                  SCR(j,i) = SCR(j,i) - C(k,i)*DXYZ(k,j)
+ 110           continue
+               SCR(j,i) = ETA*C(j,i)*SCR(j,i)
+            endif
+ 150     continue
+ 200  continue
+      call copy(SCR,DXYZ,Ndim,Nbas,Nbas)
+      return
+      end
+@* INDEX.

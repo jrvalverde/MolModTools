@@ -1,0 +1,128 @@
+@*cortbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IAT
+\item[OUTPUT:] ICORE
+\item[INPUT:] IECP
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  IATCR   IATNO   IPSEUD  IZNUC   JCORE
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   AOUT    CORE    NAOANL  SETBAS  VALTBL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine cortbl(IAT,ICORE,IECP)
+C*****************************************************************************
+C
+C   core table:
+C
+C     determine the number of subshells of core orbitals of each angular
+C     symmetry for atom number iat.  icore is an integer array lmax+1
+C     long which returns the number of subshells to the calling subroutine:
+C     the number of `s' subshells in icore(1), the number of `p' subshells
+C     in icore(2), etc...
+C
+C     if the core option has been used, the core orbitals stored in the array
+C     iatcr are used rather than the core orbitals of the nominal core table.
+C
+C     if iecp = 0 return the number of subshells, excluding subshells of
+C                 an effective core potential.
+C     if iecp = 1 return the number of subshells, including subshells of
+C                 an effective core potential.
+C
+C     note: it is possible for a negative number of core orbitals be found
+C     if effective core potentials are employed.  this happens when the
+C     number of core electrons in the effective core potential is either
+C     greater than the nominal number of core electrons or is greater than the
+C     number of core electron requested when using the core option.
+C
+C------------------------------------------------------------------------------
+      implicit none
+      integer IAT , Iatcr , Iatno , Ichoos , ict , IECP , ii , Ino ,
+     &        Iprint , Ipseud , Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm ,
+     &        Iwfock , Iwhybs , Iwmulp , Iwpnao , Iwtnab
+      integer Iwtnao , Iwtnbo , Iznuc , jat , Jcore , Jprint , Kopt ,
+     &        l , Ll , LMAX , Lu , MAXATM , MAXBAS , Norbs
+      parameter (LMAX=3)
+      integer core(57) , ICORE(4) , iord(16)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+C
+      data iord/1 , 1 , 3 , 1 , 3 , 5 , 1 , 3 , 5 , 1 , 3 , 7 , 5 , 1 ,
+     &     3 , 7/
+      data core/2 , 0 , 8 , 1 , 1 , 8 , 2 , 2 , 1 , 12 , 2 , 3 , 2 , 6 ,
+     &     3 , 3 , 2 , 1 , 12 , 3 , 4 , 3 , 1 , 6 , 3 , 4 , 3 , 2 , 16 ,
+     &     3 , 5 , 4 , 2 , 10 , 4 , 5 , 4 , 2 , 1 , 6 , 4 , 5 , 4 , 3 ,
+     &     1 , 16 , 4 , 6 , 5 , 3 , 1 , 10 , 4 , 6 , 5 , 3 , 2/
+C
+C  if the core option has not been used for this atom, use the nominal
+C  set of core orbitals:
+C
+      if ( (Jcore.ne.1 .or. Iatcr(IAT).lt.0) .and. Iatno(IAT).gt.0 )
+     &     then
+         do 50 l = 0 , LMAX
+            ICORE(l+1) = 0
+ 50      continue
+         jat = Iatno(IAT)
+         ii = 0
+ 100     ii = ii + 1
+         jat = jat - core(ii)
+         ii = ii + 1
+         if ( jat.le.0 ) then
+            do 120 l = 1 , core(ii)
+               ICORE(l) = core(ii+l)
+ 120        continue
+         else
+            ii = ii + core(ii)
+         endif
+         if ( jat.gt.0 ) goto 100
+      else
+C
+C  if the core option has been used, determine the number of core
+C  orbitals on this atom:
+C
+         do 150 l = 0 , LMAX
+            ICORE(l+1) = 0
+ 150     continue
+         ii = Iatcr(IAT)
+         if ( ii.gt.0 ) then
+            ict = 0
+ 160        ict = ict + 1
+            l = iord(ict)/2
+            ICORE(l+1) = ICORE(l+1) + 1
+            ii = ii - iord(ict)
+            if ( ii.gt.0 ) goto 160
+         endif
+      endif
+C
+C  if effective core potentials were used and iecp = 0, remove
+C  the core orbitals of the ecp:
+C
+      if ( Ipseud.ne.0 .and. IECP.eq.0 ) then
+         ii = (Iatno(IAT)-Iznuc(IAT))/2
+         if ( ii.gt.0 ) then
+            ict = 0
+ 180        ict = ict + 1
+            l = iord(ict)/2
+            ICORE(l+1) = ICORE(l+1) - 1
+            ii = ii - iord(ict)
+            if ( ii.gt.0 ) goto 180
+         endif
+      endif
+      return
+      end
+@* INDEX.

@@ -1,0 +1,37 @@
+@*fecoor.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] ATCOOR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NATOMS
+\item[Uses]  NATOMS
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   DIPANL  DIPNUC  HYBDIR  WRARC   WRBAS
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fecoor(ATCOOR)
+C*****************************************************************************
+      implicit none
+      double precision ATCOOR
+      integer Ispin , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        Ndim , nfile
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension ATCOOR(3*Natoms)
+C
+C  fecoor:  fetch the atomic cartesian coordinates in angstroms.
+C
+      nfile = 9
+      call nbread(ATCOOR,3*Natoms,nfile)
+      return
+      end
+@* INDEX.

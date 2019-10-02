@@ -1,0 +1,298 @@
+@*chsdrv.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[PASSED:] T
+\item[PASSED:] GUIDE
+\item[PASSED:] BNDOCC
+\item[PASSED:] POL
+\item[PASSED:] Q
+\item[PASSED:] V
+\item[PASSED:] BLK
+\item[PASSED:] C
+\item[PASSED:] EVAL
+\item[PASSED:] BORB
+\item[PASSED:] P
+\item[PASSED:] TA
+\item[PASSED:] HYB
+\item[PASSED:] VA
+\item[PASSED:] VB
+\item[PASSED:] TOPO
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    I3CTR   IW3C    JPRINT  N3CTR   NTOPO
+\item[Uses]  I3CTR   ISPIN   IW3C    LFNPR   MXAO    MXBO    N3CTR
+             NATOMS  NDIM    NTOPO
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CHOOSE  EQUAL   HFLD    IFLD    VALTBL
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine chsdrv(DM,T,GUIDE,BNDOCC,POL,Q,V,BLK,C,EVAL,BORB,P,TA,
+     &                  HYB,VA,VB,TOPO)
+C*****************************************************************************
+      implicit none
+      double precision BLK , BNDOCC , BORB , C , DM , EVAL , GUIDE ,
+     &                 HYB , P , POL , Q , T , TA , TOPO , V , VA , VB
+      integer i , I3ctr , iat , iat1 , iat2 , iat3 , Iatcr , Iathy ,
+     &        Iatno , Ibxm , Ichoos , iflg , Ino , Iorder , Iprin ,
+     &        Iprint , Ipseud , Ispin , ival , Iw3c
+      integer Iwapol , Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs ,
+     &        Iwmulp , Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Iznuc , jat ,
+     &        Jcore , Jorder , Jprint , k3cbon , kalpha , kalt , kat
+      integer kbeta , kbond , kd , keywd , klone , Kopt , kq , ks , kt ,
+     &        l , Label , Larc , leng , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo
+      integer Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna ,
+     &        Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , Ll , Lstocc ,
+     &        Ltyp , Lu , MAXATM , MAXBAS , Munit , Mxao , Mxaolm
+      integer Mxbo , N3ctr , Naoctr , Naol , Natoms , Nbas , nbd ,
+     &        Nbotyp , Nbouni , nctr , nctro , Ndim , nlp , Norbs ,
+     &        Ntopo , num
+C
+      logical end , error , equal
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbnao / Naoctr(MAXBAS) , Naol(MAXBAS) , Ltyp(MAXBAS) ,
+     &                Iprin(MAXBAS)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbtopo/ Iorder(MAXATM) , Jorder(MAXATM) ,
+     &                Ntopo(MAXATM,MAXATM) , N3ctr , I3ctr(10,3)
+      dimension DM(Ndim,Ndim) , T(Ndim,Ndim) , GUIDE(Natoms,Natoms) ,
+     &          BNDOCC(Ndim) , POL(Ndim,3) , Q(Mxao,Ndim) , V(Ndim) ,
+     &          BLK(Mxbo,Mxbo) , C(Mxbo,Mxbo) , EVAL(Mxbo) , BORB(Mxbo)
+     &          , P(Mxao,Mxao) , TA(Mxao,Mxao) , HYB(Mxao) , VA(Mxao) ,
+     &          VB(Mxao) , TOPO(Natoms,Natoms)
+      dimension keywd(6) , klone(4) , kbond(4) , k3cbon(6) , kalpha(5) ,
+     &          kbeta(4) , ival(4) , kalt(4)
+      data klone/1HL , 1HO , 1HN , 1HE/ , kbond/1HB , 1HO , 1HN , 1HD/ ,
+     &     k3cbon/1H3 , 1HC , 1HB , 1HO , 1HN , 1HD/ , kalpha/1HA ,
+     &     1HL , 1HP , 1HH , 1HA/ , kbeta/1HB , 1HE , 1HT , 1HA/ ,
+     &     ks/1HS/ , kd/1HD/ , kt/1HT/ , kq/1HQ/ , kalt/1H$ , 1HE ,
+     &     1HN , 1HD/
+C
+C  search for `alpha' or `beta' character string in case of alpha or
+C  beta spin density matrices:
+C
+      if ( Ispin.eq.2 ) then
+ 50      leng = 5
+         call hfld(keywd,leng,end)
+         if ( end .and. leng.eq.0 ) then
+C
+            write (Lfnpr,99007)
+            Jprint(1) = -1
+            return
+         elseif ( .not.equal(keywd,kalpha,5) ) then
+            goto 50
+         endif
+      elseif ( Ispin.eq.-2 ) then
+ 100     leng = 5
+         call hfld(keywd,leng,end)
+         if ( end .and. leng.eq.0 ) then
+C
+            write (Lfnpr,99008)
+            Jprint(1) = -1
+            return
+         elseif ( .not.equal(keywd,kbeta,4) ) then
+            goto 100
+         endif
+      endif
+C
+C  fill diagonal elements of the topo matrix with nominal numbers of
+C  lone pairs to be found on each atom:
+C
+      do 200 iat = 1 , Natoms
+         nlp = 0
+         call valtbl(iat,ival)
+         do 150 l = 0 , 3
+            nlp = nlp + ival(l+1)*(2*l+1)
+ 150     continue
+         Ntopo(iat,iat) = 100 + nlp
+ 200  continue
+C
+C  read in chosen lone pairs, bonds, and 3-center bonds:
+C
+      nctr = 0
+      N3ctr = 0
+ 300  leng = 6
+      call hfld(keywd,leng,end)
+      if ( end .or. equal(keywd,kalt,4) ) then
+C
+C  modify nominal sets of lone pairs by number of bonds and 3-center
+C  bonds.
+C
+         do 350 iat = 1 , Natoms
+            nlp = Ntopo(iat,iat)
+            if ( nlp.ge.100 ) then
+               nlp = mod(nlp,100)
+               nbd = 0
+               do 310 jat = 1 , Natoms
+                  if ( iat.ne.jat .and. Ntopo(jat,iat).ne.0 )
+     &                 nbd = nbd + Ntopo(jat,iat)
+ 310           continue
+               do 320 kat = 1 , 3
+                  do 315 jat = 1 , N3ctr
+                     if ( I3ctr(jat,kat).eq.iat ) nbd = nbd + 1
+ 315              continue
+ 320           continue
+               nlp = nlp - nbd
+               if ( nlp.lt.0 ) nlp = 0
+               Ntopo(iat,iat) = nlp
+            endif
+ 350     continue
+C
+C  use choose to find bond orbitals using ntopo and i3ctr:
+C
+         iflg = 0
+         call choose(DM,T,GUIDE,BNDOCC,POL,Q,V,BLK,C,EVAL,BORB,P,TA,HYB,
+     &               VA,VB,TOPO,iflg)
+         return
+      else
+         nctro = nctr
+         nctr = 0
+         if ( equal(keywd,klone,4) ) nctr = 1
+         if ( equal(keywd,kbond,4) ) nctr = 2
+         if ( equal(keywd,k3cbon,6) ) nctr = 3
+         if ( nctr.eq.0 ) then
+C
+            write (Lfnpr,99001) (keywd(i),i=1,6)
+            Jprint(1) = -1
+            return
+         elseif ( nctr.lt.nctro ) then
+C
+            write (Lfnpr,99002)
+            Jprint(1) = -1
+            return
+C
+99001       format (/1x,'Error in input of bond orbitals:',/,1x,
+     &   'Keyword for orbital type is not LONE, BOND, or 3CBOND (read `'
+     &   ,6A1,''')')
+99002       format (/1x,'Error in input of bond orbitals:',/,1x,
+     &        'Orbital types should be in the order: LONE, BOND, 3CBOND'
+     &        )
+99003       format (/1x,'Error in input of bond orbitals:',/,1x,
+     &             'Unrecognizable characters in input of lone orbitals'
+     &             )
+99004       format (/1x,'Error in input of bond orbitals:',/,1x,
+     &       'Unrecognizable characters in input of two center orbitals'
+     &       )
+99005       format (/1x,'Error in input of bond orbitals:',/,1x,
+     &     'Unrecognizable characters in input of three center orbitals'
+     &     )
+99006       format (/1x,'Too many three center bonds:',
+     &              '  Increase parameter MAX3C')
+99007       format (/1x,
+     &              'End of file encountered before the word ALPHA was '
+     &              ,'found')
+99008       format (/1x,
+     &              'End of file encountered before the word BETA was ',
+     &              'found')
+         elseif ( nctr.eq.2 ) then
+C
+C  read in bonds:
+C
+ 360        leng = 1
+            call hfld(keywd,leng,end)
+            if ( end ) goto 300
+            num = 0
+            if ( equal(keywd,ks,1) ) num = 1
+            if ( equal(keywd,kd,1) ) num = 2
+            if ( equal(keywd,kt,1) ) num = 3
+            if ( equal(keywd,kq,1) ) num = 4
+            if ( num.ne.0 ) then
+               call ifld(iat1,error)
+               if ( .not.(error) ) then
+                  call ifld(iat2,error)
+                  if ( .not.(error) ) then
+                     iat = max0(iat1,iat2)
+                     jat = min0(iat1,iat2)
+                     Ntopo(iat,jat) = num
+                     Ntopo(jat,iat) = num
+                     goto 360
+                  endif
+               endif
+            endif
+C
+            write (Lfnpr,99004)
+            Jprint(1) = -1
+            return
+         elseif ( nctr.eq.3 ) then
+C
+C  read in 3-center bonds:
+C
+ 380        if ( Iw3c.ne.1 ) Iw3c = 1
+            leng = 1
+            call hfld(keywd,leng,end)
+            if ( end ) goto 300
+            num = 0
+            if ( equal(keywd,ks,1) ) num = 1
+            if ( equal(keywd,kd,1) ) num = 2
+            if ( equal(keywd,kt,1) ) num = 3
+            if ( equal(keywd,kq,1) ) num = 4
+            if ( num.ne.0 ) then
+               call ifld(iat1,error)
+               if ( .not.(error) ) then
+                  call ifld(iat2,error)
+                  if ( .not.(error) ) then
+                     call ifld(iat3,error)
+                     if ( .not.(error) ) then
+                        N3ctr = N3ctr + 1
+                        if ( N3ctr.gt.10 ) goto 500
+                        I3ctr(N3ctr,1) = iat1
+                        I3ctr(N3ctr,2) = iat2
+                        I3ctr(N3ctr,3) = iat3
+                        goto 380
+                     endif
+                  endif
+               endif
+            endif
+C
+            write (Lfnpr,99005)
+            Jprint(1) = -1
+            return
+         else
+C
+C  read in lone pairs:
+C
+ 400        call ifld(iat,error)
+            if ( error ) then
+               leng = 6
+               call hfld(keywd,leng,end)
+               goto 300
+            endif
+            call ifld(num,error)
+            if ( error ) then
+               write (Lfnpr,99003)
+               Jprint(1) = -1
+               return
+            else
+               Ntopo(iat,iat) = num
+               goto 400
+            endif
+         endif
+      endif
+C
+ 500  write (Lfnpr,99006)
+      Jprint(1) = -1
+      return
+      end
+@* INDEX.

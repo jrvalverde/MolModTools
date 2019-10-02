@@ -1,0 +1,51 @@
+@*fedxyz.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DXYZ
+\item[OUTPUT:] I
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBINQR  NBREAD  UNPACK
+\item[Called by]   DIPANL  DIPELE  NAODRV  NAOSIM  NBODRV  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fedxyz(DXYZ,I)
+C*****************************************************************************
+      implicit none
+      double precision DXYZ
+      integer I , Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile , nfilex , nfiley , nfilez
+      dimension DXYZ(1)
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      data nfilex , nfiley , nfilez/50 , 51 , 52/
+C
+C  fedxyz:    fetch the AO dipole moment matrices (in angstroms)
+C      i=1:  x       i=2:    y           i=3:   z
+C
+      if ( I.eq.1 ) nfile = nfilex
+      if ( I.eq.2 ) nfile = nfiley
+      if ( I.eq.3 ) nfile = nfilez
+C
+      call nbinqr(nfile)
+      if ( nfile.gt.0 ) then
+         l2 = Ndim*(Ndim+1)/2
+         call nbread(DXYZ,l2,nfile)
+         call unpack(DXYZ,Ndim,Nbas,l2)
+      else
+         I = 0
+      endif
+      return
+      end
+@* INDEX.

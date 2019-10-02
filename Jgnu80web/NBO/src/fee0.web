@@ -1,0 +1,35 @@
+@*fee0.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] EDEL
+\item[OUTPUT:] ETOT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   NBOEAN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fee0(EDEL,ETOT)
+C*****************************************************************************
+      implicit none
+      double precision EDEL , ETOT , x
+      integer nfile
+      dimension x(2)
+C
+C  fee0:  fetches the deletion and total SCF energy
+C
+      nfile = 8
+      call nbread(x,2,nfile)
+      EDEL = x(1)
+      ETOT = x(2)
+      return
+      end
+@* INDEX.

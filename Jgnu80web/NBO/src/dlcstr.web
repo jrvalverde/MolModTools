@@ -1,0 +1,70 @@
+@*dlcstr.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] IBO
+\item[OUTPUT:] IL
+\item[INPUT:] NL
+\item[PASSED:] LIST
+\item[OUTPUT:] ML
+\item[OUTPUT:] ISTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       IDIGIT  IHTYP
+\item[Called by]   NBOSUM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine dlcstr(IBO,IL,NL,LIST,ML,ISTR)
+C*****************************************************************************
+      implicit none
+      integer i , IBO , icomma , ihtyp , IL , ileft , iright , Ispin ,
+     &        ISTR , LIST , MAXCHR , MAXD , ML , Munit , Mxao , Mxaolm ,
+     &        Mxbo , Natoms , Nbas , nd
+      integer Ndim , NL
+C
+      parameter (MAXCHR=28,MAXD=4)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      dimension LIST(Ndim) , ISTR(80)
+      integer ik(MAXD)
+C
+      data icomma , ileft , iright/',' , '(' , ')'/
+C
+C  build a character string (for the NBO summary table) which contains
+C  the delocalization information for NBO  \# ibo:
+C
+      ML = 0
+ 100  IL = IL + 1
+      if ( IL.le.NL ) then
+         call idigit(LIST(IL),ik,nd,MAXD)
+         if ( ML+nd+4.le.MAXCHR ) then
+            if ( ML.ne.0 ) then
+               ML = ML + 1
+               ISTR(ML) = icomma
+            endif
+            do 120 i = 1 , nd
+               ML = ML + 1
+               ISTR(ML) = ik(i)
+ 120        continue
+            ML = ML + 1
+            ISTR(ML) = ileft
+            ML = ML + 1
+            ISTR(ML) = ihtyp(IBO,LIST(IL))
+            ML = ML + 1
+            ISTR(ML) = iright
+            goto 100
+         endif
+      endif
+C
+      IL = IL - 1
+      return
+      end
+@* INDEX.

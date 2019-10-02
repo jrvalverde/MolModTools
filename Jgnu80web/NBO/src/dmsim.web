@@ -1,0 +1,191 @@
+@*dmsim.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[PASSED:] T
+\item[PASSED:] A
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LBL     LORBC   NAOCTR  NAOL
+\item[Transmits as argument]  IWFOCK  JPRINT  NBAS    NDIM
+\item[Uses]  ALPHA   IWFOCK  JPRINT  LANG    LCTR    LFNPR   NAOA
+             NAOC    NATOMS  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT    FEAOMO  FEDRAW  FEFAO   FETNAO  FRMTMO  IOINQR
+             LBLNAO  NAOANL  SIMTRS  SVDNAO
+\item[Called by]   NBO
+
+\end{description}
+@a
+C**************************************************************************
+      subroutine dmsim(DM,T,A)
+C**************************************************************************
+      implicit none
+      double precision A , Accthr , Athr , Crtset , DM , Dthr , E2thr ,
+     &                 Ethr , Prjset , Pthr , T , Thrset
+      integer i , i1 , i2 , i3 , i4 , i5 , Ichoos , io , ioinqr ,
+     &        Iprin , Iprint , iprnt , Ipseud , Ispin , it , Iw3c ,
+     &        Iwapol , Iwcubf , Iwdetl , Iwdm
+      integer Iwfock , Iwhybs , Iwmulp , Iwpnao , iwrit , Iwtnab ,
+     &        Iwtnao , Iwtnbo , Jcore , Jprint , Kopt , Label , Lang ,
+     &        Larc , Lbl , Lctr , Lfnao , Lfnarc , Lfndaf , Lfndef
+      integer Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , Lorb , Lorbc , Lstemt , Lstocc , Ltyp ,
+     &        MAXATM
+      integer MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Naoa , Naoc ,
+     &        Naoctr , Naol , Natoms , Nbas , Ndim
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+      common /nbao  / Lctr(MAXBAS) , Lang(MAXBAS)
+      common /nbnao / Naoc(MAXBAS) , Naoa(MAXBAS) , Ltyp(MAXBAS) ,
+     &                Iprin(MAXBAS)
+C
+      dimension DM(Ndim,Ndim) , T(Ndim,Ndim) , A(1)
+      character*80 title
+C
+      data iprnt , iwrit/4HPRNT , 4HWRIT/
+C
+C  simulate the alpha/beta NAO subprogram:
+C
+      if ( Alpha ) then
+         if ( Jprint(4).ne.0 ) write (Lfnpr,99001)
+      else
+         do 50 i = 1 , Nbas
+            Naoctr(i) = Naoc(i)
+            Naol(i) = Naoa(i)
+            Lbl(i) = Lctr(i)
+            Lorbc(i) = Lang(i)
+ 50      continue
+         call fetnao(T)
+         if ( Jprint(4).ne.0 ) write (Lfnpr,99002)
+      endif
+C
+C  output the ao-mo transformation matrix:
+C
+      io = ioinqr(Jprint(26))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call feaomo(A,it)
+         if ( it.ne.0 ) then
+            title = 'MOs in the AO basis:'
+            call aout(A,Ndim,Nbas,Nbas,title,1,Jprint(26))
+         endif
+      endif
+C
+C  output the AO fock matrix:
+C
+      io = ioinqr(Jprint(40))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fefao(A,Iwfock)
+         if ( Iwfock.ne.0 ) then
+            title = 'AO Fock matrix:'
+            call aout(A,Ndim,-Nbas,Nbas,title,1,Jprint(40))
+         endif
+      endif
+C
+C  fetch alpha or beta dm (according to whether alpha or beta is true):
+C
+      call fedraw(DM,A)
+C
+C  output the AO density matrix:
+C
+      io = ioinqr(Jprint(27))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'AO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,1,Jprint(27))
+      endif
+C
+C  save the NAO density matrix in scratch storage:
+C
+      call svdnao(DM)
+C
+C  print the natural population analysis for this spin case:
+C
+      i1 = 1
+      i2 = i1 + Natoms*Natoms
+      i3 = i2 + Natoms
+      i4 = i3 + Natoms*Natoms
+      i5 = i4 + Ndim*Ndim
+C     iend = i5 + ndim
+      call naoanl(DM,T,A(i1),A(i2),A(i3),A(i4),A(i5))
+C
+C  note: do not destroy the wiberg bond index which is stored in the first
+C  natoms*natoms elements of the scratch vector a.  this is matrix is
+C  required for the NBO analysis:
+C
+C  form the NAO labels:
+C
+      call lblnao
+C
+C  output the nao-mo transformation matrix:
+C
+      io = ioinqr(Jprint(9))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         i1 = 1
+         i2 = i1 + Natoms*Natoms
+         i3 = i2 + Ndim*Ndim
+         i4 = i3 + Ndim*Ndim
+C       iend = i4 + ndim*(ndim+5)
+         call frmtmo(T,A(i2),A(i3),A(i4),2,Jprint(9))
+      endif
+C
+C  reorganize the scratch vector:
+C
+      i1 = 1
+      i2 = i1 + Natoms*Natoms
+      i3 = i2 + Ndim*Ndim
+C     iend = i3 + ndim
+C
+C  output the NAO fock matrix:
+C
+      io = ioinqr(Jprint(31))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fefao(A(i2),Iwfock)
+         if ( Iwfock.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NAO Fock matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,2,Jprint(31))
+         endif
+      endif
+C
+C  print the NAO density matrix:
+C
+      io = ioinqr(Jprint(35))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'NAO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,2,Jprint(35))
+      endif
+      return
+C
+99001 format (//1x,'***************************************************'
+     &        ,/1x,'*******         Alpha spin orbitals         *******'
+     &        ,/1x,'***************************************************'
+     &        )
+99002 format (//1x,'***************************************************'
+     &        ,/1x,'*******         Beta  spin orbitals         *******'
+     &        ,/1x,'***************************************************'
+     &        )
+      end
+@* INDEX.

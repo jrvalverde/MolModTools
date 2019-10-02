@@ -1,0 +1,97 @@
+@*delscf.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] CORE
+\item[UNUSED:] ICORE
+\item[INPUT:] NBOOPT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    ALPHA   BETA    LFNDAF
+\item[Uses]  LFNPR   NDIM    OPEN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FENEWD  NBCLOS  NBOPEN  SVE0    TREAD   TWRITE
+\item[Called by]   RUNNBO
+
+\end{description}
+@a
+C***********************************************************************
+      subroutine delscf(CORE,ICORE,NBOOPT)
+C***********************************************************************
+      implicit none
+      double precision CORE
+      integer ICORE , Ispin , l2 , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa
+      integer Lfnpr , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        NBOOPT , Ndim
+      dimension CORE(*) , ICORE(*) , NBOOPT(10)
+      logical new , error
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+C  for the gaussian versions of the NBO program, NBO deletions must
+C  always work with lfn 48:
+C
+      Lfndaf = 48
+C
+C  if nboopt(1) = 2, then copy modified AO density matrix from the nbo
+C  daf to the rwfs.
+C
+      if ( NBOOPT(1).eq.2 ) then
+         new = .false.
+         call nbopen(new,error)
+         if ( error ) then
+            write (Lfnpr,99001)
+            stop
+         endif
+         l2 = Ndim*(Ndim+1)/2
+         if ( Open ) then
+            Alpha = .true.
+            Beta = .false.
+            call fenewd(CORE)
+            call twrite(528,CORE,l2,1,l2,1,0)
+            Alpha = .false.
+            Beta = .true.
+            call fenewd(CORE)
+            call twrite(530,CORE,l2,1,l2,1,0)
+         else
+            Alpha = .false.
+            Beta = .false.
+            call fenewd(CORE)
+            call twrite(528,CORE,l2,1,l2,1,0)
+         endif
+         call nbclos
+      endif
+C
+C  if nboopt(1) = 3, then copy the deletion energy to the NBO daf:
+C
+      if ( NBOOPT(1).eq.3 ) then
+         new = .false.
+         call nbopen(new,error)
+         if ( error ) then
+            write (Lfnpr,99001)
+            stop
+         endif
+         call tread(501,CORE,32,1,32,1,0)
+         call sve0(CORE(32))
+         call nbclos
+      endif
+      return
+C
+99001 format (/1x,'Error opening the NBO direct access file in ',
+     &        'subroutine DELSCF.')
+      end
+@* INDEX.

@@ -1,0 +1,137 @@
+@*aout.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[INPUT:] MR
+\item[PASSED:] NR
+\item[INPUT:] NC
+\item[PASSED:] TITLE
+\item[PASSED:] INDEX
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  NATOMS  NLEW    NVAL
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       APRINT  AWRITE  CORTBL  VALTBL
+\item[Called by]   DMNAO   DMSIM   FRMTMO  LMOANL  MULANA  NAO     NAOANL
+             NAODRV  NAOSIM  NBODRV  NEWWTS  WRNLMO  WRPPNA  WRTNAB
+             WRTNAO  WRTNBO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine aout(A,MR,NR,NC,TITLE,INDEX,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision A
+      integer i , iat , Iatcr , Iatno , iecp , IFLG , INDEX , Ino ,
+     &        ishell , Ispin , Iznuc , jflg , kfull , klew , kval ,
+     &        Lbl , Ll , Lu , MAXATM , MAXBAS
+      integer MR , mult , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        NC , Ndim , Nlew , Norbs , NR , Nval
+      dimension A(MR,1)
+      character*80 TITLE
+      dimension ishell(4)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nblbl / Nlew , Nval , Lbl(10,MAXBAS,4)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+C
+      data kfull , kval , klew/4HFULL , 3HVAL , 3HLEW/
+C
+C  either write a to an external file, or print it in the output file:
+C
+C  input:  a     -- matrix to be printed or written out
+C
+C          mr    -- row dimension of matrix a in calling routine
+C
+C          nr    -- abs(nr) is the actual number of rows to be output
+C                   [if nr is negative, iflg is negative (write), and
+C                    abs(nr).eq.nc (square matrix), only the upper
+C                    triangular portion is written out]
+C
+C          nc    -- actual number of columns in matrix a
+C                   [used to determine if a is square, and as an upper
+C                    limit on iflg]
+C
+C          title -- character*80 variable containing a matrix title
+C
+C          index -- index selecting appropriate output labels
+C                   0 : atom labels
+C                   1 : AO   labels
+C                   2 : NAO  labels
+C                   3 : NHO  labels
+C                   4 : NBO  labels
+C                   5 : NLMO labels
+C
+C          iflg  -- print/write flag
+C                   negative : write to lfn abs(iflg)
+C                   positive : print iflg columns of a
+C                   'full'   : print the full matrix
+C                   'val'    : print n columns of a, where n is the
+C                              number of core + valence orbitals and
+C                              is determined by this routine
+C                   'lew'    : print n columns of a, where n is the
+C                              number of occupied orbitals and is
+C                              determined by this routine
+C
+      jflg = IFLG
+      if ( jflg.eq.0 ) return
+C
+C  if jflg is full, then output the total number of columns:
+C
+      if ( jflg.eq.kfull ) jflg = abs(NC)
+C
+C  if jflg = val, output only the valence orbitals, determined from the
+C  core and valence tables:
+C
+      if ( jflg.eq.kval ) then
+         if ( Nval.lt.0 ) then
+            iecp = 0
+            jflg = 0
+            do 40 iat = 1 , Natoms
+               call cortbl(iat,ishell,iecp)
+               do 10 i = 1 , 4
+                  mult = 2*(i-1) + 1
+                  jflg = jflg + ishell(i)*mult
+ 10            continue
+               call valtbl(iat,ishell)
+               do 20 i = 1 , 4
+                  mult = 2*(i-1) + 1
+                  jflg = jflg + ishell(i)*mult
+ 20            continue
+ 40         continue
+         else
+            jflg = Nval
+         endif
+      endif
+C
+C  if jflg is lew, only output the occupied orbitals:
+C
+      if ( jflg.eq.klew ) jflg = Nlew
+C
+C  if jflg is positive, print the matrix a in the output file:
+C
+      if ( jflg.gt.0 ) call aprint(A,MR,NR,NC,TITLE,INDEX,jflg)
+C
+C  if jflg is negative but greater than -1000, write matrix a to the external
+C  file abs(jflg):
+C
+      if ( jflg.lt.0 .and. jflg.gt.-1000 )
+     &     call awrite(A,MR,NR,NC,TITLE,jflg)
+C
+      return
+      end
+@* INDEX.

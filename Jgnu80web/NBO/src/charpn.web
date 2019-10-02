@@ -1,0 +1,31 @@
+@*charpn.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[UNUSED:] A
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   RUNNBO
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C                 e n d    o f    n b o    p r o g r a m
+C
+C*****************************************************************************
+C a dummy from dbc
+      subroutine charpn(A)
+      implicit none
+      character*4 A
+C      write(6,200) a
+C  200 format(' charpn called  ',a4)
+      return
+      end
+@* INDEX.

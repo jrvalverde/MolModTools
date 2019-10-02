@@ -1,0 +1,53 @@
+@*feaomo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[OUTPUT:] IT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  BETA    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBINQR  NBREAD
+\item[Called by]   DMNAO   DMSIM   FRMTMO  NAODRV  NAOSIM  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine feaomo(T,IT)
+C*****************************************************************************
+      implicit none
+      integer Ispin , IT , l3 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile , nfilea , nfileb
+      double precision T
+      dimension T(1)
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      data nfilea , nfileb/40 , 41/
+C
+C feaomo:  fetch the AO to MO transformation matrix:
+C          (it = 1, AO to MO transform is on NBO daf)
+C          (it = 0, AO to MO transform is not on NBO daf)
+C
+      nfile = nfilea
+      if ( Beta ) nfile = nfileb
+      call nbinqr(nfile)
+      if ( nfile.gt.0 ) then
+         IT = 1
+         l3 = Ndim*Ndim
+         call nbread(T,l3,nfile)
+      else
+         IT = 0
+      endif
+      return
+      end
+@* INDEX.

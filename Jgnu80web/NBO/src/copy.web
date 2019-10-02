@@ -1,0 +1,39 @@
+@*copy.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] A
+\item[OUTPUT:] B
+\item[INPUT:] NDIM
+\item[INPUT:] NR
+\item[INPUT:] NC
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   ATDIAG  DIPELE  FACTOR  FNDSOL  NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine copy(A,B,NDIM,NR,NC)
+C*****************************************************************************
+      implicit none
+      double precision A , B
+      integer i , j , NC , NDIM , NR
+      dimension A(NDIM,1) , B(NDIM,1)
+C
+C  copy a to b:
+C
+      do 100 j = 1 , NC
+         do 50 i = 1 , NR
+            B(i,j) = A(i,j)
+ 50      continue
+ 100  continue
+      return
+      end
+@* INDEX.

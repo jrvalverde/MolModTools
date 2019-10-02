@@ -1,0 +1,52 @@
+@*angles.
+
+\section*{\sf Dummy Arguments}  
+\begin{description}
+
+\item[INPUT:] X
+\item[INPUT:] Y
+\item[INPUT:] Z
+\item[OUTPUT:] THETA
+\item[OUTPUT:] PHI
+
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   HYBDIR
+
+\end{description}
+@a
+      subroutine angles(X,Y,Z,THETA,PHI)
+      implicit none
+      double precision conv , one , PHI , THETA , X , Y , Z , zero
+      data zero , one/0.0D0 , 1.0D0/
+C
+      conv = 180.0/(4.0*datan(one))
+      if ( X.eq.zero .and. Y.eq.zero ) then
+         if ( Z.ge.zero ) then
+            THETA = zero
+         else
+            THETA = 180.0
+         endif
+         PHI = zero
+      else
+         THETA = dacos(Z)*conv
+         if ( THETA.gt.180.0 ) THETA = 360.0 - THETA
+         PHI = datan2(Y,X)*conv
+         if ( PHI.lt.zero ) PHI = PHI + 360.0
+         if ( dabs(PHI-360.0).lt.0.05 ) PHI = zero
+         if ( dabs(THETA).lt.0.05 ) PHI = zero
+         if ( dabs(THETA-180.0).lt.0.05 ) PHI = zero
+      endif
+      return
+      end
+@* INDEX.

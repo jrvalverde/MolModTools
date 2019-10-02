@@ -1,0 +1,48 @@
+@*fednao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  BETA    NBAS    NDIM    ORTHO
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FEDRAW  NBREAD  UNPACK
+\item[Called by]    NOTHING 
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fednao(DM)
+C*****************************************************************************
+      implicit none
+      double precision DM
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension DM(Ndim,Ndim)
+C
+C  fednao:  fetches the NAO density matrix (ao dm for orthogonal basis sets)
+C
+      if ( Ortho ) then
+         call fedraw(DM,DM)
+      else
+         nfile = 23
+         if ( Beta ) nfile = 24
+         l2 = Ndim*(Ndim+1)/2
+         call nbread(DM,l2,nfile)
+         call unpack(DM,Ndim,Nbas,l2)
+      endif
+      return
+      end
+@* INDEX.

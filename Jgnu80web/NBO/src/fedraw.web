@@ -1,0 +1,63 @@
+@*fedraw.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] DM
+\item[INPUT:] SCR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  ALPHA   BETA    NBAS    NDIM    OPEN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  UNPACK
+\item[Called by]   DMNAO   DMSIM   FEDNAO  NBO     NBODRV  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fedraw(DM,SCR)
+C*****************************************************************************
+      implicit none
+      double precision DM , SCR
+      integer i , Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile , nfilea , nfileb
+      dimension DM(1) , SCR(1)
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      data nfilea , nfileb/20 , 21/
+C
+C  fedraw:  fetches the density matrix (raw a.o. basis) in dm(ndim,ndim)
+C           if alpha =.true.  fetch alpha matrix
+C           if beta  =.true   fetch beta matrix.
+C           if open .and. .not.(alpha .or. beta) =.true  fetch the total d.m.
+C
+      l2 = Ndim*(Ndim+1)/2
+      nfile = nfilea
+      if ( Beta ) nfile = nfileb
+      call nbread(DM,l2,nfile)
+C
+      if ( Open ) then
+         if ( .not.(Alpha .or. Beta) ) then
+            call nbread(SCR,l2,nfileb)
+C
+C  form the total density matrix:
+C
+            do 20 i = 1 , l2
+               DM(i) = DM(i) + SCR(i)
+ 20         continue
+         endif
+      endif
+C
+      call unpack(DM,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

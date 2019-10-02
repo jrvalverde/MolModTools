@@ -1,0 +1,319 @@
+@*anlyze.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+
+\item[INPUT:] T
+\item[INPUT:] BNDOCC
+\item[OUTPUT:] HYB
+\item[PASSED:] HYCOEF
+\item[PASSED:] THYB
+
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+
+\item[Modifies]    LTYP
+\item[Transmits as argument]  IATNO   MXAO
+\item[Uses]  IATNO   IBXM    IPSEUD  ISPIN   IWHYBS  IZNUC   JPRINT
+             LABEL   LFNPR   LL      LTYP    MXAO    NAOA    NATOMS
+             NBAS    NDIM    UL
+
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+
+\item[Calls]       CONVRT  FRMHYB  HTYPE   LBLNHO  NAMEAT
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+      subroutine anlyze(T,BNDOCC,HYB,HYCOEF,THYB)
+      implicit none
+      double precision Accthr , Athr , BNDOCC , coef , coefsq , Crtset ,
+     &                 Dthr , E2thr , Ethr , hundrd , HYB , HYCOEF ,
+     &                 occcr , occevr , occlew , occnon , occvl ,
+     &                 occvnl , pcent , pct
+      double precision pow , Prjset , Pthr , std , T , t99 , t99p ,
+     &                 tenth , thresh , Thrset , THYB , totele ,
+     &                 tthoth , zero
+      integer i , ia , Iatcr , Iathy , Iatno , ib , Ibxm , ich ,
+     &        Ichoos , ictr , Ino , ipar3c , Iprin , Iprint , Ipseud ,
+     &        isgn , isp , Ispin , Iw3c , Iwapol
+      integer Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp ,
+     &        Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Iznuc , j , Jcore ,
+     &        Jprint , k , kh , kl , Kopt , ku , l
+      integer l2blnk , l3c , Label , lbd , lbl , lblnk , lcr , Lfnao ,
+     &        Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo ,
+     &        Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna
+      integer Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , lhyp , Ll ,
+     &        llp , lname , lry , lstar , lstd , Lstocc , Ltyp , Ltyp1 ,
+     &        MAXATM , MAXBAS , mcr , mecp , mhyb
+      integer mlew , Munit , mvl , Mxao , Mxaolm , Mxbo , nam , nameat ,
+     &        Naoa , Naoc , Naoctr , Naol , Natoms , Nbas , nbond ,
+     &        nctr , Ndim , nel , nhyb , nl
+      integer nl1 , Norbs
+      integer Ul
+C
+C  print out details of bond-orbital transformation from matrix t.
+C
+C  required input:
+C         t = transformation matrix from s.r. nathyb; real (1,ndim;1,ndim)
+C      ndim = declared dimensionality of array t
+C      nbas = no. of orbitals = actual dimension of t, naol
+C      naol = integer list of orbital angular momentum type
+C                naol(i)/100 = l = q.n. of atomic orbital i
+C     iatno = list of atomic numbers; iatno(i) is the atomic number
+C                of atom i as an integer
+C    natoms = no. of atoms (not including ghosts) in the molecule
+C    iwhybs = 1 if hybrid a.o. coefficients are to be printed,
+C             0 otherwise
+C     lfnpr = logical file number for printout.
+C    naoctr = list of atomic centers of oao or NAO basis orbitals
+C     label = list of bond orbital labels
+C      ibxm = permutation list of bond orbitals
+C    bndocc = list of bond orbital occupancies
+C     ispin = 0 for spinless nbos
+C           = 2 for alpha spin nbos
+C           =-2 for beta  spin nbos
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Ul(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbnao / Naoc(MAXBAS) , Naoa(MAXBAS) , Ltyp1(MAXBAS) ,
+     &                Iprin(MAXBAS)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Ibxm(MAXBAS) , Ltyp(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+      dimension T(Ndim,Ndim) , HYB(Mxao) , BNDOCC(Ndim) ,
+     &          THYB(Ndim,Ndim) , pct(5) , pow(5) , lname(5) , isp(3) ,
+     &          nam(3) , ich(3,2) , HYCOEF(Ndim)
+      data llp , lbd , l3c , lcr , lry/'LP' , 'BD' , '3C' , 'CR' , 'RY'/
+      data lname/'s' , 'p' , 'd' , 'f' , 'g'/
+      data zero , thresh , t99 , t99p/0.0D0 , 1.D-2 , 99.99D0 ,
+     &     99.995D0/
+      data tenth , hundrd , tthoth/0.1D0 , 100.0D0 , 0.0001D0/
+      data lhyp , lblnk , lstar , l2blnk/'-' , ' ' , '*' , '  '/
+C
+C  count the number of electrons:
+C
+      totele = zero
+      do 100 i = 1 , Nbas
+         totele = totele + BNDOCC(i)
+ 100  continue
+      totele = totele + tenth
+      nel = totele
+      totele = nel
+C
+C  count the number of core orbitals and the occupancies of the core,
+C  valence lewis, valence non-lewis, and extra-valence rydberg orbitals.
+C  (also count the number of electrons in the ecp, if employed)
+C
+      mcr = 0
+      occcr = zero
+      occvl = zero
+      occvnl = zero
+      do 200 i = 1 , Nbas
+         if ( Label(Ibxm(i),2).ne.lstar ) then
+            if ( Label(Ibxm(i),1).eq.lcr ) then
+               mcr = mcr + 1
+               occcr = occcr + BNDOCC(i)
+            else
+               occvl = occvl + BNDOCC(i)
+            endif
+         elseif ( Label(Ibxm(i),1).ne.lry ) then
+            occvnl = occvnl + BNDOCC(i)
+         endif
+ 200  continue
+      occevr = totele - occcr - occvl - occvnl
+      if ( Ispin.eq.0 ) mcr = 2*mcr
+      mvl = nel - mcr
+      mecp = 0
+      if ( Ipseud.ne.0 ) then
+         do 250 i = 1 , Natoms
+            mecp = mecp + Iatno(i) - Iznuc(i)
+ 250     continue
+         if ( Ispin.ne.0 ) mecp = mecp/2
+      endif
+      mlew = mcr + mvl + mecp
+      occlew = occcr + occvl + mecp
+      occnon = occvnl + occevr
+C
+C  write summary of NBO occupancies:
+C
+      if ( Jprint(5).eq.1 .and. nel.ne.0 ) then
+         write (Lfnpr,99010)
+         if ( Ipseud.ne.0 ) write (Lfnpr,99011) dble(mecp)
+         if ( mcr.ne.0 ) then
+            pcent = occcr/mcr*hundrd
+            write (Lfnpr,99012) occcr , pcent , mcr
+         endif
+         if ( mvl.ne.0 ) then
+            pcent = occvl/mvl*hundrd
+            write (Lfnpr,99013) occvl , pcent , mvl
+         endif
+         write (Lfnpr,99014)
+         pcent = occlew/mlew*hundrd
+         write (Lfnpr,99015) occlew , pcent , mlew
+         write (Lfnpr,99016)
+         pcent = occvnl/mlew*hundrd
+         write (Lfnpr,99017) occvnl , pcent , mlew
+         pcent = occevr/mlew*hundrd
+         write (Lfnpr,99018) occevr , pcent , mlew
+         write (Lfnpr,99014)
+         pcent = occnon/mlew*hundrd
+         write (Lfnpr,99019) occnon , pcent , mlew
+         write (Lfnpr,99020)
+      endif
+C
+C  write out nbos:
+C
+      if ( Jprint(5).eq.1 ) then
+         write (Lfnpr,99001)
+         write (Lfnpr,99002) (lhyp,j=1,79)
+      endif
+C
+C  main loop over bond orbitals:
+C
+      nhyb = 0
+      mhyb = 0
+      ipar3c = 1
+      do 500 nbond = 1 , Nbas
+         ib = Ibxm(nbond)
+         lbl = Label(ib,1)
+         if ( lbl.eq.llp .or. lbl.eq.lcr .or. lbl.eq.lry ) nctr = 1
+         if ( lbl.eq.lbd ) nctr = 2
+         if ( lbl.eq.l3c ) nctr = 3
+         do 300 i = 1 , 3
+            ia = Label(ib,i+3)
+            call convrt(ia,ich(i,1),ich(i,2))
+            nam(i) = l2blnk
+            if ( ia.gt.0 ) nam(i) = nameat(Iatno(ia))
+            isp(i) = lhyp
+            if ( i.ge.nctr ) isp(i) = lblnk
+ 300     continue
+C
+C  loop over atomic centers of bond orbital nbond:
+C
+         do 400 ictr = 1 , nctr
+            i = Label(ib,ictr+3)
+            nel = nameat(Iatno(i))
+            kl = Ll(i)
+            ku = Ul(i)
+            do 320 k = 1 , Mxao
+               Ltyp(k) = 0
+               HYB(k) = zero
+ 320        continue
+C
+C  choose sign for polarization coefficients:
+C
+            isgn = 1
+            if ( Label(ib,2).eq.lstar ) then
+               if ( ictr.ge.2 ) then
+                  if ( ictr.eq.3 ) ipar3c = -ipar3c
+                  if ( ictr.ne.3 .or. ipar3c.le.0 ) isgn = -isgn
+               endif
+            endif
+C
+C  extract hybrid (hyb) from transformation matrix t; ltyp(i) is the
+C  orbital angular momentum quantum no. of a.o.  \# i:
+C
+            kh = 0
+            do 340 k = kl , ku
+               kh = kh + 1
+               HYB(kh) = T(k,nbond)
+               Ltyp(kh) = Naoa(k)/100
+ 340        continue
+            call htype(HYB,Ltyp,Mxao,kh,coef,pct,nl,isgn)
+C
+C  find leading non-zero contribution to determine pow(l) for each l:
+C
+            lstd = 0
+            do 360 l = 1 , nl
+               if ( lstd.le.0 ) then
+                  pow(l) = zero
+                  std = pct(l)
+                  if ( std.lt.thresh ) goto 360
+                  lstd = l
+               endif
+               pow(l) = pct(l)/std
+               if ( pow(l).gt.t99p ) pow(l) = t99
+ 360        continue
+C
+C  write out NHO for center ictr:
+C
+            coefsq = coef*coef*hundrd
+            nl1 = nl
+            if ( nl1.gt.3 ) nl1 = 3
+            if ( ictr.eq.1 .and. nctr.eq.1 .and. Jprint(5).eq.1 )
+     &           write (Lfnpr,99003) nbond , BNDOCC(nbond) ,
+     &                               (Label(ib,k),k=1,3) , nam(1) ,
+     &                               ich(1,1) , ich(1,2) , pct(1) ,
+     &                               (lname(l),pow(l),pct(l),l=2,nl1)
+            if ( ictr.eq.1 .and. nctr.gt.1 .and. Jprint(5).eq.1 )
+     &           write (Lfnpr,99004) nbond , BNDOCC(nbond) ,
+     &                               (Label(ib,k),k=1,3) ,
+     &                               (nam(k),ich(k,1),ich(k,2),isp(k),
+     &                               k=1,3)
+            if ( nctr.ne.1 .and. Jprint(5).eq.1 ) write (Lfnpr,99005)
+     &           coefsq , coef , nel , i , pct(1) ,
+     &           (lname(l),pow(l),pct(l),l=2,nl1)
+            if ( nl.gt.3 .and. Jprint(5).eq.1 ) write (Lfnpr,99006)
+     &           (lname(l),pow(l),pct(l),l=4,nl)
+            if ( Iwhybs.ne.0 .and. BNDOCC(nbond).gt.tthoth .and.
+     &           Jprint(5).eq.1 ) write (Lfnpr,99007) (HYB(k),k=1,kh)
+            call frmhyb(HYB,THYB,coef,HYCOEF,kl,ku,nhyb)
+C
+C  if this is a new hybrid, form its label:
+C
+            if ( mhyb.ne.nhyb ) then
+               mhyb = nhyb
+               call lblnho(nhyb,nbond,ictr,nctr)
+            endif
+ 400     continue
+ 500  continue
+      return
+C
+99001 format (//,1x,'    (Occupancy)   Bond orbital/ Coefficients/ ',
+     &        'Hybrids')
+99002 format (1x,80A1)
+99003 format (1x,i3,'. (',f7.5,') ',a2,a1,'(',i2,')',a2,2A1,12x,' s(',
+     &        f6.2,'%)',2(a1,f5.2,'(',f6.2,'%)'))
+99004 format (1x,i3,'. (',f7.5,') ',a2,a1,'(',i2,')',3(a2,3A1))
+99005 format (16x,'(',f6.2,'%)',2x,f7.4,'*',a2,i2,' s(',f6.2,'%)',
+     &        2(a1,f5.2,'(',f6.2,'%)'))
+99006 format (50x,2(a1,f5.2,'(',f6.2,'%)'))
+99007 format (39x,5F8.4)
+99008 format (i3)
+99009 format (5F14.9)
+99010 format (/,1x,56('-'))
+99011 format (1x,'  Effective Core          ',f9.5)
+99012 format (1x,'  Core                    ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99013 format (1x,'  Valence Lewis           ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99014 format (2x,18('='),7x,28('='))
+99015 format (1x,'  Total Lewis             ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99016 format (2x,53('-'))
+99017 format (1x,'  Valence non-Lewis       ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99018 format (1x,'  Rydberg non-Lewis       ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99019 format (1x,'  Total non-Lewis         ',f9.5,' (',f7.3,'% of ',i3,
+     &        ')')
+99020 format (1x,56('-'))
+      end
+@* INDEX.

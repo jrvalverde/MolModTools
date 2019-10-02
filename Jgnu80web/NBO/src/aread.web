@@ -1,0 +1,95 @@
+@*aread.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] A
+\item[INPUT:] MR
+\item[INPUT:] NR
+\item[INPUT:] NC
+\item[OUTPUT:] JOB
+\item[INPUT:] LFN
+\item[OUTPUT:] ERROR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  ALPHA   BETA    OPEN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   RDPPNA  RDTNAB  RDTNAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine aread(A,MR,NR,NC,JOB,LFN,ERROR)
+C*****************************************************************************
+      implicit none
+      double precision A
+      integer i , ialfa , ibeta , idash , istr , itemp , j , JOB , LFN ,
+     &        MR , NC , NR
+      dimension A(MR,1) , JOB(20)
+      dimension itemp(20)
+      logical ERROR
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      data idash , ialfa , ibeta/4H---- , 4HALPH , 4HBETA/
+C
+C  read the matrix a to the external file lfn:
+C
+C  input:  mr    -- row dimension of matrix a in calling routine
+C
+C          nr    -- abs(nr) is the actual number of rows to be read
+C                   [if nr is negative and abs(nr).eq.nc (square matrix),
+C                    only the upper triangular portion is stored in the
+C                    input file.  this routine will read the upper triangular
+C                    portion and unpack it.]
+C
+C          nc    -- actual number of columns in matrix a
+C                   [used to determine if a is square]
+C
+C          lfn   -- input file
+C
+C  output: job   -- integer array containing the job title
+C                   [closed shell or alpha spin only]
+C
+C          error -- set to .true. if the end-of-file was encountered while
+C                   reading
+C
+      if ( Alpha .or. .not.Open ) read (LFN,99002,end=300) JOB
+      if ( .not.Open ) istr = idash
+      if ( Alpha ) istr = ialfa
+      if ( Beta ) istr = ibeta
+C
+ 100  read (LFN,99002,end=300) itemp
+      if ( itemp(1).ne.istr ) goto 100
+C
+C  if this is a square matrix and nr is negative, only read the upper
+C  triangular portion.  otherwise, read the full matrix:
+C
+      if ( abs(NR).eq.abs(NC) .and. NR.lt.0 ) then
+         read (LFN,99001,end=300) ((A(i,j),i=1,j),j=1,abs(NR))
+         do 150 j = 1 , abs(NR) - 1
+            do 120 i = j + 1 , abs(NR)
+               A(i,j) = A(j,i)
+ 120        continue
+ 150     continue
+      else
+         do 200 j = 1 , abs(NC)
+            read (LFN,99001,end=300) (A(i,j),i=1,abs(NR))
+ 200     continue
+      endif
+      ERROR = .false.
+      return
+C
+ 300  ERROR = .true.
+      return
+C
+99001 format (1x,5F15.9)
+99002 format (1x,20A4)
+      end
+@* INDEX.

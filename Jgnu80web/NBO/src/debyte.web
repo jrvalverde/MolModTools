@@ -1,0 +1,43 @@
+@*debyte.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] I
+\item[OUTPUT:] IBYTE
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   CHEM    LBLAO   LBLNAO  LBLNBO  LBLNHO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine debyte(I,IBYTE)
+C*****************************************************************************
+      implicit none
+      integer I , ib1 , ib2 , ib3 , IBYTE , ioff , ir
+      dimension IBYTE(4)
+C
+      data ib1 , ib2 , ib3 , ioff/256 , 65536 , 16777216 , 538976256/
+C
+C  decompose integer variable 'i' to four character bytes:
+C
+      IBYTE(4) = I/ib3
+      ir = I - IBYTE(4)*ib3
+      IBYTE(3) = ir/ib2
+      ir = ir - IBYTE(3)*ib2
+      IBYTE(2) = ir/ib1
+      IBYTE(1) = ir - IBYTE(2)*ib1
+C
+      IBYTE(1) = IBYTE(1) + ioff
+      IBYTE(2) = IBYTE(2) + ioff
+      IBYTE(3) = IBYTE(3) + ioff
+      IBYTE(4) = IBYTE(4) + ioff
+      return
+      end
+@* INDEX.
