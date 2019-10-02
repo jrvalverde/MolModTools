@@ -1,0 +1,58 @@
+@* trnfrm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] SYMOPS                                                    
+\item[PASSED:] IPRMUT                                                    
+\item[PASSED:] NB                                                        
+\item[PASSED:] NCOL                                                      
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] AA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  MAPPER  MAPROT  NROT                                   
+\item[Uses]  MAPPER  MAPROT  NROT                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DOROT   FRMROT  ILSW    PERMUT                         
+\item[Called by]   BLDTBL                                                 
+                                                                    
+\end{description}
+@a
+C from util1.for
+      subroutine trnfrm(A,SYMOPS,IPRMUT,NB,NCOL,NATOMS,AA)
+      implicit none
+      double precision A , AA , SYMOPS
+      integer i56d , IPRMUT , Mapper , Maprot , MAXATM , MAXBAS , 
+     &        NATOMS , NB , NCOL , Nrot
+      parameter (MAXBAS=150,MAXATM=100)
+C ----------------------------------------------------------------------
+      double precision rotd(6,6) , rotf(10,10)
+      dimension A(*) , SYMOPS(*) , IPRMUT(*) , AA(*)
+      common /maps  / Nrot , Maprot(MAXBAS) , Mapper(MAXATM)
+C           this routine performs a symmetry operation, mixing the
+C     rows of the matrix "a".  "a" is assumed to be a square matrix
+C     of dimension (nb x nb).  "symops" is a (3 x 3) matrix giving
+C     the transformation of the coordinates in the operation, and
+C     "iprmut" is an integer vector of length "natoms" which
+C     describes how the nuclear centers are permuted by the
+C     operation (iprmut(i) = j  means that "j" on input should be
+C     "i" on output).  "aa" is a scratch vector of length nb.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C                        find whether 5/6 d.
+      call ilsw(2,2,i56d)
+C                        form the transformation matrices for
+C                        d- and f-functions.
+      call frmrot(SYMOPS,rotd,rotf,3,i56d)
+C                        do the transformation of a.
+      call dorot(SYMOPS,rotd,rotf,A,NB,NCOL,Maprot,Nrot)
+C                        now, do the permutations.
+      call permut(A,AA,Mapper,IPRMUT,NATOMS,NB,NCOL)
+      return
+C
+      end
+@* INDEX.

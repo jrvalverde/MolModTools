@@ -1,0 +1,107 @@
+@* qpaint.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] BASE                                                      
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+\item[OUTPUT:] LCURSR                                                    
+\item[OUTPUT:] INTE                                                      
+\item[INPUT:] IDEL                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPFAIL  QPOK                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  IFALPH  INTCHR  IORD                           
+\item[Called by]   FFGET   QPMATC                                         
+                                                                    
+\end{description}
+@a
+      integer function qpaint(BASE,LINE,LENGTH,LCURSR,INTE,IDEL)
+      implicit none
+      integer BASE , chr , getchr , IDEL , intchr , INTE , iord , 
+     &        LCURSR , LENGTH , LINE , Maxdep , Maxkey , mycrsr , n , 
+     &        Qpabrv , Qpambg , Qpdpth , Qpend , Qperr , Qpexit
+      integer Qpfail , Qpok , Qprecr , Qpret , Stack , t , val
+      dimension LINE(*)
+      logical gotone , neg , ifalph
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C2
+C ----------------------------------------------------------------------
+C          this routine accepts any integer number.  the argument,
+C     'base', indicates the base of the integer to be accepted (10 for
+C     decimal, 16 for hex, etc.).  the returned value of the function
+C     is either qpok if an integer was accepted, or qpfail otherwise.
+C     if a number if accepted, then lcursr is advanced and the number
+C     is stored into the calling argument, integer.  no global data
+C     is modified.  "idel" indicates what kind of delimiter at the end
+C     of the integer is acceptable:
+C            0 ... non-alphanumeric.
+C            1 ... non-digit.
+C            2 ... non-digit and not ".".
+C            3 ... non-alphanumeric and not ".".
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C                        assume failure.
+      val = Qpfail
+      if ( LCURSR.ge.LENGTH ) goto 400
+C
+C                        initialize some stuff, get a local cursor.
+      neg = .false.
+      n = 0
+      gotone = .false.
+      mycrsr = LCURSR
+C
+C            check first character (+,-)
+      chr = getchr(LINE,mycrsr)
+      if ( chr.eq.iord('+') ) goto 200
+      if ( chr.eq.iord('-') ) then
+         neg = .true.
+         goto 200
+      endif
+C
+C                  get a character, see if it's a digit.
+ 100  t = intchr(chr,BASE)
+      if ( t.eq.-1 ) then
+C
+C                  be sure we got at least ont digit.
+         if ( .not.gotone ) goto 400
+C
+C                  be sure we got the right kind of delimiter.
+         if ( IDEL.eq.0 .and. ifalph(chr) ) goto 400
+         if ( IDEL.eq.3 .and. (chr.eq.iord('.') .or. ifalph(chr)) )
+     &        goto 400
+         if ( IDEL.eq.2 .and. chr.eq.iord('.') ) goto 400
+         mycrsr = mycrsr - 1
+         goto 300
+      else
+         gotone = .true.
+         n = BASE*n + t
+      endif
+C                  are we at the end of the line?
+ 200  if ( mycrsr.lt.LENGTH ) then
+         chr = getchr(LINE,mycrsr)
+         goto 100
+C
+      elseif ( .not.gotone ) then
+         goto 400
+      endif
+C
+C                  success.  set return status, deal with leading
+C                  signs, update cursor, and store accepted value
+C                  into "integer".
+ 300  val = Qpok
+      if ( neg ) n = -n
+      INTE = n
+      LCURSR = mycrsr
+ 400  qpaint = val
+      return
+C
+      end
+@* INDEX.

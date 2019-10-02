@@ -1,0 +1,84 @@
+@* dorot.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] ROTP                                                      
+\item[PASSED:] ROTD                                                      
+\item[PASSED:] ROTF                                                      
+\item[PASSED:] A                                                         
+\item[PASSED:] NB                                                        
+\item[PASSED:] NCOL                                                      
+\item[INPUT:] MAPROT                                                    
+\item[INPUT:] NROT                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TRNROW                                                 
+\item[Called by]   TRNFRM  VIBTBL                                         
+                                                                    
+\end{description}
+@a
+C from util2.for
+      subroutine dorot(ROTP,ROTD,ROTF,A,NB,NCOL,MAPROT,NROT)
+      implicit none
+      double precision A , ROTD , ROTF , ROTP
+      integer irot , iupper , lower , MAPROT , NB , NCOL , NROT
+C ----------------------------------------------------------------------
+      dimension MAPROT(*) , A(*) , ROTP(*) , ROTD(*) , ROTF(*)
+C          this routine performs a transformation of the rows of
+C     the input matrix a.  only the transformation of the orbitals
+C     is performed here (i.e., the changes corresponding to the
+C     permutations of the nuclear centers is not considered).  it
+C     calls a multiplication routine which will multiply one matrix
+C     by some rows of the other matrix.  the calling arguments are:
+C
+C          rotp ... transformation matrix for p-functions ( 3 x 3).
+C          rotd ... ditto for d-functions (dim to 6x6, filled to
+C                   only 5x5 if appropriate).
+C          rotf ... ditto for f-functions (10 x 10, filled to 7 x 7).
+C          a ...... the input matrix to be transformed.  this is
+C                   returned with the new values.  dimensioned to
+C                   nb x ncol.
+C          nb ..... the dimensions of the matrix a.
+C          ncol ... the number of columns of a to be transformed.
+C          maprot . a map of the orbital blocks in the matrix, a.
+C                   this is a integer vector of length nrot which
+C                   tells what kinds of blocks are where in the
+C                   matrix a.  thus, for example, maprot(1)=1
+C                   indicates that the first functin in a is s-type.
+C                   similarly, 3 indicates p-functions, 5 and 6 indicate
+C                   d-functions, and 7 indicates f-functins.  these
+C                   are similar to shells, except i don't want to deal
+C                   with s=p here.
+C          nrot ... number of blocks in maprot.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      lower = 1
+C                        main loop over transformation blocks.
+      do 100 irot = 1 , NROT
+C                  decide what kind of block is next.
+         iupper = lower - 1 + MAPROT(irot)
+         if ( MAPROT(irot).ne.1 ) then
+            if ( MAPROT(irot).eq.3 ) then
+C                  p-block.
+               call trnrow(A,NB,NCOL,ROTP,3,lower,iupper)
+C
+            elseif ( MAPROT(irot).eq.7 ) then
+C                  f-block.
+               call trnrow(A,NB,NCOL,ROTF,10,lower,iupper)
+            else
+C                  d-block.
+               call trnrow(A,NB,NCOL,ROTD,6,lower,iupper)
+            endif
+         endif
+         lower = iupper + 1
+ 100  continue
+      return
+C
+      end
+@* INDEX.

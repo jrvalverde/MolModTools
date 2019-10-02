@@ -1,0 +1,91 @@
+@* gnu80.
+\section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    LEN18   NCHAIN  TSTART                                 
+\item[Uses]  NCHAIN                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CHAIN   CPUTIM  DEFUNT  VERSN                          
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      program gnu80
+
+C*** JR **************************************************
+C   In order to better understand this program and the
+C terminology used to control the computational flow
+C it is best to start reading and understanding the
+C use manual
+C*********************************************************
+
+C
+C=========================================================
+C  the standard io units are defined in defunt
+C  and maintained in /io/ in = 5, iout = 6, ipunch = 7
+C  the save unit (bnread, bnwrit) is 9
+C=========================================================
+C
+      implicit none
+      double precision Atmchg , C , Phycon
+      integer Iadrs , Ian , Icharg , Idpost , Idrum , In , Info , Iop , 
+     &        Iout , Ipunch , iq , Iunit , Jop , Len18 , Ll , Lnk , 
+     &        Multip , Nae , Natoms , Nbasis
+      integer Nbe , Nchain , Ne , Nextwr , Nlink
+      integer Pad
+      real Tstart , Tstop , Elapsd , cputim
+      common /phycon/ Phycon(30)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /iop   / Iop(50)
+      common /munit / Iunit(20)
+      common /info  / Info(10)
+      common /mdrum / Idrum , Idpost , Nextwr , Iadrs(75)
+      common /tmprte/ Nchain , Ll , Nlink , Pad , Lnk(200) , Jop(50,50)
+      common /io    / In , Iout , Ipunch
+      common /clcks / Tstart , Tstop , Elapsd
+      common /len18 / Len18
+C
+C                    len18 is the maximum length of file 18
+C                          in records; it is arbitrary
+C
+      Len18 = 10000
+C     supress underflow interrupts if possible on your system
+C     if you can to avoid spurious messages
+C set logical unit table
+      call defunt
+C write header:
+      call versn
+C  all the timing routines are dummies since they are inclined
+C  to be system-specific
+      Tstart = cputim(iq)
+C
+C load link 1 and away we go
+C
+C*** JR **************************************************
+C   In order to understand this you must keep in mind that
+C this program was originally designed for machines with
+C too little memory. You would split the program into pieces
+C (usually called overlays) which would carry out different
+C processings. When one step was done you could load in the
+C next, linking it in, and overwriting the previous one. 
+C
+C   At the time, overlays would possibly have been implemented
+C as separate programs and executed one after the other, in
+C today's computers they are simply called as subroutines.
+C
+C   So, users define the processing steps to be done, each
+C carried out by a different module (overlay). Chain will
+C (load and) call modules, chaining them as needed/requested
+C by the user. All possible chains start with module one
+C (read and process user input, setup the subsequent
+C execution chain and proceed to next step).
+C*********************************************************
+ 
+      Nchain = 1
+      call chain(Nchain)
+      stop
+C
+      end
+@* INDEX.

@@ -1,0 +1,138 @@
+@* ehousd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[INPUT:] N                                                         
+\item[OUTPUT:] D                                                         
+\item[OUTPUT:] E                                                         
+\item[OUTPUT:] E2                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   DIAGD                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ehousd(A,N,D,E,E2)
+C1ehousd
+      implicit none
+      double precision A , D , E , E2 , eps , eps1 , eta , f , g , 
+     &                 gsqrt , h , hh , tol , zero
+      integer i , ii , In , Iout , Ipunch , iz , j , jk , k , l , N , 
+     &        np1
+      dimension A(*) , D(*) , E(*) , E2(*)
+      common /io    / In , Iout , Ipunch
+      data zero/.0D0/
+C
+C   function            - reduce a symmetric matrix a to symmetric
+C                           tridiagonal form using householder's
+C                           reduction.
+C   parameters   a      - the given n * n, real symmetric matrix a,
+C                           where a is stored in symmetric storage mode.
+C                           the input a is replaced by
+C                           the details of the householder
+C                           reduction of a.
+C                n      - order of a and the length of d,e, and e2
+C                d      - the output array of length n, giving the
+C                           diagonal elements of the tridiagonal matrix.
+C                e      - the output array of length n, giving the sub-
+C                           diagonal in the last (n-1) elements, e(1) is
+C                           set to equal to 0.
+C                e2     - the array contains e(i)**2.
+C      implemented by rolf seeger
+C      numer. math., 11, 181 (1968)
+C
+C
+C2ehousd
+C=    dimension itol(2)
+C=    equivalence (tol,itol(1))
+C=    data itol/'00001b00'x,0/
+      eps = 2.**(-37)
+C      eta=2.**(-218)
+      eta = 2.0D00**(-126)
+      tol = eta/eps
+      eps1 = eps + 1
+      if ( eps1.eq.eps ) write (Iout,99001) eps , eps1
+C
+99001 format (' EHOUSD-- EPS IS TO SMALL: EPS,EPS+1= ',2G15.5)
+C                                  tol is a machine dependent constant,
+C                                  tol = eta/eps, where eta is the
+C                                  smallest positive number represent-
+C                                  able in the computer and eps is the
+C                                  smallest positive number for which
+C                                  1+eps.ne.1.
+      np1 = N + 1
+      do 100 ii = 1 , N
+         i = np1 - ii
+         l = i - 1
+         iz = i*l/2
+         h = zero
+         if ( l.gt.0 ) then
+            do 20 k = 1 , l
+               f = A(iz+k)
+               D(k) = f
+               h = h + f*f
+ 20         continue
+         endif
+C                                  if h is too small for orthogonality
+C                                  to be guaranteed, the transformation
+C                                  is skipped
+         if ( h.gt.tol ) then
+C
+            E2(i) = h
+            E(i) = gsqrt(h)
+            if ( f.ge.0. ) E(i) = -E(i)
+            g = E(i)
+            h = h - f*g
+            D(l) = f - g
+            A(iz+l) = D(l)
+            f = zero
+            if ( l.gt.0 ) then
+               do 30 j = 1 , l
+                  g = zero
+                  jk = j*(j-1)/2 + 1
+C                                  form element of a x u
+                  do 25 k = 1 , l
+                     g = g + A(jk)*D(k)
+                     jk = jk + 1
+                     if ( k.ge.j ) jk = jk + k - 1
+ 25               continue
+C                                  form element of p
+                  g = g/h
+                  E(j) = g
+                  f = f + g*D(j)
+ 30            continue
+            endif
+C                                  form k
+            hh = f/(h+h)
+            jk = 0
+C                                  form reduced a
+            if ( l.gt.0 ) then
+               do 40 j = 1 , l
+                  f = D(j)
+                  E(j) = E(j) - hh*f
+                  g = E(j)
+                  do 35 k = 1 , j
+                     jk = jk + 1
+                     A(jk) = A(jk) - f*E(k) - g*D(k)
+ 35               continue
+ 40            continue
+            endif
+         else
+            E(i) = zero
+            E2(i) = zero
+            h = zero
+         endif
+         D(i) = A(iz+i)
+         A(iz+i) = h
+ 100  continue
+      return
+C
+      end
+@* INDEX.

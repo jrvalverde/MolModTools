@@ -1,0 +1,67 @@
+@* trnrow.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[INPUT:] NB                                                        
+\item[INPUT:] NCOL                                                      
+\item[INPUT:] TRAN                                                      
+\item[INPUT:] NTR                                                       
+\item[INPUT:] LOWER                                                     
+\item[INPUT:] IUPPER                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DOROT                                                  
+                                                                    
+\end{description}
+@a
+C from util1.for
+      subroutine trnrow(A,NB,NCOL,TRAN,NTR,LOWER,IUPPER)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , aloc , TRAN , zero
+      integer i , icol , ir , irm , irow , IUPPER , LOWER , n , NB , 
+     &        NCOL , NTR
+      dimension A(NB,NCOL) , TRAN(NTR,NTR)
+      dimension aloc(7)
+      data zero/0.0D0/
+C          this routine transforms some rows of the matrix a by the
+C     transformation tran. "a" is dimensioned (ncolxncol), and
+C     tran(ntr,ntr).  "lower" and "iupper" are the rows of "a" to be
+C     transformed.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+C
+      n = IUPPER - LOWER + 1
+C                        loop over columns.
+      do 200 icol = 1 , NCOL
+         ir = 0
+C                        loop over rows to be mixed.
+         do 50 irow = LOWER , IUPPER
+            ir = ir + 1
+            aloc(ir) = zero
+            irm = LOWER - 1
+C                        do multiplications.
+            do 20 i = 1 , n
+               irm = irm + 1
+               aloc(ir) = aloc(ir) + TRAN(ir,i)*A(irm,icol)
+ 20         continue
+ 50      continue
+C                        copy from local storage into "a".
+         ir = 0
+         do 100 i = LOWER , IUPPER
+            ir = ir + 1
+            A(i,icol) = aloc(ir)
+ 100     continue
+ 200  continue
+      return
+C
+      end
+@* INDEX.

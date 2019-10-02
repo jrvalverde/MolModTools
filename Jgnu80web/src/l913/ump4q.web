@@ -1,0 +1,32 @@
+@* ump4q.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] EQUAD4                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   CIDS5                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ump4q(EQUAD4)
+      implicit none
+      real EQUAD4
+      integer In , Iout , Ipunch
+      common /io    / In , Iout , Ipunch
+C
+C
+99001 format (' *** SINGLE-SUBSTITUTIONS NOT AVAILABLE ***')
+C
+      write (Iout,99001)
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,145 @@
+@* dismat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] C                                                         
+\item[INPUT:] IFLAG                                                     
+\item[INPUT:] NCOLX                                                     
+\item[INPUT:] IOUT                                                      
+\item[OUTPUT:] ERROR                                                     
+\item[INPUT:] KILL                                                      
+\item[INPUT:] CONVER                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   GEOM    MULPOP                                         
+                                                                    
+\end{description}
+@a
+      subroutine dismat(NATOMS,IAN,C,IFLAG,NCOLX,IOUT,ERROR,KILL,CONVER)
+      implicit none
+      double precision C , CONVER , gsqrt , one , s , scale , temp , 
+     &                 thresh , tooclo , zero
+      integer i , ia , IAN , icol , iel , iend , IFLAG , IOUT , ir , 
+     &        irange , irow , isav , istart , jcol , jrow , jsav , 
+     &        KILL , kount , m , NATOMS
+      integer ncmax , ncol , NCOLX
+      logical ERROR
+C***********************************************************************
+      dimension C(*) , s(11) , iel(87) , IAN(*) , isav(20) , jsav(20)
+      data tooclo/0.5D0/
+      data thresh/1.0D-6/ , zero/0.0D0/ , one/1.0D0/
+      data ncmax/11/
+      data iel/'  Bq' , '   H' , '  He' , '  Li' , '  Be' , '   B' , 
+     &     '   C' , '   N' , '   O' , '   F' , '  Ne' , '  Na' , 
+     &     '  Mg' , '  Al' , '  Si' , '   P' , '   S' , '  Cl' , 
+     &     '  Ar' , '   K' , '  Ca' , '  Sc' , '  Ti' , '   V' , 
+     &     '  Cr' , '  Mn' , '  Fe' , '  Co' , '  Ni' , '  Cu' , 
+     &     '  Zn' , '  Ga' , '  Ge' , '  As' , '  Se' , '  Br' , 
+     &     '  Kr' , '  Rb' , '  Sr' , '   Y' , '  Zr' , '  Nb' , 
+     &     '  Mo' , '  Tc' , '  Ru' , '  Rh' , '  Pd' , '  Ag' , 
+     &     '  Cd' , '  In' , '  Sn' , '  Sb' , '  Te' , '   I' , 
+     &     '  Xe' , '  Cs' , '  Ba' , '  La' , '  Ce' , '  Pr' , 
+     &     '  Nd' , '  Pm' , '  Sm' , '  Eu' , '  Gd' , '  Tb' , 
+     &     '  Dy' , '  Ho' , '  Er' , '  Tm' , '  Yb' , '  Lu' , 
+     &     '  Hf' , '  Ta' , '   W' , '  Re' , '  Os' , '  Ir' , 
+     &     '  Pt' , '  Au' , '  Hg' , '  Tl' , '  Pb' , '  Bi' , 
+     &     '  Po' , '  At' , '  Rn'/
+C     routine to print a lower triangular matrix of intermolecular
+C     distances, given the coordinates.
+C
+C     arguments:
+C     natoms ... number of atoms.
+C     ian    ... integer vector containing the atomic numbers for
+C                each of the centers.
+C     c      ... floating point vector containing the coordinates
+C                of the natoms centers.  this array should be
+C                stored (x,y,z) for each center.
+C     iflag  ... conversion flag.  this variable controls scaling
+C                of the distances before printing.
+C                1 ... scale output distances by one.
+C                2 ... scale output distances by conver.
+C                3 ... scale output distances by one/conver
+C     ncolx  ... number of columns per printed block.
+C     iout   ... fortran output unit for printing.  if zero, prinitng is
+C                suppressed.
+C     error  ... logical variable set to true if any pair of atoms is
+C                less than 0.5 angstroms (tooclo).
+C     kill   ... =0 enables testing for small interatomic distances.
+C                =1 disables testing for small interatomic distances.
+C     conver ... a unit conversion factor.
+C***********************************************************************
+C
+C
+C
+99001 format (4x,11(8x,i3))
+99002 format (i3,a4,11F11.6)
+99003 format (' SMALL INTERATOMIC DISTANCES ENCOUNTERED:',(/1x,2I5))
+C
+C     ensure that ncol is not too big.
+      ncol = NCOLX
+      if ( NCOLX.gt.ncmax ) ncol = ncmax
+C
+C     determine scale factor.
+      if ( IFLAG.eq.2 ) then
+C
+         scale = CONVER
+      elseif ( IFLAG.eq.3 ) then
+C
+         scale = one/CONVER
+         tooclo = tooclo*scale
+      else
+C
+         scale = one
+      endif
+      istart = 1
+      kount = 0
+      ERROR = .false.
+ 100  m = 0
+      iend = min0(istart+ncol-1,NATOMS)
+      if ( IOUT.ne.0 ) write (IOUT,99001) (ir,ir=istart,iend)
+      do 200 irow = istart , NATOMS
+         ia = IAN(irow) + 1
+         m = m + 1
+         irange = min0(m,ncol)
+         icol = istart
+         do 150 ir = 1 , irange
+C           compute the (ij)-th element of the distance matrix.
+C           this is computed directly from c, and tested before
+C           the square root is taken.
+            jrow = (irow-1)*3
+            jcol = (icol-1)*3
+            temp = (C(1+jrow)-C(1+jcol))**2 + (C(2+jrow)-C(2+jcol))
+     &             **2 + (C(3+jrow)-C(3+jcol))**2
+            s(ir) = zero
+            if ( temp.gt.thresh ) s(ir) = scale*gsqrt(temp)
+            if ( KILL.ne.1 .and. irow.ne.icol ) then
+               if ( s(ir).lt.tooclo ) then
+                  ERROR = .true.
+                  if ( kount.lt.20 ) then
+                     kount = kount + 1
+                     isav(kount) = irow
+                     jsav(kount) = icol
+                  endif
+               endif
+            endif
+            icol = icol + 1
+ 150     continue
+         if ( IOUT.ne.0 ) write (IOUT,99002) irow , iel(ia) , 
+     &                           (s(ir),ir=1,irange)
+ 200  continue
+      istart = istart + ncol
+      if ( istart.le.NATOMS ) goto 100
+      if ( ERROR .and. IOUT.ne.0 ) write (IOUT,99003)
+     &     (isav(i),jsav(i),i=1,kount)
+      return
+C
+      end
+@* INDEX.

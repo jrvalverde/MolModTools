@@ -1,0 +1,310 @@
+@* dd1sd4.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] SAVAIL                                                    
+\item[INPUT:] METHOD                                                    
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    INTC    INTT    LPAIR   LS      NR      V1             
+\item[Transmits as argument]  CMO     E       ISCR1   ISCR2   ISCR3   ISCR4   ISPECT 
+             LSPECT  NOA     NOA3    NOAOB   NVA     V              
+\item[Uses]  CMO     E       IBOUT   IBUC    IOPCL   IOUT    IPRINT 
+             ISCR1   ISCR2   ISCR3   ISCR4   ISPECT  LPAIR   LS     
+             LSPECT  MDV     NOA     NOA3    NOAOB   NOB     NOB3   
+             NR      NRORB   NVA     NVA3    NVAVB   NVB     NVB3   
+             V       V1      ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       AACLOS  AATILD  ABTILD  COMIJW  DEFBUC  EXPIJW  FILEIO 
+             LSEXA   TEST    TRACK   TREAD   TSTARA  TSTARB  WIA4A  
+             WIA4B   WTILDA  WTILDB                                 
+\item[Called by]   CIDS3                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dd1sd4(SAVAIL,METHOD,NBASIS)
+      implicit none
+      double precision Cmo , Cut , E , F42 , Four , Half , One , 
+     &                 Onept5 , Ten , Three , Two , V , V1 , Zero
+      integer i , i1 , Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , Ibout , Ibuc , 
+     &        ibuck , ibucka , icount , Idb1 , Idb10 , Idb2 , Idb3 , 
+     &        Idb4 , Idb5 , Idb6 , Idb7
+      integer Idb8 , Idb9 , Idm , Ieval , ij , In , ind , ind1 , index , 
+     &        Intc , Intt , Ioab , Iopcl , Iout , Iprint , Ipunch , 
+     &        Iscr1 , Iscr2 , Iscr3 , Iscr4
+      integer Iscr5 , Iscr6 , Iscrd , ism , Ispect , ispin , Iwd1 , 
+     &        Iwd2 , Iwd3 , Iws1 , Iws2 , l , la , leng , Loab , Lpair , 
+     &        Ls , Lspect , Maxbuc , mblock
+      integer Mdv , mdv1 , mdv11 , mdv2 , mdv21 , METHOD , nb21 , 
+     &        NBASIS , nbsq , nij , no , Noa , Noa2 , Noa3 , Noaob , 
+     &        Noava , Noavb , Nob , Nob2 , Nob3
+      integer Nobva , Nobvb , Novaa , Novab , Novbb , np , npairs , Nr , 
+     &        Nrorb , nruns , nsbeta , nstb , nv , Nva , Nva2 , Nva3 , 
+     &        Nvavb , Nvb , Nvb2 , Nvb3
+      integer nvsta , nvstb
+      logical iso , abclos , SAVAIL
+      dimension Ibuc(3) , Ibout(3)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(10000) , V1(10000) , Mdv
+      common /moc   / Cmo(12625) , E(175)
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /constr/ Iopcl
+      common /io    / In , Iout , Ipunch
+      common /bucknr/ Idb1 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , 
+     &                Idb8 , Idb9 , Idb10 , Idm(11) , Iad1 , Iad2 , 
+     &                Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , Iwd3 , Iws1 , 
+     &                Iws2 , Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , 
+     &                Iscr6 , Iscrd(13)
+      common /wtild / Cut , Ls(81) , Lpair , Nr , Intt , Intc
+      common /print / Iprint
+      equivalence (Ibuc(1),Iad1) , (Ibout(1),Iwd1)
+C
+C
+C     *****************************************************************
+C
+C     dd1sd4 computes the correction of the d-block due to the integrals
+C     (ab//cd) and the d-block, and
+C     the correction of the s-block due to the integrals (ia//bc) and
+C     the d-block
+C
+C     aug 76/ seeger and krishnan
+C
+C     *****************************************************************
+C
+C
+C
+C
+99001 format (' ',i5,i9,i13,e15.4)
+99002 format (1H )
+C
+      call track('DD1SD4')
+C
+      mdv1 = Mdv/3
+      mdv11 = mdv1 + 1
+      mdv2 = mdv1*2
+      mdv21 = mdv2 + 1
+      nbsq = NBASIS**2
+      nb21 = NBASIS*(NBASIS-1)/2
+      nsbeta = Nrorb*NBASIS + 1
+C
+C     define scratch buckets.
+      l = max0(nb21*Noa3,NBASIS**2*Noaob)
+      call defbuc(Iscr1,l)
+      call defbuc(Iscr2,Noa*NBASIS)
+      call defbuc(Iscr3,Nob*NBASIS)
+      if ( Iopcl.eq.0 ) call defbuc(Iscr4,l)
+C
+C     ******************************************************************
+C     loop over the three (two) spin-cases
+C     ******************************************************************
+C
+      ism = Iopcl + 2
+C
+      do 100 ispin = 1 , ism
+         abclos = .false.
+C
+C     skip the alpha,alpha case for closed shell
+         if ( (Iopcl.ne.0) .or. (ispin.ne.1) ) then
+C
+C     read scf spectrum
+            call tread(Ispect,Cmo,Lspect,1,Lspect,1,0)
+C
+            if ( ispin.eq.2 ) then
+C
+               npairs = Noaob
+               la = Nvavb
+               nvstb = Nob*NBASIS + nsbeta
+               nstb = Nrorb*NBASIS
+               if ( Iopcl.eq.0 ) then
+                  nvsta = Noa*NBASIS + 1
+                  nstb = 0
+                  nvstb = nvsta
+                  npairs = Noa*(Noa+1)/2
+                  abclos = .true.
+               endif
+               iso = .false.
+               Lpair = nbsq
+               Ls(1) = 0
+               do 10 i = 2 , NBASIS
+                  Ls(i) = Ls(i-1) + NBASIS
+ 10            continue
+            elseif ( ispin.eq.3 ) then
+C
+               npairs = Nob3
+               la = Nvb3
+               nvsta = nvstb
+               iso = .true.
+               no = Nob
+               nv = Nvb
+               Lpair = nb21
+               do 20 i = 1 , NBASIS
+                  i1 = i - 1
+                  Ls(i) = i1*NBASIS - i - (i*i1)/2
+ 20            continue
+            else
+C
+               npairs = Noa3
+               la = Nva3
+               nvsta = Noa*NBASIS + 1
+               iso = .true.
+               no = Noa
+               nv = Nva
+               Lpair = nb21
+               do 30 i = 1 , NBASIS
+                  i1 = i - 1
+                  Ls(i) = i1*NBASIS - i - (i1*i)/2
+ 30            continue
+            endif
+C
+            if ( npairs.ne.0 .and. Lpair.ne.0 .and. la.ne.0 ) then
+               ibuck = Ibuc(ispin)
+               call fileio(2,-ibuck,0,0,0)
+               call fileio(1,-Iscr1,0,0,0)
+C
+C     ******************************************************************
+C     evaluation of a(tilda)
+C     ******************************************************************
+C
+               index = 0
+               if ( abclos ) then
+                  icount = Noa
+                  ind1 = Noa
+                  ind = 0
+               endif
+               do 40 ij = 1 , npairs
+                  leng = la
+                  call fileio(2,-ibuck,leng,V(mdv11),index)
+                  if ( iso ) then
+C
+                     call lsexa(V(mdv11),nv)
+                     call aatild(V,Cmo(nvsta),V(mdv11),E,nv,NBASIS)
+                  else
+                     call abtild(V,Cmo(nvsta),V(mdv11),Cmo(nvstb),E,
+     &                           NBASIS)
+                  endif
+                  leng = Lpair
+                  index = index + la
+                  if ( abclos ) then
+                     if ( ij.eq.icount ) then
+                        ind = ind + la
+                        index = index + ind
+                        ind1 = ind1 - 1
+                        icount = icount + ind1
+                     endif
+                  endif
+                  call fileio(1,Iscr1,leng,V,0)
+ 40            continue
+C
+C     ******************************************************************
+C     evaluation of w(tilda)
+C     ******************************************************************
+C
+               ibuck = Ibout(ispin)
+               ibucka = ibuck
+               if ( abclos ) ibucka = Iscr4
+               call fileio(2,-ibuck,0,0,0)
+               call fileio(1,-ibuck,0,0,0)
+               call fileio(2,-Iscr1,0,0,0)
+               call fileio(1,-Iscr1,0,0,0)
+               mblock = Mdv/(2*Lpair)
+               nruns = npairs/mblock
+               if ( mod(npairs,mblock).ne.0 ) nruns = nruns + 1
+               np = npairs
+C
+C     run(s) over all pairs (i,j) fitting in core
+               do 50 nij = 1 , nruns
+                  Intc = 0
+                  Intt = 0
+                  Nr = min0(np,mblock)
+                  np = np - Nr
+                  leng = Nr*Lpair
+                  call fileio(2,Iscr1,leng,V,0)
+                  do 45 i = 1 , leng
+                     V1(i) = Zero
+ 45               continue
+                  if ( iso ) call wtilda
+                  if ( .not.iso ) call wtildb
+                  leng = Nr*Lpair
+                  call fileio(1,Iscr1,leng,V1,0)
+ 50            continue
+C
+C     read in the scf spectrum
+               call tread(Ispect,Cmo,Lspect,1,Lspect,1,0)
+C
+C     ******************************************************************
+C     form w(ijab,1) = sum  c(mu,a) * c(nu,b) * wtilda(i,j,mu,nu)
+C                     mu,nu
+C     ******************************************************************
+C
+               if ( .not.iso ) then
+C
+C     for closed shell get the old w in the compressed form
+                  if ( abclos .and. SAVAIL )
+     &                 call comijw(ibuck,ibucka,Nva)
+                  call tstarb(Iscr1,ibucka,Cmo(nvsta),Cmo(nvstb),E,
+     &                        SAVAIL,NBASIS)
+                  if ( abclos ) then
+C
+C     expand w to the full form.
+                     call expijw(ibucka,ibuck,Nva)
+C
+C     if singles are not available for closed shell return
+                     if ( METHOD.eq.0 .or. METHOD.eq.4 .or. 
+     &                    METHOD.eq.5 ) then
+C
+C     expand wtilda for closed shell alpha-beta case.
+C     this will be used to calculate contribution to singles.
+                        call expijw(Iscr1,Iscr4,NBASIS)
+C
+C     calculate wtilda for alpha,alpha case.
+C     this is necessary to calculate sd4
+                        call aaclos(Iscr4,Iscr1,Noa,NBASIS)
+C
+C     ******************************************************************
+C     form w(ia,4) =  sum  sum  c(mu,j) * c(nu,a) * wtilda(i,j,mu,nu)
+C                      j  mu,nu
+C     ******************************************************************
+C
+                        call wia4a(Iscr1,1,Noa,Nva,Noa3,nb21,NBASIS)
+C
+C     for closed shell return
+                        call wia4b(Iscr4,Cmo,Cmo(nstb+1),Noaob,nbsq,
+     &                             NBASIS)
+                     endif
+                     goto 200
+                  endif
+               else
+                  call tstara(Iscr1,ibuck,Cmo(nvsta),no,nv,E,SAVAIL,
+     &                        NBASIS)
+               endif
+            endif
+C
+C
+            if ( METHOD.eq.0 .or. METHOD.eq.4 .or. METHOD.eq.5 ) then
+               if ( iso ) call wia4a(Iscr1,ispin,no,nv,npairs,Lpair,
+     &                               NBASIS)
+               if ( .not.iso ) call wia4b(Iscr1,Cmo,Cmo(nstb+1),npairs,
+     &              Lpair,NBASIS)
+C
+               call test(ispin,ibuck)
+               if ( Iprint.ne.0 ) write (Iout,99002)
+            endif
+         endif
+C
+ 100  continue
+C
+C     release routine volatile buckets.
+ 200  call fileio(6,0,0,0,0)
+C
+      return
+C
+      end
+@* INDEX.

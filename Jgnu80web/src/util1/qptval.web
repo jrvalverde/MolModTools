@@ -1,0 +1,37 @@
+@* qptval.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] TABLE                                                     
+\item[OUTPUT:] TCURSR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   QPAMBI  QPDEST  QPINIT  QPMATC  QPSCHR  QPSKEY  QPTRAN 
+             QPWORD                                                 
+                                                                    
+\end{description}
+@a
+      integer function qptval(TABLE,TCURSR)
+      implicit none
+      integer i
+C ----------------------------------------------------------------------
+      integer TABLE , TCURSR
+      dimension TABLE(*)
+C     this is just a little routine to get the next value from the
+C     table and increment the cursor.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+      TCURSR = TCURSR + 1
+      i = TABLE(TCURSR)
+      qptval = i
+      return
+C
+      end
+@* INDEX.

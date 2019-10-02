@@ -1,0 +1,107 @@
+@* binwt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IX                                                        
+\item[OUTPUT:] NEL                                                       
+\item[INPUT:] IDENT                                                     
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  LABEL                                                  
+\item[Uses]  IPUNCH  ITITLE  LABEL                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TREAD                                                  
+\item[Called by]   CYCCLO  CYCOPN  GINPUT  MSOPT   OPTMZ   RHFCLO  RHFOPN 
+             SCFDM   UHFOPN                                         
+                                                                    
+\end{description}
+@a
+      subroutine binwt(IX,NEL,IDENT,NBASIS)
+      implicit none
+      integer i , idel , IDENT , iflag , ilower , In , iolbl , Iout , 
+     &        Ipunch , Ipureg , Irtcrd , isilly , Ititle , Iu1 , Iudum , 
+     &        iupper , j , kount , llabel , NBASIS
+      integer NEL , numwpc
+      double precision Label , iel
+      double precision IX
+      dimension IX(*)
+      dimension IDENT(4)
+      common /io    / In , Iout , Ipureg
+C note that label is double precision here!!!!!
+      common /label / Label(500) , Ititle(100) , Irtcrd(100)
+      common /munit / Iu1(4) , Ipunch , Iudum(15)
+      data llabel/600/
+      data numwpc/18/
+      data iolbl/2/
+C
+C    *******************************************************************
+C          this subroutine punches a binary deck.  the calling
+C     arguments are described below:
+C
+C     ix is the array from which data is to be punched.
+C
+C     nel is the number of words of data to be punched.
+C
+C     ident is a four word array containing the name of the data desired
+C
+C    *******************************************************************
+C
+C
+C
+C
+C     numwpc is the number of words per card.
+C
+99001 format (1x,4A4,2x,'NUMBER OF WORDS:',i5,', NBASIS =',i3)
+99002 format (20A4)
+C
+C     write the ident card.
+      write (Ipunch,99001) (IDENT(i),i=1,4) , NEL , NBASIS
+C      write (ipunch) (ident(i),i=1,4),nel,nbasis
+C
+C     read and punch title.
+      call tread(iolbl,Label,llabel,1,llabel,1,0)
+      write (Ipunch,99002) (Ititle(i),i=1,20)
+C      write (ipunch) (ititle(i),i=1,20)
+C
+      NEL = NEL/2
+C  now that full double precision  is used
+      write (Ipunch,99003) (IX(i),i=1,NEL)
+99003 format (4D20.12)
+C      write(ipunch) (ix(i), i=1,nel)
+C
+      isilly = 0
+      if ( isilly.eq.0 ) return
+C
+      j = 0
+      kount = 0
+      iflag = 1
+      ilower = 1
+ 100  iupper = ilower + numwpc - 1
+      idel = iupper - NEL
+      if ( idel.gt.0 ) then
+         iupper = NEL
+         iflag = 0
+      endif
+      kount = kount + 1
+      if ( iflag.eq.1 ) write (Ipunch,99004) (IX(i),i=ilower,iupper) , 
+     &                         kount
+      if ( iflag.eq.0 ) write (Ipunch,99004) (IX(i),i=ilower,iupper) , 
+     &                         (j,i=1,idel) , kount
+C
+99004 format (1x,18A4,i7)
+C
+      if ( iupper.ne.NEL ) then
+         if ( iflag.ne.0 ) then
+            ilower = ilower + numwpc
+            goto 100
+         endif
+      endif
+C
+      return
+C
+      end
+@* INDEX.

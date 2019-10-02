@@ -1,0 +1,89 @@
+@* aatild.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] ATILDA                                                    
+\item[INPUT:] C                                                         
+\item[INPUT:] A                                                         
+\item[OUTPUT:] S                                                         
+\item[INPUT:] NDIM                                                      
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  ZERO                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    TRACK                                          
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine aatild(ATILDA,C,A,S,NDIM,NBASIS)
+      implicit none
+      double precision A , ATILDA , C , F42 , Four , gabs , Half , One , 
+     &                 Onept5 , S , Ten , Three , thresh , Two , Zero
+      integer ia , ib , ind , ind1 , ind1s , ind2 , ind3 , ind4 , mu , 
+     &        mu1 , nasym , nb1 , NBASIS , NDIM , nu
+      dimension ATILDA(*) , C(*) , A(*) , S(*)
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      data thresh/1.D-8/
+C
+C     ******************************************************************
+C
+C     accepts (nbasis*ndim) matrix c, and (ndim*ndim) matrix a
+C     produces   atilda = c * a * c(transposed)
+C     s is a scratch array of min. length nbasis
+C
+C     sept/77  krishnan
+C
+C     ******************************************************************
+C
+C
+C
+C
+      call track('AATILD')
+C
+      if ( NDIM.eq.0 ) return
+      nb1 = NBASIS - 1
+      nasym = NBASIS*nb1/2
+      do 100 ind = 1 , nasym
+         ATILDA(ind) = Zero
+ 100  continue
+C
+      ind4 = 0
+      do 300 ib = 1 , NDIM
+         do 150 mu = 1 , nb1
+            S(mu) = Zero
+ 150     continue
+         ind1 = ib
+         ind2 = 0
+         do 200 ia = 1 , NDIM
+            if ( gabs(A(ind1)).ge.thresh ) then
+               do 160 mu = 1 , nb1
+                  S(mu) = S(mu) + A(ind1)*C(ind2+mu)
+ 160           continue
+            endif
+            ind2 = ind2 + NBASIS
+            ind1 = ind1 + NDIM
+ 200     continue
+C
+         ind3 = -1
+         ind1s = nb1
+         do 250 mu = 1 , nb1
+            mu1 = mu + 1
+            do 220 nu = mu1 , NBASIS
+               ATILDA(ind3+nu) = ATILDA(ind3+nu) + S(mu)*C(ind4+nu)
+ 220        continue
+            ind1s = ind1s - 1
+            ind3 = ind3 + ind1s
+ 250     continue
+         ind4 = ind4 + NBASIS
+ 300  continue
+C
+      return
+C
+      end
+@* INDEX.

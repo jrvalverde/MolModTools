@@ -1,0 +1,23 @@
+@* alldun.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  G80END                                         
+\item[Called by]   L9999                                                  
+                                                                    
+\end{description}
+@a
+      subroutine alldun
+      implicit none
+      integer fclose
+      data fclose/10/
+      call fileio(fclose,0,0,0,0)
+      call g80end
+      return
+C
+      end
+@* INDEX.

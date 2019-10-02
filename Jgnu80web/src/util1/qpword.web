@@ -1,0 +1,120 @@
+@* qpword.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IFDLIM                                                    
+\item[PASSED:] TABLE                                                     
+\item[INPUT:] TCURSR                                                    
+\item[PASSED:] LINE                                                      
+\item[INPUT:] LENGTH                                                    
+\item[OUTPUT:] LCURSR                                                    
+\item[PASSED:] STRING                                                    
+\item[OUTPUT:] LENSTR                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  QPFAIL  QPOK                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  IFALPH  INTCHR  PUTICR  QPCPV   QPTVAL  STREQ  
+\item[Called by]   FFGET   QPMATC                                         
+                                                                    
+\end{description}
+@a
+C2qpword
+      integer function qpword(IFDLIM,TABLE,TCURSR,LINE,LENGTH,LCURSR,
+     &                        STRING,LENSTR)
+C ----------------------------------------------------------------------
+      implicit none
+      integer c , chr , cur , cursr , delims , getchr , i , IFDLIM , 
+     &        incur , intchr , j , jjjj , LCURSR , LENGTH , LENSTR , 
+     &        LINE , Maxdep , Maxkey , n , nch
+      integer ndlims , outcur , Qpabrv , Qpambg , qpcpv , Qpdpth , 
+     &        Qpend , Qperr , Qpexit , Qpfail , Qpok , Qprecr , Qpret , 
+     &        qptval , Stack , STRING , t , TABLE , TCURSR , val
+      dimension LINE(*) , STRING(*) , TABLE(*)
+      logical ifalph , gotone , ifeq , streq , streqc
+      common /qpretc/ Qpok , Qpret , Qpfail , Qpambg , Qperr , Qpexit , 
+     &                Qpabrv , Qpend , Qprecr , Qpdpth , Maxdep , 
+     &                Stack(6,10) , Maxkey
+C          this routine accepts a string of characters.  if ifdlim
+C     is zero, then one or more alphanumeric characters are accepted.
+C     if ifdlim is one, then it is assumed that the delimiters
+C     are provided in table, and that tcursr points to the count.
+C     delimiters should be packed qpcpv(jjjj) per word, and
+C     a string of one or more characters terminated by one of the
+C     supplied delimiters is accepted.  the end of line is always
+C     taken as a delimiter.  the returned value of the function is
+C     either qpok, if a string is accepted, or qpfail otherwise.  if
+C     qpok, then lcursr is advanced.  tcursr is always advanced past the
+C     delimiter list, if one is provided.
+C     r. a. whiteside - march 1979
+C ----------------------------------------------------------------------
+C
+C                  assume failure.
+      val = Qpfail
+C
+C                  see if delimeters are provided.
+      ndlims = 0
+      if ( IFDLIM.eq.1 ) ndlims = qptval(TABLE,TCURSR)
+      n = (ndlims-1)/qpcpv(jjjj) + 1
+C                  end of line?
+      if ( LCURSR.ge.LENGTH ) goto 400
+C
+C                  get a local cursor, init. some stuff.
+      incur = LCURSR
+      outcur = 0
+      gotone = .false.
+C
+C                  get next character from line.
+ 100  chr = getchr(LINE,incur)
+C
+C                  if delims given, go check for these.
+      if ( ndlims.gt.0 ) then
+C                  see if this is a delimiter.
+         cur = 0
+         cursr = TCURSR
+C
+C                  loop over words in delimiter list.
+         do 150 i = 1 , n
+            delims = qptval(TABLE,cursr)
+            cur = 0
+            nch = qpcpv(jjjj)
+            do 120 j = 1 , nch
+               c = getchr(delims,cur)
+               ifeq = streq(chr,c,1)
+               if ( ifeq ) goto 200
+ 120        continue
+C
+C                  this is not a delimiter.
+ 150     continue
+C
+C                  else, break on non-alphanumeric.
+      elseif ( (.not.ifalph(chr)) .and. (intchr(chr,10).eq.-1) ) then
+         goto 200
+      endif
+      gotone = .true.
+      call puticr(chr,STRING,outcur)
+      LENSTR = outcur
+      if ( incur.lt.LENGTH ) goto 100
+      goto 300
+C
+C                  this is a delimiter. make sure we got at least
+C                  one characterr.
+ 200  if ( .not.gotone ) goto 400
+      incur = incur - 1
+ 300  val = Qpok
+      LCURSR = incur
+ 400  if ( ndlims.gt.0 ) then
+C
+C                  advance the table cursor past the delimiters.
+         do 450 i = 1 , n
+            t = qptval(delims,TCURSR)
+ 450     continue
+      endif
+      qpword = val
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,37 @@
+@* ffset.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ID                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IDUMP                                                  
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ALTGES  INCRD   RCOORD  ZSYMB                          
+                                                                    
+\end{description}
+@a
+      subroutine ffset(ID)
+C ----------------------------------------------------------------------
+      implicit none
+      integer ID , Idump , In , Iold , Iout , Ipunch , Lcursr , Line , 
+     &        Ncom
+      common /io    / In , Iout , Ipunch
+      common /fffcom/ Idump , Lcursr , Iold , Ncom , Line(40)
+C          a routine to initialize the "fff" routines.  this actually
+C     does nothing but set the "dump" flag if the argument "id"
+C     is non-zero.
+C ----------------------------------------------------------------------
+      Idump = ID
+      if ( ID.ne.0 ) write (Iout,99001)
+C
+99001 format ('  FREE-FIELD ROUTINES INITIALIZED.')
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,51 @@
+@* ffread.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] IEOF                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOLD    LCURSR  NCOM                                   
+\item[Transmits as argument]  LINE                                                   
+\item[Uses]  IDUMP   IN      IOUT    LINE                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CAPTLZ                                                 
+\item[Called by]   ALTGES  INCRD   RCOORD  RDCHG   ZGET    ZSYMB          
+                                                                    
+\end{description}
+@a
+      subroutine ffread(IEOF)
+C ----------------------------------------------------------------------
+C2ffread
+      implicit none
+      integer i , Idump , IEOF , In , Iold , Iout , Ipunch , Lcursr , 
+     &        Line , Ncom
+      integer lline(20)
+      common /io    / In , Iout , Ipunch
+      common /fffcom/ Idump , Lcursr , Iold , Ncom , Line(40)
+C          a routine to "read" a new line into the "fff" buffer.
+C     remaining data in the line is discarded.  "ieof" is returned
+C     non-zero if an end-of-file is encountered.
+C ----------------------------------------------------------------------
+C
+99001 format (20A4)
+99002 format ('  END-OF-FILE IN FFREAD.')
+99003 format ('  FFREAD:',/,1x,20A4)
+C
+      IEOF = 0
+      Lcursr = 0
+      Iold = 0
+      Ncom = 1
+      read (In,99001,end=100) (lline(i),i=1,20)
+      call captlz(lline,Line,80)
+      if ( Idump.ne.0 ) write (Iout,99003) (Line(i),i=1,20)
+      return
+C
+ 100  IEOF = 1
+      if ( Idump.eq.0 ) write (Iout,99002)
+      return
+C
+      end
+@* INDEX.

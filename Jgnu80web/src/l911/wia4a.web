@@ -1,0 +1,38 @@
+@* wia4a.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] IBUCK                                                     
+\item[UNUSED:] ISPIN                                                     
+\item[UNUSED:] NO                                                        
+\item[UNUSED:] NV                                                        
+\item[UNUSED:] NPAIRS                                                    
+\item[UNUSED:] LPAIR                                                     
+\item[UNUSED:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine wia4a(IBUCK,ISPIN,NO,NV,NPAIRS,LPAIR,NBASIS)
+      implicit none
+      integer IBUCK , In , Iout , Ipunch , ISPIN , LPAIR , NBASIS , NO , 
+     &        NPAIRS , NV
+      common /io    / In , Iout , Ipunch
+C
+C
+99001 format (' *** SINGLE-SUBSTITUTIONS NOT AVAILABLE ***')
+C
+      write (Iout,99001)
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

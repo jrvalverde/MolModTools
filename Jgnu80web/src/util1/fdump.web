@@ -1,0 +1,62 @@
+@* fdump.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  FSTAT   IOUT    MPOS    NFILES                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CIDS1   CIDS2   CIDS3   CIDS4   CIDS5   DOUBAR  FILEIO 
+             TRCL80  TRCLOS  TROP80  TROPEN                         
+                                                                    
+\end{description}
+@a
+      subroutine fdump
+      implicit none
+      integer base , Fstat , i , ifin , In , Iout , Ipunch , j , lim , 
+     &        Mpos , Nfiles , npl
+C      double precision label
+      character*8 label
+      dimension label(5)
+      common /io    / In , Iout , Ipunch
+      common /fstat / Nfiles , Mpos , Fstat(5,200)
+      data npl/11/
+      data label/' NUMBER ' , ' BASE   ' , ' END    ' , ' WR PNTR' , 
+     &     ' RD PNTR'/
+C
+C     routine to dump the contents of /fstat/.
+C
+C
+C
+C
+99001 format (4x)
+99002 format (a8,13I9)
+99003 format (' DUMPING /FSTAT/, NFILES =',i3,', MPOS= ',i5)
+C
+      write (Iout,99003) Nfiles , Mpos
+C
+      ifin = 0
+      base = 1
+      lim = npl
+C
+ 100  if ( lim.ge.Nfiles ) then
+         ifin = 1
+         lim = Nfiles
+      endif
+      write (Iout,99001)
+C
+      do 200 j = 1 , 5
+         write (Iout,99002) label(j) , (Fstat(j,i),i=base,lim)
+ 200  continue
+C
+      if ( ifin.ne.1 ) then
+         base = lim + 1
+         lim = lim + npl
+         goto 100
+      endif
+C
+      return
+C
+      end
+@* INDEX.

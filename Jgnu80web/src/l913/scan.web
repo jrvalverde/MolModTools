@@ -1,0 +1,85 @@
+@* scan.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A00                                                       
+\item[INPUT:] DAVAIL                                                    
+\item[INPUT:] SAVAIL                                                    
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IFLAG   ISPIN   ND                                     
+\item[Transmits as argument]  IAD1    IAD2    IAD3    IAS1    IAS2    NOA     NOB    
+             NVA     NVB                                            
+\item[Uses]  IAD1    IAD2    IAD3    IAS1    IAS2    IOPCL   NOA    
+             NOAVA   NOB     NOBVB   NOVAA   NOVAB   NOVBB   NRORB  
+             NVA     NVB                                            
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SCANAA  SCANAB  SCANSS  TRACK                          
+\item[Called by]   CIDS5                                                  
+                                                                    
+\end{description}
+@a
+      subroutine scan(A00,DAVAIL,SAVAIL,NBASIS)
+      implicit none
+      double precision A00 , Thresh
+      integer Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , Idmm1 , Idmm2 , Ieval , 
+     &        Iflag , In , Ioab , Iopcl , Iout , Ipunch , Ispect , 
+     &        Ispin , Loab , Lspect , Maxbuc , NBASIS
+      integer Nd , Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , Nob , 
+     &        Nob2 , Nob3 , Nobva , Nobvb , Novaa , Novab , Novbb , 
+     &        Nrorb , Nva , Nva2 , Nva3 , Nvavb
+      integer Nvb , Nvb2 , Nvb3
+      logical DAVAIL , SAVAIL
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /constr/ Iopcl
+      common /bucknr/ Idmm1(21) , Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , 
+     &                Idmm2(24)
+      common /scana / Thresh , Nd , Ispin , Iflag
+      common /io    / In , Iout , Ipunch
+C
+C
+C     ******************************************************************
+C
+C     this routine scans the a vector at the end of ci and prints the
+C     dominant configurations. (i.e. having cotributions greater than
+C     a threshold value).
+C
+C     nov/77, krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('  SCAN')
+C
+C     data thresh/0.1d0/
+C
+      Nd = NBASIS - Nrorb
+      Iflag = 0
+      if ( DAVAIL ) then
+         Ispin = 1
+         if ( Novaa.gt.0 ) call scanaa(Iad1,Noa,Nva,A00)
+         Ispin = 2
+         if ( Novab.gt.0 ) call scanab(Iad2,Noa,Nob,Nva,Nvb,A00)
+         Ispin = 3
+         if ( Iopcl.gt.0 .and. Novbb.gt.0 )
+     &        call scanaa(Iad3,Nob,Nvb,A00)
+      endif
+      if ( SAVAIL ) then
+         Ispin = 1
+         if ( Noava.gt.0 ) call scanss(Ias1,Noa,Nva,A00)
+         Ispin = 2
+         if ( Iopcl.gt.0 .and. Nobvb.gt.0 )
+     &        call scanss(Ias2,Nob,Nvb,A00)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

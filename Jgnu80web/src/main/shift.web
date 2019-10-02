@@ -1,0 +1,60 @@
+@* shift.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] I                                                         
+\item[INPUT:] J                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LSHIFT  RSHIFT                                         
+\item[Called by]   ILSW    PACK2   PACK4   UNPCK2  UNPCK4                 
+                                                                    
+\end{description}
+@a
+C  the logical routines below are left in as a record of
+C  frustrating historical experience
+C      integer function iand(i,j)
+C      iand = and(i,j)
+C      return
+C      end
+C      integer function ieor(i,j)
+C      ieor = xor(i,j)
+C      return
+C      end
+C      integer function or(i,j)
+C      or = ior(i,j)
+C      return
+C      end
+C      integer function xor(i,j)
+C      xor = ieor(i,j)
+C      return
+C      end
+      integer function shift(I,J)
+      implicit none
+      integer I , J , jj , lshift
+      real rshift
+C
+      if ( J.ge.0 ) then
+C  for unix
+         shift = lshift(I,J)
+C for ftn77/386
+C      shift = ls(i,j)
+         return
+      endif
+C
+      jj = iabs(J)
+C for unix
+      shift = rshift(I,jj)
+C for ftn77/386
+C      shift = rs(i,jj)
+C  for others (vax)
+C      shift = ishft(i,j)
+      return
+C
+      end
+@* INDEX.

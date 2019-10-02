@@ -1,0 +1,116 @@
+@* symasg.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[PASSED:] B                                                         
+\item[PASSED:] AA                                                        
+\item[OUTPUT:] ORBSYM                                                    
+\item[PASSED:] TABLE                                                     
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NCOL                                                      
+\item[INPUT:] NAE                                                       
+\item[INPUT:] NBE                                                       
+\item[PASSED:] NATOMS                                                    
+\item[INPUT:] IFGUES                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT    NSYMOP                                         
+\item[Uses]  IOUT    NREPS   NSYMOP                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       BLDTBL  GETREP  ILSW    PRTSYM  TQUERY  TREAD   TWRITE 
+\item[Called by]   GUESS   MULPOP                                         
+                                                                    
+\end{description}
+@a
+C  from util3.for
+      subroutine symasg(A,B,AA,ORBSYM,TABLE,NBASIS,NCOL,NAE,NBE,NATOMS,
+     &                  IFGUES)
+      implicit none
+      integer i , IFGUES , In , inc , Iout , Ipunch , irwc , irwca , 
+     &        irwcb , irwrep , irws , irwsy1 , irwsya , irwsyb , iuhf , 
+     &        len , lenf , lrwrep , NAE , NATOMS
+      integer NBASIS , NBE , NCOL , nelect , nosym
+C ----------------------------------------------------------------------
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      double precision A(*) , AA(*) , B(*) , TABLE(*)
+      integer ORBSYM(*)
+      common /io    / In , Iout , Ipunch
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      data irwrep/562/ , lrwrep/767/
+      data irws/514/ , irwca/524/ , irwcb/526/
+      data irwsya/563/ , irwsyb/564/
+C          this routine makes orbital symmetry assignments to
+C     the orbitals currently on the read-write files.  for
+C     open shell systems, both
+C     alpha and beta elctrons are assigned.  these assignments are
+C     written both to the output file (unit 6) and to the appropriate
+C     read-write file.  also, the symmetry assignments in the form
+C     of integers are written to another rwf.
+C     if "ifgues" is non-zero, then the heading ' initial guess
+C     orbital symmetries' is used.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C                              files for integer symmetries.
+C
+C                              be sure we can run.
+      call tquery(irwrep,lenf)
+      if ( lenf.le.0 ) return
+C
+C                              some initialization stuff.
+      irwc = irwca
+      irwsy1 = irwsya
+      inc = 0
+      nelect = NAE
+      call ilsw(2,1,iuhf)
+      iuhf = mod(iuhf,2)
+C
+99001 format (' ORBITAL SYMMETRIES.')
+99002 format ('   ALPHA ORBITALS')
+99003 format ('   BETA ORBITALS')
+99004 format (' INITIAL GUESS ORBITAL SYMMETRIES.')
+C
+C                              read in common block.
+      call tread(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+      if ( Nsymop.eq.0 ) return
+      if ( Nreps.eq.0 ) return
+      if ( IFGUES.eq.0 ) write (Iout,99001)
+      if ( IFGUES.ne.0 ) write (Iout,99004)
+C
+C                              build the table for each orbital.
+      nosym = 0
+ 100  call bldtbl(A,B,TABLE,NBASIS,NCOL,AA,irwc,irws,NATOMS,nosym)
+C
+C                              make symmetry assignments.
+      call getrep(TABLE,ORBSYM,NCOL,0,nosym)
+C
+C                              print.
+      if ( iuhf.ne.0 .and. inc.eq.0 ) write (Iout,99002)
+      if ( iuhf.ne.0 .and. inc.eq.1 ) write (Iout,99003)
+      call prtsym(ORBSYM,nelect,NCOL,Iout)
+C
+C                              now, make integer assignments.
+      do 200 i = 1 , NCOL
+         ORBSYM(i) = 0
+ 200  continue
+      if ( nosym.eq.0 ) call getrep(TABLE,ORBSYM,NCOL,1,nosym)
+      len = (NBASIS-1)/2 + 1
+      call twrite(irwsy1,AA,len,1,len,1,0)
+      len = (NCOL-1)/2 + 1
+      call twrite(irwsy1,ORBSYM,len,1,len,1,0)
+C
+      if ( iuhf.eq.0 ) return
+      if ( inc.eq.1 ) return
+      inc = 1
+      irwc = irwcb
+      irwsy1 = irwsyb
+      nelect = NBE
+      goto 100
+C
+      end
+@* INDEX.

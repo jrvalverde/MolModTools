@@ -1,0 +1,26 @@
+@* g80end.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ALLDUN  LNK1E                                          
+                                                                    
+\end{description}
+@a
+      subroutine g80end
+      implicit none
+      integer*4 In , Iout , Ipunch
+      common /io    / In , Iout , Ipunch
+C
+      close (unit=3)
+      write (Iout,99001)
+      return
+C
+99001 format (/,' **** End of gnu80 Job Step *****')
+C
+      end
+@* INDEX.

@@ -1,0 +1,78 @@
+@* fferr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] WANTED                                                    
+\item[INPUT:] FOUND                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT    LINE                                           
+\item[Uses]  IOLD    IOUT    LINE                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       IORD    LNK1E   STROUT                                 
+\item[Called by]   ALTGES  INCRD   LSUBST  RCOORD  RDCHG   ZCENTR  ZGET   
+             ZMATCH  ZPARM   ZSYMB                                  
+                                                                    
+\end{description}
+@a
+      subroutine fferr(WANTED,FOUND)
+C ----------------------------------------------------------------------
+      implicit none
+      integer blank , FOUND , i , Idump , In , Iold , iord , Iout , 
+     &        Ipunch , Lcursr , Line , Ncom , questm , WANTED
+      common /io    / In , Iout , Ipunch
+      common /fffcom/ Idump , Lcursr , Iold , Ncom , Line(40)
+      data blank/4H    / , questm/1H?/
+C          a routine to deal with free-field input errors.  you
+C     call this routine with two strings describing what you wanted
+C     to find as input ("wanted") and what was actually found
+C     ("found").  these are hollerith strings, exactly like thoes
+C     returnes by "ffget".  this routine prints messages indicating
+C     what was wanted and what was found, in addition to dumping
+C     the current line and indicating what the current cursor
+C     location is.  if either of the calling arguments is zero, then
+C     the data about it is not printed. for instance, if "wanted" is
+C     zero, then no line is printed indicating what was expected in
+C     input.
+C     r. a. whiteside - feburary 1980
+C ----------------------------------------------------------------------
+C
+99001 format ('  WANTED AN INTEGER AS INPUT.')
+99002 format ('  WANTED A FLOATING POINT NUMBER AS INPUT.')
+99003 format ('  WANTED A STRING AS INPUT.')
+99004 format ('  FOUND AN INTEGER AS INPUT.')
+99005 format ('  FOUND A FLOATING POINT NUMBER AS INPUT.')
+99006 format ('  FOUND A STRING AS INPUT.')
+99007 format ('  FOUND AN END-OF-LINE FOR INPUT.')
+99008 format ('  FOUND A NULL FIELD AS INPUT.')
+C
+C                        indicate what was expected as input.
+      if ( WANTED.ne.0 ) then
+         if ( WANTED.eq.iord('INT') ) write (Iout,99001)
+         if ( WANTED.eq.iord('FP') ) write (Iout,99002)
+         if ( WANTED.eq.iord('STR') ) write (Iout,99003)
+      endif
+C
+C                        indicate what was found.
+      if ( FOUND.ne.0 ) then
+         if ( FOUND.eq.iord('INT') ) write (Iout,99004)
+         if ( FOUND.eq.iord('FP') ) write (Iout,99005)
+         if ( FOUND.eq.iord('STR') ) write (Iout,99006)
+         if ( FOUND.eq.iord('END') ) write (Iout,99007)
+         if ( FOUND.eq.iord('NUL') ) write (Iout,99008)
+      endif
+C
+C                        dump the current line.
+      call strout(Iout,Line,80,1)
+      write (Iout,99009) (blank,i=1,Iold) , questm
+C
+99009 format (1x,80A1)
+C
+      call lnk1e
+      return
+C
+      end
+@* INDEX.

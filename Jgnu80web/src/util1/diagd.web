@@ -1,0 +1,80 @@
+@* diagd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] V                                                         
+\item[PASSED:] D                                                         
+\item[INPUT:] NBASIS                                                    
+\item[PASSED:] E                                                         
+\item[PASSED:] E2                                                        
+\item[INPUT:] MDIM                                                      
+\item[INPUT:] CMP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       EHBCKD  EHOBKD  EHOUDH  EHOUSD  EQRT2D                 
+\item[Called by]   CYCCLO  DIABLO  FIRST   FRMV    MOFI    OFIX    SECMOM 
+             VIBFRQ                                                 
+                                                                    
+\end{description}
+@a
+      subroutine diagd(A,V,D,NBASIS,E,E2,MDIM,CMP)
+      implicit none
+      double precision A , D , E , E2 , one , V , zero
+      integer i , ier , j , m1 , m2 , MDIM , mtt , NBASIS , ntt
+      logical CMP
+      dimension A(*) , V(MDIM,*) , D(*) , E(*) , E2(*)
+      data zero/0.0D0/ , one/1.0D0/
+C     ******************************************************************
+C     double precision diagonalization routine for a hermitian
+C     (symmetric) matrix in packed form (packed real first)
+C     a is the input matrix (packed: real first)
+C     v is the eigenvector matrix, again real first
+C     d contains the eigenvalues
+C     nbasis is the actual dimension of the problem
+C     e is a scratch array of length mdim
+C     e2 is a scratch array of the length 2*mdim
+C     mdim is the max. dimension
+C
+C     coded in august by rolf seeger
+C     see numerische mathematik, 11, 181 (1968)
+C     ******************************************************************
+C
+C     ******************************************************************
+      if ( CMP ) then
+C
+         ntt = NBASIS*(NBASIS+1)/2
+         mtt = MDIM*(MDIM+1)/2
+         m1 = mtt + 1
+         m2 = mtt + ntt
+         do 50 i = m1 , m2
+            A(i) = -A(i)
+ 50      continue
+         call ehoudh(A,A(m1),NBASIS,D,E,E2)
+      else
+         call ehousd(A,NBASIS,D,E,E2)
+      endif
+      do 200 i = 1 , NBASIS
+         do 100 j = 1 , NBASIS
+            V(i,j) = zero
+ 100     continue
+ 200  continue
+      do 300 i = 1 , NBASIS
+         V(i,i) = one
+ 300  continue
+      call eqrt2d(D,E,NBASIS,V,MDIM,ier)
+      if ( CMP ) then
+         call ehbckd(A,A(m1),E2,NBASIS,V,V(1,MDIM+1),MDIM)
+         return
+      endif
+C
+      call ehobkd(A,NBASIS,1,NBASIS,V,MDIM)
+      return
+C
+      end
+@* INDEX.

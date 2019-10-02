@@ -1,0 +1,467 @@
+@* ntran.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] UNIT                                                      
+\item[INPUT:] OP                                                        
+\item[OUTPUT:] NWRDS                                                     
+\item[OUTPUT:] X                                                         
+\item[OUTPUT:] IERR                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IO      IOUT    MAXPOS  NUNITS  PRINT   SYNCS   UNITS  
+             WAIT                                                   
+\item[Uses]  IO      IOUT    LEN18   MAXPOS  NUNITS  PRINT   SYNCS  
+             UNITS                                                  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CPUTIM  LNK1E   NWAIT                                  
+\item[Called by]   FILEIO  INTEGI                                         
+                                                                    
+\end{description}
+@a
+      subroutine ntran(UNIT,OP,NWRDS,X,IERR)
+      implicit none
+      integer bufpos , bufr , dif , hop , i , Idum , ier , IERR , 
+     &        iiiiii , In , ind , Io , Iout , Ipunch , iq , iunit , j , 
+     &        len , Len18 , Maxpos
+      integer ndummy , nops , Nunits , NWRDS , OP , opos , ops , pos , 
+     &        qio , reclen , rpos , stat , UNIT , Units , X
+      dimension X(*)
+      real Wait
+      logical Syncs , Print , asyn , async , sync
+      real cputim
+      dimension ops(14)
+      dimension pos(4) , stat(2,4)
+      dimension bufr(4095)
+      common /len18 / Len18
+      common /ntr   / Wait(3,4) , Io(3,4) , Units(4) , Nunits , 
+     &                Maxpos(4) , Print(4) , Syncs(4) , Idum
+      common /io    / In , Iout , Ipunch
+C     data asyn/.true./
+      data async/.true./ , sync/.false./
+      data ops/1 , 2 , 6 , 9 , 10 , 21 , 22 , 23 , 24 , 25 , 26 , 27 , 
+     &     28 , 29/ , nops/14/
+C if you want to change the number of units change all 4's :
+      data pos/4*0/ , stat/8*0/
+C also change common ntr
+      data reclen/4095/ , bufr/4095*0/
+C
+      Iout = 6
+      ier = 0
+      hop = iabs(OP)
+C
+C check unit
+      do 100 i = 1 , Nunits
+         if ( UNIT.eq.Units(i) ) goto 200
+ 100  continue
+C unit not defined:
+C if this is a define unit operation go do it, else---> error
+      if ( hop.eq.26 .or. hop.eq.27 ) then
+C
+C     ***********
+C     define unit
+C     ***********
+C
+         iunit = Nunits + 1
+         if ( iunit.gt.4 ) then
+C9080  write(iout,8080) op,unit
+C      go to 10000
+            write (Iout,99009) OP , UNIT , iunit
+            goto 1100
+C
+            write (Iout,99010) OP , UNIT
+            goto 1100
+C
+            write (Iout,99011) OP , UNIT , NWRDS , rpos
+            goto 1100
+         else
+            Nunits = iunit
+            Units(iunit) = UNIT
+            Maxpos(iunit) = 0
+            Syncs(iunit) = async
+            if ( hop.eq.26 ) Syncs(iunit) = .not.async
+C
+C     ******************
+C     extend synchronous
+C     ******************
+C      if (unit.ne.18) go to 9100
+C      if(stat(2,iunit).eq.0) go to 2805
+C      if (print(iunit)) write(iout,8895) pos(iunit)
+C      write(unit'pos(iunit)) bufr
+C      stat(2,iunit)=0
+C2805  io(2,iunit)=io(2,iunit)+1
+C      pos(iunit)=pos(iunit)+1
+C      rpos=(nwrds+reclen-1)/reclen
+C      if (rpos.gt.len18) go to 9110
+C      pu=maxpos(iunit)+1
+C      if (pu.lt.pos(iunit)) pu=pos(iunit)
+C      do 2610 i=pu,rpos
+C      if (print(iunit)) write(iout,8895) i
+C      write(unit'i) bufr
+C2610  continue
+C      maxpos(iunit)=rpos
+C      io(2,iunit)=rpos-pu+1
+C      bufpos=1
+            goto 800
+         endif
+      else
+C
+C     *******
+C     error:
+C     *******
+         write (Iout,99001) UNIT
+         goto 1200
+      endif
+C
+ 200  iunit = i
+      Io(1,iunit) = Io(1,iunit) + 1
+      if ( Print(iunit) ) write (Iout,99012) UNIT , OP , NWRDS
+C get sync switch for this unit
+      asyn = Syncs(iunit)
+C get operation:
+      do 300 i = 1 , nops
+         if ( ops(i).eq.hop ) goto 400
+C  unknown operation
+ 300  continue
+C
+      write (Iout,99002) OP
+      goto 1100
+C
+ 400  if ( i.eq.1 ) then
+      elseif ( i.eq.2 ) then
+      elseif ( i.eq.3 ) then
+C
+C ***********
+C2reposition:
+C ***********
+         rpos = NWRDS
+         qio = 0
+         if ( asyn ) then
+C asynchronous:
+C     write(iout,8070) unit,nwrds
+C  check i/o completion
+            call nwait(stat,iunit,UNIT,ier)
+            if ( ier.lt.0 ) goto 1000
+            rpos = NWRDS
+            if ( rpos.lt.1 ) then
+C
+               write (Iout,99005) OP , NWRDS , UNIT
+               goto 1100
+            else
+               dif = rpos - pos(iunit)
+               pos(iunit) = rpos
+               if ( pos(iunit).gt.Maxpos(iunit)+1 ) then
+C
+                  write (Iout,99004) UNIT
+                  goto 1100
+               else
+C  should we go backward or forward in the file
+                  if ( dif.gt.0 ) goto 500
+                  if ( dif.eq.0 ) goto 800
+C  go backward:
+C  should we rewind and spool or backspace
+                  dif = -dif
+                  if ( dif.gt.rpos ) then
+C  we should rewind and spool:
+                     rewind UNIT
+                     if ( Print(iunit) ) write (Iout,99015) UNIT
+                     dif = rpos - 1
+                     qio = 1
+                     goto 500
+                  else
+C  backspace is quicker:
+                     do 402 i = 1 , dif
+                        backspace UNIT
+ 402                 continue
+                     qio = dif
+                     if ( Print(iunit) ) write (Iout,99018) dif
+                     goto 600
+                  endif
+               endif
+            endif
+         else
+C get record position:
+            rpos = (NWRDS+reclen-1)/reclen
+            bufpos = 1 + mod(NWRDS-1,reclen)
+            if ( pos(iunit).ne.rpos ) then
+               if ( stat(2,iunit).ne.0 ) then
+                  if ( Print(iunit) ) write (Iout,99016) pos(iunit)
+                  if ( pos(iunit).gt.Maxpos(iunit) ) Maxpos(iunit)
+     &                 = pos(iunit)
+                  write (UNIT,rec=pos(iunit)) bufr
+                  Io(2,iunit) = Io(2,iunit) + 1
+                  stat(2,iunit) = 0
+               endif
+               pos(iunit) = rpos
+               if ( pos(iunit).le.Maxpos(iunit) ) then
+                  Io(2,iunit) = Io(2,iunit) + 1
+                  if ( Print(iunit) ) write (Iout,99017) pos(iunit)
+                  read (UNIT,rec=pos(iunit)) bufr
+               endif
+            endif
+            goto 800
+         endif
+      elseif ( i.eq.5 ) then
+         goto 700
+      elseif ( i.eq.6 ) then
+C
+C     ********************
+C     re-open old unit
+C     ********************
+         if ( asyn ) goto 800
+         Maxpos(iunit) = NWRDS
+         goto 700
+      elseif ( i.eq.7 ) then
+C
+C     **********
+C     close unit
+C     **********
+         if ( asyn ) then
+C
+            call nwait(stat,iunit,UNIT,ier)
+            if ( ier.ge.0 ) goto 800
+            goto 1000
+         else
+            if ( stat(2,iunit).ne.0 ) then
+               if ( Print(iunit) ) write (Iout,99016) pos(iunit)
+               if ( pos(iunit).gt.Maxpos(iunit) ) Maxpos(iunit)
+     &              = pos(iunit)
+               write (UNIT,rec=pos(iunit)) bufr
+               stat(2,iunit) = 0
+            endif
+            Io(2,iunit) = Io(2,iunit) + 1
+            goto 800
+         endif
+      elseif ( i.eq.8 ) then
+C
+C     *******
+C     wait
+C     *******
+         if ( asyn ) call nwait(stat,iunit,UNIT,ier)
+         if ( ier.lt.0 ) goto 1000
+         IERR = ier
+         goto 800
+      elseif ( i.eq.9 ) then
+C
+         write (Iout,99003) OP
+         goto 1100
+      elseif ( i.eq.10 ) then
+         write (Iout,99003) OP
+         goto 1100
+      elseif ( i.eq.11 .or. i.eq.12 ) then
+         goto 800
+      elseif ( i.eq.13 ) then
+         goto 800
+      elseif ( i.eq.14 ) then
+C
+C     *******************
+C     set print(iunit) switch
+C     *******************
+         Print(iunit) = NWRDS.ne.0
+         goto 800
+      else
+C  no-operation:
+C  not implemented in this version:
+         return
+      endif
+C
+C  **************
+C  read or write:
+C  **************
+      IERR = NWRDS
+      len = NWRDS
+      ind = 1
+      Io(3,iunit) = Io(3,iunit) + len
+      if ( asyn ) then
+C  asynchronous i/o:
+C  wait for completion of previous i/o on this unit
+         call nwait(stat,iunit,UNIT,ier)
+         if ( ier.lt.0 ) goto 1000
+         Wait(3,iunit) = cputim(iq)
+         opos = pos(iunit)
+         pos(iunit) = opos + 1
+         if ( hop.ne.2 ) then
+            if ( Print(iunit) ) write (Iout,99016) opos
+            if ( Maxpos(iunit).lt.opos ) Maxpos(iunit) = opos
+C     write(unit,id=hop) x(1)...x(nwrds)
+            ndummy = NWRDS
+C      write (unit) (x(iiiiii),iiiiii=1,nwrds)
+            write (UNIT) ndummy , (X(iiiiii),iiiiii=1,NWRDS)
+C
+         elseif ( opos.gt.Maxpos(iunit) ) then
+            write (Iout,99004) UNIT
+            goto 1100
+         else
+            if ( Print(iunit) ) write (Iout,99017) opos
+C     read (unit,id=hop) x(1)...x(nwrds)
+C      read (unit)  (x(iiiiii),iiiiii=1,nwrds)
+C dbc
+            read (UNIT) ndummy , (X(iiiiii),iiiiii=1,ndummy)
+            NWRDS = ndummy
+         endif
+         stat(1,iunit) = hop
+         stat(2,iunit) = NWRDS
+         Io(2,iunit) = Io(2,iunit) + 1
+         IERR = -1
+         if ( OP.gt.0 ) goto 800
+C  complete i/o before returning:
+         call nwait(stat,iunit,UNIT,ier)
+         if ( ier.lt.0 ) goto 1000
+         IERR = ier
+         goto 800
+      else
+C  synchronous i/o:
+ 450     j = reclen - bufpos + 1
+         if ( j.gt.len ) j = len
+         if ( j.gt.0 ) then
+            if ( hop.eq.1 ) then
+C
+C write to buffer
+               stat(2,iunit) = 1
+               do 460 i = 1 , j
+                  bufr(bufpos) = X(ind)
+                  bufpos = bufpos + 1
+                  ind = ind + 1
+ 460           continue
+            else
+C read from  buffer
+               do 470 i = 1 , j
+                  X(ind) = bufr(bufpos)
+                  bufpos = bufpos + 1
+                  ind = ind + 1
+ 470           continue
+            endif
+         endif
+         len = len - j
+         if ( len.le.0 ) goto 800
+C continue with next record,  first save this one
+         if ( stat(2,iunit).ne.0 ) then
+            if ( pos(iunit).gt.Maxpos(iunit) ) Maxpos(iunit)
+     &           = pos(iunit)
+            if ( Print(iunit) ) write (Iout,99016) pos(iunit)
+            write (UNIT,rec=pos(iunit)) bufr
+            stat(2,iunit) = 0
+         endif
+         Io(2,iunit) = Io(2,iunit) + 1
+         pos(iunit) = pos(iunit) + 1
+         if ( pos(iunit).gt.Len18 ) then
+            write (Iout,99004) UNIT
+            goto 1100
+         elseif ( pos(iunit).le.Maxpos(iunit) ) then
+C
+            if ( Print(iunit) ) write (Iout,99017) pos(iunit)
+            read (UNIT,rec=pos(iunit),err=900) bufr
+            Io(2,iunit) = Io(2,iunit) + 1
+            bufpos = 1
+            goto 450
+C end of file during read
+         elseif ( hop.eq.2 ) then
+            write (Iout,99004) UNIT
+            goto 1100
+         else
+            bufpos = 1
+            goto 450
+C no, we are writing, continue:
+         endif
+      endif
+C  spool unit:
+ 500  if ( dif.ne.0 ) then
+         qio = qio + dif
+         do 550 i = 1 , dif
+            call nwait(stat,iunit,UNIT,ier)
+            if ( ier.lt.0 ) goto 1000
+            Wait(3,iunit) = cputim(iq)
+C     read(unit,id=3)
+            read (UNIT)
+            stat(1,iunit) = 3
+ 550     continue
+      endif
+ 600  stat(2,iunit) = qio
+      Io(2,iunit) = Io(2,iunit) + qio
+      goto 800
+C
+C     *******
+C     rewind.
+C     *******
+ 700  bufpos = 1
+      if ( pos(iunit).ne.1 ) then
+         if ( asyn ) then
+C
+            Io(2,iunit) = Io(2,iunit) + 1
+C  wait for io completion
+            call nwait(stat,iunit,UNIT,ier)
+            if ( ier.lt.0 ) goto 1000
+            if ( Print(iunit) ) write (Iout,99015) UNIT
+            rewind UNIT
+            pos(iunit) = 1
+         else
+            if ( stat(2,iunit).ne.0 ) then
+               Io(2,iunit) = Io(2,iunit) + 1
+               if ( Print(iunit) ) write (Iout,99016) pos(iunit)
+               if ( pos(iunit).gt.Maxpos(iunit) ) Maxpos(iunit)
+     &              = pos(iunit)
+               write (UNIT,rec=pos(iunit)) bufr
+               stat(2,iunit) = 0
+            endif
+            Io(2,iunit) = Io(2,iunit) + 1
+            pos(iunit) = 1
+            if ( Maxpos(iunit).ne.0 ) then
+               if ( Print(iunit) ) write (Iout,99017) pos(iunit)
+               read (UNIT,rec=pos(iunit)) bufr
+            endif
+         endif
+      endif
+C
+C   exit:
+ 800  if ( .not.Print(iunit) ) return
+      if ( asyn ) write (Iout,99013) pos(iunit) , Maxpos(iunit) , 
+     &                               stat(1,iunit) , IERR
+      if ( asyn ) return
+      write (Iout,99014) pos(iunit) , Maxpos(iunit) , stat(2,iunit) , 
+     &                   bufpos
+      return
+C
+ 900  write (Iout,99005) UNIT
+      goto 1100
+C
+ 1000 write (Iout,99007) UNIT , ier
+ 1100 if ( iunit.ne.0 ) Units(iunit) = -1
+      if ( asyn ) write (Iout,99013) pos(iunit) , Maxpos(iunit) , 
+     &                               stat(1,iunit) , IERR
+      if ( .not.asyn ) write (Iout,99014) pos(iunit) , Maxpos(iunit) , 
+     &                        stat(2,iunit) , bufpos
+ 1200 call lnk1e
+      stop
+C
+99001 format (' ','NTRAN **** ERROR **** UNIT NOT DEFINED: ',i10)
+99002 format (' ','NTRAN **** ERROR **** UNKNOWN OPERATION: ',i10)
+99003 format (' ','NTRAN **** ERROR **** OPERATION NOT IMPLEMENTED:',i5)
+99004 format (' ','NTRAN **** ERROR **** END OF DATA SET, UNIT =  ',i10)
+99005 format (' ','NTRAN **** ERROR **** DURING READ, UNIT =  ',i10)
+99006 format (' ','NTRAN **** ERROR, OP= ',i5,'NWRDS= ',i5,'UNIT= ',i5)
+99007 format (' ','NTRAN **** ERROR **** PREVIOUS READ OR WRITE NOT ',
+     &        'SUCCESFULLY COMPLETED ON UNIT NR ',i2,' IERR= ',i2)
+99008 format (' ','NTRAN:WARNING REPOSITION ON ASYNCHRONOUS UNIT:',i5,
+     &        ' POS= ',i5)
+C8080  format(' ','ntran **** error, op= ',i5,'unit= ',i5,
+C     + ' attempt to redefine unit')
+99009 format (' ','NTRAN **** ERROR, OP= ',i5,'UNIT= ',i5,
+     &        ' UNIT CANNOT BE DEFINED SYNCHRONOUS: ',i5)
+99010 format (' ','NTRAN **** ERROR, OP= ',i5,'UNIT= ',i5,
+     &        ' UNIT CANNOT BE DEFINED, TO MANY UNITS: ',i5)
+99011 format (' ','NTRAN **** ERROR, OP= ',i5,'UNIT= ',i5,
+     &        ' UNIT DEFINED TO LARGE N WORDS= ',i10,' N. RECORDS= ',i5)
+99012 format (' ','NTRAN: UNIT= ',i5,', OP = ',i5,', NWRDS  =',i5)
+99013 format (' ','  "  : POS = ',i5,', EOF= ',i5,', STATUS =',i5,
+     &        ' IERR= ',i5)
+99014 format (' ','  "  : POS = ',i5,', EOF= ',i5,', STATUS =',i5,
+     &        ' BUFPOS= ',i5)
+99015 format (' ','NTRAN: REWIND, UNIT = ',i5)
+99016 format (' ','NTRAN: WRITE,  BUF # =  ',i5)
+99017 format (' ','NTRAN: READ,   BUF # =  ',i5)
+99018 format (' ','NTRAN: BACKSPACE,      ',i5,' RECORDS')
+C
+      end
+@* INDEX.

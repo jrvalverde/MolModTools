@@ -1,0 +1,141 @@
+@* bldtbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[PASSED:] B                                                         
+\item[OUTPUT:] TABLE                                                     
+\item[INPUT:] NB                                                        
+\item[INPUT:] NCOL                                                      
+\item[PASSED:] AA                                                        
+\item[PASSED:] IRWC                                                      
+\item[PASSED:] IRWS                                                      
+\item[PASSED:] NATOMS                                                    
+\item[PASSED:] NOSYM                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IPRMUT  NROT    SYMOPS                                 
+\item[Uses]  IPRMUT  NROT    NSYMOP  SYMOPS                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DGNMAP  MATREC  TREAD   TRNFRM  TWRITE                 
+\item[Called by]   SYMASG                                                 
+                                                                    
+\end{description}
+@a
+C   from util3.for
+      subroutine bldtbl(A,B,TABLE,NB,NCOL,AA,IRWC,IRWS,NATOMS,NOSYM)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision A , AA , B , sum , TABLE , zero
+      integer i , id , iop , IRWC , irwmap , IRWS , irwsc , lrwmap , 
+     &        mapdgn , Mapper , Maprot , MAXATM , MAXBAS , NATOMS , NB , 
+     &        NCOL , ndgn , NOSYM , Nrot , nsq
+      parameter (MAXBAS=150,MAXATM=100)
+      double precision Symops , Chrtbl
+      integer Nsymop , Nreps , Lblrep , Iprmut
+      dimension A(NB,NCOL) , B(NB,NCOL) , TABLE(NCOL,6) , AA(*)
+      dimension mapdgn(MAXBAS)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      common /maps  / Nrot , Maprot(MAXBAS) , Mapper(MAXATM)
+      data irwsc/3555/ , irwmap/559/ , lrwmap/125/
+      data zero/0.0D0/
+C          this routine builds in "table" a description of how each
+C     molecular orbital (in read-write file "irwc") behaves under each
+C     symmetry operation (these are found in /repdat/).  "nb" is the
+C     number of basis functions.  "aa" is a scratch vector of length
+C     nb.  "irws" is
+C     the read-write file number of the overlap matrix.  "a" and "b"
+C     are two nb x nb matrices used for temporary storage.
+C
+C          the output from this routine, "table", is an array of
+C     size: ncol x nsymop.  thus, table(i,j) will describe how the i-th
+C     orbital behaves under the j-th symmetry operation.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+C
+C1/repcom/
+C     common/repcom/ nsymop,nreps,lblrep(32),chrtbl(10,16),symops(9,10),
+C    $     iprmut(100,10)
+C
+C          nsymop ... the number of symmetry operations to be used
+C               in assigning orbital symmetries.
+C          nreps  ... the number of orreducible representations in
+C               the character table.
+C          lblrep ... a delimited string containing the labels for the
+C               representations, "a1g" for instance.
+C          chrtbl ... the character table.  chttbl(iop,irep) indicates
+C               how the "irep-th" representation behaves under the
+C               "iop-th" symmetry operation.
+C          symops ... three by three matrices defining each symmetry
+C               operation.
+C          iprmut ... a vector describing the permutations of the atomms
+C               under eachh symmetry operation.  iprmut(i)=j means
+C               that the i-th atom turns into the j-th atom under
+C               the operation.
+C1
+C     data irwrep/562/,lrwrep/767/
+C
+      nsq = NB*NB
+C
+C                        clear the degeneracy map.
+      do 100 i = 1 , NCOL
+         mapdgn(i) = 0
+ 100  continue
+      ndgn = 0
+C
+C                        calculate and write out "s x c"
+      call tread(IRWS,A,NB,NB,NB,NB,1)
+      call tread(IRWC,B,nsq,1,nsq,1,0)
+      call matrec(A,B,AA,NB,NB,NB,NCOL,1)
+      call twrite(irwsc,A,nsq,1,nsq,1,0)
+C
+C                        read in the basis-dependent maps.
+      call tread(irwmap,Nrot,lrwmap,1,lrwmap,1,0)
+C
+C                        main loop over symmetry operations.
+C                        -----------------------------------
+      do 200 iop = 1 , Nsymop
+C                  read in "sc" and coefs.
+         if ( iop.ne.1 ) call tread(irwsc,A,nsq,1,nsq,1,0)
+         call tread(IRWC,B,nsq,1,nsq,1,0)
+C                  calculate the overlap between transformed and
+C                  non-transformed orbitals.
+         call trnfrm(A,Symops(1,iop),Iprmut(1,iop),NB,NCOL,NATOMS,AA)
+         call matrec(B,A,AA,NB,NCOL,NB,NCOL,5)
+C
+C                  "dgnmap" looks at the resulting overlap
+C                  matrix and determines which orbitals, if any,
+C                  are degenerate.  this information is used later
+C                  to sum up the trace of v alues among a degenerate
+C                  set of orbitals.
+         call dgnmap(A,NB,NCOL,mapdgn,ndgn,NOSYM)
+C
+C                  put entries into "table".
+         do 150 i = 1 , NCOL
+            TABLE(i,iop) = A(i,i)
+ 150     continue
+ 200  continue
+C     .... end of loop over symmetry operations.
+C
+C                  sum up values among degenerate sets.
+      if ( ndgn.eq.0 ) return
+      do 300 id = 1 , ndgn
+         do 250 iop = 1 , Nsymop
+            sum = zero
+            do 220 i = 1 , NCOL
+               if ( mapdgn(i).eq.id ) sum = sum + TABLE(i,iop)
+ 220        continue
+            do 240 i = 1 , NCOL
+               if ( mapdgn(i).eq.id ) TABLE(i,iop) = sum
+ 240        continue
+ 250     continue
+ 300  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,275 @@
+@* diag.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NN                                                        
+\item[INPUT:] MAXDIM                                                    
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] VEC                                                       
+\item[OUTPUT:] EIG                                                       
+\item[OUTPUT:] W                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GSQRT                                          
+\item[Called by]   ANNIL   CYCOPN  DXQUAD  FORMV   GETMO   ROOTMT         
+                                                                    
+\end{description}
+@a
+      subroutine diag(NN,MAXDIM,A,VEC,EIG,W)
+      implicit none
+      double precision A , a2 , b , beta , betasq , cosa , cosap , d , 
+     &                 dia , dif , EIG , g , gabs , gamma , gsqrt , 
+     &                 one , ord , p , pp , ppbr
+      double precision ppbs , pt5 , q , qj , r1 , r12 , r2 , rhosq , s , 
+     &                 sgn , shift , sina , sina2 , sqrts , sum , temp , 
+     &                 tenm18 , two , u , VEC
+      double precision W , wj , wtaw , zero
+      integer i , i1 , iposv , itemp , ivpos , j , k , l , lv , m , 
+     &        MAXBAS , MAXDIM , n , n1 , n2 , NN , np , npas , nr , nrr
+      integer nt , nv
+      parameter (MAXBAS=150)
+      dimension A(MAXDIM,MAXDIM) , VEC(MAXDIM,MAXDIM) , EIG(MAXDIM) , 
+     &          W(MAXDIM)
+      dimension gamma(MAXBAS) , beta(MAXBAS) , betasq(MAXBAS) , 
+     &          p(MAXBAS) , q(MAXBAS) , ord(MAXBAS) , iposv(MAXBAS) , 
+     &          ivpos(MAXBAS)
+      equivalence (p(1),q(1),ivpos(1),beta(1)) , (iposv(1),gamma(1)) , 
+     &             (ord(1),betasq(1))
+      data zero/0.0D0/ , pt5/0.5D0/ , one/1.0D0/ , two/2.0D0/
+      data tenm18/1.0D-18/
+C
+C     matrix diagnolization routine for real symmetric case
+C     householder method
+C     rho= upper limit for off-diagonal element
+C     nn= size of matrix
+C     a = matrix (only lower triangle is used + this is destroyed
+C     eig = returned eigenvalues in algebraic descending order
+C     vec = returned eigenvectors in columns
+      rhosq = tenm18
+      n = NN
+      if ( n.eq.0 ) goto 900
+      n1 = n - 1
+      n2 = n - 2
+      gamma(1) = A(1,1)
+      if ( n2.lt.0 ) goto 200
+      if ( n2.ne.0 ) then
+         do 100 nr = 1 , n2
+            b = A(nr+1,nr)
+            s = zero
+            do 20 i = nr , n2
+               s = s + A(i+2,nr)*A(i+2,nr)
+ 20         continue
+C     prepare for possible bypass of transformation
+            A(nr+1,nr) = zero
+            if ( s.gt.0 ) then
+               s = s + b*b
+               sgn = +one
+               if ( b.lt.0 ) sgn = -one
+               sqrts = gsqrt(s)
+               d = sgn/(sqrts+sqrts)
+               temp = gsqrt(pt5+b*d)
+               W(nr) = temp
+               A(nr+1,nr) = temp
+               d = d/temp
+               b = -sgn*sqrts
+C     d is factor of proportionality. now compute and save w vector.
+C     extra singly subscripted w vector used for speed.
+               do 30 i = nr , n2
+                  temp = d*A(i+2,nr)
+                  W(i+1) = temp
+                  A(i+2,nr) = temp
+ 30            continue
+C     premultiply vector w by matrix a to obtain p vector.
+C     simultaneously accumulate dot product wp,(the scalar k)
+               wtaw = zero
+               do 40 i = nr , n1
+                  sum = zero
+                  do 35 j = nr , i
+                     sum = sum + A(i+1,j+1)*W(j)
+ 35               continue
+                  i1 = i + 1
+                  if ( n1.ge.i1 ) then
+                     do 36 j = i1 , n1
+                        sum = sum + A(j+1,i+1)*W(j)
+ 36                  continue
+                  endif
+                  p(i) = sum
+                  wtaw = wtaw + sum*W(i)
+ 40            continue
+C     p vector and scalar k  now stored. next compute q vector
+               do 50 i = nr , n1
+                  q(i) = p(i) - wtaw*W(i)
+ 50            continue
+C     now form pap matrix, required part
+               do 60 j = nr , n1
+                  qj = q(j)
+                  wj = W(j)
+                  do 55 i = j , n1
+                     A(i+1,j+1) = A(i+1,j+1) - two*(W(i)*qj+wj*q(i))
+ 55               continue
+ 60            continue
+            endif
+            beta(nr) = b
+            betasq(nr) = b*b
+            gamma(nr+1) = A(nr+1,nr+1)
+ 100     continue
+      endif
+      b = A(n,n-1)
+      beta(n-1) = b
+      betasq(n-1) = b*b
+      gamma(n) = A(n,n)
+ 200  betasq(n) = zero
+C     adjoin an identify matrix to be postmultiplied by rotations.
+      do 300 i = 1 , n
+         do 250 j = 1 , n
+            VEC(i,j) = zero
+ 250     continue
+         VEC(i,i) = one
+ 300  continue
+      m = n
+      sum = zero
+      npas = 1
+ 400  beta(m) = zero
+      betasq(m) = zero
+      m = m - 1
+      if ( m.eq.0 ) then
+C
+         EIG(1) = gamma(1) + sum
+C     initialize auxiliary tables required for rearranging the vectors
+         do 450 j = 1 , n
+            iposv(j) = j
+            ivpos(j) = j
+            ord(j) = j
+ 450     continue
+C     use a transposition sort to order the eigenvalues
+         m = n
+ 500     m = m - 1
+         if ( m.ne.0 ) then
+C
+            do 520 j = 1 , m
+               if ( EIG(j).gt.EIG(j+1) ) then
+                  temp = EIG(j)
+                  EIG(j) = EIG(j+1)
+                  EIG(j+1) = temp
+                  itemp = ord(j)
+                  ord(j) = ord(j+1)
+                  ord(j+1) = itemp
+               endif
+ 520        continue
+            goto 500
+         else
+            if ( n1.ne.0 ) then
+               do 530 l = 1 , n1
+                  nv = ord(l)
+                  np = iposv(nv)
+                  if ( np.ne.l ) then
+                     lv = ivpos(l)
+                     ivpos(np) = lv
+                     iposv(lv) = np
+                     do 522 i = 1 , n
+                        temp = VEC(i,l)
+                        VEC(i,l) = VEC(i,np)
+                        VEC(i,np) = temp
+ 522                 continue
+                  endif
+ 530           continue
+            endif
+C     back transform the vectors of the triple diagonal matrix
+            do 560 nrr = 1 , n
+               k = n1
+ 540           k = k - 1
+               if ( k.gt.0 ) then
+                  sum = zero
+                  do 545 i = k , n1
+                     sum = sum + VEC(i+1,nrr)*A(i+1,k)
+ 545              continue
+                  sum = sum + sum
+                  do 550 i = k , n1
+                     VEC(i+1,nrr) = VEC(i+1,nrr) - sum*A(i+1,k)
+ 550              continue
+                  goto 540
+               endif
+C
+ 560        continue
+            goto 900
+         endif
+      elseif ( betasq(m).le.rhosq ) then
+         EIG(m+1) = gamma(m+1) + sum
+         goto 400
+      endif
+C     take root of corner 2 by 2 nearest to lower diagonal in value
+C     as estimate of eigenvalue to use for shift
+ 600  a2 = gamma(m+1)
+      r2 = pt5*a2
+      r1 = pt5*gamma(m)
+      r12 = r1 + r2
+      dif = r1 - r2
+      temp = gsqrt(dif*dif+betasq(m))
+      r1 = r12 + temp
+      r2 = r12 - temp
+      dif = gabs(a2-r1) - gabs(a2-r2)
+      if ( dif.lt.0 ) then
+C
+         shift = r1
+      else
+         shift = r2
+      endif
+C
+      sum = sum + shift
+      cosa = one
+      g = gamma(1) - shift
+      pp = g
+      ppbs = pp*pp + betasq(1)
+      ppbr = gsqrt(ppbs)
+      do 700 j = 1 , m
+         cosap = cosa
+         if ( ppbs.ne.0 ) then
+C
+            sina = beta(j)/ppbr
+            sina2 = betasq(j)/ppbs
+            cosa = pp/ppbr
+C     postmultiply identity by p-transpose matrix
+            nt = j + npas
+            if ( nt.ge.n ) nt = n
+            do 620 i = 1 , nt
+               temp = cosa*VEC(i,j) + sina*VEC(i,j+1)
+               VEC(i,j+1) = -sina*VEC(i,j) + cosa*VEC(i,j+1)
+               VEC(i,j) = temp
+ 620        continue
+         else
+            sina = zero
+            sina2 = zero
+            cosa = one
+         endif
+         dia = gamma(j+1) - shift
+         u = sina2*(g+dia)
+         gamma(j) = g + u
+         g = dia - u
+         pp = dia*cosa - sina*cosap*beta(j)
+         if ( j.ne.m ) then
+C
+            ppbs = pp*pp + betasq(j+1)
+            ppbr = gsqrt(ppbs)
+            beta(j) = sina*ppbr
+            betasq(j) = sina2*ppbs
+         else
+            beta(j) = sina*pp
+            betasq(j) = sina2*pp*pp
+            goto 800
+         endif
+ 700  continue
+ 800  gamma(m+1) = g
+C     test for convergence of last diagonal element
+      npas = npas + 1
+      if ( betasq(m).gt.rhosq ) goto 600
+      EIG(m+1) = gamma(m+1) + sum
+      goto 400
+ 900  return
+C
+      end
+@* INDEX.

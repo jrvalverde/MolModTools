@@ -1,0 +1,31 @@
+@* l9999.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ALLDUN                                                 
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l9999(NCHAIN)
+      implicit none
+      integer NCHAIN
+C
+C
+C      this is the last link to be executed in a gnu80 run.
+C               ends the run
+C
+      call alldun
+      NCHAIN = 1
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,23 @@
+@* drum.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   D2ESP   D2ESPD  DIPOLE  GENL2E  GINPUT  MSOPT   MULPOP 
+             OPTMZ   RDGEOM  RHFCLO  RHFOPN  SAVSCF  SCFDM   STVINT 
+             UHFOPN  WINDOW                                         
+                                                                    
+\end{description}
+@a
+      subroutine drum
+      implicit none
+      integer In , Iout , Ipunch
+      common /io    / In , Iout , Ipunch
+      return
+C
+      end
+@* INDEX.

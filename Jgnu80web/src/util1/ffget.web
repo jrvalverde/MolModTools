@@ -1,0 +1,116 @@
+@* ffget.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] STR                                                       
+\item[PASSED:] LEN                                                       
+\item[INPUT:] INTGR                                                     
+\item[INPUT:] FP                                                        
+\item[OUTPUT:] IFOUND                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOLD    LCURSR  NCOM                                   
+\item[Transmits as argument]  LINE                                                   
+\item[Uses]  IDUMP   IOUT    LCURSR  LINE    NCOM                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR  IORD    QPAINT  QPDP    QPSKBL  QPWORD         
+\item[Called by]   ALTGES  INCRD   RCOORD  RDCHG   ZCENTR  ZGET    ZPARM  
+             ZSYMB                                                  
+                                                                    
+\end{description}
+@a
+      subroutine ffget(STR,LEN,INTGR,FP,IFOUND)
+C ----------------------------------------------------------------------
+C2ffget
+      implicit none
+      integer comma , delims , equal , getchr , Idump , IFOUND , In , 
+     &        INTGR , Iold , iord , Iout , Ipunch , itst , j , l , 
+     &        Lcursr , LEN , lenlin , Line , Ncom
+      integer qpaint , qpdp , STR
+      integer junk , qpword
+      double precision FP
+      dimension delims(2) , STR(*)
+      common /io    / In , Iout , Ipunch
+      common /fffcom/ Idump , Lcursr , Iold , Ncom , Line(40)
+      data delims/3 , ',= '/ , comma/','/ , equal/'='/
+      data lenlin/80/
+C          a routine to deal with free-field input.  a call to this
+C     routine plucks the next item off of the input string and
+C     returns it to the user.  if the next item is an integer, then
+C     this is returned to "intgr".  if it is a floating point
+C     number, then it is returned in "fp".  if it is a string
+C     (terminated by comma, equal-sign, or space), then the string
+C     is returned in "str" and is of length "len".  the last argument,
+C     "ifound" indicates what kind of thing was found in the
+C     line.  the returned values of this are:
+C
+C          "str" ... the item returned is a string.
+C          "int" ... the item is an integer.
+C          "fp"  ... the item is a floating point number.
+C          "end" ... no items remain in the line.
+C          "nul" ... null field was found.
+C ----------------------------------------------------------------------
+C
+C
+99001 format ('  FFGET -- FLOATING POINT NUMBER:',d20.7)
+99002 format ('  FFGET -- INTEGER:',i10)
+99003 format ('  FFGET -- END-OF-LINE.')
+99004 format ('  FFGET --- NULL FIELD FOUND.')
+C
+      Iold = Lcursr
+C
+C                  skip blanks and commas.
+ 100  call qpskbl(Line,Lcursr,lenlin)
+      if ( Lcursr.ge.lenlin ) then
+C
+C                  end of line.
+         IFOUND = iord('END')
+         if ( Idump.ne.0 ) write (Iout,99003)
+         return
+      else
+         j = getchr(Line,Lcursr)
+         if ( .not.((j.eq.comma .or. j.eq.equal) .and. Ncom.ne.0) ) then
+            if ( j.eq.comma .or. j.eq.equal ) Ncom = 1
+            if ( j.eq.comma .or. j.eq.equal ) goto 100
+            Lcursr = Lcursr - 1
+C
+C                  see if there is a floating point number.
+            itst = qpdp(Line,lenlin,Lcursr,FP)
+            if ( itst.eq.0 ) then
+               Ncom = 0
+               IFOUND = iord('FP')
+               if ( Idump.ne.0 ) write (Iout,99001) FP
+               return
+C
+C                  look for an integer.
+            elseif ( qpaint(10,Line,lenlin,Lcursr,INTGR,0).ne.0 ) then
+C
+C                  get the string.
+               l = 0
+               junk = qpword(1,delims,l,Line,lenlin,Lcursr,STR,LEN)
+               IFOUND = iord('STR')
+               Ncom = 0
+C for f2c:
+C      if (idump.ne.0) call strout(iout,23hffget-- found string:  ,23,0)
+C      if (idump.ne.0) call strout(iout,str,len,2)
+C      if (idump.ne.0) call strout(iout,1h ,1,1)
+               return
+            else
+               IFOUND = iord('INT')
+               Ncom = 0
+               if ( Idump.ne.0 ) write (Iout,99002) INTGR
+               return
+            endif
+         endif
+      endif
+C
+C                  null field.
+      IFOUND = iord('NUL')
+      Ncom = 1
+      if ( Idump.ne.0 ) write (Iout,99004)
+      return
+C
+      end
+@* INDEX.

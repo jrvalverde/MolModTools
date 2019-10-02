@@ -1,0 +1,70 @@
+@* getde.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] METHOD                                                    
+\item[INPUT:] ISCHEM                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    A0S     DE1                                            
+\item[Uses]  A00     DE1     IOUT    IPRINT  W0      ZERO           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TRACK                                                  
+\item[Called by]   GETA                                                   
+                                                                    
+\end{description}
+@a
+      subroutine getde(METHOD,ISCHEM)
+      implicit none
+      double precision A00 , A0old , A0s , Anorm , Cuts , De1 , Dehf , 
+     &                 Delmax , Den , Dep , Energy , F42 , Four , Half , 
+     &                 One , Onept5 , Q1 , Qep , Ten , Three
+      double precision Two , W0 , Zero
+      integer Idummy , Iflag , In , Inr , Iout , Ipcyc , Iprint , 
+     &        Ipunch , ISCHEM , Isd , Maxit , METHOD , Niter , Norm
+      logical Davail , Savail
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /wtoa  / De1 , Q1 , A0s
+      common /io    / In , Iout , Ipunch
+      common /extrap/ Dep(2) , Qep , A0old , Inr , Idummy
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+      common /print / Iprint
+C
+C     ******************************************************************
+C
+C     defines 'de' for
+C     a(s) = w(s)/(de-delta(s))
+C
+C     feb/77 seeger and krishnan
+C
+C     ******************************************************************
+C
+C
+99001 format (' DE=',d20.8)
+C
+      call track('METHOD')
+C
+      A0s = A00
+      if ( ISCHEM.eq.2 ) then
+C
+         De1 = W0/A00
+      elseif ( ISCHEM.eq.3 ) then
+C
+         De1 = Zero
+      else
+C
+         if ( METHOD.le.1 ) De1 = W0/A00
+         if ( METHOD.gt.1 ) De1 = Zero
+      endif
+C
+      if ( Iprint.gt.0 ) write (Iout,99001) De1
+C
+      return
+C
+      end
+@* INDEX.

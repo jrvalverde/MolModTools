@@ -1,0 +1,96 @@
+@* abtild.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] ATILDA                                                    
+\item[INPUT:] CA                                                        
+\item[INPUT:] A                                                         
+\item[INPUT:] CB                                                        
+\item[OUTPUT:] S                                                         
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  NVA     NVB     ZERO                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    TRACK                                          
+\item[Called by]   DD1SD4                                                 
+                                                                    
+\end{description}
+@a
+      subroutine abtild(ATILDA,CA,A,CB,S,NBASIS)
+      implicit none
+      double precision A , ATILDA , CA , CB , F42 , Four , gabs , Half , 
+     &                 One , Onept5 , S , Ten , Three , thresh , Two , 
+     &                 Zero
+      integer ia , ib , Ieval , ind , ind1 , ind2 , ind3 , ind4 , Ioab , 
+     &        Ispect , Loab , Lspect , Maxbuc , mu , nb2 , NBASIS , 
+     &        Noa , Noa2 , Noa3 , Noaob
+      integer Noava , Noavb , Nob , Nob2 , Nob3 , Nobva , Nobvb , 
+     &        Novaa , Novab , Novbb , Nrorb , nu , Nva , Nva2 , Nva3 , 
+     &        Nvavb , Nvb , Nvb2 , Nvb3
+      dimension ATILDA(*) , CA(*) , A(*) , CB(*) , S(*)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      data thresh/1.D-8/
+C
+C     ******************************************************************
+C
+C     accepts (nbasis*nv1) matrix ca, (nbasis*nv2) matrix cb, and
+C     (nv2*nv1) matrix a
+C     produces   atilda = ca * a * cb(transposed)
+C     s is a scratch array of min. length nbasis
+C
+C     sept/77  krishnan
+C
+C     ******************************************************************
+C
+C
+C
+C
+      call track('ABTILD')
+C
+      if ( Nva.le.0 .or. Nvb.le.0 ) return
+      nb2 = NBASIS*NBASIS
+      do 100 ind = 1 , nb2
+         ATILDA(ind) = Zero
+ 100  continue
+C
+      ind1 = 0
+      ind4 = 0
+      do 300 ia = 1 , Nva
+         do 150 nu = 1 , NBASIS
+            S(nu) = Zero
+ 150     continue
+         ind2 = 0
+         do 200 ib = 1 , Nvb
+            ind1 = ind1 + 1
+            if ( gabs(A(ind1)).ge.thresh ) then
+               do 160 nu = 1 , NBASIS
+                  S(nu) = S(nu) + A(ind1)*CB(ind2+nu)
+ 160           continue
+            endif
+            ind2 = ind2 + NBASIS
+ 200     continue
+C
+         ind3 = 0
+         do 250 mu = 1 , NBASIS
+            ind4 = ind4 + 1
+            do 220 nu = 1 , NBASIS
+               ATILDA(ind3+nu) = ATILDA(ind3+nu) + CA(ind4)*S(nu)
+ 220        continue
+            ind3 = ind3 + NBASIS
+ 250     continue
+ 300  continue
+C
+      return
+C
+      end
+@* INDEX.

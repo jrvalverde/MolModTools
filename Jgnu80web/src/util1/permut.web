@@ -1,0 +1,66 @@
+@* permut.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] A                                                         
+\item[OUTPUT:] VEC                                                       
+\item[OUTPUT:] MAP                                                       
+\item[INPUT:] IPRMUT                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] NB                                                        
+\item[INPUT:] NCOL                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   TRNFRM  VIBTBL                                         
+                                                                    
+\end{description}
+@a
+C from util1.for
+      subroutine permut(A,VEC,MAP,IPRMUT,NATOMS,NB,NCOL)
+      implicit none
+      integer i , iat , icol , iend , int , IPRMUT , ist , MAP , 
+     &        NATOMS , NB , NCOL
+C ----------------------------------------------------------------------
+      double precision A(NB,NB) , VEC(NB)
+      dimension MAP(*) , IPRMUT(*)
+C           this routine performs a permutation of the rows of "a",
+C     according to the "map".  "a" is an (nb x ncol) matrix, "vec"
+C     is a scratch vector of length "nb".  "map" is an integer vector
+C     of length "natoms" which gives for each atom the first basis
+C     function on that atom.  "iprmut" is an integer vector, also of
+C     length "natoms" which descrobes the permutation of the atoms to
+C     be performed:  iprmut(i) = j  means that the j-th atom on input
+C     should be the i-th atom on output.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      MAP(NATOMS+1) = NB + 1
+C                        loop over columns.
+      do 200 icol = 1 , NCOL
+C                        loop over atoms.
+         do 50 iat = 1 , NATOMS
+            ist = MAP(iat)
+            iend = MAP(iat+1) - 1
+            int = IPRMUT(iat)
+            int = MAP(int) - 1
+C                  loop over functions on atom
+            do 20 i = ist , iend
+               int = int + 1
+               VEC(int) = A(i,icol)
+ 20         continue
+ 50      continue
+C
+         do 100 i = 1 , NB
+            A(i,icol) = VEC(i)
+ 100     continue
+ 200  continue
+      return
+C
+      end
+@* INDEX.
