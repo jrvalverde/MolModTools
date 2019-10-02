@@ -1,0 +1,2522 @@
+
+basis/d6311.web,31
+      subroutine d6311(27,458
+
+basis/d95v.web,30
+      subroutine d95v(31,549
+
+basis/dn21g.web,30
+      SUBROUTINE DN21G(5,115
+
+basis/fc6311.web,33
+      subroutine fc6311(24,1443
+
+basis/la1bas.web,33
+      subroutine la1bas(32,1819
+
+basis/la2nd.web,32
+      subroutine la2nd(32,1669
+
+basis/la3rd.web,32
+      subroutine la3rd(28,1666
+
+basis/la4th.web,32
+      subroutine la4th(28,1666
+
+basis/la5th.web,32
+      subroutine la5th(28,1666
+
+basis/los2nd.web,31
+      SUBROUTINE LOS2ND(5,103
+
+basis/los3rd.web,31
+      SUBROUTINE LOS3RD(5,102
+
+basis/los4th.web,31
+      SUBROUTINE LOS4TH(5,103
+
+basis/los5th.web,31
+      SUBROUTINE LOS5TH(5,102
+
+basis/lpeone.web,33
+      subroutine lpeone(21,1226
+
+basis/lpetwo.web,33
+      subroutine lpetwo(21,1226
+
+basis/minbas.web,33
+      subroutine minbas(21,1227
+
+basis/n21g.web,31
+      subroutine n21g(44,2079
+
+basis/neon.web,31
+      subroutine neon(24,1442
+
+basis/s1s.web,30
+      subroutine s1s(20,1145
+
+basis/s2p.web,30
+      subroutine s2p(20,1145
+
+basis/s2sp.web,31
+      subroutine s2sp(21,1224
+
+basis/s2s.web,30
+      subroutine s2s(20,1145
+
+basis/s3d.web,30
+      subroutine s3d(20,1145
+
+basis/s3p.web,30
+      subroutine s3p(20,1145
+
+basis/s3spd.web,32
+      subroutine s3spd(22,1291
+
+basis/s3sp.web,31
+      subroutine s3sp(21,1220
+
+basis/s3s.web,30
+      subroutine s3s(20,1145
+
+basis/s4d.web,30
+      subroutine s4d(20,1145
+
+basis/s4spd.web,32
+      subroutine s4spd(22,1295
+
+basis/s4sp.web,31
+      subroutine s4sp(21,1220
+
+basis/s5sp.web,31
+      subroutine s5sp(21,1224
+
+basis/sto.web,30
+      subroutine sto(27,1655
+
+blocks/uu0001.web,30
+      blockdata uu000114,738
+
+blocks/uu0002.web,30
+      blockdata uu000214,737
+
+blocks/uu0003.web,30
+      blockdata uu000314,720
+
+blocks/uu0301.web,30
+      blockdata uu030116,858
+
+blocks/uu0302.web,29
+      BLOCK DATA UU03023,14
+
+blocks/uu0303.web,30
+      blockdata uu030314,720
+
+blocks/uu0310.web,30
+      blockdata uu031015,789
+
+blocks/uu0311.web,30
+      blockdata uu031115,789
+
+blocks/uu0312.web,30
+      blockdata uu031214,720
+
+blocks/uu0314.web,30
+      blockdata uu031415,789
+
+blocks/uu0401.web,30
+      blockdata uu040116,858
+
+blocks/uu0501.web,30
+      blockdata uu050116,858
+
+blocks/uu0502.web,30
+      blockdata uu050217,927
+
+blocks/uu0503.web,31
+      blockdata uu050320,1134
+
+blocks/uu0505.web,30
+      blockdata uu050516,858
+
+blocks/uu0601.web,30
+      blockdata uu060116,858
+
+blocks/uu0701.web,30
+      blockdata uu070114,720
+
+blocks/uu0702.web,30
+      blockdata uu070214,720
+
+blocks/uu0703.web,30
+      blockdata uu070314,720
+
+blocks/uu0716.web,30
+      blockdata uu071615,789
+
+blocks/uu0801.web,30
+      blockdata uu080115,789
+
+blocks/uu0802.web,30
+      blockdata uu080214,720
+
+blocks/uu0803.web,30
+      blockdata uu080314,720
+
+blocks/uu0901.web,30
+      blockdata uu090116,858
+
+blocks/uu0909.web,30
+      blockdata uu090914,720
+
+blocks/uu0913.web,30
+      blockdata uu091314,720
+
+blocks/uu0utl.web,30
+      blockdata uu0utl14,720
+
+blocks/uucids.web,30
+      blockdata uucids18,996
+
+blocks/uugpar.web,31
+      blockdata uugpar34,1597
+
+blocks/uuilsw.web,30
+      blockdata uuilsw17,927
+
+blocks/uuints.web,30
+      blockdata uuints15,789
+
+blocks/uuntrn.web,30
+      blockdata uuntrn14,720
+
+blocks/uuot2e.web,30
+      blockdata uuot2e14,720
+
+blocks/uuqpar.web,30
+      blockdata uuqpar15,789
+
+blocks/uustv.web,29
+      blockdata uustv16,857
+
+blocks/uut2.web,27
+      BLOCK DATA UUT23,12
+
+blocks/uuw2.web,27
+      BLOCK DATA UUW23,12
+
+l001/arcset.web,32
+      subroutine arcset25,1131
+
+l001/chain.web,59
+subroutine savscf 35,1729
+      subroutine chain(41,1873
+
+l001/croute.web,31
+      subroutine croute18,817
+
+l001/dollar.web,33
+      subroutine dollar(30,1454
+
+l001/eroute.web,34
+      subroutine eroute(195,7100
+
+l001/fillrt.web,33
+      subroutine fillrt(67,2965
+
+l001/gamgen.web,31
+      subroutine gamgen14,749
+
+l001/gparse.web,39
+      integer function gparse(26,1180
+
+l001/inicom.web,31
+      subroutine inicom16,904
+
+l001/jqint.web,38
+      integer function jqint(18,1007
+
+l001/l001.web,31
+      subroutine l001(18,1003
+
+l001/l0cmnd.web,33
+      subroutine l0cmnd(23,1373
+
+l001/link1.web,32
+      subroutine link1198,7171
+
+l001/nextov.web,39
+      integer function nextov(25,1513
+
+l001/nondf.web,30
+      subroutine nondf15,834
+
+l001/phyfil.web,33
+      subroutine phyfil(18,1005
+
+l001/prtrte.web,33
+      subroutine prtrte(20,1151
+
+l001/qpambi.web,39
+      integer function qpambi(20,1157
+
+l001/qpany1.web,39
+      integer function qpany1(22,1303
+
+l001/qparse.web,70
+     function returns 24,1404
+      integer function qparse(39,1894
+
+l001/qpcstr.web,39
+      integer function qpcstr(21,1229
+
+l001/qpdcod.web,39
+      integer function qpdcod(58,2811
+
+l001/qpdest.web,39
+      integer function qpdest(20,1157
+
+l001/qpdump.web,31
+      subroutine qpdump15,806
+
+l001/qperro.web,33
+      subroutine qperro(21,1224
+
+l001/qpinit.web,33
+      subroutine qpinit(23,1370
+
+l001/qpmatc.web,39
+      integer function qpmatc(25,1522
+
+l001/qppop.web,30
+      subroutine qppop14,744
+
+l001/qppush.web,39
+      integer function qppush(19,1078
+
+l001/qpreal.web,39
+      integer function qpreal(21,1231
+
+l001/qpscan.web,39
+      integer function qpscan(22,1316
+
+l001/qpschr.web,39
+      integer function qpschr(21,1246
+
+l001/qpskey.web,39
+      integer function qpskey(23,1384
+
+l001/qpskip.web,33
+      subroutine qpskip(18,1001
+
+l001/qptran.web,39
+      integer function qptran(20,1173
+
+l001/qputit.web,33
+      subroutine qputit(20,1168
+
+l001/rdrout.web,33
+      subroutine rdrout(20,1157
+
+l001/rstart.web,32
+      subroutine rstart19,1093
+
+l001/rtedef.web,33
+      subroutine rtedef(53,2458
+
+l101/chgmlt.web,32
+      subroutine chgmlt(32,624
+
+l101/isubst.web,38
+      integer function isubst(31,619
+
+l101/l101.web,30
+      subroutine l101(23,362
+
+l101/lsubst.web,38
+      integer function lsubst(35,724
+
+l101/nosign.web,32
+      subroutine nosign(35,739
+
+l101/prmout.web,33
+      subroutine prmout(47,1253
+
+l101/rcoord.web,33
+      subroutine rcoord(29,1456
+
+l101/rdchg.web,31
+      subroutine rdchg(27,472
+
+l101/rdgeom.web,35
+      subroutine rdgeom(386,16450
+
+l101/rdtitl.web,31
+      subroutine rdtitl27,602
+
+l101/zcentr.web,32
+      subroutine zcentr(38,935
+
+l101/zget.web,30
+      subroutine zget(36,863
+
+l101/zmatch.web,33
+      subroutine zmatch(52,1620
+
+l101/zparm.web,32
+      subroutine zparm(43,1009
+
+l101/zsymb.web,31
+      subroutine zsymb(31,727
+
+l102/contt.web,32
+      subroutine contt(19,1094
+
+l102/deriv.web,32
+      subroutine deriv(22,1305
+
+l102/enter.web,32
+      subroutine enter(21,1236
+
+l102/fpdump.web,31
+      subroutine fpdump17,969
+
+l102/fperr.web,32
+      subroutine fperr(18,1007
+
+l102/fpexit.web,31
+      subroutine fpexit17,973
+
+l102/fpmain.web,31
+      subroutine fpmain16,904
+
+l102/getmat.web,33
+      subroutine getmat(22,1306
+
+l102/initfp.web,31
+      subroutine initfp17,973
+
+l102/l102.web,31
+      subroutine l102(19,1097
+
+l102/rmsfp.web,47
+      double precision function rmsfp(19,1080
+
+l102/search.web,32
+      subroutine search18,1042
+
+l102/udfp.web,31
+      subroutine udfp(19,1096
+
+l102/value.web,30
+      subroutine value16,903
+
+l103/d2corr.web,33
+      subroutine d2corr(21,1237
+
+l103/dxlinr.web,33
+      subroutine dxlinr(23,1378
+
+l103/dxquad.web,33
+      subroutine dxquad(25,1537
+
+l103/estm.web,29
+      subroutine estm16,902
+
+l103/grdopt.web,33
+      subroutine grdopt(35,1856
+
+l103/initbs.web,33
+      subroutine initbs(26,1586
+
+l103/l103.web,31
+      subroutine l103(18,1003
+
+l103/optmz.web,32
+      subroutine optmz(85,3579
+
+l103/savept.web,31
+      subroutine savept21,954
+
+l103/schmdt.web,33
+      subroutine schmdt(24,1445
+
+l103/star.web,29
+      subroutine star16,885
+
+l103/udbs.web,31
+      subroutine udbs(19,1096
+
+l105/analfc.web,33
+      subroutine analfc(20,1151
+
+l105/axmxv.web,32
+      subroutine axmxv(23,1365
+
+l105/contst.web,39
+      logical function contst(27,1668
+
+l105/ident.web,32
+      subroutine ident(20,1146
+
+l105/initfc.web,33
+      subroutine initfc(32,1740
+
+l105/initms.web,33
+      subroutine initms(31,1976
+
+l105/l105.web,31
+      subroutine l105(18,1003
+
+l105/msopt.web,32
+      subroutine msopt(71,2911
+
+l105/msprnt.web,33
+      subroutine msprnt(26,1593
+
+l105/nextx.web,32
+      subroutine nextx(31,1976
+
+l105/norm1.web,47
+      double precision function norm1(19,1077
+
+l105/tests.web,30
+      subroutine tests15,809
+
+l105/udms.web,31
+      subroutine udms(20,1169
+
+l105/vtxv.web,31
+      subroutine vtxv(22,1291
+
+l202/c2axes.web,33
+      subroutine c2axes(28,1743
+
+l202/center.web,33
+      subroutine center(22,1293
+
+l202/cirset.web,33
+      subroutine cirset(26,1596
+
+l202/cnaxis.web,33
+      subroutine cnaxis(26,1596
+
+l202/corprt.web,33
+      subroutine corprt(22,1296
+
+l202/cram.web,31
+      subroutine cram(54,2205
+
+l202/equiv.web,32
+      subroutine equiv(23,1373
+
+l202/filchg.web,33
+      subroutine filchg(23,1375
+
+l202/fill.web,31
+      subroutine fill(27,1662
+
+l202/filrep.web,33
+      subroutine filrep(20,1154
+
+l202/findc2.web,33
+      subroutine findc2(26,1596
+
+l202/findcn.web,33
+      subroutine findcn(27,1670
+
+l202/findv.web,32
+      subroutine findv(26,1596
+
+l202/fixrep.web,33
+      subroutine fixrep(19,1099
+
+l202/fwgrp.web,32
+      subroutine fwgrp(34,2178
+
+l202/geom.web,31
+      subroutine geom(87,3511
+
+l202/inirep.web,33
+      subroutine inirep(21,1220
+
+l202/invert.web,33
+      subroutine invert(22,1301
+
+l202/l202.web,31
+      subroutine l202(18,1003
+
+l202/labrep.web,33
+      subroutine labrep(21,1237
+
+l202/mul3x3.web,33
+      subroutine mul3x3(20,1147
+
+l202/noones.web,33
+      subroutine noones(42,2309
+
+l202/numdof.web,39
+      integer function numdof(19,1081
+
+l202/num.web,36
+      integer function num(19,1070
+
+l202/octa.web,31
+      subroutine octa(28,1736
+
+l202/omega.web,32
+      subroutine omega(36,2336
+
+l202/oper.web,31
+      subroutine oper(30,1880
+
+l202/orc2v.web,32
+      subroutine orc2v(23,1369
+
+l202/orcn.web,31
+      subroutine orcn(27,1667
+
+l202/ord2h.web,32
+      subroutine ord2h(23,1373
+
+l202/ordn.web,31
+      subroutine ordn(27,1667
+
+l202/orkey.web,38
+      integer function orkey(24,1448
+
+l202/ornax.web,38
+      integer function ornax(21,1226
+
+l202/orplan.web,33
+      subroutine orplan(25,1523
+
+l202/oryz.web,31
+      subroutine oryz(23,1371
+
+l202/outrep.web,33
+      subroutine outrep(20,1163
+
+l202/printc.web,33
+      subroutine printc(18,1000
+
+l202/ptgrp.web,32
+      subroutine ptgrp(32,2024
+
+l202/puttbl.web,33
+      subroutine puttbl(21,1223
+
+l202/put.web,30
+      subroutine put(25,1517
+
+l202/reflct.web,33
+      subroutine reflct(24,1443
+
+l202/repci.web,30
+      subroutine repci14,744
+
+l202/repcnh.web,33
+      subroutine repcnh(18,1012
+
+l202/repcnv.web,33
+      subroutine repcnv(18,1012
+
+l202/repcn.web,32
+      subroutine repcn(18,1011
+
+l202/repcst.web,33
+      subroutine repcst(18,1008
+
+l202/repcs.web,30
+      subroutine repcs14,744
+
+l202/repdnd.web,33
+      subroutine repdnd(18,1012
+
+l202/repdnh.web,33
+      subroutine repdnh(18,1012
+
+l202/repdn.web,32
+      subroutine repdn(18,1011
+
+l202/repdst.web,33
+      subroutine repdst(19,1077
+
+l202/repoh.web,30
+      subroutine repoh14,744
+
+l202/repo.web,29
+      subroutine repo14,743
+
+l202/reptd.web,30
+      subroutine reptd14,744
+
+l202/rept.web,29
+      subroutine rept14,743
+
+l202/secmom.web,33
+      subroutine secmom(23,1371
+
+l202/sighcn.web,33
+      subroutine sighcn(27,1670
+
+l202/snaxis.web,33
+      subroutine snaxis(27,1670
+
+l202/sphere.web,33
+      subroutine sphere(28,1738
+
+l202/sphset.web,33
+      subroutine sphset(25,1523
+
+l202/sssc.web,31
+      subroutine sssc(23,1374
+
+l202/ssseq.web,32
+      subroutine ssseq(23,1365
+
+l202/ssso.web,31
+      subroutine ssso(22,1301
+
+l202/ssssig.web,33
+      subroutine ssssig(23,1376
+
+l202/stoich.web,33
+      subroutine stoich(26,1595
+
+l202/subvar.web,33
+      subroutine subvar(26,1608
+
+l202/symm.web,33
+      subroutine symm(215,10470
+
+l202/tetra.web,32
+      subroutine tetra(28,1737
+
+l202/triang.web,33
+      subroutine triang(28,1740
+
+l202/tstc3.web,32
+      subroutine tstc3(27,1668
+
+l202/tstc4.web,32
+      subroutine tstc4(27,1668
+
+l202/tstc5.web,32
+      subroutine tstc5(27,1668
+
+l202/vert.web,31
+      subroutine vert(27,1668
+
+l202/zprint.web,33
+      subroutine zprint(24,1446
+
+l202/ztoc.web,31
+      subroutine ztoc(95,4926
+
+l301/applab.web,33
+      subroutine applab(23,1376
+
+l301/bas1.web,31
+      subroutine bas1(27,1664
+
+l301/basprt.web,31
+      subroutine basprt17,906
+
+l301/bassym.web,33
+      subroutine bassym(25,1535
+
+l301/berror.web,33
+      subroutine berror(19,1077
+
+l301/bldmap.web,33
+      subroutine bldmap(23,1391
+
+l301/bprint.web,33
+      subroutine bprint(21,1220
+
+l301/eone.web,31
+      subroutine eone(26,1592
+
+l301/ethree.web,33
+      subroutine ethree(32,2037
+
+l301/etwo.web,31
+      subroutine etwo(28,1741
+
+l301/ezero.web,32
+      subroutine ezero(22,1298
+
+l301/gbasis.web,33
+      subroutine gbasis(73,3367
+
+l301/getngr.web,33
+      subroutine getngr(26,1591
+
+l301/ginput.web,33
+      subroutine ginput(59,3001
+
+l301/l301.web,31
+      subroutine l301(18,1003
+
+l301/leeao.web,32
+      subroutine leeao(25,1507
+
+l301/leevao.web,33
+      subroutine leevao(25,1504
+
+l301/losbas.web,33
+      subroutine losbas(31,1734
+
+l301/lospot.web,33
+      subroutine lospot(27,1674
+
+l301/permap.web,33
+      subroutine permap(23,1366
+
+l301/pinput.web,33
+      subroutine pinput(71,3366
+
+l301/prgbas.web,32
+      subroutine prgbas29,1390
+
+l301/prnpot.web,33
+      subroutine prnpot(29,1807
+
+l301/putlbl.web,33
+      subroutine putlbl(20,1159
+
+l301/rdpot.web,32
+      subroutine rdpot(26,1594
+
+l301/rotcor.web,33
+      subroutine rotcor(19,1082
+
+l301/rotmap.web,33
+      subroutine rotmap(23,1367
+
+l301/rotmat.web,33
+      subroutine rotmat(21,1227
+
+l301/set2e.web,32
+      subroutine set2e(24,1426
+
+l301/setpot.web,33
+      subroutine setpot(25,1524
+
+l301/sfopti.web,33
+      subroutine sfopti(22,1305
+
+l301/sfopt.web,30
+      subroutine sfopt15,834
+
+l301/shldat.web,33
+      subroutine shldat(23,1367
+
+l301/typcon.web,33
+      subroutine typcon(21,1174
+
+l302/cmpltc.web,33
+      subroutine cmpltc(23,1371
+
+l302/formfn.web,33
+      subroutine formfn(22,1299
+
+l302/fpx.web,30
+      subroutine fpx(21,1222
+
+l302/fx.web,44
+      double precision function fx(20,1142
+
+l302/l302.web,31
+      subroutine l302(18,1003
+
+l302/ryspol.web,33
+      subroutine ryspol(24,1457
+
+l302/rysset.web,33
+      subroutine rysset(19,1081
+
+l302/smults.web,33
+      subroutine smults(24,1439
+
+l302/stvint.web,33
+      subroutine stvint(38,2410
+
+l302/zpolyr.web,33
+      subroutine zpolyr(22,1301
+
+l302/zquadr.web,33
+      subroutine zquadr(24,1445
+
+l303/dipole.web,33
+      subroutine dipole(36,2272
+
+l303/fermi.web,32
+      subroutine fermi(26,1576
+
+l303/l303.web,31
+      subroutine l303(18,1003
+
+l305/l305.web,31
+      subroutine l305(18,1003
+
+l306/ang1.web,31
+      subroutine ang1(25,1510
+
+l306/ang2.web,31
+      subroutine ang2(26,1583
+
+l306/bessv.web,32
+      subroutine bessv(21,1223
+
+l306/bess.web,29
+      function bess(19,1075
+
+l306/cntrlp.web,33
+      subroutine cntrlp(31,1949
+
+l306/facab.web,32
+      subroutine facab(22,1292
+
+l306/fillp.web,32
+      subroutine fillp(20,1154
+
+l306/glpint.web,33
+      subroutine glpint(34,2134
+
+l306/imove.web,32
+      subroutine imove(20,1146
+
+l306/l306.web,31
+      subroutine l306(18,1003
+
+l306/ldata.web,31
+      subroutine ldata19,1110
+
+l306/lpsctr.web,33
+      subroutine lpsctr(28,1728
+
+l306/pseud1.web,33
+      subroutine pseud1(29,1818
+
+l306/pseud2.web,33
+      subroutine pseud2(29,1809
+
+l306/ptprep.web,33
+      subroutine ptprep(27,1669
+
+l306/qalt.web,29
+      function qalt(19,1075
+
+l306/qasy.web,29
+      function qasy(19,1075
+
+l306/qcomp.web,30
+      function qcomp(19,1084
+
+l306/qpasy.web,30
+      function qpasy(24,1445
+
+l306/qpow.web,29
+      function qpow(19,1075
+
+l306/qqrad.web,32
+      subroutine qqrad(32,2031
+
+l306/quadr.web,32
+      subroutine quadr(24,1442
+
+l306/recur1.web,33
+      subroutine recur1(19,1085
+
+l306/recur2.web,33
+      subroutine recur2(25,1512
+
+l306/recurf.web,33
+      subroutine recurf(23,1373
+
+l306/ztab.web,29
+      subroutine ztab14,743
+
+l310/f.web,43
+      double precision function f(22,1291
+
+l310/genl2e.web,33
+      subroutine genl2e(65,4016
+
+l310/getc.web,31
+      subroutine getc(22,1291
+
+l310/getf.web,31
+      subroutine getf(22,1301
+
+l310/gpurdf.web,33
+      subroutine gpurdf(72,3855
+
+l310/l310.web,31
+      subroutine l310(19,1097
+
+l311/elimij.web,33
+      subroutine elimij(18,1001
+
+l311/elimik.web,33
+      subroutine elimik(18,1001
+
+l311/elimkl.web,33
+      subroutine elimkl(18,1001
+
+l311/elim.web,29
+      subroutine elim14,747
+
+l311/filmax.web,31
+      subroutine filmax14,745
+
+l311/ishdup.web,39
+      integer function ishdup(21,1219
+
+l311/l311.web,31
+      subroutine l311(19,1097
+
+l311/pinf.web,31
+      subroutine pinf(22,1282
+
+l311/r30001.web,31
+      subroutine r3000115,814
+
+l311/r30011.web,31
+      subroutine r3001115,814
+
+l311/r30101.web,31
+      subroutine r3010115,814
+
+l311/r30111.web,31
+      subroutine r3011115,814
+
+l311/r31111.web,31
+      subroutine r3111115,814
+
+l311/rot2.web,31
+      subroutine rot2111,7090
+
+l311/sgeom.web,31
+      subroutine sgeom21,1227
+
+l311/shell.web,33
+      subroutine shell(119,5246
+
+l311/sinfo.web,31
+      subroutine sinfo20,1158
+
+l311/sp0000.web,32
+      subroutine sp000022,1297
+
+l311/sp0001.web,32
+      subroutine sp000122,1297
+
+l311/sp0011.web,32
+      subroutine sp001120,1159
+
+l311/sp0101.web,32
+      subroutine sp010121,1228
+
+l311/sp0111.web,32
+      subroutine sp011124,1435
+
+l311/sp1111.web,32
+      subroutine sp111139,2330
+
+l311/tq0011.web,31
+      subroutine tq001121,952
+
+l311/tq0101.web,32
+      subroutine tq010122,1021
+
+l311/tq0111.web,32
+      subroutine tq011130,1505
+
+l311/tq1111.web,32
+      subroutine tq111158,3505
+
+l314/aosumf.web,33
+      subroutine aosumf(25,1509
+
+l314/cntprm.web,33
+      subroutine cntprm(23,1367
+
+l314/dfcut.web,32
+      subroutine dfcut(18,1007
+
+l314/dfout1.web,33
+      subroutine dfout1(36,2325
+
+l314/dfout2.web,33
+      subroutine dfout2(35,2256
+
+l314/dfout3.web,33
+      subroutine dfout3(35,2256
+
+l314/dfout4.web,33
+      subroutine dfout4(35,2256
+
+l314/dfout6.web,33
+      subroutine dfout6(35,2256
+
+l314/dfout8.web,33
+      subroutine dfout8(34,2187
+
+l314/gaoind.web,33
+      subroutine gaoind(22,1305
+
+l314/geta2.web,30
+      subroutine geta215,813
+
+l314/getip2.web,33
+      subroutine getip2(22,1307
+
+l314/l314.web,31
+      subroutine l314(19,1097
+
+l314/lentqf.web,39
+      integer function lentqf(19,1078
+
+l314/mtget.web,38
+      integer function mtget(26,1588
+
+l314/phoeni.web,33
+      subroutine phoeni(60,3806
+
+l314/purdf2.web,33
+      subroutine purdf2(80,4255
+
+l314/qinf.web,30
+      subroutine qinf20,1178
+
+l314/replct.web,33
+      subroutine replct(22,1301
+
+l314/rpol2.web,32
+      subroutine rpol2(25,1525
+
+l314/sitind.web,31
+      subroutine sitind15,814
+
+l314/twod2c.web,31
+      subroutine twod2c14,745
+
+l314/twod3c.web,33
+      subroutine twod3c(18,1008
+
+l314/twod4c.web,33
+      subroutine twod4c(19,1078
+
+l401/altges.web,33
+      subroutine altges(23,1384
+
+l401/blockh.web,33
+      subroutine blockh(26,1589
+
+l401/cfill.web,32
+      subroutine cfill(26,1588
+
+l401/chkrd.web,32
+      subroutine chkrd(23,1389
+
+l401/cmpden.web,33
+      subroutine cmpden(27,1682
+
+l401/coefs.web,32
+      subroutine coefs(22,1291
+
+l401/complt.web,33
+      subroutine complt(30,1889
+
+l401/corges.web,33
+      subroutine corges(24,1449
+
+l401/densty.web,33
+      subroutine densty(27,1679
+
+l401/dform.web,32
+      subroutine dform(23,1365
+
+l401/filrec.web,33
+      subroutine filrec(23,1374
+
+l401/frmprj.web,33
+      subroutine frmprj(26,1612
+
+l401/gcfact.web,31
+      subroutine gcfact15,818
+
+l401/gdot.web,31
+      subroutine gdot(25,1511
+
+l401/geserr.web,33
+      subroutine geserr(18,1008
+
+l401/gesopt.web,32
+      subroutine gesopt47,1732
+
+l401/gesprt.web,33
+      subroutine gesprt(24,1463
+
+l401/gesrwf.web,33
+      subroutine gesrwf(21,1237
+
+l401/getges.web,33
+      subroutine getges(32,2053
+
+l401/getmo.web,32
+      subroutine getmo(24,1448
+
+l401/gnorm.web,32
+      subroutine gnorm(21,1224
+
+l401/guess.web,33
+      subroutine guess(184,7237
+
+l401/huckel.web,33
+      subroutine huckel(41,2340
+
+l401/hukges.web,33
+      subroutine hukges(59,3206
+
+l401/ind401.web,33
+      subroutine ind401(23,1374
+
+l401/l401.web,31
+      subroutine l401(18,1003
+
+l401/normch.web,33
+      subroutine normch(19,1077
+
+l401/ovlp.web,31
+      subroutine ovlp(34,2151
+
+l401/prjhuk.web,33
+      subroutine prjhuk(31,1981
+
+l401/projec.web,33
+      subroutine projec(27,1682
+
+l401/rdges.web,32
+      subroutine rdges(54,2981
+
+l401/rootmt.web,33
+      subroutine rootmt(24,1448
+
+l401/twreig.web,33
+      subroutine twreig(22,1298
+
+l501/conclo.web,33
+      subroutine conclo(25,1541
+
+l501/csymm.web,32
+      subroutine csymm(21,1227
+
+l501/cvu.web,30
+      subroutine cvu(21,1218
+
+l501/cycclo.web,33
+      subroutine cycclo(34,2176
+
+l501/dir2e.web,32
+      subroutine dir2e(27,1680
+
+l501/dirclo.web,33
+      subroutine dirclo(24,1463
+
+l501/fofclo.web,33
+      subroutine fofclo(33,2101
+
+l501/formf.web,32
+      subroutine formf(31,1945
+
+l501/frmp.web,31
+      subroutine frmp(23,1372
+
+l501/frmv.web,31
+      subroutine frmv(23,1375
+
+l501/fvmul.web,32
+      subroutine fvmul(22,1297
+
+l501/gofr.web,31
+      subroutine gofr(25,1510
+
+l501/incrd.web,32
+      subroutine incrd(22,1302
+
+l501/l501.web,31
+      subroutine l501(18,1003
+
+l501/levshf.web,33
+      subroutine levshf(28,1742
+
+l501/locmin.web,33
+      subroutine locmin(28,1759
+
+l501/matmul.web,33
+      subroutine matmul(24,1447
+
+l501/raff1c.web,33
+      subroutine raff1c(24,1445
+
+l501/rhfclo.web,34
+      subroutine rhfclo(211,8454
+
+l501/tst503.web,33
+      subroutine tst503(18,1001
+
+l501/uhftst.web,33
+      subroutine uhftst(22,1304
+
+l501/vdagt.web,32
+      subroutine vdagt(22,1293
+
+l502/annil.web,32
+      subroutine annil(28,1739
+
+l502/conopn.web,33
+      subroutine conopn(24,1463
+
+l502/cycopn.web,33
+      subroutine cycopn(33,2097
+
+l502/fofopn.web,33
+      subroutine fofopn(29,1798
+
+l502/formv.web,32
+      subroutine formv(23,1372
+
+l502/l502.web,31
+      subroutine l502(18,1003
+
+l502/linear.web,33
+      subroutine linear(21,1220
+
+l502/paann.web,32
+      subroutine paann(25,1517
+
+l502/rwfspc.web,33
+      subroutine rwfspc(19,1075
+
+l502/spin.web,31
+      subroutine spin(25,1517
+
+l502/traopn.web,48
+      double precision function traopn(20,1146
+
+l502/trasq.web,47
+      double precision function trasq(19,1072
+
+l502/uhfopn.web,33
+      subroutine uhfopn(30,1858
+
+l503/asgsym.web,33
+      subroutine asgsym(22,1302
+
+l503/aufbau.web,33
+      subroutine aufbau(20,1155
+
+l503/bessrt.web,33
+      subroutine bessrt(26,1608
+
+l503/carpol.web,33
+      subroutine carpol(21,1229
+
+l503/cmat.web,31
+      subroutine cmat(23,1371
+
+l503/comat.web,32
+      subroutine comat(21,1219
+
+l503/conuso.web,33
+      subroutine conuso(26,1600
+
+l503/diablo.web,33
+      subroutine diablo(23,1388
+
+l503/dimens.web,33
+      subroutine dimens(18,1012
+
+l503/first.web,32
+      subroutine first(37,2350
+
+l503/l503.web,31
+      subroutine l503(18,1003
+
+l503/ofix.web,31
+      subroutine ofix(24,1450
+
+l503/polcar.web,33
+      subroutine polcar(21,1221
+
+l503/scfdm.web,32
+      subroutine scfdm(33,2064
+
+l503/spindm.web,33
+      subroutine spindm(26,1609
+
+l503/tracab.web,48
+      double precision function tracab(21,1247
+
+l505/conphf.web,33
+      subroutine conphf(25,1531
+
+l505/cycphf.web,33
+      subroutine cycphf(33,2101
+
+l505/eigen.web,32
+      subroutine eigen(22,1299
+
+l505/fofphf.web,33
+      subroutine fofphf(30,1881
+
+l505/l505.web,31
+      subroutine l505(18,1003
+
+l505/matrc3.web,33
+      subroutine matrc3(24,1439
+
+l505/phfchk.web,33
+      subroutine phfchk(21,1236
+
+l505/phfprt.web,33
+      subroutine phfprt(20,1163
+
+l505/rhfopn.web,33
+      subroutine rhfopn(28,1720
+
+l505/traphf.web,48
+      double precision function traphf(20,1146
+
+l601/atompr.web,33
+      subroutine atompr(23,1369
+
+l601/dq.web,29
+      subroutine dq(29,1821
+
+l601/ecnfig.web,33
+      subroutine ecnfig(24,1456
+
+l601/frmpop.web,33
+      subroutine frmpop(25,1521
+
+l601/l601.web,31
+      subroutine l601(18,1003
+
+l601/mulpop.web,33
+      subroutine mulpop(68,2681
+
+l601/orbtyp.web,33
+      subroutine orbtyp(18,1001
+
+l601/rgdvo.web,32
+      subroutine rgdvo(19,1080
+
+l601/symlbl.web,33
+      subroutine symlbl(22,1315
+
+l602/l602.web,31
+      subroutine l602(19,1022
+
+l602/savscf.web,33
+      subroutine savscf(21,1233
+
+l602/utida.web,32
+      subroutine utida(18,1000
+
+l602/utiti.web,32
+      subroutine utiti(18,1000
+
+l701/d1e.web,30
+      subroutine d1e(23,1372
+
+l701/dstvnt.web,33
+      subroutine dstvnt(56,3760
+
+l701/l701.web,31
+      subroutine l701(18,1003
+
+l702/d2esp.web,32
+      subroutine d2esp(22,1305
+
+l702/efill.web,32
+      subroutine efill(31,1958
+
+l702/fpppp.web,31
+      subroutine fpppp45,2883
+
+l702/l702.web,31
+      subroutine l702(18,1003
+
+l702/twldrv.web,33
+      subroutine twldrv(93,6257
+
+l703/d2espd.web,33
+      subroutine d2espd(23,1375
+
+l703/dipabc.web,33
+      subroutine dipabc(35,2241
+
+l703/dipab.web,32
+      subroutine dipab(31,1949
+
+l703/dipac.web,32
+      subroutine dipac(32,2018
+
+l703/dipa.web,31
+      subroutine dipa(26,1588
+
+l703/dphnix.web,33
+      subroutine dphnix(64,4261
+
+l703/efill1.web,33
+      subroutine efill1(37,2400
+
+l703/l703.web,31
+      subroutine l703(18,1003
+
+l705/cntlpd.web,33
+      subroutine cntlpd(36,2294
+
+l705/dlpint.web,33
+      subroutine dlpint(37,2341
+
+l705/l705.web,31
+      subroutine l705(18,1003
+
+l716/bend.web,31
+      subroutine bend(25,1515
+
+l716/dclose.web,33
+      subroutine dclose(30,1888
+
+l716/dopen.web,32
+      subroutine dopen(31,1960
+
+l716/drvsrd.web,33
+      subroutine drvsrd(25,1533
+
+l716/fcorpr.web,33
+      subroutine fcorpr(21,1219
+
+l716/ffrcnn.web,33
+      subroutine ffrcnn(21,1224
+
+l716/formbg.web,33
+      subroutine formbg(39,2560
+
+l716/frcnn.web,32
+      subroutine frcnn(21,1223
+
+l716/frcout.web,33
+      subroutine frcout(29,1789
+
+l716/fzprnt.web,33
+      subroutine fzprnt(23,1365
+
+l716/ibout.web,32
+      subroutine ibout(22,1295
+
+l716/l716.web,31
+      subroutine l716(18,1003
+
+l716/minv.web,31
+      subroutine minv(22,1298
+
+l716/mofi.web,31
+      subroutine mofi(22,1295
+
+l716/norout.web,33
+      subroutine norout(24,1460
+
+l716/putff.web,32
+      subroutine putff(29,1817
+
+l716/putf.web,31
+      subroutine putf(26,1592
+
+l716/rmsvec.web,33
+      subroutine rmsvec(21,1225
+
+l716/rotff.web,32
+      subroutine rotff(21,1219
+
+l716/rotf.web,31
+      subroutine rotf(21,1218
+
+l716/str.web,30
+      subroutine str(24,1441
+
+l716/symnum.web,48
+      double precision function symnum(18,1005
+
+l716/thermo.web,33
+      subroutine thermo(26,1606
+
+l716/tors.web,31
+      subroutine tors(26,1588
+
+l716/tranff.web,33
+      subroutine tranff(34,2188
+
+l716/tranf.web,32
+      subroutine tranf(26,1585
+
+l716/tstcor.web,33
+      subroutine tstcor(20,1154
+
+l716/vibfrq.web,33
+      subroutine vibfrq(33,2109
+
+l716/vibovl.web,33
+      subroutine vibovl(23,1367
+
+l716/vibsym.web,33
+      subroutine vibsym(26,1613
+
+l716/vibtbl.web,33
+      subroutine vibtbl(25,1536
+
+l716/zmmod.web,32
+      subroutine zmmod(23,1367
+
+l801/ciprm.web,31
+      subroutine ciprm44,1880
+
+l801/l801.web,31
+      subroutine l801(18,1003
+
+l801/window.web,34
+      subroutine window(169,6914
+
+l801/writed.web,33
+      subroutine writed(18,1004
+
+l801/writes.web,33
+      subroutine writes(18,1004
+
+l802/dirtrn.web,31
+      subroutine dirtrn14,741
+
+l802/l802.web,31
+      subroutine l802(18,1003
+
+l802/trcl80.web,32
+      subroutine trcl8026,1594
+
+l802/trclos.web,33
+      subroutine trclos(30,1858
+
+l803/l803.web,31
+      subroutine l803(18,1003
+
+l803/trop80.web,32
+      subroutine trop8027,1663
+
+l803/tropen.web,32
+      subroutine tropen26,1594
+
+l901/clean.web,32
+      subroutine clean(19,1085
+
+l901/doubar.web,33
+      subroutine doubar112,5749
+
+l901/exchn1.web,33
+      subroutine exchn1(23,1380
+
+l901/exchn2.web,33
+      subroutine exchn2(22,1299
+
+l901/exchn3.web,33
+      subroutine exchn3(23,1384
+
+l901/exchn4.web,33
+      subroutine exchn4(22,1308
+
+l901/exchn5.web,33
+      subroutine exchn5(23,1381
+
+l901/exchn6.web,33
+      subroutine exchn6(23,1381
+
+l901/l901.web,31
+      subroutine l901(18,1003
+
+l909/cids1.web,33
+      subroutine cids1(150,6051
+
+l909/l909.web,31
+      subroutine l909(18,1003
+
+l910/cids2.web,32
+      subroutine cids2(25,1512
+
+l910/ds4n5.web,32
+      subroutine ds4n5(18,1008
+
+l910/ds4n6.web,32
+      subroutine ds4n6(18,1008
+
+l910/ds4.web,28
+      subroutine ds414,742
+
+l910/l910.web,31
+      subroutine l910(18,1003
+
+l910/ss3.web,28
+      subroutine ss314,742
+
+l911/aatild.web,33
+      subroutine aatild(23,1375
+
+l911/abtild.web,33
+      subroutine abtild(23,1375
+
+l911/cids3.web,32
+      subroutine cids3(29,1788
+
+l911/dd1sd4.web,33
+      subroutine dd1sd4(28,1727
+
+l911/l911.web,31
+      subroutine l911(18,1003
+
+l911/sd5ds5.web,33
+      subroutine sd5ds5(19,1083
+
+l911/wia4a.web,32
+      subroutine wia4a(24,1452
+
+l911/wia4b.web,32
+      subroutine wia4b(23,1378
+
+l911/wtwij.web,32
+      subroutine wtwij(23,1374
+
+l912/aaclos.web,33
+      subroutine aaclos(21,1233
+
+l912/cids4.web,32
+      subroutine cids4(29,1788
+
+l912/comijw.web,33
+      subroutine comijw(21,1242
+
+l912/conddf.web,33
+      subroutine conddf(19,1079
+
+l912/ctwc1.web,32
+      subroutine ctwc1(25,1520
+
+l912/ctwc2.web,32
+      subroutine ctwc2(25,1520
+
+l912/dd2.web,29
+      subroutine dd219,1104
+
+l912/dd3.web,29
+      subroutine dd323,1380
+
+l912/exp78.web,32
+      subroutine exp78(21,1232
+
+l912/expaba.web,33
+      subroutine expaba(21,1233
+
+l912/expabs.web,33
+      subroutine expabs(21,1233
+
+l912/expand.web,33
+      subroutine expand(21,1233
+
+l912/expija.web,33
+      subroutine expija(21,1229
+
+l912/expijs.web,33
+      subroutine expijs(22,1315
+
+l912/expijw.web,33
+      subroutine expijw(20,1160
+
+l912/expol.web,30
+      subroutine expol15,817
+
+l912/expsym.web,33
+      subroutine expsym(20,1160
+
+l912/inibuc.web,33
+      subroutine inibuc(20,1159
+
+l912/l912.web,31
+      subroutine l912(18,1003
+
+l912/lsexa.web,32
+      subroutine lsexa(19,1077
+
+l912/lsexs.web,32
+      subroutine lsexs(19,1073
+
+l912/matca1.web,33
+      subroutine matca1(25,1526
+
+l912/matca2.web,33
+      subroutine matca2(25,1526
+
+l912/matcab.web,33
+      subroutine matcab(25,1526
+
+l912/mattrn.web,33
+      subroutine mattrn(27,1680
+
+l912/multvc.web,33
+      subroutine multvc(20,1159
+
+l912/normds.web,32
+      subroutine normds20,1180
+
+l912/printp.web,33
+      subroutine printp(24,1439
+
+l912/santab.web,33
+      subroutine santab(21,1229
+
+l912/santij.web,33
+      subroutine santij(21,1229
+
+l912/scalp1.web,33
+      subroutine scalp1(23,1387
+
+l912/scalp.web,47
+      double precision function scalp(21,1239
+
+l912/sumant.web,33
+      subroutine sumant(21,1233
+
+l912/sumn.web,31
+      subroutine sumn(21,1231
+
+l912/test.web,31
+      subroutine test(21,1235
+
+l912/tewa.web,46
+      double precision function tewa(23,1389
+
+l912/tewb.web,46
+      double precision function tewb(22,1315
+
+l912/tews.web,46
+      double precision function tews(23,1389
+
+l912/timer.web,32
+      subroutine timer(19,1080
+
+l912/transp.web,33
+      subroutine transp(21,1233
+
+l912/trsfr.web,32
+      subroutine trsfr(21,1241
+
+l912/tstara.web,33
+      subroutine tstara(26,1609
+
+l912/tstarb.web,33
+      subroutine tstarb(26,1606
+
+l912/vewa.web,46
+      double precision function vewa(24,1449
+
+l912/vewb.web,46
+      double precision function vewb(24,1445
+
+l912/vews.web,46
+      double precision function vews(24,1449
+
+l912/wtilda.web,32
+      subroutine wtilda20,1180
+
+l912/wtildb.web,32
+      subroutine wtildb20,1180
+
+l912/wtoada.web,33
+      subroutine wtoada(24,1466
+
+l912/wtoadb.web,33
+      subroutine wtoadb(24,1462
+
+l912/wtoas.web,32
+      subroutine wtoas(22,1305
+
+l913/cidens.web,33
+      subroutine cidens(27,1650
+
+l913/cids5.web,32
+      subroutine cids5(36,2271
+
+l913/geta.web,31
+      subroutine geta(26,1586
+
+l913/getde.web,32
+      subroutine getde(19,1084
+
+l913/l913.web,31
+      subroutine l913(18,1003
+
+l913/pform.web,32
+      subroutine pform(24,1454
+
+l913/scanaa.web,33
+      subroutine scanaa(22,1318
+
+l913/scanab.web,33
+      subroutine scanab(24,1464
+
+l913/scanss.web,33
+      subroutine scanss(22,1318
+
+l913/scan.web,31
+      subroutine scan(25,1523
+
+l913/ump4q.web,32
+      subroutine ump4q(18,1008
+
+l913/ump4t.web,32
+      subroutine ump4t(18,1008
+
+l9999/alldun.web,31
+      subroutine alldun14,741
+
+l9999/g80end.web,31
+      subroutine g80end14,741
+
+l9999/l9999.web,32
+      subroutine l9999(18,1004
+
+main/gnu80.web,31
+C=16,748
+      Len18 45,1990
+
+main/shift.web,38
+      integer function shift(37,1494
+
+util1/aclear.web,33
+      subroutine aclear(22,1281
+
+util1/bdump.web,32
+      subroutine bdump(18,1003
+
+util1/binrd.web,32
+      subroutine binrd(22,1303
+
+util1/binwt.web,32
+      subroutine binwt(23,1382
+
+util1/bldtbl.web,33
+      subroutine bldtbl(29,1777
+
+util1/diagd.web,32
+      subroutine diagd(26,1588
+
+util1/diag.web,31
+      subroutine diag(23,1371
+
+util1/dismat.web,33
+      subroutine dismat(26,1589
+
+util1/dorot.web,32
+      subroutine dorot(26,1537
+
+util1/drum.web,29
+      subroutine drum16,873
+
+util1/ehbckd.web,33
+      subroutine ehbckd(63,3470
+
+util1/ehobkd.web,33
+      subroutine ehobkd(23,1366
+
+util1/ehoudh.web,33
+      subroutine ehoudh(59,3306
+
+util1/ehousd.web,33
+      subroutine ehousd(22,1304
+
+util1/fdump.web,30
+      subroutine fdump15,809
+
+util1/fferr.web,32
+      subroutine fferr(21,1235
+
+util1/ffget.web,32
+      subroutine ffget(24,1461
+
+util1/ffread.web,33
+      subroutine ffread(19,1099
+
+util1/ffset.web,32
+      subroutine ffset(18,1007
+
+util1/fileio.web,33
+      subroutine fileio(31,1926
+
+util1/fillc.web,32
+      subroutine fillc(23,1365
+
+util1/matprt.web,33
+      subroutine matprt(29,1813
+
+util1/ntran.web,32
+      subroutine ntran(24,1444
+
+util1/nwait.web,32
+      subroutine nwait(21,1222
+
+util1/out2e.web,32
+      subroutine out2e(43,2811
+
+util1/permut.web,33
+      subroutine permut(25,1458
+
+util1/qpaint.web,39
+      integer function qpaint(23,1376
+
+util1/qpcpv.web,38
+      integer function qpcpv(18,1004
+
+util1/qpdp.web,37
+      integer function qpdp(21,1228
+
+util1/qpskbl.web,33
+      subroutine qpskbl(20,1152
+
+util1/qptval.web,39
+      integer function qptval(20,1143
+
+util1/qpword.web,39
+      integer function qpword(26,1533
+
+util1/symasg.web,33
+      subroutine symasg(30,1848
+
+util1/trnfrm.web,33
+      subroutine trnfrm(26,1556
+
+util1/trnrow.web,33
+      subroutine trnrow(25,1456
+
+util2/aadd.web,31
+      subroutine aadd(21,1218
+
+util2/aoloop.web,33
+      subroutine aoloop(23,1367
+
+util2/convgd.web,33
+      subroutine convgd(20,1147
+
+util2/corpr1.web,33
+      subroutine corpr1(21,1223
+
+util2/cpulft.web,48
+      double precision function cpulft(18,1001
+
+util2/cputim.web,36
+      real function cputim(35,1526
+
+util2/crop.web,37
+      integer function crop(18,1003
+
+util2/dagtyd.web,32
+      subroutine dagtyd(18,997
+
+util2/decchr.web,33
+      subroutine decchr(21,1221
+
+util2/defunt.web,31
+      subroutine defunt14,745
+
+util2/dgnmap.web,33
+      subroutine dgnmap(23,1373
+
+util2/digtst.web,33
+      subroutine digtst(21,1222
+
+util2/dint2e.web,48
+      double precision function dint2e(18,1004
+
+util2/dintrp.web,48
+      double precision function dintrp(18,1004
+
+util2/dout.web,31
+      subroutine dout(21,1175
+
+util2/encode.web,33
+      subroutine encode(21,1224
+
+util2/eqrt2d.web,33
+      subroutine eqrt2d(23,1373
+
+util2/fld.web,36
+      integer function fld(20,1143
+
+util2/fmtgen.web,33
+      subroutine fmtgen(22,1298
+
+util2/fmtset.web,33
+      subroutine fmtset(23,1382
+
+util2/frmrot.web,33
+      subroutine frmrot(22,1298
+
+util2/fsymm.web,32
+      subroutine fsymm(23,1365
+
+util2/gabgst.web,33
+      subroutine gabgst(20,1148
+
+util2/gabs.web,46
+      double precision function gabs(29,1757
+
+util2/gacos.web,46
+      double precision function gacos(18,999
+
+util2/gasin.web,46
+      double precision function gasin(18,995
+
+util2/gatan2.web,48
+      double precision function gatan2(19,1069
+
+util2/gatan.web,47
+      double precision function gatan(24,1413
+
+util2/gcos.web,46
+      double precision function gcos(19,1067
+
+util2/getind.web,33
+      subroutine getind(21,1223
+
+util2/gexp.web,46
+      double precision function gexp(19,1067
+
+util2/gfloat.web,48
+      double precision function gfloat(24,1414
+
+util2/glog10.web,47
+      double precision function glog10(18,996
+
+util2/glog.web,45
+      double precision function glog(18,998
+
+util2/gmax1.web,47
+      double precision function gmax1(19,1072
+
+util2/gmin1.web,47
+      double precision function gmin1(19,1072
+
+util2/gmod.web,46
+      double precision function gmod(19,1067
+
+util2/gsign.web,47
+      double precision function gsign(19,1072
+
+util2/gsin.web,45
+      double precision function gsin(18,998
+
+util2/gsqrt.web,47
+      double precision function gsqrt(29,1758
+
+util2/gtan.web,45
+      double precision function gtan(18,998
+
+util2/hexchr.web,39
+      integer function hexchr(18,1000
+
+util2/iclear.web,33
+      subroutine iclear(19,1074
+
+util2/ifalph.web,39
+      logical function ifalph(18,1005
+
+util2/ijkpri.web,39
+      integer function ijkpri(21,1215
+
+util2/ilsw.web,31
+      subroutine ilsw(31,1933
+
+util2/intchr.web,39
+      integer function intchr(19,1078
+
+util2/iord.web,37
+      integer function iord(22,1274
+
+util2/ipt123.web,33
+      subroutine ipt123(22,1297
+
+util2/itqry.web,38
+      integer function itqry(18,1004
+
+util2/killer.web,31
+      subroutine killer14,737
+
+util2/lfld.web,31
+      subroutine lfld(21,1219
+
+util2/lnk1e.web,31
+      subroutine lnk1e29,1783
+
+util2/lnk1.web,29
+      subroutine lnk114,739
+
+util2/locstr.web,33
+      subroutine locstr(22,1295
+
+util2/matpac.web,33
+      subroutine matpac(24,1435
+
+util2/matrec.web,33
+      subroutine matrec(25,1514
+
+util2/move.web,31
+      subroutine move(22,1287
+
+util2/nchrpw.web,39
+      integer function nchrpw(18,1001
+
+util2/newlnk.web,33
+      subroutine newlnk(20,1155
+
+util2/not.web,35
+      integer function not(18,993
+
+util2/nrep.web,37
+      integer function nrep(20,1144
+
+util2/numer.web,37
+      integer function numer(18,999
+
+util2/or3mom.web,48
+      double precision function or3mom(22,1292
+
+util2/oraxis.web,33
+      subroutine oraxis(23,1375
+
+util2/orptst.web,33
+      subroutine orptst(21,1229
+
+util2/pack2.web,30
+      subroutine pack215,834
+
+util2/pack4.web,30
+      subroutine pack415,834
+
+util2/pad.web,30
+      subroutine pad(22,1291
+
+util2/pakstr.web,33
+      subroutine pakstr(21,1226
+
+util2/prmtbl.web,33
+      subroutine prmtbl(28,1750
+
+util2/prsfwg.web,33
+      subroutine prsfwg(22,1304
+
+util2/prtsym.web,33
+      subroutine prtsym(21,1225
+
+util2/putdel.web,33
+      subroutine putdel(22,1290
+
+util2/putfp.web,32
+      subroutine putfp(22,1315
+
+util2/puti.web,31
+      subroutine puti(20,1151
+
+util2/putsmt.web,33
+      subroutine putsmt(20,1151
+
+util2/putstr.web,33
+      subroutine putstr(21,1226
+
+util2/rawst.web,32
+      subroutine rawst(30,1881
+
+util2/rotate.web,33
+      subroutine rotate(27,1655
+
+util2/rsetcl.web,33
+      subroutine rsetcl(21,1221
+
+util2/rsetop.web,33
+      subroutine rsetop(20,1148
+
+util2/rtrace.web,33
+      subroutine rtrace(19,1077
+
+util2/setrys.web,31
+      subroutine setrys14,741
+
+util2/shlatm.web,33
+      subroutine shlatm(24,1444
+
+util2/skip.web,31
+      subroutine skip(20,1150
+
+util2/streqc.web,39
+      logical function streqc(20,1152
+
+util2/streq.web,38
+      logical function streq(20,1151
+
+util2/strout.web,33
+      subroutine strout(23,1357
+
+util2/tform.web,32
+      subroutine tform(22,1292
+
+util2/timeo.web,32
+      subroutine timeo(19,1074
+
+util2/tquery.web,33
+      subroutine tquery(20,1148
+
+util2/traceb.web,31
+      subroutine traceb14,733
+
+util2/tread.web,32
+      subroutine tread(39,2477
+
+util2/trspn2.web,33
+      subroutine trspn2(19,1074
+
+util2/twrite.web,33
+      subroutine twrite(36,2271
+
+util2/unpcck.web,33
+      subroutine unpcck(24,1440
+
+util2/unpck2.web,31
+      subroutine unpck214,749
+
+util2/unpck4.web,31
+      subroutine unpck415,818
+
+util2/vec.web,30
+      subroutine vec(23,1368
+
+util2/versn.web,30
+      subroutine versn14,740
+
+util2/vprod.web,32
+      subroutine vprod(20,1146
+
+util2/winc.web,31
+      subroutine winc(24,1443
+
+util3/amove.web,32
+      subroutine amove(20,1146
+
+util3/ascale.web,33
+      subroutine ascale(21,1220
+
+util3/defbuc.web,33
+      subroutine defbuc(20,1148
+
+util3/dmpint.web,33
+      subroutine dmpint(21,1230
+
+util3/dot.web,30
+      subroutine dot(22,1295
+
+util3/drvip1.web,33
+      subroutine drvip1(29,1809
+
+util3/dsymm.web,32
+      subroutine dsymm(19,1076
+
+util3/fillcp.web,33
+      subroutine fillcp(24,1461
+
+util3/filmat.web,33
+      subroutine filmat(20,1155
+
+util3/frmw.web,31
+      subroutine frmw(30,1888
+
+util3/get1cs.web,33
+      subroutine get1cs(21,1224
+
+util3/get2cs.web,33
+      subroutine get2cs(22,1314
+
+util3/get2c.web,32
+      subroutine get2c(23,1369
+
+util3/get3c.web,32
+      subroutine get3c(21,1240
+
+util3/geta1.web,32
+      subroutine geta1(20,1150
+
+util3/getcc1.web,33
+      subroutine getcc1(21,1224
+
+util3/getcc2.web,33
+      subroutine getcc2(22,1293
+
+util3/getij.web,32
+      subroutine getij(20,1151
+
+util3/getnb6.web,33
+      subroutine getnb6(18,1005
+
+util3/getrep.web,33
+      subroutine getrep(25,1448
+
+util3/herm.web,31
+      subroutine herm(20,1149
+
+util3/integi.web,303
+      subroutine integi(22,1094
+      entry iwrite(47,1857
+      entry iread(62,2275
+      entry idef(71,2493
+      entry iwind(78,2649
+      entry ipr(90,2937
+      entry iwait(97,3062
+      entry irel(105,3261
+      entry ipos(112,3386
+      entry ifile(120,3560
+      entry icopy(127,3693
+
+util3/intprt.web,33
+      subroutine intprt(22,1296
+
+util3/inv.web,30
+      subroutine inv(24,1448
+
+util3/isymgo.web,33
+      subroutine isymgo(26,1590
+
+util3/labint.web,33
+      subroutine labint(21,1237
+
+util3/labscf.web,33
+      subroutine labscf(20,1155
+
+util3/linout.web,33
+      subroutine linout(20,1154
+
+util3/ltoutd.web,33
+      subroutine ltoutd(22,1292
+
+util3/matout.web,33
+      subroutine matout(24,1434
+
+util3/nprio.web,38
+      integer function nprio(21,1218
+
+util3/ordoc.web,30
+      subroutine ordoc14,732
+
+util3/pmat.web,31
+      subroutine pmat(21,1218
+
+util3/purdf1.web,33
+      subroutine purdf1(20,1147
+
+util3/redob.web,32
+      subroutine redob(28,1347
+
+util3/redop.web,32
+      subroutine redop(29,1487
+
+util3/renorm.web,32
+      subroutine renorm34,1714
+
+util3/repuls.web,33
+      subroutine repuls(21,1224
+
+util3/rootn.web,32
+      subroutine rootn(22,1301
+
+util3/rpol1.web,32
+      subroutine rpol1(25,1525
+
+util3/scftrc.web,48
+      double precision function scftrc(21,1219
+
+util3/setord.web,31
+      subroutine setord15,814
+
+util3/setr1.web,30
+      subroutine setr114,740
+
+util3/sls.web,30
+      subroutine sls(21,1221
+
+util3/square.web,33
+      subroutine square(22,1293
+
+util3/tioc.web,31
+      subroutine tioc(49,2491
+
+util3/track.web,32
+      subroutine track(26,1555
+
+util3/virial.web,33
+      subroutine virial(25,1521
+
+util4/captlz.web,33
+      subroutine captlz(20,1152
+
+util4/deltyc.web,39
+      integer function deltyc(18,1000
+
+util4/deltyp.web,39
+      integer function deltyp(18,1004
+
+util4/getbc.web,32
+      subroutine getbc(46,2682
+
+util4/getb.web,31
+      subroutine getb(48,2819
+
+util4/getchr.web,39
+      integer function getchr(22,1285
+
+util4/getch.web,40
+      character function getch(19,1073
+
+util4/getlcu.web,41
+      character function getlcu(19,1074
+
+util4/ilord.web,38
+      integer function ilord(26,1263
+
+util4/lord.web,36
+      integer function lord(18,998
+
+util4/putbc.web,32
+      subroutine putbc(22,1294
+
+util4/putb.web,31
+      subroutine putb(23,1362
+
+util4/puticr.web,66
+      subroutine puticr(22,1293
+      subroutine putchr(61,2493
+
+util4/szprnt.web,33
+      subroutine szprnt(22,1315
+
+util4/putput.web,0
+
+l202/l202b.web,0
+
+l202/l202a.web,0
