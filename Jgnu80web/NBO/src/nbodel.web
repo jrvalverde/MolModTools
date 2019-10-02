@@ -1,0 +1,186 @@
+@*nbodel.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] A
+\item[INPUT:] MEMORY
+\item[OUTPUT:] IDONE
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  IATNO   ISPIN   NDIM
+\item[Uses]  IATNO   IBXM    ISPIN   LABEL   LFNPR   NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CONVRT  DELETE  FEFNBO  FENBO   JACOBI  NAMEAT  NEWDM
+             SIMLTR  SVNEWD  TRNSPO
+\item[Called by]   NBOEAN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbodel(A,MEMORY,IDONE)
+C*****************************************************************************
+C
+C     nbodel: subroutine to delete bond orbital fock matrix elements for
+C              a particular spin case:
+C                ispin = 0     closed shell
+C                        2     alpha spin
+C                       -2     beta  spin
+C
+C     idone is set equal to 1 if there are no more deletions,
+C                           0 otherwise.
+C
+C     a(memory) is scratch storage
+C
+C*****************************************************************************
+      implicit none
+      double precision A , occchg
+      integer i , iat , Iatno , ib , ibas , Ibxm , ich , IDONE , ii ,
+     &        inam , Iscr1 , Iscr2 , isp , Ispin , itype , k , l3c ,
+     &        Label , lbd , lbl
+      integer lblnk1 , lblnk2 , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr
+      integer lhyp , MAXATM , MAXBAS , MEMORY , Munit , Mxao , Mxaolm ,
+     &        Mxbo , n1 , n2 , n3 , n4 , n5 , n6 , n7 , nameat ,
+     &        Natoms , Nbas , Nbotyp , Nbouni
+      integer nctr , ndel , Ndim , nelec , nend , nmoocc , nsq , ntrunc
+      logical done
+      dimension A(MEMORY) , ich(3,2) , inam(3) , isp(3)
+C
+C  NBO common blocks:
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Iatno(MAXBAS) , Ibxm(MAXBAS) , Iscr1(2*MAXBAS) ,
+     &                Iscr2(2*MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      data lbd/2HBD/ , l3c/2H3C/ , lblnk2/2H  / , lblnk1/1H / ,
+     &     lhyp/1H-/
+C
+C   fnbo  :  NBO fock matrix (triangular)
+C   trf   :  truncated fock matrix (square)
+C   eigvr :  eigenvectors of ftrunc
+C   dmnew :  new AO dm (from truncation) -- triangular
+C   occ   :  occupation vector of bond orbitals
+C   occnew:  occupation vector of bond orbitals, after deletion
+C   tnbo  :  AO to NBO transformation matrix
+C   scr   :  scratch vector
+C
+C  set up storage space:
+C
+C   a(n1):  occ
+C   a(n2):  occnew
+C   a(n3):  tnbo
+C   a(n4):  fnbo, eigvr
+C   a(n5):  scr, trf, dmnew
+C   a(n6):  scr
+C   a(n7):  idel
+C
+      nsq = Ndim*Ndim
+      n1 = 1
+      n2 = n1 + Ndim
+      n3 = n2 + Ndim
+      n4 = n3 + nsq
+      n5 = n4 + nsq
+      n6 = n5 + nsq
+      n7 = n6 + Ndim
+      nend = n7 + nsq/2 + 1
+      if ( nend.gt.MEMORY ) then
+C
+         write (Lfnpr,99006) nend , MEMORY
+         IDONE = 1
+         return
+C
+99001    format (/1x,'Occupations of bond orbitals:')
+99002    format (7x,8F7.4)
+99003    format (/7x,'Orbital',19x,
+     &           'No deletions   This deletion   Change',/,1x,78('-'))
+99004    format (1x,i3,'. ',a2,a1,'(',i2,')',3(a2,3A1),9x,f7.5,8x,f7.5,
+     &           3x,f8.5)
+99005    format (/)
+99006    format (/1x,'Insufficient memory in subroutine NBODEL:',/5x,
+     &           'Memory needed: ',i10,'   Memory available: ',i10,/1x,
+     &           'Deletions halted!')
+      else
+         call fenbo(A(n3),A(n1),A(n5),nelec)
+         call fefnbo(A(n4))
+C
+C  delete requested fock matrix elements, forming truncated fock matrix
+C             in trf
+C
+C   idel  :  list of deleted orbitals, elements, or blocks
+C   itype :  type of deletion: 1 for orbitals
+C                              2 for individual matrix elements
+C			       3 for zeroing intersection between two sets
+C			                                 of orbitals
+C                              4 for entire matrix blocks
+C   ndel  :  number of orbitals, elements or blocks to be deleted
+C
+         call delete(A(n4),A(n5),Ndim,A(n7),nsq,itype,ndel,ntrunc,done,
+     &               Ispin)
+C
+C  if no more deletions, exit program
+C
+         if ( .not.(done) ) then
+C  diagonalize truncated fock matrix in trf
+C
+            call jacobi(ntrunc,A(n5),A(n2),A(n4),Ndim,Ndim,0)
+C
+C  construct new density matrix in dm from eigenvectors of trf,
+C   in NBO basis:
+C   a(n2):  eigenvalues of trf        (entering)
+C   a(n2):  new NBO orbital occupancies  (exiting)
+C
+            nmoocc = nelec
+            if ( Ispin.eq.0 ) nmoocc = nelec/2
+            call newdm(A(n5),A(n4),A(n2),Ndim,A(n7),nsq,ndel,itype,
+     &                 nmoocc,Ispin)
+C
+C  take transpose of t so that it can transform the density matrix
+C    from the NBO basis to the unsymmetrized AO basis:
+C
+            call trnspo(A(n3),Ndim,Ndim)
+            call simltr(Ndim,Ndim,A(n5),A(n3),A(n4),A(n6),1)
+            call svnewd(A(n5))
+C
+            write (Lfnpr,99001)
+            write (Lfnpr,99003)
+            do 20 ibas = 1 , Ndim
+               ib = Ibxm(ibas)
+               lbl = Label(ib,1)
+               nctr = 1
+               if ( lbl.eq.lbd ) nctr = 2
+               if ( lbl.eq.l3c ) nctr = 3
+               do 10 i = 1 , 3
+                  iat = Label(ib,i+3)
+                  call convrt(iat,ich(i,1),ich(i,2))
+                  inam(i) = lblnk2
+                  if ( iat.gt.0 ) inam(i) = nameat(Iatno(iat))
+                  isp(i) = lhyp
+                  if ( i.ge.nctr ) isp(i) = lblnk1
+ 10            continue
+               i = n1 - 1 + ibas
+               ii = n2 - 1 + ibas
+               occchg = A(ii) - A(i)
+               write (Lfnpr,99004) ibas , (Label(ib,k),k=1,3) ,
+     &                             (inam(k),ich(k,1),ich(k,2),isp(k),
+     &                             k=1,3) , A(i) , A(ii) , occchg
+ 20         continue
+            IDONE = 0
+            return
+         endif
+      endif
+C
+      IDONE = 1
+      return
+      end
+@* INDEX.

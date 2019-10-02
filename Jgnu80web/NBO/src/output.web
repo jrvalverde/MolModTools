@@ -1,0 +1,61 @@
+@*output.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] A
+\item[INPUT:] MR
+\item[INPUT:] MC
+\item[INPUT:] NR
+\item[INPUT:] NC
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  LFNPR
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   APRINT  SYMUNI
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine output(A,MR,MC,NR,NC)
+C*****************************************************************************
+      implicit none
+      double precision A
+      integer i , j , l , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm ,
+     &        Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho ,
+     &        Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa
+      integer Lfnpr , MC , MR , NC , ncl , ncu , nloops , NR
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension A(MR,MC)
+C
+C  for 80 column output:
+C  list elements of array a (matrix or vector).
+C     mr,mc declared row and column dimensionality,
+C     nr,nc actual row and column dimensionality,
+C
+      ncl = 1
+      ncu = 6
+      nloops = NC/6 + 1
+      do 100 l = 1 , nloops
+         if ( ncu.gt.NC ) ncu = NC
+         write (Lfnpr,99001) (j,j=ncl,ncu)
+         do 50 i = 1 , NR
+            write (Lfnpr,99002) i , (A(i,j),j=ncl,ncu)
+ 50      continue
+         if ( ncu.ge.NC ) return
+         ncl = ncu + 1
+         ncu = ncu + 6
+ 100  continue
+      return
+99001 format (/11x,10(i3,9x))
+99002 format (1x,i3,10F12.5)
+      end
+@* INDEX.

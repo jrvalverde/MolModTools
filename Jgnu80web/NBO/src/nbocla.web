@@ -1,0 +1,97 @@
+@*nbocla.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] BNDOCC
+\item[OUTPUT:] ACCTHR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    MOLLST  NBOTYP  NBOUNI
+\item[Uses]  IBXM    ISPIN   LABEL   MOLAT   MOLEC   MOLLST  NATOMS
+             NBAS    NMOLEC
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbocla(BNDOCC,ACCTHR)
+C*****************************************************************************
+      implicit none
+      double precision ACCTHR , BNDOCC , donthr , one , thresh , two ,
+     &                 zero
+      integer iat , Iathy , iatmol , ib , ibas , Ibxm , imol , imolat ,
+     &        Ispin , l3c , lab , Label , lbd , lstar , Lstocc ,
+     &        MAXATM , MAXBAS , Molat , Molata , Molec
+      integer Moleca , Mollst , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Nbotyp , Nbouni , nctr , Ndim , Nmola , Nmolec
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Mollst(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbmol / Nmolec , Molat(MAXATM) , Molec(MAXATM,MAXATM) ,
+     &                Nmola , Molata(MAXATM) , Moleca(MAXATM,MAXATM)
+      dimension BNDOCC(Nbas)
+      data lbd , l3c , lstar/2HBD , 2H3C , 1H*/
+      data thresh , one , zero , two/1.50D0 , 1.0D0 , 0.0D0 , 2.0D0/
+      data donthr/1.0D-1/
+C
+C  classify nbos according to donor/acceptor type:
+C
+      if ( ACCTHR.le.zero ) then
+         ACCTHR = thresh
+         if ( Ispin.ne.0 ) ACCTHR = ACCTHR - one
+      endif
+      if ( Ispin.ne.0 ) donthr = donthr/two
+C
+C  make up list mollst of which "molecule" each atom is in:
+C
+      do 200 iat = 1 , Natoms
+         do 50 imol = 1 , Nmolec
+            imolat = Molat(imol)
+            do 20 iatmol = 1 , imolat
+               if ( Molec(imol,iatmol).eq.iat ) goto 100
+ 20         continue
+ 50      continue
+         stop 'ROUTINE NBOCLA'
+ 100     Mollst(iat) = imol
+ 200  continue
+C
+C  make up lists of NBO orbitals:
+C    nbouni(ibas) = molecular unit
+C    nbotyp(ibas) = number of centers (+10 if a low occupancy lone pair)
+C                                     (+20 if an antibond/rydberg)
+      do 300 ibas = 1 , Nbas
+         ib = Ibxm(ibas)
+         iat = Label(ib,4)
+         imol = Mollst(iat)
+         Nbouni(ibas) = imol
+         lab = Label(ib,1)
+         nctr = 1
+         if ( lab.eq.lbd ) nctr = 2
+         if ( lab.eq.l3c ) nctr = 3
+         Nbotyp(ibas) = nctr
+         if ( Label(ib,2).eq.lstar ) then
+C
+C  antibond/rydberg
+C
+            Nbotyp(ibas) = nctr + 20
+C
+C  high occupancy ry* or bd* orbital
+C
+            if ( BNDOCC(ibas).gt.donthr ) Nbotyp(ibas) = nctr + 10
+         elseif ( BNDOCC(ibas).le.ACCTHR ) then
+C
+C  low occupancy valence orbital
+C
+            Nbotyp(ibas) = nctr + 10
+         endif
+ 300  continue
+      return
+      end
+@* INDEX.

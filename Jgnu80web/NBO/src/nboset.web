@@ -1,0 +1,170 @@
+@*nboset.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] NBOOPT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    ACCTHR  ATHR    AUHF    CI      COMPLX  CRTSET  DTHR
+             E2THR   ETHR    ICHOOS  IPRINT  IPSEUD  IW3C    IWCUBF
+             IWDETL  IWDM    IWFOCK  IWHYBS  IWMULP  IWPNAO  IWTNAB
+             IWTNAO  IWTNBO  JCORE   JPRINT  KOPT    LFNAO   LFNARC
+             LFNDAF  LFNDEF  LFNDM   LFNMO   LFNNAB  LFNNAO  LFNNBO
+             LFNNHO  LFNNLM  LFNPNA  LFNPNB  LFNPNH  LFNPNL  LFNPPA
+             MCSCF   NVAL    OPEN    ORTHO   PRJSET  PTHR    ROHF
+             THRSET  UHF
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NBO
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C  job initialization routines: (called by sr nbo)
+C
+C      subroutine nboset(nboopt)
+C      subroutine jobopt(nboopt)
+C      subroutine nbodim(memory)
+C
+C*****************************************************************************
+      subroutine nboset(NBOOPT)
+C*****************************************************************************
+      implicit none
+      double precision Accthr , Athr , Crtset , Dthr , E2thr , Ethr ,
+     &                 half , Prjset , Pthr , tenth , Thrset
+      integer i , Ichoos , Iprint , Ipseud , Ispin , Iw3c , Iwapol ,
+     &        Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp ,
+     &        Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Jcore , Jprint , Kopt
+      integer Lbl , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm ,
+     &        Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr ,
+     &        MAXATM
+      integer MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        NBOOPT , Ndim , Nlew , Nval
+      dimension NBOOPT(10)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+      common /nblbl / Nlew , Nval , Lbl(10,MAXBAS,4)
+C
+      data tenth , half/0.1D0 , 0.5D0/
+C
+C  set default job options:  (modifications to these defaults
+C  should not be made here but later in this subroutine)
+C
+      Iwdm = 1                      
+C bond-order matrix, not occupation matrix
+      Iw3c = 0
+      Iwhybs = 0
+      Iwpnao = 0
+      Iwtnao = 0
+      Iwtnab = 0
+      Iwtnbo = 0
+      Iwfock = 1                    
+C use fock matrix if present
+      Iprint = 12                   
+C set to the desired print level + 10
+      Ipseud = 0
+      Iwdetl = 0
+      Iwmulp = 0
+      Ichoos = 0
+      Kopt = 0
+      Jcore = 0
+      Iwcubf = 0
+      Open = .false.
+      Ortho = .false.
+      Uhf = .false.
+      Auhf = .false.
+      Rohf = .false.
+      Ci = .false.
+      Mcscf = .false.
+      Complx = .false.
+      do 100 i = 1 , 60
+         Jprint(i) = 0
+ 100  continue
+C
+      Lfnao = 31
+      Lfnpna = 32
+      Lfnnao = 33
+      Lfnpnh = 34
+      Lfnnho = 35
+      Lfnpnb = 36
+      Lfnnbo = 37
+      Lfnpnl = 38
+      Lfnnlm = 39
+      Lfnmo = 40
+      Lfndm = 41
+      Lfnnab = 42
+      Lfnppa = 43
+      Lfnarc = 47
+      Lfndaf = -48                  
+C set positive if chosen by user
+      Lfndef = 49
+C
+C  setting nval negative indicates that this variable has not
+C  been determined yet:
+C
+      Nval = -1
+C
+C  that some thresholds are .lt.0 indicates that these variables have not
+C  been set by the user:
+C
+      Thrset = -1.9D0
+      Prjset = -0.2D0
+      Accthr = -tenth
+      Crtset = 1.999
+      E2thr = -half
+      Athr = -1.000
+      Pthr = -25.000
+      Ethr = -0.100
+      Dthr = -0.020
+C
+C  set job options according to nboopt:
+C
+C  skip the computation of the nbos?
+C
+      if ( NBOOPT(1).eq.-1 ) Jprint(1) = 1
+C
+C  turn off $choose and $core keylists if $nbo keylist is not to
+C  be read:
+C
+      if ( NBOOPT(1).eq.1 ) Ichoos = -1
+      if ( NBOOPT(1).eq.1 ) Jcore = -1
+C
+C  force dipole analysis?
+C
+      if ( NBOOPT(3).ne.0 ) then
+         Jprint(8) = 1
+         Jprint(46) = 1
+      endif
+C
+C  force resonance keyword?
+C
+      if ( NBOOPT(4).ne.0 ) Jprint(14) = 1
+C
+C  program version:
+C
+      Jprint(2) = NBOOPT(10)
+C
+      return
+      end
+@* INDEX.

@@ -1,0 +1,113 @@
+@*newdm.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] DM
+\item[INPUT:] U
+\item[OUTPUT:] EIG
+\item[INPUT:] NDIM
+\item[INPUT:] IDEL
+\item[INPUT:] LEN
+\item[INPUT:] NDEL
+\item[INPUT:] ITYPE
+\item[INPUT:] NMOOCC
+\item[INPUT:] ISPIN
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LOCC
+\item[Transmits as argument]  NRANK
+\item[Uses]  LOCC    NRANK
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       RNKEIG
+\item[Called by]   NBODEL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine newdm(DM,U,EIG,NDIM,IDEL,LEN,NDEL,ITYPE,NMOOCC,ISPIN)
+C*****************************************************************************
+      implicit none
+      double precision DM , EIG , one , onetwo , sum , two , U , zero
+      integer i , Iatno , Ibxm , IDEL , ii , ij , iout , ISPIN , ITYPE ,
+     &        j , jj , jout , k , Label , LEN , Locc , MAXATM , MAXBAS ,
+     &        Nbotyp , Nbouni
+      integer NDEL , ndelor , NDIM , NMOOCC , nocc , Nrank , ntrunc
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Iatno(MAXBAS) , Ibxm(MAXBAS) , Nrank(2*MAXBAS) ,
+     &                Locc(2*MAXBAS)
+      dimension DM(1) , U(NDIM,NDIM) , EIG(NDIM) , IDEL(LEN)
+      data zero/0.0D0/ , one/1.0D0/ , two/2.0D0/
+C  onetwo: one if open shell (ispin.ne.0), two if closed shell (doubly occ mos)
+      onetwo = two
+      if ( ISPIN.ne.0 ) onetwo = one
+C  ntrunc: dimension of truncated fock matrix
+      ntrunc = NDIM
+      if ( ITYPE.eq.1 ) ntrunc = NDIM - NDEL
+C  rank the eigenvalues 'eig' from the truncated fock matrix from lowest
+C   to highest in 'nrank':
+      call rnkeig(Nrank,EIG,ntrunc,NDIM,Locc)
+C  put in 'locc' the locations of the 'nmoocc' lowest eigenvalues:
+C   (these correspond to the doubly occupied mos)
+      nocc = 0
+      do 100 i = 1 , ntrunc
+         if ( Nrank(i).le.NMOOCC ) then
+            nocc = nocc + 1
+            Locc(nocc) = i
+         endif
+ 100  continue
+C  ndelor: number of deleted orbitals
+      ndelor = NDIM - ntrunc
+C
+C  construct the new NBO density matrix:
+C
+C  loop over rows:
+      ii = 0
+      ij = 0
+      iout = 1
+      do 200 i = 1 , NDIM
+         if ( iout.le.ndelor ) then
+            if ( i.eq.IDEL(iout) ) then
+C  zero rows of the new NBO density matrix that were zeroed
+C    in the truncation, also zeroing the orbital occpancy, eig(i):
+               iout = iout + 1
+               EIG(i) = zero
+               do 110 j = 1 , i
+                  ij = ij + 1
+                  DM(ij) = zero
+ 110           continue
+               goto 200
+            endif
+         endif
+         ii = ii + 1
+C  loop over columns:
+         jout = 1
+         jj = 0
+         do 150 j = 1 , i
+            if ( jout.le.ndelor ) then
+               if ( j.eq.IDEL(jout) ) then
+C  zero columns of the new NBO density matrix that were zeroed
+C    in the truncation of the NBO fock matrix:
+                  jout = jout + 1
+                  ij = ij + 1
+                  DM(ij) = zero
+                  goto 150
+               endif
+            endif
+C  find dm(ij) from the eigenvectors of the truncated NBO fock matrix in 'u',
+C  summing over the occupied mos, and multiplying by two for double occupancy:
+            jj = jj + 1
+            sum = zero
+            do 120 k = 1 , NMOOCC
+               sum = sum + U(ii,Locc(k))*U(jj,Locc(k))
+ 120        continue
+            ij = ij + 1
+            DM(ij) = sum*onetwo
+            if ( i.eq.j ) EIG(i) = sum*onetwo
+ 150     continue
+ 200  continue
+      return
+      end
+@* INDEX.

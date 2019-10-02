@@ -1,0 +1,193 @@
+@*nboean.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[INPUT:] MEMORY
+\item[INPUT:] NBOOPT
+\item[OUTPUT:] IDONE
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    ALPHA   BETA    ISPIN   LFNDAF
+\item[Transmits as argument]  LFNIN
+\item[Uses]  AUHF    CI      LFNIN   LFNPR   MCSCF   MUNIT   ROHF
+             UHF
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       DELINP  FEE0    FEINFO  NBCLOS  NBODEL  NBOPEN  STRTIN
+\item[Called by]   RUNNBO
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C  NBO energetic analysis routines:
+C
+C      subroutine nboean(a,memory,nboopt,idone)
+C      subroutine nbodel(a,memory,idone)
+C      subroutine delete(f,trf,ndim,idel,len,itype,ndel,ntrunc,done,
+C     +                  ispin)
+C      subroutine newdm(dm,u,eig,ndim,idel,len,ndel,itype,nmoocc,ispin)
+C      subroutine rnkeig(rank,eig,n,ndim,arcrnk)
+C      subroutine simltr(n,ndim,f,u,r,s,kntrol)
+C
+C*****************************************************************************
+      subroutine nboean(A,MEMORY,NBOOPT,IDONE)
+C*****************************************************************************
+C
+C     nboean: controller subroutine to do NBO energetic analysis
+C               by fock matrix deletion method
+C
+C       a(memory) is scratch storage
+C
+C       nboopt(1) = 2       read in next deletion and form new dm
+C                 = 3       compute energy change for this deletion
+C
+C       set idone to 1 if no deletions are found:
+C
+C*****************************************************************************
+      implicit none
+      double precision A , aukcal , conv , echang , edel , ekcal ,
+     &                 etot , evkcal , one , thrneg
+      integer IDONE , Ispin , iswean , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao ,
+     &        Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh ,
+     &        Lfnpnl , Lfnppa
+      integer Lfnpr , MEMORY , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , NBOOPT , Ndim
+      logical error , new
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension A(MEMORY) , NBOOPT(10)
+C
+      data thrneg/ - 1.0D-3/
+      data one , aukcal , evkcal/1.0D0 , 627.51 , 23.061/
+C
+C  lfndaf must be set if this is a gaussian run [due to the link
+C  structure (multiple executable images) of the gaussian programs].
+C
+      if ( NBOOPT(10).gt.80 ) Lfndaf = 48
+C
+C  open the old NBO daf:
+C
+      new = .false.
+      call nbopen(new,error)
+      if ( error ) then
+         IDONE = 1
+         return
+      endif
+      call feinfo(A,iswean)
+C
+C  if nboopt(1) = 3,  compute the energy of deletion:
+C
+      if ( NBOOPT(1).eq.3 ) then
+         call fee0(edel,etot)
+         echang = edel - etot
+         if ( Munit.eq.0 ) then
+            conv = aukcal
+         elseif ( Munit.eq.1 ) then
+            conv = evkcal
+         else
+            conv = one
+         endif
+         ekcal = echang*conv
+         if ( ekcal.lt.thrneg ) write (Lfnpr,99004)
+         if ( Munit.eq.0 ) then
+            write (Lfnpr,99001) edel , etot , echang , ekcal
+         elseif ( Munit.eq.1 ) then
+            write (Lfnpr,99002) edel , etot , echang , ekcal
+         else
+            write (Lfnpr,99003) edel , etot , echang , ekcal
+         endif
+         IDONE = 0
+         call nbclos
+         return
+      endif
+C
+C  perform the NBO energetic analysis:
+C
+C  if iswean is set to 1, search for the $del keylist:
+C
+      if ( iswean.eq.1 ) then
+         call delinp(NBOOPT,IDONE)
+         if ( IDONE.eq.1 ) goto 100
+      elseif ( NBOOPT(10).gt.80 ) then
+         call strtin(Lfnin)
+      endif
+C
+C  rohf, mcscf, ci, and auhf wave functions are not acceptable:
+C
+      if ( Rohf .or. Mcscf .or. Ci .or. Auhf ) then
+         IDONE = 1
+         goto 100
+      endif
+C
+      Ispin = 0
+      if ( Uhf ) Ispin = 2
+      Alpha = .false.
+      Beta = .false.
+      if ( Uhf ) Alpha = .true.
+      call nbodel(A,MEMORY,IDONE)
+      if ( IDONE.ne.1 ) then
+C
+         if ( Uhf ) then
+            Ispin = -2
+            Alpha = .false.
+            Beta = .true.
+            call nbodel(A,MEMORY,IDONE)
+         endif
+C
+         write (Lfnpr,99005)
+         call nbclos
+         return
+      endif
+C
+ 100  call nbclos
+      return
+C
+99001 format (1x,78('-'),/,3x,'Energy of deletion : ',f20.9,/,3x,
+     &        '  Total SCF energy : ',f20.9,/,3x,
+     &        '                       -------------------',/,3x,
+     &        '     Energy change : ',f17.6,' a.u.,   ',f13.3,
+     &        ' kcal/mol'/1x,78('-'))
+99002 format (1x,78('-'),/,3x,'Energy of deletion : ',f20.9,/,3x,
+     &        '  Total SCF energy : ',f20.9,/,3x,
+     &        '                       -------------------',/,3x,
+     &        '     Energy change : ',f17.6,' e.V.,   ',f13.3,
+     &        ' kcal/mol'/1x,78('-'))
+99003 format (1x,78('-'),/,3x,'Energy of deletion : ',f13.3,/,3x,
+     &        '  Total SCF energy : ',f13.3,/,3x,
+     &        '                       -------------------',/,3x,
+     &        '     Energy change : ',f13.3,' kcal/mol,   ',f13.3,
+     &        ' kcal/mol'/1x,78('-'))
+99004 format (/,6x,
+     &        '***** WARNING *****  The variational principle has been',
+     &        /,5x,
+     &        '  violated and the above deletion energy is invalid!',
+     &        //,5x,
+     &        'Probable cause:  A deletion was attempted that did not ',
+     &        /,5x,
+     &        'have as high symmetry as was employed in the integral',/,
+     &        5x,
+     &        'and SCF computation.  REMEDY:  Redo computation without',
+     &        /,5x,
+     &      'symmetry if this non-symmetry-conserving deletion is still'
+     &      ,/,5x,'desired.')
+99005 format (/1x,
+     &       'NEXT STEP:  Evaluate the energy of the new density matrix'
+     &       ,/,1x,
+     &      '            that has been constructed from the deleted NBO'
+     &      ,/,1x,'            Fock matrix by doing one SCF cycle.'/)
+      end
+@* INDEX.

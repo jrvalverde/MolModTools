@@ -1,0 +1,46 @@
+@*nbinqr.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] IDAR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  IONBO   LFNPR
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FEAOMO  FEBAS   FEDXYZ  FEFAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbinqr(IDAR)
+C*****************************************************************************
+      implicit none
+      integer IDAR , Inbo , Ionbo , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa
+      integer Lfnpr , Nav , NBDAR
+C
+      parameter (NBDAR=100)
+      common /nbodaf/ Inbo , Nav , Ionbo(NBDAR)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      if ( IDAR.lt.1 .or. IDAR.gt.NBDAR ) then
+         write (Lfnpr,99001) IDAR , NBDAR
+         stop
+      endif
+C
+      if ( Ionbo(IDAR).eq.0 ) IDAR = 0
+      return
+C
+99001 format (/1x,'NBO DAF record out of range: IDAR = ',i4,
+     &        '  NBDAR = ',i4)
+      end
+@* INDEX.

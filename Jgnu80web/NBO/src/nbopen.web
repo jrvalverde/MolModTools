@@ -1,0 +1,193 @@
+@*nbopen.
+\begin{verbatim}
+C*****************************************************************************
+C
+C  NBO direct access file (daf) routines:
+C
+C      subroutine nbopen(new,error)
+C      subroutine nbwrit(ix,nx,idar)
+C      subroutine nbread(ix,nx,idar)
+C      subroutine nbclos
+C      subroutine nbinqr(idar)
+C
+C      subroutine fetitl(title)
+C      subroutine fee0(edel,etot)
+C      subroutine sve0(edel)
+C      subroutine fecoor(atcoor)
+C      subroutine fesraw(s)
+C      subroutine fedraw(dm,scr)
+C      subroutine fefao(f,iwfock)
+C      subroutine feaomo(t,it)
+C      subroutine fedxyz(dxyz,i)
+C      subroutine svnbo(t,occ,iscr)
+C      subroutine fenbo(t,occ,iscr,nelec)
+C      subroutine fetnbo(t)
+C      subroutine svpnao(t)
+C      subroutine fepnao(t)
+C      subroutine svsnao(s)
+C      subroutine fesnao(s)
+C      subroutine svtnab(t)
+C      subroutine fetnab(t)
+C      subroutine svtlmo(t)
+C      subroutine fetlmo(t)
+C      subroutine svtnho(t)
+C      subroutine fetnho(t)
+C      subroutine svppao(dm)
+C      subroutine feppao(dm)
+C      subroutine svtnao(t)
+C      subroutine fetnao(t)
+C      subroutine svnlmo(t)
+C      subroutine fenlmo(t)
+C      subroutine svdnao(dm)
+C      subroutine fednao(dm)
+C      subroutine svfnbo(f)
+C      subroutine fefnbo(f)
+C      subroutine svnewd(dm)
+C      subroutine fenewd(dm)
+C      subroutine feinfo(icore,iswean)
+C      subroutine febas(nshell,nexp,iscr)
+C
+C  the following records of the NBO direct access file (daf) are used:
+C
+C          1  ---   nbodaf common block
+C          2  ---   job title
+C          3  ---   natoms,ndim,nbas,munit,wavefunction flags,iswean
+C          4  ---   iatno,iznuc,lctr,lang
+C          5  ---   AO basis set information
+C          8  ---   deletion energy, total energy
+C          9  ---   atomic coordinates
+C         10  ---   AO overlap matrix
+C         11  ---   pnao overlap matrix
+C         20  ---   AO density matrix (alpha)
+C         21  ---   AO density matrix (beta)
+C         22  ---   pure AO density matrix
+C         23  ---   NAO density matrix (alpha)
+C         24  ---   NAO density matrix (beta)
+C         25  ---   AO density matrix with NBO deletions (alpha)
+C         26  ---   AO density matrix with NBO deletions (beta)
+C         27  ---   NBO occupancies (alpha)
+C         28  ---   NBO occupancies (beta)
+C         30  ---   AO fock matrix (alpha)
+C         31  ---   AO fock matrix (beta)
+C         32  ---   NAO fock matrix (alpha)
+C         33  ---   NAO fock matrix (beta)
+C         34  ---   NBO fock matrix (alpha)
+C         35  ---   NBO fock matrix (beta)
+C         40  ---   AO to MO transformation matrix (alpha)
+C         41  ---   AO to MO transformation matrix (beta)
+C         42  ---   AO to pnao transformation matrix
+C         43  ---   AO to NAO transformation matrix
+C         44  ---   AO to NBO transformation matrix  (alpha)
+C         45  ---   AO to NBO transformation matrix  (beta)
+C         46  ---   AO to NLMO transformation matrix
+C         47  ---   NAO to NHO transformation matrix
+C         48  ---   NAO to NBO transformation matrix
+C         49  ---   NBO to NLMO transformation matrix
+C         50  ---   x dipole integrals
+C         51  ---   y dipole integrals
+C         52  ---   z dipole integrals
+C         60  ---   NBO labels (alpha)
+C         61  ---   NBO labels (beta)
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] NEW
+\item[OUTPUT:] ERROR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    INBO    IONBO   IX      IXDNBO  IXSNBO  NAV     NBNAV
+\item[Uses]  INBO    IX      IXDNBO  LFNDAF  NBNAV
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT
+\item[Called by]   DELSCF  NBO     NBOEAN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbopen(NEW,ERROR)
+C*****************************************************************************
+C
+      implicit none
+      integer BYTES
+      integer i , Inbo , Ionbo , ISINGL , Ix , Ixdnbo , Ixsnbo , ldar ,
+     &        LENGTH , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm ,
+     &        Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho
+      integer Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr , max , maxix , min , Nav , NBDAR , Nbnav , nfile ,
+     &        nx
+      logical NEW , ERROR
+C
+C     ----- open an NBO direct access file -----
+C
+C        inbo  .....  fortran file number
+C        ionbo .....  index array of length -nbdar-
+C        nav   .....  associated variable
+C        nbdar .....  number of -da- index words
+C                     equal to the number logical
+C                     records which can be written
+C                     on -inbo-.
+C
+      parameter (ISINGL=2,LENGTH=256)
+      parameter (BYTES=4*LENGTH)
+      parameter (NBDAR=100)
+      common /nbodaf/ Inbo , Nav , Ionbo(NBDAR)
+      common /nbonav/ Ixdnbo(LENGTH) , Nbnav
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension Ix(2+NBDAR) , Ixsnbo(LENGTH/2)
+      equivalence (Ixsnbo(1),Ixdnbo(1))
+      equivalence (Ix(1),Inbo)
+C
+      Inbo = abs(Lfndaf)
+C
+C  if this is a new NBO daf, write common/nbonav/ on the first record:
+C
+      if ( NEW ) then
+         open (unit=Inbo,status='NEW',access='DIRECT',recl=BYTES,
+     &         form='UNFORMATTED',err=200)
+         Nav = 1
+         Nbnav = 1
+         do 50 i = 1 , NBDAR
+            Ionbo(i) = 0
+ 50      continue
+         nfile = 1
+         nx = NBDAR/2 + 1
+         call nbwrit(Ix,nx,nfile)
+C
+C  otherwise, open the old file and read in common/nbonav/ from the
+C  first record:
+C
+      else
+         open (unit=Inbo,status='OLD',access='DIRECT',recl=BYTES,
+     &         form='UNFORMATTED',err=200)
+         Nbnav = 1
+         maxix = LENGTH*ISINGL/2
+         ldar = (NBDAR/2+1)*ISINGL
+         max = 0
+ 100     min = max + 1
+         max = max + maxix
+         if ( max.gt.ldar ) max = ldar
+         if ( ISINGL.eq.1 ) read (Inbo,rec=Nbnav) Ixsnbo
+         if ( ISINGL.eq.2 ) read (Inbo,rec=Nbnav) Ixdnbo
+         do 150 i = min , max
+            Ix(i) = Ixdnbo(i-min+1)
+ 150     continue
+         Nbnav = Nbnav + 1
+         if ( max.lt.ldar ) goto 100
+         Inbo = abs(Lfndaf)
+      endif
+      ERROR = .false.
+      return
+C
+C  error encountered while opening this file:
+C
+ 200  ERROR = .true.
+      return
+      end
+@* INDEX.

@@ -1,0 +1,78 @@
+@*nbwrit.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IX
+\item[INPUT:] NX
+\item[INPUT:] IDAR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    IONBO   IXDNBO  NAV     NBNAV
+\item[Uses]  INBO    IONBO   IXDNBO  IXSNBO  NAV     NBNAV
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FEAOIN  FEINFO  NBCLOS  NBOPEN  SVDNAO  SVE0    SVFNBO
+             SVNBO   SVNEWD  SVNLMO  SVPNAO  SVPPAO  SVSNAO  SVTLMO
+             SVTNAB  SVTNAO  SVTNHO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbwrit(IX,NX,IDAR)
+C*****************************************************************************
+      implicit none
+      integer i , IDAR , Inbo , Ionbo , ISINGL , IX , Ixdnbo , ixmax ,
+     &        Ixsnbo , ldar , LENGTH , max , maxix , min , Nav , NBDAR ,
+     &        Nbnav , NX
+      parameter (ISINGL=2,LENGTH=256)
+      parameter (NBDAR=100)
+      common /nbodaf/ Inbo , Nav , Ionbo(NBDAR)
+      common /nbonav/ Ixdnbo(LENGTH) , Nbnav
+      dimension IX(*) , Ixsnbo(LENGTH/2)
+      equivalence (Ixsnbo(1),Ixdnbo(1))
+C
+      ixmax = LENGTH/2
+      maxix = ixmax*ISINGL
+      ldar = NX*ISINGL
+      if ( Ionbo(IDAR).ne.0 ) then
+C
+C     ----- rewrite -----
+C
+         Nbnav = Ionbo(IDAR)
+         max = 0
+ 50      min = max + 1
+         max = max + maxix
+         if ( max.gt.ldar ) max = ldar
+         do 100 i = min , max
+            Ixdnbo(i-min+1) = IX(i)
+ 100     continue
+         if ( ISINGL.eq.1 ) write (Inbo,rec=Nbnav) Ixsnbo
+         if ( ISINGL.eq.2 ) write (Inbo,rec=Nbnav) Ixdnbo
+         Nbnav = Nbnav + 1
+         if ( max.lt.ldar ) goto 50
+      else
+C
+C     ----- first write -----
+C
+         Ionbo(IDAR) = Nav
+         Nbnav = Nav
+C
+         max = 0
+ 150     min = max + 1
+         max = max + maxix
+         if ( max.gt.ldar ) max = ldar
+         do 200 i = min , max
+            Ixdnbo(i-min+1) = IX(i)
+ 200     continue
+         if ( ISINGL.eq.1 ) write (Inbo,rec=Nbnav) Ixsnbo
+         if ( ISINGL.eq.2 ) write (Inbo,rec=Nbnav) Ixdnbo
+         Nbnav = Nbnav + 1
+         if ( max.lt.ldar ) goto 150
+         Nav = Nbnav
+         return
+      endif
+      return
+      end
+@* INDEX.

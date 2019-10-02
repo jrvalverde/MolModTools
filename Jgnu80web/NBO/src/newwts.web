@@ -1,0 +1,110 @@
+@*newwts.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] S
+\item[INPUT:] T
+\item[OUTPUT:] WT
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LSTOCC
+\item[Transmits as argument]  NBAS
+\item[Uses]  LSTOCC  NAOCTR  NAOL    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine newwts(S,T,WT)
+C*****************************************************************************
+      implicit none
+      double precision av , S , sjk , sum , T , WT , zero
+      integer i , iadd , il , ilbl , imax , inao , iorb , Ispin , j ,
+     &        jorb , jorbl , k , Label , Larc , Lbl , Lfnao , Lfnarc ,
+     &        Lfndaf , Lfndef , Lfndm
+      integer Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho ,
+     &        Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr , Lorb , Lorbc , Lstemt , Lstocc , m , MAXATM ,
+     &        MAXBAS
+      integer Munit , Mxao , Mxaolm , Mxbo , Naoctr , Naol , Natoms ,
+     &        Nbas , nc , Ndim , nl , nm , nocc , nstart
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      dimension T(Ndim,Ndim) , S(Ndim,Ndim) , WT(Ndim)
+      character*80 title
+C
+      data zero/0.0D0/
+C
+C  recompute occupancy weights
+      nocc = 0
+      do 100 i = 1 , Nbas
+         sum = zero
+         do 50 j = 1 , Nbas
+            do 20 k = 1 , Nbas
+               sjk = S(j,k)
+               if ( j.gt.k ) sjk = S(k,j)
+               sum = sum + T(j,i)*sjk*T(k,i)
+ 20         continue
+ 50      continue
+         WT(i) = sum
+C  reformat list lstocc:
+         if ( Lstocc(i).ne.0 ) then
+            nocc = nocc + 1
+            Lstocc(nocc) = i
+         endif
+ 100  continue
+      nstart = nocc + 1
+      do 200 i = nstart , Ndim
+         Lstocc(i) = 0
+ 200  continue
+C  symmetry-average weights:
+      nl = 1
+      iorb = 0
+ 300  iorb = iorb + nl
+      if ( iorb.le.Nbas ) then
+         nl = 1
+         ilbl = Naoctr(iorb)
+         il = Naol(iorb)/100
+         nm = il*2 + 1
+         imax = Nbas - iorb
+         do 350 iadd = 1 , imax
+            jorb = iorb + iadd
+            jorbl = Naol(jorb)/100
+            if ( Naoctr(jorb).ne.ilbl .or. jorbl.ne.il ) goto 400
+            nl = nl + 1
+ 350     continue
+ 400     nc = nl/nm
+         do 450 i = 1 , nc
+            sum = zero
+            do 420 m = 1 , nm
+               inao = iorb + (i-1) + (m-1)*nc
+               sum = sum + WT(inao)
+ 420        continue
+            av = sum/nm
+            do 440 m = 1 , nm
+               inao = iorb + (i-1) + (m-1)*nc
+               WT(inao) = av
+ 440        continue
+ 450     continue
+         goto 300
+      endif
+C
+      title = 'New symmetry-averaged occupancy weights:'
+      call aout(WT,Nbas,Nbas,1,title,-1,1)
+      return
+C
+      end
+@* INDEX.

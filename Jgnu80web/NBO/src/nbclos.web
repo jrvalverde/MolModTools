@@ -1,0 +1,32 @@
+@*nbclos.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  X
+\item[Uses]  INBO    X
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBWRIT
+\item[Called by]   DELSCF  NBO     NBOEAN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbclos
+C*****************************************************************************
+      implicit none
+      integer Inbo , Ionbo , Nav , NBDAR , nfile , nx
+      double precision X
+      parameter (NBDAR=100)
+      common /nbodaf/ Inbo , Nav , Ionbo(NBDAR)
+      dimension X(NBDAR/2+1)
+      equivalence (X(1),Inbo)
+C
+      nfile = 1
+      nx = NBDAR/2 + 1
+      call nbwrit(X,nx,nfile)
+      close (unit=Inbo,status='KEEP')
+      return
+      end
+@* INDEX.

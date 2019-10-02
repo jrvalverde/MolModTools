@@ -1,0 +1,51 @@
+@*pack.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] T
+\item[INPUT:] NDIM
+\item[INPUT:] NBAS
+\item[INPUT:] L2
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   FEAOIN  SVDNAO  SVFNBO  SVPPAO  SVSNAO  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine pack(T,NDIM,NBAS,L2)
+C*****************************************************************************
+      implicit none
+      integer i , ii , iptr , j , jptr , L2 , NBAS , NDIM
+      double precision T , zero
+      dimension T(1)
+C
+      data zero/0.0D0/
+C
+C  pack:  packs a symmetric matrix t into an upper triangular matrix.
+C         t should be dimensioned (ndim,ndim) in the calling routine:
+C
+      if ( NBAS.gt.NDIM ) stop 'NBAS IS GREATER THAN NDIM'
+      ii = 0
+      do 100 j = 1 , NBAS
+         jptr = (j-1)*NDIM
+         do 50 i = 1 , j
+            iptr = jptr + i
+            ii = ii + 1
+            T(ii) = T(iptr)
+ 50      continue
+ 100  continue
+      if ( ii.ne.L2 ) stop 'ERROR IN ROUTINE PACK'
+C
+      do 200 i = ii + 1 , NDIM*NDIM
+         T(i) = zero
+ 200  continue
+      return
+      end
+@* INDEX.

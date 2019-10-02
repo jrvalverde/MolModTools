@@ -1,0 +1,231 @@
+@*naosim.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[OUTPUT:] T
+\item[PASSED:] A
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LBL     LORBC   LSTOCC  NAOCTR  NAOL
+\item[Transmits as argument]  IWFOCK  JPRINT  NBAS    NDIM
+\item[Uses]  IWFOCK  JPRINT  LANG    LCTR    NATOMS  NBAS    NDIM
+             OPEN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT    FEAOMO  FEDXYZ  FEFAO   FRMTMO  IOINQR  LBLAO
+             LBLNAO  NAOANL  SIMTRS  SVDNAO  SVTNAO  WRARC   WRBAS
+\item[Called by]   NBO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine naosim(DM,T,A)
+C*****************************************************************************
+      implicit none
+      double precision A , DM , one , T , zero
+      integer i , i1 , i2 , i3 , i4 , i5 , Ichoos , io , ioinqr ,
+     &        Iprint , iprnt , Ipseud , Ispin , it , Iw3c , Iwapol ,
+     &        Iwcubf , Iwdetl , Iwdm , Iwfock
+      integer Iwhybs , Iwmulp , Iwpnao , iwrit , Iwtnab , Iwtnao ,
+     &        Iwtnbo , ix , j , Jcore , Jprint , Kopt , Label , Lang ,
+     &        Larc , Lbl , Lctr , Lfnao , Lfnarc , Lfndaf
+      integer Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao ,
+     &        Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh ,
+     &        Lfnpnl , Lfnppa , Lfnpr , Lorb , Lorbc , Lstemt , Lstocc ,
+     &        MAXATM
+      integer MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Naoctr , Naol ,
+     &        Natoms , Nbas , Ndim
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbao  / Lctr(MAXBAS) , Lang(MAXBAS)
+C
+      dimension DM(Ndim,Ndim) , T(Ndim,Ndim) , A(1)
+      character*80 title
+C
+      data zero , one/0.0D0 , 1.0D0/
+      data iprnt , iwrit/4HPRNT , 4HWRIT/
+C
+C  this routine simulates the action of the NAO subprogram:
+C
+C  form labels for the raw AO basis set:
+C
+      call lblao
+C
+C  copy the AO centers and labels from /nbao/ to /nbbas/:
+C
+      do 100 i = 1 , Nbas
+         Lbl(i) = Lctr(i)
+         Lorbc(i) = Lang(i)
+ 100  continue
+C
+C  write out the AO basis set information:
+C
+      if ( Jprint(22).gt.0 ) call wrbas(A,A,Jprint(22))
+C
+C  write out the archive file:
+C
+      if ( Jprint(7).ne.0 ) call wrarc(A,A,Jprint(7))
+C
+C  output the ao-mo transformation matrix:
+C
+      io = ioinqr(Jprint(26))
+      if ( .not.Open .and. (io.eq.iprnt .or. io.eq.iwrit) ) then
+         call feaomo(A,it)
+         if ( it.ne.0 ) then
+            title = 'MOs in the AO basis:'
+            call aout(A,Ndim,Nbas,Nbas,title,1,Jprint(26))
+         endif
+      endif
+C
+C  output the AO fock matrix:
+C
+      io = ioinqr(Jprint(40))
+      if ( .not.Open .and. (io.eq.iprnt .or. io.eq.iwrit) ) then
+         call fefao(A,Iwfock)
+         if ( Iwfock.ne.0 ) then
+            title = 'AO Fock matrix:'
+            call aout(A,Ndim,-Nbas,Nbas,title,1,Jprint(40))
+         endif
+      endif
+C
+C  output the AO density matrix:
+C
+      io = ioinqr(Jprint(27))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'Spinless AO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,1,Jprint(27))
+      endif
+C
+C  output the AO dipole matrices:
+C
+      io = ioinqr(Jprint(50))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         ix = 1
+         call fedxyz(A,ix)
+         if ( ix.ne.0 ) then
+            title = 'AO x dipole integrals:'
+            call aout(A,Ndim,-Nbas,Nbas,title,1,Jprint(50))
+         endif
+         ix = 2
+         call fedxyz(A,ix)
+         if ( ix.ne.0 ) then
+            title = 'AO y dipole integrals:'
+            call aout(A,Ndim,-Nbas,Nbas,title,1,Jprint(50))
+         endif
+         ix = 3
+         call fedxyz(A,ix)
+         if ( ix.ne.0 ) then
+            title = 'AO z dipole integrals:'
+            call aout(A,Ndim,-Nbas,Nbas,title,1,Jprint(50))
+         endif
+      endif
+C
+C  initialize the AO to NAO transformation matrix (unit matrix):
+C
+      do 200 j = 1 , Nbas
+         do 150 i = 1 , Nbas
+            T(i,j) = zero
+ 150     continue
+         T(j,j) = one
+ 200  continue
+C
+C  save tnao for later use:
+C
+      call svtnao(T)
+C
+C  fill atomic orbital information lists:
+C
+      do 300 i = 1 , Nbas
+         Naoctr(i) = Lctr(i)
+         Naol(i) = Lang(i)
+         Lstocc(i) = 1
+ 300  continue
+C
+C  perform the natural population analysis: (note that routine naoanl
+C  expects to find the overlap matrix in t, which is the unit matrix
+C  for orthogonal basis sets. upon return from naoanl, t is the AO to
+C  NAO transformation, which is still a unit matrix):
+C
+      i1 = 1
+      i2 = i1 + Natoms*Natoms
+      i3 = i2 + Natoms
+      i4 = i3 + Natoms*Natoms
+      i5 = i4 + Ndim*Ndim
+C     iend = i5 + ndim
+      call naoanl(DM,T,A(i1),A(i2),A(i3),A(i4),A(i5))
+C
+C  do not destroy the matrix at a(i1).  this holds the wiberg bond
+C  index which needs to be passed to the NBO routines.
+C
+C  save the NAO density matrix:
+C
+      call svdnao(DM)
+C
+C  form the NAO labels:
+C
+      call lblnao
+C
+C  if this is an open shell wavefunction, don't do anything more:
+C
+      if ( Open ) return
+C
+C  output the nao-mo transformation matrix:
+C
+      io = ioinqr(Jprint(9))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         i1 = 1
+         i2 = i1 + Natoms*Natoms
+         i3 = i2 + Ndim*Ndim
+         i4 = i3 + Ndim*Ndim
+C       iend = i4 + ndim*(ndim+5)
+         call frmtmo(T,A(i2),A(i3),A(i4),2,Jprint(9))
+      endif
+C
+C  reorganize the scratch vector:
+C
+      i1 = 1
+      i2 = i1 + Natoms*Natoms
+      i3 = i2 + Ndim*Ndim
+C     iend = i3 + ndim
+C
+C  output the NAO fock matrix:
+C
+      io = ioinqr(Jprint(31))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fefao(A(i2),Iwfock)
+         if ( Iwfock.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NAO Fock matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,2,Jprint(31))
+         endif
+      endif
+C
+C  output the NAO density matrix:
+C
+      io = ioinqr(Jprint(35))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'NAO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,2,Jprint(35))
+      endif
+      return
+      end
+@* INDEX.

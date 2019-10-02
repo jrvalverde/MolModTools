@@ -1,0 +1,87 @@
+@*nboinp.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] NBOOPT
+\item[OUTPUT:] IDONE
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  LFNIN
+\item[Uses]  LFNIN
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   HFLD    STRTIN
+\item[Called by]   NBO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nboinp(NBOOPT,IDONE)
+C*****************************************************************************
+      implicit none
+      integer IDONE , irep , keywd , knbo , len , Lfnao , Lfnarc ,
+     &        Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab ,
+     &        Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb ,
+     &        Lfnpnh
+      integer Lfnpnl , Lfnppa , Lfnpr , NBOOPT
+      logical end , equal
+      dimension NBOOPT(10)
+      dimension keywd(6) , knbo(4)
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      data knbo/1H$ , 1HN , 1HB , 1HO/
+C
+C  if nboopt(1) = 1, don't search for keywords, just continue with
+C  default options:
+C
+      if ( NBOOPT(1).eq.1 ) then
+         IDONE = 0
+         return
+      endif
+C
+C  if this is the gamess, hondo, or general version of the NBO program,
+C  rewind the input file before searching for $nbo:
+C
+      irep = 1
+      if ( NBOOPT(10).eq.0 ) irep = 0
+      if ( NBOOPT(10).eq.6 ) irep = 0
+      if ( NBOOPT(10).eq.7 ) irep = 0
+      if ( irep.eq.0 ) rewind (Lfnin)
+C
+C  search input file for $nbo:
+C
+ 100  call strtin(Lfnin)
+      len = 6
+      call hfld(keywd,len,end)
+      if ( equal(keywd,knbo,4) ) then
+C
+C  $nbo found -- continue with the NBO analysis:
+C
+         IDONE = 0
+         return
+      elseif ( .not.(len.eq.0 .and. end) ) then
+         goto 100
+      endif
+C
+C  end of file encountered -- stop NBO analysis, except for the general
+C  version of the program (set nboopt(1) so keywords are not read):
+C
+      if ( irep.eq.1 ) then
+         rewind (Lfnin)
+         irep = irep + 1
+         goto 100
+      elseif ( NBOOPT(10).eq.0 ) then
+         NBOOPT(1) = 1
+         IDONE = 0
+      else
+         IDONE = 1
+      endif
+      return
+      end
+@* INDEX.

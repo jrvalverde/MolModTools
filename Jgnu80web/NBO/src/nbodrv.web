@@ -1,0 +1,779 @@
+@*nbodrv.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+\item[PASSED:] T
+\item[PASSED:] A
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  ACCTHR  ICHOOS  IWFOCK  IWTNAB  IWTNBO  JCORE   JPRINT
+             NBAS    NDIM
+\item[Uses]  ACCTHR  BETA    ICHOOS  ISPIN   IWDM    IWFOCK  IWTNAB
+             IWTNBO  JCORE   JPRINT  LFNPR   MXAO    MXBO    NATOMS
+             NBAS    NDIM    ORTHO
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       ANLYZE  AOUT    CHSDRV  CHSINP  COPY    CORINP  DIPANL
+             FEDRAW  FEDXYZ  FEFAO   FEPNAO  FESRAW  FETLMO  FETNAB
+             FETNAO  FETNHO  FNBOAN  FNDMOL  FRMTMO  HYBDIR  IOINQR
+             LBLNBO  LMOANL  MATMLT  NATHYB  NBOCLA  NBOSUM  NLMO
+             NORMLZ  RDCORE  RDTNAB  SIMTRS  SRTNBO  SVFNBO  SVNBO
+             SVNLMO  SVTLMO  SVTNAB  TRNSPO  WRNLMO  WRTNAB  WRTNBO
+             XCITED
+\item[Called by]   NBO
+
+\end{description}
+@a
+C**************************************************************************
+      subroutine nbodrv(DM,T,A)
+C**************************************************************************
+C
+C  driver subroutine to calculate natural hybrid orbitals (nhos) and
+C  natural bond orbitals (nbos) from the density matrix in the NAO basis
+C
+C        t = scratch storage
+C       dm = NAO density matrix
+C            the spin nature of dm is indicated by:
+C            ispin =  0: spinless  (closed shell)
+C            ispin = +2: alpha spin
+C            ispin = -2: spin
+C            (ispin is the reciprocal of the s(z) quantum no.)
+C
+C        a = scratch storage from the main program.  the location of a(1)
+C               is in the common block /scm/ in the main program,
+C               after the storage for the matrices 's','dm'
+C             ('a' is the vector which is partitioned
+C                   according to the storage needs of each program run)
+C     atom, basis, option, nbinfo: common blocks with data transfered from
+C        from the input programs.
+C
+C-----------------------------------------------------------------------------
+      implicit none
+      double precision A , Accthr , Athr , Crtset , DM , Dthr , E2thr ,
+     &                 Ethr , Prjset , Pthr , T , Thrset
+      integer i0 , i1 , i10 , i11 , i12 , i13 , i14 , i2 , i3 , i4 ,
+     &        i5 , i6 , i7 , i8 , i9 , ialarm , Iatcr , Iatno , Ichoos ,
+     &        Ino
+      integer io , ioinqr , Iprint , iprnt , Ipseud , iread , Ispin ,
+     &        Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs ,
+     &        Iwmulp , Iwpnao , iwrit , Iwtnab , Iwtnao , Iwtnbo
+      integer ix , Iznuc , Jcore , jo , Jprint , Kopt , Label , Larc ,
+     &        Lbl , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho
+      integer Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr , Ll , Lorb , Lorbc , Lstemt , Lstocc , Lu ,
+     &        MAXATM , MAXBAS , Molat , Molata , Molec , Moleca , Munit
+      integer Mxao , Mxaolm , Mxbo , nab , Naoctr , Naol , Natoms ,
+     &        Nbas , Ndim , Nmola , Nmolec , nocc , Norbs
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      character*80 title
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbmol / Nmolec , Molat(MAXATM) , Molec(MAXATM,MAXATM) ,
+     &                Nmola , Molata(MAXATM) , Moleca(MAXATM,MAXATM)
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+C
+      dimension T(Ndim,Ndim) , DM(Ndim,Ndim) , A(1)
+C
+      data iprnt , iwrit , iread/4HPRNT , 4HWRIT , 4HREAD/
+C
+C  skip NBO transformation if requested:
+C
+      if ( Jprint(1).gt.0 ) then
+         write (Lfnpr,99004)
+         return
+      endif
+C
+C  organize scratch storage vector a.  warning:  this is redefined
+C  several times after the nbos are formed
+C
+C  a(i0)  = guide(natoms,natoms)
+C  a(i1)  = bndocc(ndim)
+C  a(i2)  = pol(ndim,3)
+C  a(i3)  = q(mxao,ndim)
+C  a(i4)  = v(ndim)
+C  a(i5)  = blk(mxbo,mxbo)
+C  a(i6)  = c(mxbo,mxbo)
+C  a(i7)  = eval(mxbo)
+C  a(i8)  = borb(mxbo)
+C  a(i9)  = p(mxao,mxao)
+C  a(i10) = pk(mxao,mxao)
+C  a(i11) = hyb(mxao)
+C  a(i12) = va(mxao)
+C  a(i13) = vb(mxao)
+C
+      i0 = 1
+      i1 = i0 + Natoms*Natoms
+      i2 = i1 + Ndim
+      i3 = i2 + 3*Ndim
+      i4 = i3 + Mxao*Ndim
+      i5 = i4 + Ndim
+      i6 = i5 + Mxbo*Mxbo
+      i7 = i6 + Mxbo*Mxbo
+      i8 = i7 + Mxbo
+      i9 = i8 + Mxbo
+      i10 = i9 + Mxao*Mxao
+      i11 = i10 + Mxao*Mxao
+      i12 = i11 + Mxao
+      i13 = i12 + Mxao
+      i14 = i13 + Mxao
+C     iend = i14 + natoms*natoms
+C
+      if ( Jprint(5).ne.0 .and. Ispin.eq.0 ) write (Lfnpr,99001)
+      if ( Jprint(5).ne.0 .and. Ispin.eq.2 ) write (Lfnpr,99002)
+      if ( Jprint(5).ne.0 .and. Ispin.eq.-2 ) write (Lfnpr,99003)
+C
+C  read in t-nab, label, ibxm, transform dm, and find bndocc if iwtnab=iread:
+C
+      if ( ioinqr(Iwtnab).eq.iread ) then
+         call rdtnab(T,DM,A(i1),A(i2),Iwtnab)
+      else
+C
+C  search input file for $core input:
+C
+         if ( .not.Beta ) then
+            call corinp(Jprint(2),Jcore)
+            call rdcore(Jcore)
+         endif
+C
+C  search input file for $choose input:
+C
+         if ( .not.Beta ) call chsinp(Jprint(2),Ichoos)
+C
+C  calculate natural hybrid orbitals and bond orbitals:
+C
+         if ( Ichoos.ne.1 ) call nathyb(DM,T,A(i0),A(i1),A(i2),A(i3),
+     &                                  A(i4),A(i5),A(i6),A(i7),A(i8),
+     &                                  A(i9),A(i10),A(i11),A(i12),
+     &                                  A(i13),A(i14))
+         if ( Ichoos.eq.1 ) call chsdrv(DM,T,A(i0),A(i1),A(i2),A(i3),
+     &                                  A(i4),A(i5),A(i6),A(i7),A(i8),
+     &                                  A(i9),A(i10),A(i11),A(i12),
+     &                                  A(i13),A(i14))
+C
+C  if NBO search was abandoned, don't try to do anything further:
+C
+         if ( Jprint(1).lt.0 ) return
+C
+C  sort the nbos by atom:
+C
+         call srtnbo(T,A(i1))
+C
+C  form the NBO density matrix:
+C
+         call simtrs(DM,T,A(i2),Ndim,Nbas)
+C
+C  check NHO overlaps to see if bond orbitals should be relabelled:
+C
+         if ( .not.Ortho ) then
+            i0 = 1
+            i1 = i0 + Natoms*Natoms
+            i2 = i1 + Ndim
+            i3 = i2 + Mxao
+            i4 = i3 + Ndim*Ndim
+            i5 = i4 + Ndim*Ndim
+            i6 = i5 + Ndim
+C         iend = i6 + ndim
+            call xcited(DM,T,A(i2),A(i3),A(i4),A(i5),A(i6),A(i6))
+         endif
+      endif
+C
+C  t  now contains the nao-nbo transformation matrix
+C  dm now contains the NBO density matrix
+C  a(i0)  contains the wiberg bond index matrix     
+C don't destroy this
+C  a(i1)  contains the NBO occupancies              
+C don't destroy this
+C  a(i2)  is scratch space
+C
+C  save the nao-nbo transformation on the NBO daf:
+C
+      call svtnab(T)
+C
+C  form the NBO labels:
+C
+      call lblnbo
+C
+C  write out the analysis of bond orbitals:
+C
+      i0 = 1
+      i1 = i0 + Natoms*Natoms
+      i2 = i1 + Ndim
+      i3 = i2 + Ndim
+      i4 = i3 + Ndim
+C     iend = i4 + ndim*ndim
+      call anlyze(T,A(i1),A(i2),A(i3),A(i4))
+C
+C  write out hybrid directionality and bond bending info:
+C
+      if ( Jprint(36).ne.0 ) then
+         i0 = 1
+         i1 = i0 + Natoms*Natoms
+         i2 = i1 + Ndim
+         i3 = i2 + 3*Natoms
+         i4 = i3 + Ndim*Ndim
+         i5 = i4 + Ndim*Ndim
+C       iend = i5 + ndim
+         call hybdir(A(i1),A(i2),A(i3),A(i4),A(i5))
+      endif
+C
+C  find molecular units:
+C
+      call fndmol(A(i2))
+C
+C  classify all the nbos according to donor/acceptor type:
+C
+      call nbocla(A(i1),Accthr)
+C
+C  output transformation matrices for the pnho and NHO basis sets,
+C  and the NHO density matrix, NHO fock matrix, and NHO dipole matrices:
+C
+C  the section of the code makes use of t and dm.  these matrices
+C  will be restored later:  [note: do not destroy info already stored
+C  in a(i0) and a(i1)]
+C
+C  reorganize the scratch vector:
+C
+      i0 = 1
+      i1 = i0 + Natoms*Natoms
+      i2 = i1 + Ndim
+      i3 = i2 + Ndim*Ndim
+      i4 = i3 + Ndim*Ndim
+C     iend = i4 + ndim*(ndim+5)
+C
+C  output the ao-pnho transformation and the pnho overlap matrix:
+C
+      io = ioinqr(Jprint(20))
+      jo = ioinqr(Jprint(30))
+      if ( (io.eq.iprnt .or. io.eq.iwrit) .or.
+     &     (jo.eq.iprnt .or. jo.eq.iwrit) ) then
+         call fepnao(T)
+         call fetnho(A(i2))
+         call matmlt(T,A(i2),A(i3),Ndim,Nbas)
+         call fesraw(A(i2))
+         call normlz(T,A(i2),Ndim,Nbas)
+         if ( jo.eq.iprnt .or. jo.eq.iwrit ) then
+            title = 'PNHOs in the AO basis:'
+            call aout(T,Ndim,Nbas,Nbas,title,1,Jprint(30))
+         endif
+         if ( io.eq.iprnt .or. io.eq.iwrit ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'PNHO overlap matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,3,Jprint(20))
+         endif
+      endif
+C
+C  form the ao-nho transformation matrix:
+C
+      call fetnao(T)
+      call fetnho(A(i2))
+      call matmlt(T,A(i2),A(i3),Ndim,Nbas)
+C
+C  output the ao-nho transformation matrix:
+C
+      io = ioinqr(Jprint(28))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'NHOs in the AO basis:'
+         call aout(T,Ndim,Nbas,Nbas,title,1,Jprint(28))
+      endif
+C
+C  output the nao-nho transformation matrix:
+C
+      io = ioinqr(Jprint(33))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fetnho(A(i2))
+         title = 'NHOs in the NAO basis:'
+         call aout(A(i2),Ndim,Nbas,Nbas,title,2,Jprint(33))
+      endif
+C
+C  output the nho-mo transformation matrix:
+C
+      io = ioinqr(Jprint(38))
+      if ( io.eq.iprnt .or. io.eq.iwrit )
+     &     call frmtmo(T,A(i2),A(i3),A(i4),3,Jprint(38))
+C
+C  output the NHO density matrix:
+C
+      io = ioinqr(Jprint(34))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fedraw(DM,A(i2))
+         if ( Iwdm.eq.1 ) then
+            call fesraw(A(i2))
+            call simtrs(DM,A(i2),A(i3),Ndim,Nbas)
+         endif
+         call simtrs(DM,T,A(i2),Ndim,Nbas)
+         title = 'NHO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,3,Jprint(34))
+      endif
+C
+C  output the NHO fock matrix:
+C
+      io = ioinqr(Jprint(29))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fefao(A(i2),Iwfock)
+         if ( Iwfock.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NHO Fock matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,3,Jprint(29))
+         endif
+      endif
+C
+C  output the NHO dipole matrices:
+C
+      io = ioinqr(Jprint(52))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         ix = 1
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NHO x dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,3,Jprint(52))
+         endif
+         ix = 2
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NHO y dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,3,Jprint(52))
+         endif
+         ix = 3
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NHO z dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,3,Jprint(52))
+         endif
+      endif
+C
+C  output transformation matrices for the pnbo and NBO basis sets,
+C  and the NBO density matrix, NBO fock matrix, and NBO dipole matrices:
+C
+C  [note: do not destroy info already stored in a(i0) and a(i1)]
+C
+C  reorganize the scratch vector:
+C
+      i0 = 1
+      i1 = i0 + Natoms*Natoms
+      i2 = i1 + Ndim
+      i3 = i2 + Ndim*Ndim
+      i4 = i3 + Ndim*Ndim
+C     iend = i4 + ndim*(ndim+5)
+C
+C  output the ao-pnbo transformation and the pnbo overlap matrix:
+C
+      io = ioinqr(Jprint(21))
+      jo = ioinqr(Jprint(25))
+      if ( (io.eq.iprnt .or. io.eq.iwrit) .or.
+     &     (jo.eq.iprnt .or. jo.eq.iwrit) ) then
+         call fepnao(T)
+         call fetnab(A(i2))
+         call matmlt(T,A(i2),A(i3),Ndim,Nbas)
+         call fesraw(A(i2))
+         call normlz(T,A(i2),Ndim,Nbas)
+         if ( jo.eq.iprnt .or. jo.eq.iwrit ) then
+            title = 'PNBOs in the AO basis:'
+            call aout(T,Ndim,Nbas,Nbas,title,1,Jprint(25))
+         endif
+         if ( io.eq.iprnt .or. io.eq.iwrit ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'PNBO overlap matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,4,Jprint(21))
+         endif
+      endif
+C
+C  form the ao-nbo transformation matrix:
+C
+      call fetnao(T)
+      call fetnab(A(i2))
+      call matmlt(T,A(i2),A(i3),Ndim,Nbas)
+C
+C  save the ao-nbo transformation, NBO occs, and NBO labels on NBO daf:
+C
+      call svnbo(T,A(i1),A(i2))
+C
+C  write the ao-nbo transformation with NBO labels and occupancies:
+C
+      if ( ioinqr(Iwtnbo).eq.iwrit ) call wrtnbo(T,A(i1),Iwtnbo)
+C
+C  print the ao-nbo transformation matrix:
+C
+      if ( ioinqr(Iwtnbo).eq.iprnt ) then
+         title = 'NBOs in the AO basis:'
+         call aout(T,Ndim,Nbas,Nbas,title,1,Iwtnbo)
+      endif
+C
+C  write the nao-nbo transformation matrix:
+C
+      if ( ioinqr(Iwtnab).eq.iwrit ) then
+         call fetnab(A(i2))
+         call wrtnab(A(i2),Iwtnab)
+      endif
+C
+C  print the nao-nbo transformation to the output file:
+C
+      if ( ioinqr(Iwtnab).eq.iprnt ) then
+         call fetnab(A(i2))
+         title = 'NBOs in the NAO basis:'
+         call aout(A(i2),Ndim,Nbas,Nbas,title,2,Iwtnab)
+      endif
+C
+C  output the nho-nbo transformation matrix:
+C
+      io = ioinqr(Jprint(41))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fetnho(A(i2))
+         call trnspo(A(i2),Ndim,Nbas)
+         call fetnab(A(i3))
+         call matmlt(A(i2),A(i3),A(i4),Ndim,Nbas)
+         title = 'NBOs in the NHO basis:'
+         call aout(A(i2),Ndim,Nbas,Nbas,title,3,Jprint(41))
+      endif
+C
+C  output the nbo-mo transformation matrix:
+C
+      io = ioinqr(Jprint(45))
+      if ( io.eq.iprnt .or. io.eq.iwrit )
+     &     call frmtmo(T,A(i2),A(i3),A(i4),4,Jprint(45))
+C
+C  form the NBO density matrix:
+C
+      call fedraw(DM,A(i2))
+      if ( Iwdm.eq.1 .and. .not.Ortho ) then
+         call fesraw(A(i2))
+         call simtrs(DM,A(i2),A(i3),Ndim,Nbas)
+      endif
+      call simtrs(DM,T,A(i2),Ndim,Nbas)
+C
+C  output the NBO density matrix:
+C
+      io = ioinqr(Jprint(16))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'NBO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,4,Jprint(16))
+      endif
+C
+C  output the NBO fock matrix:
+C
+      call fefao(A(i2),Iwfock)
+      if ( Iwfock.ne.0 ) then
+         call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+         call svfnbo(A(i2))
+         io = ioinqr(Jprint(37))
+         if ( io.eq.iprnt .or. io.eq.iwrit ) then
+            title = 'NBO Fock matrix:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,4,Jprint(37))
+         endif
+      endif
+C
+C  output the NBO dipole matrices:
+C
+      io = ioinqr(Jprint(53))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         ix = 1
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NBO x dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,4,Jprint(53))
+         endif
+         ix = 2
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NBO y dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,4,Jprint(53))
+         endif
+         ix = 3
+         call fedxyz(A(i2),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i2),T,A(i3),Ndim,Nbas)
+            title = 'NBO z dipole integrals:'
+            call aout(A(i2),Ndim,-Nbas,Nbas,title,4,Jprint(53))
+         endif
+      endif
+C
+C  perform perturbative analysis of the NBO fock matrix:
+C
+      if ( Jprint(3).eq.1 .and. Iwfock.ne.0 )
+     &     call fnboan(A(i1),A(i2),A(i3))
+C
+C  print the NBO summary:
+C
+      if ( Jprint(6).eq.1 ) then
+         i0 = 1
+         i1 = i0 + Natoms*Natoms
+         i2 = i1 + Ndim
+         i3 = i2 + Ndim*Ndim
+         i4 = i3 + Ndim
+         i5 = i4 + Natoms
+C       iend = i5 + ndim
+         call nbosum(A(i2),A(i1),A(i3),A(i4),A(i5))
+      endif
+C
+C  search for multiple resonance structures:
+C
+C      if(jprint(32).ne.0) then
+C        call resstr(a(i0),a(i1))
+C      end if
+C
+C  continue with the construction of the nlmos:
+C
+      if ( Jprint(8).eq.0 ) return
+C
+C  store in a(i0) the vector reson(ndim), the squares of the diagonal
+C  elements of the NBO to NLMO transformation matrix.  ialarm sounds
+C  the alarm that the NLMO step is to be skipped:
+C
+C   dm   : NBO density        
+C transformed to NLMO basis on return
+C   a(i0): reson(ndim)        
+C percentages of parent nbo
+C   a(i1): lmoocc(ndim)       
+C NLMO occupancies
+C   a(i2): tnlmo(ndim,ndim)   
+C nbo-nlmo transform
+C   a(i3): tsym               
+C scratch
+C
+      i0 = 1
+      i1 = i0 + Ndim
+      i2 = i1 + Ndim
+      i3 = i2 + Ndim*Ndim
+C     iend = i3 + ndim*ndim
+      call nlmo(Nbas,DM,A(i1),A(i2),A(i3),A(i0),nocc,ialarm)
+      if ( ialarm.ne.0 ) return
+C
+C  save the NBO to NLMO transformation matrix on the NBO daf:
+C
+      call svtlmo(A(i2))
+C
+C  form the NAO to NLMO transformation in t:
+C
+      call fetnab(T)
+      call matmlt(T,A(i2),A(i3),Ndim,Nbas)
+C
+C  set up storage for lmoanl:
+C
+C   a(i0): reson(ndim)
+C   a(i1): lmoocc(ndim)
+C   a(i2): ts(ndim)
+C   a(i3): border(natoms,natoms)
+C   a(i4): owbord(natoms,natoms)
+C   a(i5): atlmo(nocc,natoms)
+C   a(i6): siab(nocc,nab)
+C
+      nab = Natoms*(Natoms-1)/2
+      if ( Natoms.eq.1 ) nab = 1
+      i0 = 1
+      i1 = i0 + Ndim
+      i2 = i1 + Ndim
+      i3 = i2 + Ndim
+      i4 = i3 + Natoms*Natoms
+      i5 = i4 + Natoms*Natoms
+      i6 = i5 + nocc*Natoms
+      i7 = i6 + nocc*nab
+C     iend = i7 + ndim*ndim
+      call copy(DM,A(i7),Ndim,Nbas,Nbas)
+      call lmoanl(T,A(i7),A(i0),A(i1),A(i2),A(i3),A(i4),A(i5),A(i6),
+     &            nocc,nab)
+C
+C  output transformation matrices for the pnlmo and NLMO basis sets,
+C  and the NLMO density matrix, NLMO fock matrix, and NLMO dipole matrices:
+C
+C  reorganize the scratch vector:
+C
+      i0 = 1
+      i1 = i0 + Ndim*Ndim
+      i2 = i1 + Ndim*Ndim
+C     iend = i2 + ndim*(ndim+5)
+C
+C  output the ao-pnlmo transformation and the pnlmo overlap matrix:
+C
+      io = ioinqr(Jprint(48))
+      jo = ioinqr(Jprint(49))
+      if ( (io.eq.iprnt .or. io.eq.iwrit) .or.
+     &     (jo.eq.iprnt .or. jo.eq.iwrit) ) then
+         call fepnao(T)
+         call fetnab(A(i0))
+         call matmlt(T,A(i0),A(i1),Ndim,Nbas)
+         call fetlmo(A(i0))
+         call matmlt(T,A(i0),A(i1),Ndim,Nbas)
+         call fesraw(A(i0))
+         call normlz(T,A(i0),Ndim,Nbas)
+         if ( jo.eq.iprnt .or. jo.eq.iwrit ) then
+            title = 'PNLMOs in the AO basis:'
+            call aout(T,Ndim,Nbas,Nbas,title,1,Jprint(49))
+         endif
+         if ( io.eq.iprnt .or. io.eq.iwrit ) then
+            call simtrs(A(i0),T,A(i1),Ndim,Nbas)
+            title = 'PNLMO overlap matrix:'
+            call aout(A(i0),Ndim,-Nbas,Nbas,title,5,Jprint(48))
+         endif
+      endif
+C
+C  form the ao-nlmo transformation matrix:
+C
+      call fetnao(T)
+      call fetnab(A(i0))
+      call matmlt(T,A(i0),A(i1),Ndim,Nbas)
+      call fetlmo(A(i0))
+      call matmlt(T,A(i0),A(i1),Ndim,Nbas)
+C
+C  save the ao-nlmo transformation on NBO daf:
+C
+      call svnlmo(T)
+C
+C  write out the ao-nlmo transformation matrix:
+C
+      io = ioinqr(Jprint(23))
+      if ( io.eq.iwrit ) call wrnlmo(T,DM,Jprint(23))
+C
+C  print the ao-nlmo transformation matrix:
+C
+      if ( io.eq.iprnt ) then
+         title = 'NLMOs in the AO basis:'
+         call aout(T,Ndim,Nbas,Nbas,title,1,Jprint(23))
+      endif
+C
+C  output the nao-nlmo transformation matrix:
+C
+      io = ioinqr(Jprint(18))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fetnab(A(i0))
+         call fetlmo(A(i1))
+         call matmlt(A(i0),A(i1),A(i2),Ndim,Nbas)
+         title = 'NLMOs in the NAO basis:'
+         call aout(T,Ndim,Nbas,Nbas,title,2,Jprint(18))
+      endif
+C
+C  output the nho-nlmo transformation matrix:
+C
+      io = ioinqr(Jprint(24))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fetnho(A(i0))
+         call trnspo(A(i0),Ndim,Nbas)
+         call fetnab(A(i1))
+         call matmlt(A(i0),A(i1),A(i2),Ndim,Nbas)
+         call fetlmo(A(i1))
+         call matmlt(A(i0),A(i1),A(i2),Ndim,Nbas)
+         title = 'NLMOs in the NHO basis:'
+         call aout(A(i0),Ndim,Nbas,Nbas,title,3,Jprint(24))
+      endif
+C
+C  output the nbo-nlmo transformation matrix:
+C
+      io = ioinqr(Jprint(47))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fetlmo(A(i0))
+         title = 'NLMOs in the NBO basis:'
+         call aout(A(i0),Ndim,Nbas,Nbas,title,4,Jprint(47))
+      endif
+C
+C  output the nlmo-mo transformation matrix:
+C
+      io = ioinqr(Jprint(13))
+      if ( io.eq.iprnt .or. io.eq.iwrit )
+     &     call frmtmo(T,A(i0),A(i1),A(i2),5,Jprint(13))
+C
+C  output the NLMO density matrix:
+C
+      io = ioinqr(Jprint(17))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         title = 'NLMO density matrix:'
+         call aout(DM,Ndim,-Nbas,Nbas,title,5,Jprint(17))
+      endif
+C
+C  output the NLMO fock matrix:
+C
+      io = ioinqr(Jprint(15))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         call fefao(A(i0),Iwfock)
+         if ( Iwfock.ne.0 ) then
+            call simtrs(A(i0),T,A(i1),Ndim,Nbas)
+            title = 'NLMO Fock matrix:'
+            call aout(A(i0),Ndim,-Nbas,Nbas,title,5,Jprint(15))
+         endif
+      endif
+C
+C  output the NLMO dipole matrices:
+C
+      io = ioinqr(Jprint(54))
+      if ( io.eq.iprnt .or. io.eq.iwrit ) then
+         ix = 1
+         call fedxyz(A(i0),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i0),T,A(i1),Ndim,Nbas)
+            title = 'NLMO x dipole integrals:'
+            call aout(A(i0),Ndim,-Nbas,Nbas,title,5,Jprint(54))
+         endif
+         ix = 2
+         call fedxyz(A(i0),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i0),T,A(i1),Ndim,Nbas)
+            title = 'NLMO y dipole integrals:'
+            call aout(A(i0),Ndim,-Nbas,Nbas,title,5,Jprint(54))
+         endif
+         ix = 3
+         call fedxyz(A(i0),ix)
+         if ( ix.ne.0 ) then
+            call simtrs(A(i0),T,A(i1),Ndim,Nbas)
+            title = 'NLMO z dipole integrals:'
+            call aout(A(i0),Ndim,-Nbas,Nbas,title,5,Jprint(54))
+         endif
+      endif
+C
+C  perform the nbo/nlmo dipole moment analysis:
+C
+C  dm   :  NLMO density matrix
+C  t    :  ao-nlmo transformation matrix
+C  a(i1):  c(ndim,ndim)
+C  a(i2):  tnbo(ndim,ndim)
+C  a(i3):  dx(ndim,ndim)
+C  a(i4):  dy(ndim,ndim)
+C  a(i5):  dz(ndim,ndim)
+C  a(i6):  scr(ndim,ndim)
+C  a(i7):  index(ndim)
+C
+      if ( Jprint(46).ne.0 ) then
+         i1 = 1
+         i2 = i1 + Ndim*Ndim
+         i3 = i2 + Ndim*Ndim
+         i4 = i3 + Ndim*Ndim
+         i5 = i4 + Ndim*Ndim
+         i6 = i5 + Ndim*Ndim
+         i7 = i6 + Ndim*Ndim
+C       iend = i7 + (ndim+1)/2
+         call dipanl(DM,T,A(i1),A(i2),A(i3),A(i4),A(i5),A(i6),A(i7))
+      endif
+      return
+C
+99001 format (//1x,'NATURAL BOND ORBITAL ANALYSIS:')
+99002 format (//1x,'NATURAL BOND ORBITAL ANALYSIS,',
+     &        ' alpha spin orbitals:')
+99003 format (//1x,'NATURAL BOND ORBITAL ANALYSIS,',
+     &        ' beta spin orbitals:')
+99004 format (//1x,'NBO analysis skipped by request.')
+      end
+@* INDEX.

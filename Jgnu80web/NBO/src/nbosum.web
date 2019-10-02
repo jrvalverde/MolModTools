@@ -1,0 +1,243 @@
+@*nbosum.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] F
+\item[INPUT:] BNDOCC
+\item[PASSED:] LIST
+\item[OUTPUT:] LISTA
+\item[PASSED:] SCR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  IATNO   NATOMS  NBAS    NDIM
+\item[Uses]  E2THR   IATNO   IBXM    ISPIN   IWFOCK  IZNUC   LABEL
+             LFNPR   MOLAT   MOLEC   NATOMS  NBAS    NBOTYP  NBOUNI
+             NDIM    NMOLEC
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CHEM    DLCSTR  FEFNBO  GETDEL  NAMEAT  UNPACK
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nbosum(F,BNDOCC,LIST,LISTA,SCR)
+C*****************************************************************************
+      implicit none
+      double precision Accthr , Athr , BNDOCC , charge , Crtset , Dthr ,
+     &                 E2thr , enrg , Ethr , F , hundrd , occ , occlew ,
+     &                 occnon , occryd , Prjset , Pthr , SCR , ten ,
+     &                 tenth
+      double precision thr , thr1 , thr2 , Thrset , total , two , zero
+      integer i , iat , Iatcr , Iathy , Iatno , ib , ibas , Ibxm ,
+     &        Ichoos , ictr , iflg , il , ilab , imol , Ino , Iprint ,
+     &        Ipseud , iptr , Ispin , istr
+      integer Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs ,
+     &        Iwmulp , Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Iznuc , j ,
+     &        jat , Jcore , Jprint , kat , Kopt , Label
+      integer Larc , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm ,
+     &        Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , LIST
+      integer LISTA , Ll , lry , lstar , Lstocc , Lu , MAXATM , MAXBAS ,
+     &        mecp , ml , Molat , Molata , Molec , Moleca , Munit ,
+     &        Mxao , Mxaolm , Mxbo , nameat , nat
+      integer Natoms , Nbas , Nbotyp , Nbouni , nctr , Ndim , nel , nl ,
+     &        Nmola , Nmolec , Norbs , ntri
+      logical first
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbmol / Nmolec , Molat(MAXATM) , Molec(MAXATM,MAXATM) ,
+     &                Nmola , Molata(MAXATM) , Moleca(MAXATM,MAXATM)
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      dimension F(Ndim,Ndim) , BNDOCC(Ndim) , LIST(Ndim) ,
+     &          LISTA(Natoms,2) , SCR(1)
+      dimension istr(80) , ilab(9)
+C
+      data zero , two , ten , hundrd/0.0D0 , 2.0D0 , 1.0D1 , 1.0D2/
+      data tenth/1.0D-1/
+      data lstar , lry/'*' , 'RY'/
+C
+C  set flag to zero -- determine strong delocalizations from perturbative
+C  analysis of the NBO fock matrix:
+C
+      iflg = 0
+C
+C  threshold for printing delocalizations:
+C
+      thr1 = dabs(E2thr)
+      if ( Ispin.ne.0 ) thr = thr/two
+      thr2 = thr1/ten
+C
+C  get fock matrix if there is one:
+C
+      if ( Iwfock.ne.0 ) then
+         ntri = Ndim*(Ndim+1)/2
+         call fefnbo(F)
+         call unpack(F,Ndim,Nbas,ntri)
+      endif
+C
+C  print summary heading, then loop over molecules:
+C
+      if ( Iwfock.ne.0 ) then
+         write (Lfnpr,99001)
+      else
+         write (Lfnpr,99002)
+      endif
+      do 200 imol = 1 , Nmolec
+C
+C  determine the molecular formula, the nuclear charge, and the number of
+C  ecp electrons of this molecular unit:
+C
+         nat = 0
+         mecp = 0
+         charge = zero
+         do 50 iat = 1 , Molat(imol)
+            kat = Iatno(Molec(imol,iat))
+            mecp = mecp + dble(kat-Iznuc(Molec(imol,iat)))
+            charge = charge + dble(kat)
+            do 20 jat = 1 , nat
+               if ( LISTA(jat,1).eq.kat ) then
+                  LISTA(jat,2) = LISTA(jat,2) + 1
+                  goto 50
+               endif
+ 20         continue
+            nat = nat + 1
+            LISTA(nat,1) = kat
+            LISTA(nat,2) = 1
+ 50      continue
+         if ( Ispin.ne.0 ) mecp = mecp/2
+         if ( Ispin.ne.0 ) charge = charge/two
+         call chem(nat,Natoms,LISTA,nl,istr)
+         write (Lfnpr,99003) imol , (istr(i),i=1,nl)
+C
+C  loop over nbo's on this molecular unit:
+C
+         occlew = dble(mecp)
+         occnon = zero
+         occryd = zero
+         do 100 ibas = 1 , Nbas
+            if ( Nbouni(ibas).eq.imol ) then
+               ib = Ibxm(ibas)
+               ilab(1) = Label(ib,1)
+               ilab(2) = Label(ib,2)
+               ilab(3) = Label(ib,3)
+               iptr = 3
+               nctr = mod(Nbotyp(ibas),10)
+               do 60 ictr = 1 , nctr
+                  iptr = iptr + 2
+                  ilab(iptr) = Label(ib,ictr+3)
+                  ilab(iptr-1) = nameat(Iatno(ilab(iptr)))
+ 60            continue
+               occ = BNDOCC(ibas)
+               if ( ilab(1).eq.lry ) then
+                  occryd = occryd + occ
+               elseif ( ilab(2).eq.lstar ) then
+                  occnon = occnon + occ
+               else
+                  occlew = occlew + occ
+               endif
+C
+C  if there is a fock matrix, find the orbital energy and principal
+C  delocalizations:
+C
+               if ( Iwfock.ne.0 ) then
+                  enrg = F(ibas,ibas)
+                  call getdel(ibas,occ,thr1,thr2,nl,LIST,SCR,F,iflg)
+                  first = .true.
+                  il = 0
+ 65               call dlcstr(ibas,il,nl,LIST,ml,istr)
+                  if ( first ) then
+                     if ( nctr.eq.1 ) then
+                        write (Lfnpr,99004) ibas , (ilab(i),i=1,iptr) ,
+     &                         occ , enrg , (istr(j),j=1,ml)
+                     elseif ( nctr.eq.2 ) then
+                        write (Lfnpr,99005) ibas , (ilab(i),i=1,iptr) ,
+     &                         occ , enrg , (istr(j),j=1,ml)
+                     else
+                        write (Lfnpr,99006) ibas , (ilab(i),i=1,iptr) ,
+     &                         occ , enrg , (istr(j),j=1,ml)
+                     endif
+                     first = .false.
+                  else
+                     write (Lfnpr,99007) (istr(j),j=1,ml)
+                  endif
+                  if ( il.lt.nl ) goto 65
+C
+C  otherwise only write out orbital labels and occupancy:
+C
+               elseif ( nctr.eq.1 ) then
+                  write (Lfnpr,99004) ibas , (ilab(i),i=1,iptr) , occ
+               elseif ( nctr.eq.2 ) then
+                  write (Lfnpr,99005) ibas , (ilab(i),i=1,iptr) , occ
+               else
+                  write (Lfnpr,99006) ibas , (ilab(i),i=1,iptr) , occ
+               endif
+            endif
+ 100     continue
+         write (Lfnpr,99008)
+         total = occlew + occnon + occryd
+C
+C  make sure the total number of electrons is an integer if there is only
+C  one molecular unit:
+C
+         if ( Nmolec.eq.1 ) then
+            total = total + tenth
+            nel = total
+            total = nel
+            occryd = total - occlew - occnon
+         endif
+C
+C  write a summary of the electron population on this molecular unit:
+C
+         if ( dabs(total-dble(nint(total))).lt.1.0D-5 )
+     &        total = dble(nint(total))
+         charge = charge - total
+         write (Lfnpr,99009) occlew , occlew/total*hundrd
+         write (Lfnpr,99010) occnon , occnon/total*hundrd
+         write (Lfnpr,99011) occryd , occryd/total*hundrd
+         write (Lfnpr,99008)
+         write (Lfnpr,99012) imol , total , hundrd
+         write (Lfnpr,99013) imol , charge
+ 200  continue
+      return
+C
+99001 format (//1x,'Natural Bond Orbitals (Summary):',//53x,
+     &        'Principal ','Delocalizations',/1x,
+     &        '          NBO              Occupancy  ',
+     &        '  Energy      (geminal,vicinal,remote)',/1x,79('='))
+99002 format (//1x,'Natural Bond Orbitals (Summary):',//1x,'          ',
+     &        'NBO              Occupancy  ',/1x,40('-'))
+99003 format (1x,'Molecular unit ',i2,'  ',60A1)
+99004 format (1x,i3,'. ',a2,a1,'(',i2,')',a2,i2,10x,f9.5,f12.5,4x,28A1)
+99005 format (1x,i3,'. ',a2,a1,'(',i2,')',a2,i2,'-',a2,i2,5x,f9.5,f12.5,
+     &        4x,28A1)
+99006 format (1x,i3,'. ',a2,a1,'(',i2,')',a2,i2,'-',a2,i2,'-',a2,i2,
+     &        f9.5,f12.5,4x,28A1)
+99007 format (52x,28A1)
+99008 format (1x,'      -------------------------------')
+99009 format (1x,'             Total Lewis',f11.5,'  (',f8.4,'%)')
+99010 format (1x,'       Valence non-Lewis',f11.5,'  (',f8.4,'%)')
+99011 format (1x,'       Rydberg non-Lewis',f11.5,'  (',f8.4,'%)')
+99012 format (1x,'           Total unit ',i2,f11.5,'  (',f8.4,'%)')
+99013 format (1x,'          Charge unit ',i2,f11.5,/)
+      end
+@* INDEX.

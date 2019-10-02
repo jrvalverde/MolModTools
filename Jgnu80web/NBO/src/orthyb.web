@@ -1,0 +1,130 @@
+@*orthyb.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] Q
+\item[OUTPUT:] S
+\item[OUTPUT:] TA
+\item[OUTPUT:] EVAL
+\item[OUTPUT:] C
+\item[OUTPUT:] IALARM
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  MXBO
+\item[Uses]  INO     LFNPR   LL      MXAO    MXBO    NATOMS  NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       JACOBI
+\item[Called by]   CHOOSE  NATHYB
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine orthyb(Q,S,TA,EVAL,C,IALARM,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision C , EVAL , one , Q , S , TA , temp , toosml ,
+     &                 zero
+      integer i , ia , IALARM , Iatcr , Iatno , IFLG , il , Ilu , Ino ,
+     &        Ispin , Iznuc , j , k , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo
+      integer Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna ,
+     &        Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , Ll , MAXATM ,
+     &        MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas
+      integer Ndim , nh , Norbs
+C
+C  symmetric orthogonalization of available hybrids in q:
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Ilu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      dimension Q(Mxao,Ndim) , S(Mxbo,Mxbo) , TA(Mxao,Mxao) , EVAL(Mxbo)
+     &          , C(Mxbo,Mxbo)
+      data zero , one/0.0D0 , 1.0D0/
+C  toosml: "too small" -- threshold for an s matrix eigenvalue that is too
+C   small and will cause numerical problems and is indicative of near-linear
+C   dependency in the hybrids.
+      data toosml/1.0D-4/
+      IALARM = 0
+      do 200 ia = 1 , Natoms
+         il = Ll(ia)
+         nh = Ino(ia)
+         if ( nh.gt.Mxao ) goto 300
+         if ( nh.gt.1 ) then
+C  load ia-block of q into ta...
+            do 20 j = 1 , nh
+               do 10 i = 1 , Mxao
+                  TA(i,j) = Q(i,il+j-1)
+ 10            continue
+ 20         continue
+C  form overlap matrix s = ta(transp)*ta...
+            do 40 j = 1 , nh
+               do 30 i = j , nh
+                  temp = zero
+                  do 25 k = 1 , Mxao
+                     temp = temp + TA(k,i)*TA(k,j)
+ 25               continue
+                  S(i,j) = temp
+                  S(j,i) = temp
+ 30            continue
+ 40         continue
+C  diagonalize overlap matrix...
+            call jacobi(nh,S,EVAL,C,Mxbo,Mxbo,0)
+C  form inverse square root of s, store in s...
+C   (avoid numerical problems of linear dependence ("too small" eigenvalues)
+C     by prescreening the eigenvalues)
+            do 60 i = 1 , nh
+               if ( EVAL(i).lt.toosml ) goto 300
+               EVAL(i) = one/dsqrt(EVAL(i))
+ 60         continue
+            do 80 j = 1 , nh
+               do 70 i = j , nh
+                  temp = zero
+                  do 65 k = 1 , nh
+                     temp = temp + EVAL(k)*C(i,k)*C(j,k)
+ 65               continue
+                  S(i,j) = temp
+                  S(j,i) = temp
+ 70            continue
+ 80         continue
+C  form new tap=ta*s**(-1/2), store in c...
+            do 100 j = 1 , nh
+               do 90 i = 1 , Mxao
+                  temp = zero
+                  do 85 k = 1 , nh
+                     temp = temp + TA(i,k)*S(k,j)
+ 85               continue
+                  C(i,j) = temp
+ 90            continue
+ 100        continue
+C  replace orthogonalized ta in array q...
+            do 120 j = 1 , nh
+               do 110 i = 1 , Mxao
+                  Q(i,il+j-1) = C(i,j)
+ 110           continue
+ 120        continue
+         endif
+ 200  continue
+C  symmetric orthogonalization complete.
+      return
+C
+C  sound the alarm that there are too many hybrids or that there is
+C  linear dependency in the hybrids!!
+C
+ 300  IALARM = ia
+      if ( IFLG.eq.0 ) write (Lfnpr,99001) EVAL(i) , ia
+      return
+C
+99001 format (4x,'Bad eigenvalue (',f15.7,') of S-NHO for atom ',i2)
+      end
+@* INDEX.

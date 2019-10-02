@@ -1,0 +1,231 @@
+@*nbo.
+\begin{verbatim}
+  input:
+     core       core memory to be dynamically allocated for storage needs.
+     memory     the number of double precision words available in `core'.
+     nboopt(10) list of NBO options as summarized below:
+
+     nboopt(1)  = -2       do nothing
+                = -1       natural population analysis (npa) only
+                =  0       perform npa/nbo/nlmo analyses
+                =  1       perform npa/nbo/nlmo analyses, don't read keywords
+                =  2       perform one fock matrix deletion, forming new dm
+                =  3       evaluate and print the energy change from deletion
+
+     nboopt(2)  =  0       SCF density
+                =  1       MP first order density
+                =  3       MP2 density
+                =  4       MP3 density
+                =  5       MP4 density
+                =  6       CI one-particle density
+                =  7       CI density
+                =  8       qci/cc density
+                =  9       density correct to second order
+
+     nboopt(3)  =  1       transform dipole moment matrices to nbo/nlmo bases
+
+     nboopt(4)  =  1       allow strongly resonant lewis structures
+                           (force the resonance keyword)
+
+     nboopt(5)  =  1       spin-annihilated uhf (auhf) wavefunction
+
+     nboopt(6-9)           unused
+
+     nboopt(10) =  0       general version of the NBO program (gennbo)
+                =  1       ampac version
+                =  6       gamess version
+                =  7       hondo version
+                =  8x      gaussian 8x version
+\end{verbatim}
+\section*{\sf Dummy Arguments}  
+\begin{description}
+
+\item[INPUT:] CORE
+\item[INPUT:] MEMORY
+\item[INPUT:] NBOOPT
+
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+
+\item[Modifies]    ALPHA   BETA    ISPIN
+\item[Uses]  COMPLX  LFNPR   NDIM    OPEN    ORTHO
+
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+
+\item[Calls]       DMNAO   DMSIM   FEAOIN  FEDRAW  FESRAW  FETITL  GENINP
+             JOBOPT  NAODRV  NAOSIM  NBCLOS  NBODIM  NBODRV  NBOINP
+             NBOPEN  NBOSET
+\item[Called by]   RUNNBO
+
+\end{description}
+@a
+      subroutine nbo(CORE,MEMORY,NBOOPT)
+      implicit none
+      double precision CORE
+      integer i , Iatcr , Iatno , Ibxm , Ichoos , idone , Ino , Iprint ,
+     &        Ipseud , Ispin , Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm ,
+     &        Iwfock , Iwhybs , Iwmulp , Iwpnao , Iwtnab
+      integer Iwtnao , Iwtnbo , Iznuc , Jcore , Jprint , Kopt , Label ,
+     &        Lang , Larc , Lbl , Lctr , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao
+      integer Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh ,
+     &        Lfnpnl , Lfnppa , Lfnpr , Ll , Lorb , Lorbc , Lstocc ,
+     &        Lu , MAXATM , MAXBAS , MEMORY , Munit , Mxao , Mxaolm
+      integer Mxbo , n2 , Natoms , Nbas , NBOOPT , Nbotyp , Nbouni ,
+     &        Ndim , ndm , Norbs , nscr , nt
+      logical newdaf , error
+C
+C  NBO common blocks:
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbao  / Lctr(MAXBAS) , Lang(MAXBAS)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension CORE(MEMORY) , NBOOPT(10)
+C
+C  if nboopt(1).eq.-2, then no NBO analysis was requested:
+C
+      if ( NBOOPT(1).eq.-2 ) return
+C
+C  set default options:
+C
+      call nboset(NBOOPT)
+C
+C  if this is the general version of the program, read the \$gennbo keylist:
+C
+      if ( NBOOPT(10).eq.0 ) then
+         call geninp(newdaf)
+      else
+         newdaf = .true.
+      endif
+C
+C  search the input file for the \$nbo keylist:
+C
+      call nboinp(NBOOPT,idone)
+      if ( idone.eq.1 ) return
+C
+C  read in job options from the \$nbo keylist:
+C
+      call jobopt(NBOOPT)
+C
+C  open the NBO direct access file:
+C
+      call nbopen(newdaf,error)
+      if ( error ) then
+         write (Lfnpr,99001)
+         return
+      endif
+C
+C  fetch atoms, basis, and wave function information:
+C
+      call feaoin(CORE,CORE,NBOOPT)
+      if ( Complx ) return
+C
+C  write the job title to the output file:
+C
+      call fetitl(CORE)
+      write (Lfnpr,99002) (CORE(i),i=1,8) , CORE(9)
+C
+C  set up dimensioning information and determine if enough space is available:
+C
+      call nbodim(MEMORY)
+C
+C  set up basic storage:
+C
+C  core(ndm) :  ndim by ndim matrix to store density matrix
+C  core(nt)  :  ndim by ndim matrix to hold overlap or transformation matrices
+C  core(nscr):  scratch storage, dynamically allocated according needs
+C
+      n2 = Ndim*Ndim
+      ndm = 1
+      nt = ndm + n2
+      nscr = nt + n2
+C
+C  read in input overlap and density matrices, AO basis:
+C
+      Alpha = .false.
+      Beta = .false.
+      Ispin = 0
+      call fedraw(CORE(ndm),CORE(nscr))
+C
+C  simulate the natural population analysis if the input basis is orthogonal:
+C
+      if ( Ortho ) then
+         call naosim(CORE(ndm),CORE(nt),CORE(nscr))
+C
+C  load the overlap matrix into core(nt) and perform the natural population
+C  analysis:
+C
+      else
+         call fesraw(CORE(nt))
+         call naodrv(CORE(ndm),CORE(nt),CORE(nscr))
+      endif
+C
+C  note: core(ndm) now contains the total density matrix in the NAO basis
+C        and core(nt) contains the AO to NAO transformation
+C
+C  perform closed shell NBO analysis:
+C
+      if ( .not.Open ) then
+         call nbodrv(CORE(ndm),CORE(nt),CORE(nscr))
+      else
+C
+C  perform open shell NBO analysis:
+C
+C  first, analyze alpha density matrix:
+C
+         Alpha = .true.
+         Beta = .false.
+         Ispin = 2
+         if ( Ortho ) then
+            call dmsim(CORE(ndm),CORE(nt),CORE(nscr))
+         else
+            call dmnao(CORE(ndm),CORE(nt),CORE(nscr))
+         endif
+         call nbodrv(CORE(ndm),CORE(nt),CORE(nscr))
+C
+C  now, analyze beta density matrix:
+C
+         Alpha = .false.
+         Beta = .true.
+         Ispin = -2
+         if ( Ortho ) then
+            call dmsim(CORE(ndm),CORE(nt),CORE(nscr))
+         else
+            call dmnao(CORE(ndm),CORE(nt),CORE(nscr))
+         endif
+         call nbodrv(CORE(ndm),CORE(nt),CORE(nscr))
+      endif
+C
+C  close the NBO direct access file:
+C
+      call nbclos
+      return
+C
+99001 format (/1x,'NBO direct access file could not be opened.  NBO ',
+     &        'program aborted.')
+99002 format (/1x,'Job title: ',8A8,a5)
+      end
+@* INDEX.

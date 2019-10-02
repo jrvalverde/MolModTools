@@ -1,0 +1,310 @@
+@*nao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] T
+\item[OUTPUT:] S
+\item[OUTPUT:] OCC
+\item[INPUT:] BLK
+\item[PASSED:] SBLK
+\item[INPUT:] EVAL
+\item[INPUT:] C
+\item[PASSED:] EVECT
+\item[PASSED:] EVAL2
+\item[OUTPUT:] LISTAO
+\item[INPUT:] NBLOCK
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    LSTEMT  LSTOCC  MXAOLM  NAOCTR  NAOL
+\item[Transmits as argument]  IWPNAO  JPRINT  LARC    NBAS    NDIM
+\item[Uses]  IWPNAO  JPRINT  LARC    LBL     LORB    LSTEMT  LSTOCC
+             MXAOLM  NAOCTR  NAOL    NATOMS  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT    ATDIAG  FEPPAO  IOINQR  LOADAV  NEWRYD  NEWWTS
+             RANK    RDPPNA  REDIAG  RYDSEL  SETBAS  SHMDT   SIMTRS
+             SVPNAO  WORTH   WRPPNA
+\item[Called by]   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine nao(T,S,OCC,BLK,SBLK,EVAL,C,EVECT,EVAL2,LISTAO,NBLOCK)
+C*****************************************************************************
+      implicit none
+      double precision BLK , C , EVAL , EVAL2 , EVECT , OCC , one , S ,
+     &                 SBLK , T , zero
+      integer i , iao , Iatcr , Iatno , Ichoos , icntr , ijr , il ,
+     &        ilbl , im , Ino , ioinqr , Iprint , iprnt , Ipseud ,
+     &        iread , Ispin , Iw3c , Iwapol , Iwcubf
+      integer Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp , Iwpnao ,
+     &        iwrit , Iwtnab , Iwtnao , Iwtnbo , Iznuc , j , Jcore ,
+     &        Jprint , jr , Kopt , l , Label , lang , Larc
+      integer Lbl , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm ,
+     &        Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr ,
+     &        LISTAO
+      integer Ll , Lorb , Lorbc , Lstemt , Lstocc , Lu , m , MAXATM ,
+     &        MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Naoctr , Naol ,
+     &        Natoms , Nbas , NBLOCK , Ndim , nemt
+      integer nf , nl , nlang , nocc , Norbs , nsel1 , nsel2
+C********************************************************************
+C
+C  main subroutine 'nao' for natural atomic orbital basis set.
+C
+C
+C  input required:
+C        s = overlap matrix elements in lower triangle (below diagonal)
+C          = density matrix elements in upper triangle (including diag.)
+C               (input ao's must(!) be normalized.  on return, s is the
+C                full density matrix.  overlap matrix elements are lost.)
+C      lbl = list of atomic centers; lbl(i) = n if orbital i is on center n
+C     lorb = list of angular momentum type for each orbital;
+C            lorb(i) = n if orbital i is of 'type' n.
+C            n = ( 51,151,152,153)     = (s,px,py,pz)
+C              = (251,252,253,254,255) = (dxy,dxz,dyz,d(x2-y2),d(3z2-r2))
+C              = (351-357 for the 7 types of f orbitals)
+C              = (451-459 for the 9 types of g orbitals)
+C
+C  output:
+C        t = transformation matrix from input ao's to nao's (rows are
+C            labelled by primitive ao's, columns by nao's)
+C   naoctr = list of atomic centers for nao's; naoctr(i) = n if NAO  \# i
+C            is on center  \#n.
+C     naol = list of angular momentum type for each nao, same format as "lorb"
+C
+C  before return:
+C   lstocc = list of natural minimal basis ('occupied') orbitals;
+C            lstocc(i)=n (i=1,...,nocc) means that NAO  \#n belongs
+C            to the nmb set.
+C   lstemt = list of natural rydberg basis ('empty') orbitals;
+C            lstemt(i)=n (i=1,...,nemt) means that NAO  \#n belongs
+C            to the nrb set.
+C
+C  after return:
+C   lstocc(i) = 1 only if NAO  \#i belongs to the nmb set.
+C
+C********************************************************************
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension T(Ndim,Ndim) , S(Ndim,Ndim) , OCC(Ndim) , BLK(Ndim,Ndim)
+     &          , SBLK(Mxaolm,Mxaolm) , EVAL(Nbas) , EVAL2(Nbas) ,
+     &          LISTAO(Mxaolm,9) , C(NBLOCK) , EVECT(Mxaolm,Mxaolm)
+      character*80 title
+      data zero , one/0.0D0 , 1.0D0/
+      data iprnt , iwrit , iread/4HPRNT , 4HWRIT , 4HREAD/
+C
+C  skip t-nao formation if ioinqr(iwpnao).eq.iread:
+C
+      if ( ioinqr(Iwpnao).ne.iread ) then
+C
+C  zero transformation matrix t:
+C
+         do 50 j = 1 , Nbas
+            Lstocc(j) = 0
+            Lstemt(j) = 0
+            do 20 i = 1 , Nbas
+               T(i,j) = zero
+ 20         continue
+ 50      continue
+C
+C  nf counts the accumulated orbitals:
+C
+         nf = 0
+C
+C  nocc counts the accumulated 'occupied' orbitals:
+C  nemt counts the accumulated 'empty' orbitals:
+C
+         nocc = 0
+         nemt = 0
+C
+C  begin main NAO loop over atomic centers:
+C
+         do 100 icntr = 1 , Natoms
+C
+C  loop over angular momentum blocks (s,p,d,f,g).  nl counts the number
+C  of orbitals in each "m" component of the "l" block:
+C
+            do 80 il = 1 , 5
+               if ( nf.le.Nbas ) then
+                  l = il - 1
+                  m = 2*l + 1
+C
+C  scan orbital labels to gather 'listao' of orbitals belonging to
+C  proper atom and angular momentum symmetry:
+C
+                  do 55 im = 1 , m
+                     lang = 100*l + im + 50
+                     nl = 0
+                     do 52 i = 1 , Nbas
+                        if ( (Lbl(i).eq.icntr) .and. (Lorb(i).eq.lang) )
+     &                       then
+                           nl = nl + 1
+                           LISTAO(nl,im) = i
+                        endif
+ 52                  continue
+ 55               continue
+                  if ( nl.eq.0 ) goto 100
+C
+C  load this list of orbitals into blk and sblk (density matrix and
+C  overlap elements, resp.), and average the density matrix elements
+C  over the m components of l for the atom:
+C
+                  call loadav(LISTAO,nl,m,S,Ndim,BLK,SBLK,Mxaolm)
+C
+C  solve the generalized eigenvalue problem:
+C
+                  call atdiag(nl,BLK,SBLK,EVAL,C)
+C
+C  order the eigenvectors by occupancy eigenvalue:
+C
+                  call rank(EVAL,nl,nl,Larc)
+C
+C  loop over the 2*l+1 components to store t-nao data:
+C
+                  do 60 im = 1 , m
+C
+C  partition orbitals into 'occupied' and 'empty' sets:
+C
+                     call setbas(Lstocc,Lstemt,nocc,nemt,icntr,l,nl,nf,
+     &                           Ndim)
+C
+C  store the ordered eigenvectors in t:
+C
+                     do 58 j = 1 , nl
+                        jr = Larc(j)
+                        nf = nf + 1
+                        OCC(nf) = EVAL(j)
+                        do 56 i = 1 , nl
+                           iao = LISTAO(i,im)
+                           ijr = i + nl*(jr-1)
+                           T(iao,nf) = C(ijr)
+ 56                     continue
+C
+C  make up NAO orbital labels:
+C
+                        Naoctr(nf) = icntr
+                        Naol(nf) = l*100 + im + 50
+ 58                  continue
+ 60               continue
+               endif
+ 80         continue
+ 100     continue
+      endif
+C
+C  read in pre-orthogonal t-nao data:
+C
+      if ( ioinqr(Iwpnao).eq.iread ) then
+         call rdppna(T,OCC)
+C
+C  recompute and symmetry-average weights, reorganize lstocc if the input
+C  pnaos are rpnaos:
+C
+         if ( OCC(1).lt.zero ) call newwts(S,T,OCC)
+         nocc = 0
+         nemt = 0
+         lang = 0
+         ilbl = 1
+         nlang = 0
+         do 150 i = 1 , Nbas
+            if ( Lstocc(i).gt.0 ) nocc = nocc + 1
+            if ( (Naoctr(i).ne.ilbl) .or. (Naol(i).ne.lang) ) then
+               if ( nlang.gt.Mxaolm ) Mxaolm = nlang
+               nlang = 1
+               ilbl = Naoctr(i)
+               lang = Naol(i)
+            else
+               nlang = nlang + 1
+            endif
+            do 120 j = 1 , Nbas
+               if ( Lstocc(j).eq.i ) goto 150
+ 120        continue
+            nemt = nemt + 1
+            Lstemt(nemt) = i
+ 150     continue
+      endif
+C
+C  write preorthogonal t-nao data to lfnppa:
+C
+      if ( ioinqr(Iwpnao).eq.iwrit ) call wrppna(T,OCC,Iwpnao)
+C
+C  save t-pnao for later use in computing the non-orthogonal overlaps
+C  between naos or nbos:
+C
+      call svpnao(T)
+      if ( ioinqr(Iwpnao).eq.iprnt ) then
+         title = 'PNAOs in the PAO basis:'
+         call aout(T,Ndim,Nbas,Nbas,title,-1,Iwpnao)
+      endif
+C
+C  final orthogonalization:
+C
+      do 300 i = 1 , Nbas
+         do 200 j = 1 , i
+            S(j,i) = S(i,j)
+ 200     continue
+         S(i,i) = one
+ 300  continue
+      call worth(S,T,BLK,Lstocc,Ndim,Nbas,nocc,OCC,EVAL,BLK)
+      if ( nemt.ne.0 ) then
+         call shmdt(T,S,Ndim,Nbas,nocc,Lstocc,nemt,Lstemt,BLK)
+C
+C  put p-pao in upper triangle of s (and diagonal):
+C
+         call feppao(BLK)
+         do 350 j = 1 , Nbas
+            do 320 i = 1 , j
+               S(i,j) = BLK(i,j)
+ 320        continue
+ 350     continue
+         call newryd(T,S,BLK,C,SBLK,EVECT,OCC,EVAL,EVAL2,LISTAO,
+     &               Jprint(11))
+C
+C  select the significant rydbergs, put in "larc".
+C  put the list of the rest of the rydbergs into "listao",
+C  and set the weightings of these low occupancy orbitals to one.
+C  then, do a weighted orthog. among the significant rydbergs,
+C  schmidt orthog. the low occ. ryds to these, and finally
+C  do a lowdin orthog. among the low occ. ryds.:
+C
+         call rydsel(Lstemt,nemt,nsel1,Larc,nsel2,LISTAO,OCC)
+         if ( nsel1.ne.0 ) then
+            call worth(S,T,BLK,Larc,Ndim,Nbas,nsel1,OCC,EVAL,BLK)
+            if ( nsel2.eq.0 ) goto 400
+         endif
+         if ( nsel1.ne.0 ) call shmdt(T,S,Ndim,Nbas,nsel1,Larc,nsel2,
+     &                                LISTAO,BLK)
+         call worth(S,T,BLK,LISTAO,Ndim,Nbas,nsel2,OCC,EVAL,BLK)
+      endif
+ 400  call feppao(S)
+      call simtrs(S,T,OCC,Ndim,Nbas)
+      call rediag(S,T,BLK,OCC,SBLK,C,LISTAO,Jprint(11))
+C
+C  return occupied list 'lstocc' of 1's or 0's:
+C
+      do 500 i = 1 , Nbas
+         Lstocc(i) = 1
+ 500  continue
+      do 600 i = 1 , nemt
+         Lstocc(Lstemt(i)) = 0
+ 600  continue
+      return
+      end
+@* INDEX.
