@@ -1,0 +1,20 @@
+@* dirtrn.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       LNK1E                                                  
+\item[Called by]   OUT2E                                                  
+                                                                    
+\end{description}
+@a
+      subroutine dirtrn
+      implicit none
+      write (6,*) ' Direct Transformation not ready yet; sorry'
+      call lnk1e
+      return
+      end
+@* INDEX.

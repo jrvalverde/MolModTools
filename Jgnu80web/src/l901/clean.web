@@ -1,0 +1,58 @@
+@* clean.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUCK                                                     
+\item[INPUT:] LENGTH                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  GABS                                           
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine clean(IBUCK,LENGTH)
+      implicit none
+      double precision gabs , small , V , zero
+      integer i , IBUCK , l , leng , LENGTH , Mdv
+      common /v     / V(20000) , Mdv
+      data zero , small/0.D0 , 1.D-9/
+C
+C     ******************************************************************
+C
+C     cleans up buckets by setting all values smaller than 1.d-9
+C     to zero.
+C
+C     feb/79 krishnan
+C
+C     ******************************************************************
+C
+C
+C
+      if ( LENGTH.gt.0 ) then
+C
+         call fileio(2,-IBUCK,0,0,0)
+         call fileio(1,-IBUCK,0,0,0)
+C
+         l = LENGTH
+ 50      leng = min0(l,Mdv)
+         l = l - leng
+         call fileio(2,IBUCK,leng,V,0)
+C
+         do 100 i = 1 , leng
+            if ( gabs(V(i)).lt.small ) V(i) = zero
+ 100     continue
+C
+         call fileio(1,IBUCK,leng,V,0)
+         if ( l.gt.0 ) goto 50
+      endif
+C
+      return
+C
+      end
+@* INDEX.

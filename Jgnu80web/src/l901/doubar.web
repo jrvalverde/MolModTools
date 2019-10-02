@@ -1,0 +1,426 @@
+@* doubar.
+
+\begin{verbatim}
+
+     conversion of the set of single-bar integrals provided by the
+     a.o.-to-m.o. transformation routine to the packed set of
+     double-bar integrals and a-coefficients. this program also
+     calculates the second order moller-plesset perturbation
+     energy e(mp2).
+
+
+     ******************************************************************
+
+     iop(..)
+
+     for options in overlay 9 see routine cids1 in link 909.
+
+buckets
+     organization of the buckets:
+
+     buckets \#  1 - 21: isd1 ... isd21   single- and doublebar integrals
+              22 - 24: iad1 ... iad3    wavefunction doubles
+              25 - 26: ias1, ias2       wavefunction singles
+              27 - 29: iwd1 ... iwd3    correction doubles
+              30 - 31: iws1, iws2       correction singles
+              32 - 50: isc1 ... isc19   scratch
+
+numbers
+     the following table summarizes the layout of the 'buckets'.
+     along with each bucket is listed its spin-case information
+     (a=alpha, b=beta), the symmetries in the suffixes, and
+     the order of the suffixes.
+     the sequence is defined in the following manner.  if the
+     table lists ijab, it means that for each triple, (ija)
+     one will find all b together on the disk.  also, for each
+     (ij), all ab are together on the disk, etc.  note that
+     some buckets are stored in an odd manner.  particularly,
+     buckets like (ia//jb)abab.  these double-bar buckets happen
+     to be the same as the corresponding single-bar buckets
+     (produced in overlay 8), and are not re-written.
+
+     ==================================================================
+     bkt nr      integral     spin-case     sym            seq
+     ==================================================================
+        1        (ij//ab)       aaaa      i<j,a<b         ijab
+        2        (ij//ab)       abab        all           iajb
+        3        (ij//ab)       bbbb      i<j,a<b         ijab
+        4        (ij//kl)       aaaa    i<j,k<l,ij.le.kl  ijkl
+        5        (ia//jb)       aaaa        all           iajb
+        6        (ij//kl)       abab    i.le.k,j.le.l     ikjl
+        7        (ia//jb)       abab    i.le.j,a.le.b     ijab
+        8        (ia//jb)       baba    i.le.j,a.le.b     ijab
+        9        (ij//kl)       bbbb    i<j,k<l,ij<kl     ijkl
+       10        (ia//jb)       bbbb        all           iajb
+       11        (ij//ka)       aaaa     i<j, all ka      ijka
+       12        (ij//ka)       abab    i.le.k, all ja    ikja
+       13        (ij//ka)       baba    i.le.k, all ja    ikja
+       14        (ij//ka)       bbbb     i<j, all ka      ijka
+       15        (ia//bc)       aaaa     all ia, b<c      iabc
+       16        (ia//bc)       abab     all ib, a.le.c   ibac
+       17        (ia//bc)       baba     all ib, a.le.c   ibac
+       18        (ia//bc)       bbbb     all ia, b<c      iabc
+       19        (ab//cd)       aaaa     a<b,c<d,ab<cd    abcd
+       20        (ab//cd)       abab     a.le.b,c.le.d    acbd
+       21        (ab//cd)       bbbb     a<b,c<d,ab<cd    abcd
+       22        a(ijab)        aaaa     i<j,a<b          ijab
+       23        a(ijab)        abab     all              iajb
+       24        a(ijab)        bbbb     i<j,a<b          ijab
+       25        a(ia)          aa       all ia           ia
+       26        a(ia)          bb       all ia           ia
+       27        w(ijab)        aaaa     i<j,a<b          ijab
+       28        w(ijab)        abab     all              iajb
+       29        w(ijab)        bbbb     i<j,a<b          ijab
+       30        w(ia)          aa       all ia           ia
+       31        w(ia)          bb       all ia           ia
+     ==================================================================
+
+
+
+\end{verbatim}
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    E2      IBCKT   IDUMP   IPRINT  S2      T              
+\item[Transmits as argument]  IAD1    IAD2    IAD3    IEVAL   IGENO   INFORB  IOPCL  
+             ISC1    ISC2    ISC3    ISD1    ISD10   ISD11   ISD12  
+             ISD13   ISD14   ISD15   ISD16   ISD17   ISD18   ISD2   
+             ISD3    ISD4    ISD5    ISD6    ISD7    ISD8    ISD9   
+             ISPECT  LIGEN   LNFORB  NOA     NOA2    NOAVA   NOB    
+             NOBVB   NVA     NVB                                    
+\item[Uses]  E2      IAD1    IAD2    IAD3    IBCKT   IDUMP   IEVAL  
+             IGENO   INFORB  IOP     IOPCL   IOUT    IPRINT  ISC1   
+             ISC2    ISC3    ISD1    ISD10   ISD11   ISD12   ISD13  
+             ISD14   ISD15   ISD16   ISD17   ISD18   ISD2    ISD3   
+             ISD4    ISD5    ISD6    ISD7    ISD8    ISD9    ISPECT 
+             LA0     LANORM  LEHF    LENRGY  LIGEN   LISD    LMP2   
+             LNFORB  LS20    LS21    MAXBUC  MDV     NOA     NOA2   
+             NOA3    NOAVA   NOB     NOB2    NOB3    NOBUC   NOBVB  
+             NOVAB   NRORB   NVA     NVA2    NVA3    NVB     NVB2   
+             NVB3    S2      T                                      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CLEAN   CONDDF  DEFBUC  EXCHN1  EXCHN2  EXCHN3  EXCHN4 
+             EXCHN5  EXCHN6  EXP78   EXPSYM  FDUMP   FILEIO  GABS   
+             GSQRT   ILSW    MATTRN  TQUERY  TREAD   TRSFR   TWRITE 
+\item[Called by]   L901                                                   
+                                                                    
+\end{description}
+
+
+@a
+      subroutine doubar
+      implicit none
+      double precision anorm1 , Atmchg , C , e , E2 , ed , eump2 , 
+     &                 gabs , gsqrt , one , S2 , s20 , s21 , small , T , 
+     &                 tsqp1 , V , zero
+      integer i , Iad1 , Iad2 , Iad3 , Ian , Ias1 , Ias2 , Ibckt , 
+     &        ibuck , Icharg , Idmm , Idummy , Idump , Ieval , Igeno , 
+     &        ign , ii , In , ind , Inforb
+      integer Ioab , Iop , Iopcl , Iout , Iprint , Ipunch , isbuc , 
+     &        Isc1 , Isc2 , Isc3 , Isc4 , Iscd , Isd1 , Isd10 , Isd11 , 
+     &        Isd12 , Isd13 , Isd14 , Isd15 , Isd16
+      integer Isd17 , Isd18 , Isd2 , Isd3 , Isd4 , Isd5 , Isd6 , Isd7 , 
+     &        Isd8 , Isd9 , Ispect , Iwd1 , Iwd2 , Iwd3 , Iws1 , Iws2 , 
+     &        La0 , Lanorm , lbuck , Lehf
+      integer lend12 , lend16 , lend2 , lend7 , lengd , lengi , lengs , 
+     &        length , Lenrgy , Ligen , Lisd , Lmp2 , Lnforb , Loab , 
+     &        Ls20 , Ls21 , lscr , lscr1 , Lspect , Maxbuc
+      integer Mdv , mdv2 , Multip , Nae , Natoms , nb2 , Nbasis , Nbe , 
+     &        Ne , Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , Nob , 
+     &        Nob2 , Nob3 , Nobuc , nobuc1
+      integer nobuc9 , Nobva , Nobvb , nom , Novaa , Novab , Novbb , 
+     &        novm , Nrorb , Nva , Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , 
+     &        Nvb3 , nvm
+      dimension lengd(50) , lengs(50) , e(140) , Ibckt(50)
+      dimension ign(280) , ed(140)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /v     / V(20000) , Mdv
+      common /rwfl  / Igeno , Ligen , Inforb , Lnforb
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /nobuc / Nobuc
+      common /bucknr/ Isd1 , Isd2 , Isd3 , Isd4 , Isd5 , Isd6 , Isd7 , 
+     &                Isd8 , Isd9 , Isd10 , Isd11 , Isd12 , Isd13 , 
+     &                Isd14 , Isd15 , Isd16 , Isd17 , Isd18 , Idmm(3) , 
+     &                Iad1 , Iad2 , Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , 
+     &                Iwd3 , Iws1 , Iws2 , Isc1 , Isc2 , Isc3 , Isc4 , 
+     &                Iscd(15)
+      common /lgen  / Lehf , Lmp2 , Ls20 , Ls21 , Lenrgy , Lanorm , 
+     &                La0 , Lisd
+      common /result/ T , E2 , S2
+      common /io    / In , Iout , Ipunch
+      common /constr/ Iopcl
+      common /print / Iprint
+      common /dump  / Idump , Idummy
+      equivalence (Ibckt(1),Isd1)
+      equivalence (ign(1),ed(1),e(1))
+      data zero , one/0.D0 , 1.D0/
+      data small/1.D-9/
+      data isbuc/50/
+C
+C
+C
+99001 format (d20.14)
+99002 format (' SINGLE-BAR TO DOUBLE-BAR CONVERSION'/1x,35(1H*))
+99003 format (' (S**2,0)=',d13.5,11x,'(S**2,1)=',d13.5)
+99004 format (' NORM(A1)=',d13.5)
+99005 format (' E2=',d22.8,8x,'EUMP2=',d24.11)
+99006 format (' ',39x,d24.11)
+99007 format (' THE FOLLOWING DOUBLE BAR BUCKETS ARE PRESENT:',21I4)
+99008 format (/)
+C
+C
+      Iprint = Iop(33)
+      Idump = Iop(34)
+C
+      if ( Iprint.ge.1 ) write (Iout,99002)
+C
+      call ilsw(2,1,Iopcl)
+C
+C     initiate common/orb/
+      call tread(Inforb,Ispect,Lnforb,1,Lnforb,1,0)
+C
+C     get lengths of single-bar integrals.
+      do 100 i = 1 , 18
+         call tquery((i+isbuc),lengs(i))
+ 100  continue
+C
+C     define buckets
+      do 200 i = 1 , Nobuc
+         Ibckt(i) = i
+ 200  continue
+      nobuc1 = Nobuc + 1
+      nobuc9 = Nobuc + 9
+      do 300 i = nobuc1 , nobuc9
+         Ibckt(i) = 2000 + i
+ 300  continue
+C
+C     read eigenvalues
+      nb2 = 2*Nrorb
+      call tread(Ieval,e,nb2,1,nb2,1,0)
+C
+      mdv2 = Mdv/2
+C
+C     compute lengths of the double-bar integral buckets.
+C
+      do 400 i = 1 , Maxbuc
+         lengd(i) = 0
+ 400  continue
+C
+C     buckets used for open and for closed shell
+      if ( lengs(Isd5).ne.0 ) lengd(Isd1) = Noa3*Nva3
+      if ( lengs(Isd4).ne.0 ) lengd(Isd4) = Noa3*(Noa3+1)/2
+      if ( lengs(Isd5).ne.0 .and. lengs(Isd1).ne.0 ) lengd(Isd5)
+     &     = Noava*Noava
+      if ( lengs(Isd11).ne.0 ) lengd(Isd11) = Noa3*Noava
+      if ( lengs(Isd15).ne.0 ) lengd(Isd15) = Noava*Nvb3
+      lengd(Iad1) = lengd(Isd1)
+      if ( Iopcl.ne.0 ) then
+C
+C     lengths of buckets for open shell
+         if ( lengs(Isd2).ne.0 ) lengd(Isd2) = Novab
+         if ( lengs(Isd10).ne.0 ) lengd(Isd3) = Nob3*Nvb3
+         if ( lengs(Isd6).ne.0 ) lengd(Isd6) = Noa2*Nob2
+         if ( lengs(Isd7).ne.0 ) lengd(Isd7) = Noa2*Nvb2
+         if ( lengs(Isd8).ne.0 ) lengd(Isd8) = Nob2*Nva2
+         if ( lengs(Isd9).ne.0 ) lengd(Isd9) = Nob3*(Nob3+1)/2
+         if ( lengs(Isd10).ne.0 .and. lengs(Isd3).ne.0 ) lengd(Isd10)
+     &        = Nobvb*Nobvb
+         if ( lengs(Isd12).ne.0 ) lengd(Isd12) = Noa2*Nobvb
+         if ( lengs(Isd13).ne.0 ) lengd(Isd13) = Nob2*Noava
+         if ( lengs(Isd14).ne.0 ) lengd(Isd14) = Nob3*Nobvb
+         if ( lengs(Isd16).ne.0 ) lengd(Isd16) = Noava*Nvb2
+         if ( lengs(Isd17).ne.0 ) lengd(Isd17) = Nobvb*Nva2
+         if ( lengs(Isd18).ne.0 ) lengd(Isd18) = Nobvb*Nvb3
+         lengd(Iad2) = lengd(Isd2)
+         lengd(Iad3) = lengd(Isd3)
+      else
+         if ( lengs(Isd5).ne.0 ) lengd(Isd2) = Novab
+         if ( lengs(Isd4).ne.0 ) lengd(Isd6) = Noa2*Nob2
+         if ( lengs(Isd1).ne.0 ) lengd(Isd7) = Noa2*Nvb2
+         if ( lengs(Isd11).ne.0 ) lengd(Isd12) = Noa2*Nobvb
+         if ( lengs(Isd15).ne.0 ) lengd(Isd16) = Noava*Nvb2
+         lengd(Iad2) = lengd(Isd2)
+      endif
+C
+C     scratch buckets
+      nom = max0(Noa,Nob)
+      nvm = max0(Nva,Nvb)
+      novm = max0(nom,nvm)
+      lscr = nom**2*novm**2
+      lscr1 = lscr
+      if ( lengs(Isd15).gt.0 ) lscr1 = nom*nvm*novm**2
+      lengd(Isc1-2000) = lscr1
+      lengd(Isc2-2000) = lscr1
+      lengd(Isc3-2000) = lscr
+C
+C     initialize the entries of all those buckets
+      do 500 i = 1 , Nobuc
+         ibuck = Ibckt(i)
+         if ( lengd(ibuck).gt.0 ) call conddf(ibuck,lengd(ibuck))
+ 500  continue
+C
+      do 600 i = nobuc1 , nobuc9
+         ibuck = Ibckt(i)
+         lbuck = lengd(ibuck-2000)
+         if ( lbuck.gt.0 ) call defbuc(ibuck,lbuck)
+ 600  continue
+C
+C
+C     transfer and expand some buckets
+C
+C
+      if ( lengs(Isd5).gt.0 ) call expsym(Noava,(Isd5+isbuc),Isc1)
+C
+      if ( Iopcl.ne.0 ) then
+C
+         call trsfr(lengd(Isd2),(Isd2+isbuc),Isd2)
+         call trsfr(lengd(Isd6),(Isd6+isbuc),Isd6)
+         call trsfr(lengd(Isd7),(Isd7+isbuc),Isd7)
+         call trsfr(lengd(Isd8),(Isd8+isbuc),Isd8)
+         call trsfr(lengd(Isd12),(Isd12+isbuc),Isd12)
+         call trsfr(lengd(Isd13),(Isd13+isbuc),Isd13)
+         call trsfr(lengd(Isd16),(Isd16+isbuc),Isd16)
+         call trsfr(lengd(Isd17),(Isd17+isbuc),Isd17)
+      else
+C
+C     initiate buckets \# 2, 6, 7, and 12 for rhf
+C dbc this temporary storage seems to be necessary for f2c
+         lend2 = lengd(Isd2)
+         lend7 = lengd(Isd7)
+         lend12 = lengd(Isd12)
+         lend16 = lengd(Isd16)
+         call trsfr(lend2,Isc1,Isd2)
+         if ( lengd(Isd6).gt.0 ) call expsym(Noa2,(Isd4+isbuc),Isd6)
+         call trsfr(lend7,(Isd1+isbuc),Isd7)
+         call trsfr(lend12,(Isd11+isbuc),Isd12)
+         call trsfr(lend16,(Isd15+isbuc),Isd16)
+      endif
+C
+C
+C     form double bar integrals
+C
+C
+      T = zero
+      E2 = zero
+      S2 = zero
+C
+C     bucket \# 1 and 5
+      if ( lengs(Isd5).ne.0 ) then
+         call mattrn(Noa,Nva,Noa,Nva,2,Isc1,Isc2,mdv2)
+         call exchn1(Noa,Nva,Isc2,Isd1,Iad1,e)
+         if ( lengs(Isd1).ne.0 ) then
+            call exp78(Noa,Nva,(Isd1+isbuc),Isc2)
+            call mattrn(Noa,Noa,Nva,Nva,2,Isc2,Isc3,mdv2)
+            call mattrn(Noa,Nva,Noa,Nva,1,Isc1,Isc2,mdv2)
+            call exchn2(Noa,Nva,Isc3,Isc2,Isd5)
+         endif
+         if ( Iopcl.eq.0 ) then
+            E2 = E2 + E2
+            T = T + T
+            goto 700
+         endif
+      endif
+C
+C     bucket \# 3 and 10
+      if ( lengs(Isd10).ne.0 ) then
+         call expsym(Nobvb,(Isd10+isbuc),Isc1)
+         call mattrn(Nob,Nvb,Nob,Nvb,2,Isc1,Isc2,mdv2)
+         call exchn1(Nob,Nvb,Isc2,Isd3,Iad3,e(Nrorb+1))
+         if ( lengs(Isd3).ne.0 ) then
+            call exp78(Nob,Nvb,(Isd3+isbuc),Isc2)
+            call mattrn(Nob,Nob,Nvb,Nvb,2,Isc2,Isc3,mdv2)
+            call mattrn(Nob,Nvb,Nob,Nvb,1,Isc1,Isc2,mdv2)
+            call exchn2(Nob,Nvb,Isc3,Isc2,Isd10)
+         endif
+      endif
+C
+C     bucket \# 2
+ 700  if ( lengd(Isd2).ne.0 ) then
+         call mattrn(Noa,Nva,Nob,Nvb,2,Isd2,Isc1,mdv2)
+         call exchn3(Isc1,Iad2,e)
+      endif
+C
+C     bucket \# 4
+      if ( lengd(Isd4).gt.0 ) call exchn4(Noa,(Isd4+isbuc),Isd4,Isc1,
+     &     Isc2)
+C
+C     bucket \# 9
+      if ( Iopcl.ne.0 .and. lengd(Isd9).ne.0 )
+     &     call exchn4(Nob,(Isd9+isbuc),Isd9,Isc1,Isc2)
+C
+C     bucket \# 11
+      if ( lengd(Isd11).gt.0 ) call exchn5(Noa,Nva,(Isd11+isbuc),Isd11,
+     &     Isc1,Isc2)
+C
+C     bucket \# 14
+      if ( lengd(Isd14).gt.0 ) call exchn5(Nob,Nvb,(Isd14+isbuc),Isd14,
+     &     Isc1,Isc2)
+C
+C     bucket  15
+      if ( lengd(Isd15).gt.0 ) call exchn6(Noa,Nva,(Isd15+isbuc),Isd15,
+     &     Isc1,Isc2)
+C
+C     bucket  18
+      if ( lengd(Isd18).gt.0 ) call exchn6(Nob,Nvb,(Isd18+isbuc),Isd18,
+     &     Isc1,Isc2)
+C
+C     read and update common/gen/
+      call tread(Igeno,ed,Ligen,1,Ligen,1,0)
+      eump2 = ed(Lehf) + (E2)
+      ed(Lmp2) = eump2
+      ed(Lenrgy) = eump2
+      tsqp1 = T + one
+      anorm1 = gsqrt(tsqp1)
+      ign(Lisd) = 0
+      ed(Lanorm) = (anorm1)
+      ed(La0) = one
+C
+      write (Iout,99004) anorm1
+      write (Iout,99005) E2 , eump2
+C      write (iout,9050) (eump2,ikl=1,4)
+C
+      if ( Iopcl.ne.0 ) then
+         s20 = (ed(Ls20))
+         if ( s20.lt.small ) s20 = zero
+         if ( gabs(S2).lt.small ) S2 = zero
+         s21 = s20 + S2
+         ed(Ls21) = ed(Ls20) + (S2)
+         write (Iout,99003) s20 , s21
+      endif
+      call twrite(Igeno,ed,Ligen,1,Ligen,1,0)
+C
+C     print which buckets are generated
+      ind = 0
+      do 800 ii = 1 , Nobuc
+         i = Ibckt(ii)
+         lengd(i) = 0
+         call tquery(i,lengd(i))
+         if ( lengd(i).ne.0 ) then
+            ind = ind + 1
+            lengs(ind) = i
+            lengi = lengd(i)
+            call clean(i,lengi)
+         endif
+ 800  continue
+C
+      if ( Iprint.ge.1 ) write (Iout,99007) (lengs(i),i=1,ind)
+C
+C     release single-bar buckets
+      do 900 i = 1 , 18
+         length = 0
+         call tquery((i+isbuc),length)
+         if ( length.gt.0 ) call fileio(5,(i+isbuc),0,0,0)
+ 900  continue
+C
+      if ( Idump.gt.1 ) call fdump
+      return
+C
+      end
+@* INDEX.

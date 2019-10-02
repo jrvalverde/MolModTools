@@ -1,0 +1,411 @@
+@* window.
+\begin{verbatim}
+     overlay 800:
+     the purpose of this overlay is to do the transformation
+     of the 2-electron integrals from the a.o. to m.o. basis.
+
+     link 801:
+     this link prepares the m.o.coefficients and the one-electron
+     energies for the post-scf programs as follows:
+     a selected set of m.o.s (selected using iop(10))
+     is written onto rwf  \# ispect
+     some quantities commonly used in post-scf routines are evaluated
+     and written on rwf  \# inforb
+
+     link 802:
+     this link does the 2-electron integral transformation for
+     rhf systems.
+
+     link 803:
+     this link does the 2-electron integral transformation for
+     uhf systems.
+
+
+
+     Options iop(..)
+
+iop(5)
+     iop(5) ... rhf or uhf
+     0 ... read in from ilsw
+     1 ... rhf
+     2 ... uhf
+
+iop(6)
+     iop(6) ... specifies which single-bar integrals are to be
+                computed.
+     0 ... (ia/jb)
+     1 ... (ia/jb), (ij/ab)
+     2 ... (ia/jb), (ij/ab), (ij/kl)
+     3 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka)
+     4 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka), (ia/bc)
+     5 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka), (ia/bc), (ab/cd)
+
+     in terms of what can be done with what integrals:
+     0 ... mp2
+     1 ... hartree-fock stability.
+     2 ... mp3, cid, ccd, mp4(dq).
+     3 ... cisd, mp4(sdq), d2escf.
+     4 ... mp4(sdtq), mp2 derivatives, cid derivatives.
+     5 ... not implemented.
+
+     the program will compute the various spin cases for the
+     groups of integrals selected.  see the table below
+     for a fuller description of the single-bar integrals,
+     where they are located, and what their orders are.
+
+iop(7)
+     iop(7) ... test scf convergence flag
+     0 ... yes
+     1 ... no
+
+iop(8)
+     iop(8) ... option to change the core available
+     0 ... mdv is set to default value.(see data statement)
+     1 ... read in mdv (i6 format)
+
+iop(9)
+     iop(9) ... use trcl80 always.(mainly a debugging option)
+     0 ... no
+     1 ... yes.
+
+iop(10)
+     iop(10) ... window is selected as follows:
+     0 ... all molecular orbitals are taken
+     1 ... the core m.o.s are frozen
+     2 ... a card is read in (2i3) indicating the start and the end
+
+iop(30)
+     iop(30) ... the molecular orbitals outside the window are set
+                 to zero, thus simulating the window without changing
+                 anything else (for test purposes)
+     0 ... no
+     1 ... yes
+
+iop(31)
+     iop(31) ... perform primitive post-scf operations
+     0 ... none
+     1 ... ci
+
+     ******************************************************************
+
+     output description for overlay 8:
+     ********************************
+
+     this overlay produces the single-bar molecular orbital integrals
+     (pq/rs) by transforming the atomic orbital integrals
+     (mu nu/lambda sigma) appropriatly.
+
+     as these integrals are evaluated, they are written to buckets
+     (buckets are read-write files used in post-scf programs)
+     according to what type they are.
+     in the following description, suffixes i,j,k, etc refer to
+     orbitals that are occupied in the hartree-fock determinant,
+     and a,b,c,d etc to virtual orbitals.
+
+     the following table summarizes the assignments of integrals
+     to buckets.  note that along with each integral type is
+     given the spin-case, pertinent suffix symmetries and the order
+     in which the integrals are stored.  if the order is listed
+     as ijkl, it means that for each i, one will find all jkl;
+     for each ij-pair, one will find all kl, etc.
+
+
+     ==================================================================
+     bkt nr  integral   spin-case         symmetries          order
+     ==================================================================
+      51     (ij/ab)      aaaa        i.le.j,a.le.b            ijab
+      52     (ia/jb)      aabb           none                  iajb
+      53     (ij/ab)      aabb        i.le.j,a.le.b            ijab
+      54     (ij/kl)      aaaa        i.le.j,k.le.l,ij.le.kl   ijkl
+      55     (ia/jb)      aaaa        ia.le.jb                 iajb
+      56     (ij/kl)      aabb        i.le.j,k.le.l            ijkl
+      57     (ij/ab)      aabb        i.le.j,a.le.b            ijab
+      58     (ij/ab)      bbaa        i.le.j,a.le.b            ijab
+      59     (ij/kl)      bbbb        i.le.j,k.le.l,ij.le.kl   ijkl
+      60     (ia/jb)      bbbb        ia.le.jb                 iajb
+      61     (ij/ka)      aaaa        i.le.j, all ka           ijka
+      62     (ij/ka)      aabb        i.le.j, all ka           ijka
+      63     (ij/ka)      bbaa        i.le.j, all ka           ijka
+      64     (ij/ka)      bbbb        i.le.j, all ka           ijka
+      65     (ia/bc)      aaaa        all ia, b.le.c           iabc
+      66     (ia/bc)      aabb        all ia, b.le.c           iabc
+      67     (ia/bc)      bbaa        all ia, b.le.c           iabc
+      68     (ia/bc)      bbbb        all ia, b.le.c           iabc
+      69     (ab/cd)      aaaa        a.le.b,c.le.d,ab.le.cd   abcd
+      70     (ab/cd)      aabb        a.le.b,c.le.d            abcd
+      71     (ab/cd)      bbbb        a.le.b,c.le.d,ab.le.cd   abcd
+     ==================================================================
+
+
+\end{verbatim}
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    AD      AS      BD      LOAB    LSPECT  NOA     NOA2   
+             NOA3    NOAOB   NOAVA   NOAVB   NOB     NOB2    NOB3   
+             NOBVA   NOBVB   NOVAA   NOVAB   NOVBB   NRORB   NVA    
+             NVA2    NVA3    NVAVB   NVB     NVB2    NVB3           
+\item[Transmits as argument]  IEVAL   IEVALF  INFORB  IOAB    IOC     IOUAB   ISPECT 
+             LNFORB  NBASIS                                         
+\item[Uses]  AD      AS      BD      IAN     IEVAL   IEVALF  IN     
+             INFORB  IOAB    IOC     IOP     IOUAB   IOUT    ISPECT 
+             LNFORB  LOAB    LSPECT  NAE     NATOMS  NBASIS  NBE    
+             NOA     NOA3    NOAVA   NOB     NOB3    NOBVB   NRORB  
+             NVA     NVA3    NVB     NVB3    ZERO                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CIPRM   DRUM    ILSW    LNK1E   MATOUT  TREAD   TWRITE 
+\item[Called by]   L801                                                   
+                                                                    
+\end{description}
+
+
+
+@a
+      subroutine window(JUMP)
+      implicit none
+      double precision Ad , As , Atmchg , Bd , C , F42 , Filler , Four , 
+     &                 Half , One , Onept5 , Ten , Three , Two , Zero
+      integer i , i1 , i2 , Ian , iani , Icharg , icip , iend , iendp , 
+     &        Ieval , Ievalf , In , ind1 , Indcon , Inforb , Ioab , 
+     &        Ioc , Iop , iopcl , Iouab
+      integer Iout , iprint , Ipunch , Ispect , ist , istm , itest , 
+     &        iwdo , j , JUMP , kl , ksm , kspin , LENFIL , Lnforb , 
+     &        Loab , Lspect , m , MAXBAS , Maxbuc
+      integer MEMLEN , Multip , Nae , Natoms , nb2 , Nbasis , Nbe , 
+     &        nbs2 , nbsq , Ne , Noa , Noa2 , Noa3 , Noaob , Noava , 
+     &        Noavb , Nob , Nob2 , Nob3 , Nobva
+      integer Nobvb , Novaa , Novab , Novbb , Nrorb , nrorb2 , nsbeta , 
+     &        NSQMAX , nst , Nva , Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , 
+     &        Nvb3
+      parameter (MAXBAS=150,MEMLEN=50000,NSQMAX=(MAXBAS*MAXBAS),
+     &           LENFIL=(MEMLEN-2*NSQMAX-MAXBAS))
+C   lenfil is the length of the filler in /memry/
+C
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+C   these two should be the square of the basis size in
+C   doubled in case of open shells
+C      common /memry/ as(2*maxbas**2),ad(2*maxbas**2),bd(2*maxbas)
+C  but for the moment, enough for 150 basis closed shells
+      common /memry / As(NSQMAX) , Ad(NSQMAX) , Bd(MAXBAS) , 
+     &                Filler(LENFIL)
+      common /scfrwf/ Ievalf , Iouab , Ioc(2)
+      common /comorb/ Inforb , Lnforb
+      common /io    / In , Iout , Ipunch
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /conv  / Indcon
+C
+C
+99001 format (2I3)
+99002 format (' RANGE OF M.O.''S USED FOR CORRELATION:',2I4)
+99003 format (' NOA=',i3,5x,'NVA=',i3,10x,'NOB=',i3,5x,'NVB=',i3)
+99004 format (/' CAUTION: TEST WINDOW IS USED'/)
+99005 format (' *** THERE IS NO CORRELATION ENERGY FOR THIS SYSTEM ***')
+99006 format (4I3)
+C
+C     ******************************************************************
+C
+      call drum
+C
+      iwdo = Iop(10)
+      itest = Iop(30)
+      icip = Iop(31)
+      iprint = Iop(33)
+C
+      call ilsw(2,1,iopcl)
+      ksm = iopcl + 1
+      nb2 = ksm*Nbasis
+      nbsq = Nbasis**2
+C
+C     read in complete set of eigenvalues
+      call tread(Ievalf,Ad,nb2,1,nb2,1,0)
+C
+C     determine window limits
+      ist = 1
+      iend = Nbasis
+      if ( iwdo.eq.2 ) read (In,*) ist , iend
+      if ( ist.eq.0 ) ist = 1
+      if ( iend.eq.0 ) iend = Nbasis
+      if ( iwdo.eq.1 ) then
+         ist = 1
+         iend = Nbasis
+         do 50 i = 1 , Natoms
+            iani = Ian(i)
+            if ( iani.gt.10 ) then
+               ist = ist + 1
+C
+            elseif ( iani.gt.2 ) then
+               ist = ist + 1
+            endif
+ 50      continue
+      endif
+      write (Iout,99002) ist , iend
+      if ( itest.ne.0 ) then
+C
+C     ******************************************************************
+C     test-window
+C     ******************************************************************
+C
+C     eigenvalues
+         write (Iout,99004)
+         if ( iopcl.eq.0 ) then
+            do 60 i = 1 , Nbasis
+               Ad(i+Nbasis) = Ad(i)
+ 60         continue
+         endif
+         nb2 = 2*Nbasis
+         call twrite(Ieval,Ad,nb2,1,nb2,1,0)
+C
+C     m.o. coefficients
+         nbsq = Nbasis**2
+         nbs2 = nbsq*ksm
+         istm = ist - 1
+         iendp = iend + 1
+         do 150 kspin = 1 , ksm
+            call tread(Ioc(kspin),Ad,Nbasis,Nbasis,Nbasis,Nbasis,0)
+            nsbeta = (kspin-1)*nbsq
+            if ( istm.gt.0 ) then
+               kl = istm*Nbasis
+               do 70 i = 1 , kl
+                  As(i+nsbeta) = Zero
+ 70            continue
+            endif
+            do 100 i = ist , iend
+               i1 = (i-1)*Nbasis
+               i2 = i1 + nsbeta
+               do 80 j = 1 , Nbasis
+                  As(i2+j) = Ad(i1+j)
+ 80            continue
+ 100        continue
+            if ( iendp.lt.Nbasis ) then
+               kl = (Nbasis-iend)*Nbasis
+               ind1 = iend*Nbasis + nsbeta
+               do 110 i = 1 , kl
+                  As(i+ind1) = Zero
+ 110           continue
+            endif
+ 150     continue
+         Lspect = nbs2
+         call twrite(Ispect,As,Lspect,1,Lspect,1,0)
+C
+         Nrorb = Nbasis
+         ist = 1
+         iend = Nbasis
+      else
+C
+C     ******************************************************************
+C     regular window
+C     ******************************************************************
+C
+         Nrorb = iend - ist + 1
+         nsbeta = Nrorb*Nbasis
+C
+C     prepare eigenvalues
+         m = 0
+         do 200 i = ist , iend
+            m = m + 1
+            Bd(m) = Ad(i)
+ 200     continue
+         nst = iopcl*Nbasis
+         do 250 i = ist , iend
+            m = m + 1
+            Bd(m) = Ad(i+nst)
+ 250     continue
+         nrorb2 = 2*Nrorb
+         call twrite(Ieval,Bd,nrorb2,1,nrorb2,1,0)
+C
+C     prepare m.o. coefficients
+         m = 0
+         do 300 kspin = 1 , ksm
+            call tread(Ioc(kspin),Ad,Nbasis,Nbasis,Nbasis,Nbasis,0)
+            do 280 i = ist , iend
+               i1 = (i-1)*Nbasis
+               do 260 j = 1 , Nbasis
+                  m = m + 1
+                  As(m) = Ad(i1+j)
+ 260           continue
+ 280        continue
+ 300     continue
+C
+         Lspect = m
+         call twrite(Ispect,As,Lspect,1,Lspect,1,0)
+      endif
+C
+C     ******************************************************************
+C     evaluate some quantities used in post-scf routines
+C     ******************************************************************
+C
+      istm = ist - 1
+      Noa = Nae - istm
+      Nob = Nbe - istm
+      Nva = Nrorb - Noa
+      Nvb = Nrorb - Nob
+      if ( (Noa+Nob).le.1 .or. (Nva+Nvb).le.1 ) write (Iout,99005)
+      if ( (Noa+Nob).le.1 .or. (Nva+Nvb).le.1 ) call lnk1e
+      if ( iprint.gt.0 ) write (Iout,99003) Noa , Nva , Nob , Nvb
+      Noaob = Noa*Nob
+      Noava = Noa*Nva
+      Noavb = Noa*Nvb
+      Nobva = Nob*Nva
+      Nobvb = Nob*Nvb
+      Noavb = Noa*Nvb
+      Nvavb = Nva*Nvb
+      Noa2 = Noa*(Noa+1)/2
+      Noa3 = Noa*(Noa-1)/2
+      Nob2 = Nob*(Nob+1)/2
+      Nob3 = Nob*(Nob-1)/2
+      Nva2 = Nva*(Nva+1)/2
+      Nva3 = Nva*(Nva-1)/2
+      Nvb2 = Nvb*(Nvb+1)/2
+      Nvb3 = Nvb*(Nvb-1)/2
+      Novaa = Noa3*Nva3
+      Novab = Noava*Nobvb
+      Novbb = Nob3*Nvb3
+      if ( iprint.gt.2 ) then
+         call matout(As,Nbasis,Nrorb,Nbasis,Nrorb)
+         if ( iopcl.gt.0 ) call matout(As(nsbeta+1),Nbasis,Nrorb,Nbasis,
+     &                                 Nrorb)
+      endif
+C
+C     ******************************************************************
+C     adapt alpha-beta overlap matrix
+C     ******************************************************************
+C
+      if ( iopcl.ne.0 ) then
+         call tread(Iouab,Ad,Nbasis,Nbasis,Nbasis,Nbasis,0)
+         m = 0
+         do 350 i = ist , iend
+            i1 = (i-1)*Nbasis
+            do 320 j = ist , iend
+               m = m + 1
+               As(m) = Ad(i1+j)
+ 320        continue
+ 350     continue
+         Loab = m
+         call twrite(Ioab,As,Loab,1,Loab,1,0)
+      endif
+      call twrite(Inforb,Ispect,Lnforb,1,Lnforb,1,0)
+C
+C     call subroutine which performs primitive ci
+      if ( icip.eq.1 ) call ciprm
+C
+C     ...............
+      JUMP = 0
+C     ...............
+C
+      return
+C
+      end
+@* INDEX.

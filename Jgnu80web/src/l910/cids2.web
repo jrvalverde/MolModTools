@@ -1,0 +1,181 @@
+@* cids2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    CUT     IAD3    IAS2    IBCKT   IDB3    IDUMP   IPRINT 
+             IWD3    IWS2    NITER                                  
+\item[Transmits as argument]  A00     ICIVAR  INFORB  IOPCL   IRWIBF  ISMODE  ISPECT 
+             IWSD    LCIVAR  LENIBF  LNFORB  NBASIS  ZERO           
+\item[Uses]  A00     CUTS    IAD1    IAS1    ICIVAR  IDB1    IDUMP  
+             INFORB  IOP     IOPCL   IOUT    IRWIBF  ISMODE  ISPECT 
+             IWD1    IWS1    IWSD    LCIVAR  LENIBF  LNFORB  NBASIS 
+             NITER   NOBUC   SAVAIL  ZERO                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DS4     DS4N5   DS4N6   FDUMP   ILSW    INIBUC  SS3    
+             TQUERY  TREAD   TWRITE                                 
+\item[Called by]   L910                                                   
+                                                                    
+\end{description}
+@a
+      subroutine cids2(JUMP)
+      implicit none
+      double precision A00 , Anorm , Atmchg , C , Cut , Cuts , Dehf , 
+     &                 Delmax , Den , Energy , F42 , Four , Half , One , 
+     &                 Onept5 , Ten , Three , Two , V , W0
+      double precision Zero
+      integer i , Iad1 , Iad2 , Iad3 , Ian , Ias1 , Ias2 , Ibasd , 
+     &        Ibase , Ibckt , Ibfpad , Icharg , Icivar , Icon , Idb1 , 
+     &        Idb10 , Idb2 , Idb3 , Idb4 , Idb5
+      integer Idb6 , Idb7 , Idb8 , Idb9 , Idmm , Idummy , Idump , 
+     &        Ieval , Iextrp , Ifil , Iflag , Igeno , In , Inforb , 
+     &        Intc , Intcnt , Intt , Ioab , Iop , Iopcl
+      integer Iout , Ipcyc , Iprint , Ipunch , Iq , Ireset , Irwibf , 
+     &        Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , Iscr6 , Iscrd , 
+     &        Isd , Ismode , Ispect , Istat , Itotal , Iux
+      integer Iwd1 , Iwd2 , Iwd3 , Iws1 , Iws2 , Iwsd , JUMP , Kntt1 , 
+     &        Kntt2 , Last , Lcivar , length , Lenibf , Lextrp , Ligen , 
+     &        Limint , Lnforb , Loab , Lpair , Ls
+      integer Lspect , Maxbuc , Maxit , Mdv , method , Mode , mspti , 
+     &        Multip , Nae , Natoms , Nbasis , Nbe , Ne , Niter , Noa , 
+     &        Noa2 , Noa3 , Noaob , Noava , Noavb
+      integer Nob , Nob2 , Nob3 , Nobuc , nobuc1 , nobuc9 , Nobva , 
+     &        Nobvb , Norm , Novaa , Novab , Novbb , Nr , Nrorb , 
+     &        Nrpext , Ntx , Nva , Nva2 , Nva3 , Nvavb
+      integer Nvb , Nvb2 , Nvb3 , Nwiib , Nwpi
+      integer Dbase , Dbasd , dcount
+      logical Davail , Savail
+      dimension Ibckt(1) , Iwsd(1)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /v     / V(20000) , Mdv
+      common /rwfp  / Igeno , Ligen , Inforb , Lnforb , Icivar , 
+     &                Lcivar , Iextrp , Lextrp
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+      common /nobuc / Nobuc
+      common /bucknr/ Idb1 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , 
+     &                Idb8 , Idb9 , Idb10 , Idmm(11) , Iad1 , Iad2 , 
+     &                Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , Iwd3 , Iws1 , 
+     &                Iws2 , Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , 
+     &                Iscr6 , Iscrd(13)
+      common /wtild / Cut , Ls(81) , Lpair , Nr , Intt , Intc
+      common /locibf/ Irwibf , Lenibf
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Ibfpad
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /constr/ Iopcl
+      common /print / Iprint
+      common /dump  / Idump , Idummy
+      common /io    / In , Iout , Ipunch
+      equivalence (Ibckt(1),Idb1) , (Iwsd(1),Iwd1)
+C
+C
+C     ******************************************************************
+C
+C     obtain vector w:   w(s) = sum  v(st) * a(t)     for s>0
+C                               t>0
+C     s and t being double- and single substitutions
+C
+C     sept 76/seeger and krishnan
+C
+C     ******************************************************************
+C
+C
+C
+C
+C
+99001 format (' ITERATION STEP #',i3/1x,18(1H*))
+C
+C
+      method = Iop(5)
+      mspti = Iop(16)
+      Iprint = Iop(33)
+      Idump = Iop(34)
+C
+      call ilsw(2,1,Iopcl)
+C
+C     initiate common/orb/, /civar/
+      call tread(Inforb,Ispect,Lnforb,1,Lnforb,1,0)
+      call tread(Icivar,A00,Lcivar,1,Lcivar,1,0)
+C
+      Niter = Niter + 1
+      if ( method.le.1 .or. method.ge.6 ) write (Iout,99001) Niter
+C
+C     initiate bucket numbers
+      do 100 i = 1 , Nobuc
+         Ibckt(i) = i
+ 100  continue
+C
+C     define numbers of routine volatile buckets.
+      nobuc1 = Nobuc + 1
+      nobuc9 = Nobuc + 9
+      do 200 i = nobuc1 , nobuc9
+         Ibckt(i) = 3000 + i
+ 200  continue
+C
+      if ( Iopcl.eq.0 ) then
+         Ias2 = Ias1
+         Iws2 = Iws1
+         Iad3 = Iad1
+         Iwd3 = Iwd1
+         Idb3 = Idb1
+      endif
+C
+C     zero w-buckets
+      do 300 i = 1 , 5
+         length = 0
+         call tquery(Iwsd(i),length)
+         if ( length.gt.0 ) call inibuc(Iwsd(i),length,Zero)
+ 300  continue
+C
+      if ( method.eq.0 .or. method.eq.4 .or. method.eq.5 ) then
+         if ( Savail ) then
+C
+C     initialize common ibf.
+            call tread(Irwibf,Ismode,Lenibf,1,Lenibf,1,0)
+            Cut = Cuts
+C
+C     ******************************************************************
+C     treat the different cases
+C     ******************************************************************
+C
+C     ss (ia//jb)
+            call ss3
+C
+C     ds (ab//ci)
+            if ( mspti.eq.0 ) call ds4n6(Nbasis)
+            if ( mspti.eq.1 ) call ds4
+            if ( mspti.eq.2 ) call ds4n5(Nbasis)
+         endif
+      endif
+C
+      call twrite(Icivar,A00,Lcivar,1,Lcivar,1,0)
+C
+C     ******************************************************************
+C     exit
+C     ******************************************************************
+C
+C     ................
+      if ( Idump.gt.1 ) call fdump
+      JUMP = 101
+C     ................
+C
+      return
+C
+      end
+@* INDEX.

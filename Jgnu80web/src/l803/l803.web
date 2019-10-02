@@ -1,0 +1,27 @@
+@* l803.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] NCHAIN                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       NEXTOV  TROPEN                                         
+\item[Called by]   CHAIN                                                  
+                                                                    
+\end{description}
+@a
+      subroutine l803(NCHAIN)
+      implicit none
+      integer NCHAIN , nextov
+C
+      call tropen
+      NCHAIN = nextov(0)
+      return
+C
+      end
+@* INDEX.

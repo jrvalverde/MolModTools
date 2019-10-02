@@ -1,0 +1,112 @@
+@* exchn1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] IBUC3                                                     
+\item[INPUT:] E                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    E2      T       V                                      
+\item[Uses]  E2      MDV     T       V                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  TRACK                                          
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine exchn1(NO,NV,IBUC1,IBUC2,IBUC3,E)
+      implicit none
+      double precision a0 , a1 , dv , E , E2 , ei , eij , eija , eijab , 
+     &                 S2 , T , V
+      integer i1 , i2 , i3 , ia , ia1 , iada , iadb , iadi , ib , 
+     &        IBUC1 , IBUC2 , IBUC3 , ii , ii1 , ij , index , leng , 
+     &        Mdv , mdv2 , mdv21
+      integer NO , no1 , nov2 , NV , nv1 , nv2
+      dimension E(*)
+      common /v     / V(20000) , Mdv
+      common /result/ T , E2 , S2
+C
+C     ******************************************************************
+C
+C     accepts (ia/jb) in sequence ijab for all i,j,a,b
+C
+C     produces a(ijab), i.lt.j, a.lt.b, where
+C     a(ijab) = - (ij//ab)/(e(a)+e(b)-e(i)-e(j))
+C     (ij//ab) = (ia/jb) - (ib/ja)
+C     further:
+C     t2 = t2 + sum(a(ijab)**2)
+C     e2 = e2 + sum(a(ijab)*(ij//ab))
+C
+C     reads (ia/jb) and (ib/ja) from ibuc1
+C     writes (ij//ab) into ibuc2
+C     writes a(ijab) into ibuc3
+C
+C     feb/76 seeger.
+C
+C     ******************************************************************
+C
+C
+C
+      call track('EXCHN1')
+C
+      no1 = NO - 1
+      nv1 = NV - 1
+      if ( no1.le.0 .or. nv1.le.0 ) return
+C
+      nv2 = NV**2
+      nov2 = NO*nv2
+      mdv2 = Mdv/2
+      mdv21 = mdv2 + 1
+      call fileio(1,-IBUC2,0,0,0)
+      call fileio(1,-IBUC3,0,0,0)
+C
+      do 100 ii = 1 , no1
+         iadi = (ii-1)*nov2
+         ei = E(ii)
+         ii1 = ii + 1
+         do 50 ij = ii1 , NO
+            eij = ei + E(ij)
+            index = iadi + (ij-1)*nv2
+            leng = nv2
+            call fileio(2,-IBUC1,leng,V,index)
+            iada = 0
+            i3 = 0
+C
+            do 20 ia = 1 , nv1
+               eija = E(ia+NO) - eij
+               ia1 = ia + 1
+               iadb = iada + NV
+               do 10 ib = ia1 , NV
+                  eijab = eija + E(ib+NO)
+                  i1 = iada + ib
+                  i2 = iadb + ia
+                  i3 = i3 + 1
+                  dv = (V(i1)) - (V(i2))
+                  a0 = (dv)
+                  a1 = (dv/eijab)
+                  E2 = E2 - a0*a1
+                  T = T + a1**2
+                  V(i3) = a0
+                  V(i3+mdv2) = -a1
+                  iadb = iadb + NV
+ 10            continue
+               iada = iada + NV
+ 20         continue
+C
+            leng = i3
+            call fileio(1,IBUC2,leng,V,0)
+            call fileio(1,IBUC3,leng,V(mdv21),0)
+ 50      continue
+C
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

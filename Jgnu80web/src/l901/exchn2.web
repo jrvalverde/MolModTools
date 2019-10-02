@@ -1,0 +1,52 @@
+@* exchn2.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] IBUC3                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       SUMN    TRACK   TRSFR                                  
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine exchn2(NO,NV,IBUC1,IBUC2,IBUC3)
+      implicit none
+      integer IBUC1 , IBUC2 , IBUC3 , Mdv , NO , nov , novtot , NV
+      double precision one , V
+      common /v     / V(20000) , Mdv
+      data one/1.D0/
+C
+C     ******************************************************************
+C
+C     accepts (ij/ab) and (ib/ja) in seq. iajb
+C     produces (ia//jb) in seq. iajb with i.lt.j: all a,b /
+C     i.eq.j: a.le.b
+C
+C     may/78 krishnan
+C
+C     ******************************************************************
+C
+C
+C
+      call track('EXCHN2')
+C
+      nov = NO*NV
+      if ( nov.le.0 ) return
+      novtot = nov*nov
+      call sumn(IBUC2,IBUC1,novtot,-one)
+      call trsfr(novtot,IBUC1,IBUC3)
+C
+      return
+C
+      end
+@* INDEX.

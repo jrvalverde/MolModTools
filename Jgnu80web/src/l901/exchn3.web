@@ -1,0 +1,125 @@
+@* exchn3.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC3                                                     
+\item[INPUT:] E                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    E2      S2      T       V                              
+\item[Transmits as argument]  IOAB    LOAB    NRORB                                  
+\item[Uses]  E2      IOAB    IOPCL   IOUT    IPRINT  LOAB    MDV    
+             NOA     NOB     NRORB   NVA     NVAVB   NVB     S2     
+             T       V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FILEIO  MATOUT  TRACK   TREAD                          
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine exchn3(IBUC1,IBUC3,E)
+      implicit none
+      double precision a0 , a1 , Dv , E , E2 , ei , eij , eija , eijab , 
+     &                 S2 , T , uaj , uib , V
+      integer i1 , ia , ib , ib1 , IBUC1 , IBUC3 , Ieval , ii , ij , 
+     &        In , Ioab , Iopcl , Iout , Iprint , Ipunch , Ispect , 
+     &        iva , j1 , leng , Loab
+      integer Lspect , Maxbuc , Mdv , mdv2 , mdv21 , mdv3 , mdv31 , mm , 
+     &        Noa , Noa2 , Noa3 , Noaob , Noava , Noavb , Nob , Nob2 , 
+     &        Nob3 , nobb , nobn , Nobva
+      integer Nobvb , Novaa , Novab , Novbb , Nrorb , Nva , Nva2 , 
+     &        Nva3 , Nvavb , Nvb , Nvb2 , Nvb3
+      dimension E(*)
+      dimension Dv(20000)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /v     / V(20000) , Mdv
+      common /result/ T , E2 , S2
+      common /io    / In , Iout , Ipunch
+      common /constr/ Iopcl
+      common /print / Iprint
+      equivalence (Dv(1),V(1))
+C
+C     ******************************************************************
+C
+C     form a(ijab) from (ij//ab) for bucket  \#2
+C     further: e2 and t2
+C
+C     reads (ij//ab) (alpha-beta) from ibuc1
+C     writes a(ijab) into ibuc3
+C
+C     feb/76 seeger
+C
+C     ******************************************************************
+C
+C
+C
+C
+99001 format (///' ALPHA - BETA OVERLAP MATRIX')
+C
+      call track('EXCHN3')
+C
+      if ( Noa.le.0 .or. Nob.le.0 .or. Nva.le.0 .or. Nvb.le.0 ) return
+C
+      mdv2 = Mdv/3
+      mdv21 = mdv2 + 1
+      mdv3 = mdv2 + mdv2
+      mdv31 = mdv3 + 1
+      nobb = Nob + Nrorb
+      nobn = Nob*Nrorb + mdv2
+      leng = Nvavb
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(1,-IBUC3,0,0,0)
+C
+C     read in the alpha-beta overlap matrix: u
+      if ( Iopcl.ne.0 ) then
+         call tread(Ioab,V(mdv21),Loab,1,Loab,1,0)
+         if ( Iprint.gt.1 ) then
+            write (Iout,99001)
+            call matout(V(mdv21),Nrorb,Nrorb,Nrorb,Nrorb)
+         endif
+      endif
+C
+      do 100 ii = 1 , Noa
+         ei = E(ii)
+         i1 = ii + nobn
+         j1 = mdv2
+         do 50 ij = 1 , Nob
+            call fileio(2,IBUC1,leng,V,0)
+            eij = ei + E(ij+Nrorb)
+            mm = 0
+C
+            do 20 ia = 1 , Nva
+               iva = ia + Noa
+               eija = E(iva) - eij
+               uaj = V(j1+iva)
+               ib1 = i1
+               do 10 ib = 1 , Nvb
+                  eijab = E(ib+nobb) + eija
+                  mm = mm + 1
+                  a0 = V(mm)
+                  a1 = a0/(eijab)
+                  T = T + a1**2
+                  E2 = E2 - a0*a1
+                  uib = V(ib1)
+                  S2 = S2 + a1*uaj*uib
+                  V(mm+mdv3) = -a1
+                  ib1 = ib1 + Nrorb
+ 10            continue
+ 20         continue
+            call fileio(1,IBUC3,leng,V(mdv31),0)
+            j1 = j1 + Nrorb
+ 50      continue
+ 100  continue
+      S2 = S2 + S2
+C
+      return
+C
+      end
+@* INDEX.

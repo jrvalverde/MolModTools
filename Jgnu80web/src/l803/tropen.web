@@ -1,0 +1,797 @@
+@* tropen.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DBASE   I       IBASE   IDUMP   IFIL    IIA     IJ     
+             INTCNT  J       JA      K       L       NJ      NTX    
+             S       SINDX   T       V                              
+\item[Transmits as argument]  CMO     IJLS    INFORB  IRWIBF  ISMODE  ISPECT  LENIBF 
+             LNFORB  LSPECT  X                                      
+\item[Uses]  CMO     DBASD   I       IBASD   IBASE   ICON    IDUMP  
+             IFIL    IJ      IJLS    INFORB  INTCNT  IOP     IOUT   
+             IREGWS  IRESET  IRWIBF  ISMODE  ISPECT  ITOTAL  IUX    
+             J       K       KNTT1   KNTT2   L       LENIBF  LNFORB 
+             LSPECT  MAXWS   MINDX   MINWS   MODE    NBASIS  NJ     
+             NOA     NOA2    NOAVA   NOB     NOB2    NOBVB   NOVAB  
+             NRORB   NTX     NVA2    NVB2    NWPI    P       Q      
+             R       S       SINDX   T       V       VALINT  X      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DEFBUC  FDUMP   FILEIO  ILSW    IREAD   IWAIT   IWIND  
+             LABSCF  LNK1E   TREAD   TROP80  TWRITE  UNPCK4         
+\item[Called by]   L803                                                   
+                                                                    
+\end{description}
+@a
+      subroutine tropen
+      implicit none
+      double precision a0 , Atmchg , C , Cmo , S , T , V , Valint , X , 
+     &                 zero
+      integer I , ia , iadk , iads , Ian , ib , ib0 , ibadr , Ibasd , 
+     &        Ibase , Ibfpad , ibprev , ibuck , ic , Icharg , Icon , 
+     &        icont , iconv , Icount , id
+      integer Idummy , Idump , Ieval , iext , Ifil , iflst , Iia , Ij , 
+     &        Ijls , In , indij , indkl , indmj , indmk , indml , 
+     &        indmoi , indmoj , indmok , indx , Inforb
+      integer intape , Intcnt , Ioab , Iop , iopcl , Iout , ip1 , 
+     &        ipass , iprint , Ipunch , Iq , iqbufr , iqproc , Iregws , 
+     &        Ireset , Irwibf , isl , Ismode , Ispect , isr
+      integer Istat , Itotal , Iux , ix , J , Ja , jc , jdif , jq , K , 
+     &        kk , kl , Kntt1 , Kntt2 , L , Last , leng , lengs , 
+     &        Lenibf , Limint
+      integer ll , Lnforb , Loab , lq , Lspect , m , m1 , Maxbuc , 
+     &        Maxws , mdim , mdim1 , Mindx , Minws , mjen , mjsave , 
+     &        mjst , mken , mkst , mlen , mlst
+      integer Mode , moi , moj , moja , mok , moklk , mol , mola , 
+     &        Morews , mstart , Multip , n2 , Nae , Natoms , Nbasis , 
+     &        Nbe , nbkdat , nbuck , Ne , nfile
+      integer nint , Nj , nleng , nloop , Noa , Noa2 , Noa3 , Noaob , 
+     &        noap , Noava , Noavb , Nob , Nob2 , Nob3 , nobp , Nobva , 
+     &        Nobvb , Novaa , Novab , Novbb
+      integer Nrorb , Nrpext , nsbeta , nsl , nspace , nsr , nsrp , 
+     &        ntt , nttt , Ntx , Nva , Nva2 , Nva3 , Nvavb , Nvb , 
+     &        Nvb2 , Nvb3 , Nwiib , Nwpi
+      logical iopt , mokocc
+      integer P , Q , R , Sindx
+      integer Dbase , Dbasd , Dcount
+      dimension X(4760) , ix(1)
+      dimension Iia(2)
+      dimension lengs(18) , ibadr(5,4) , nbkdat(6)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+C      common /v803/v(23976)
+      common /memry / V(50000)
+      common /st    / S(6400) , T(80) , Ij(81) , Nj(81)
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /cmo803/ Cmo(12800)
+      common /packed/ I , J , K , L , Valint , Ja
+      common /comorb/ Inforb , Lnforb
+      common /rwfscr/ Ijls
+      common /io    / In , Iout , Ipunch
+      common /ibf   / Ismode , Mode , Istat , Last , Ntx , Iux(5) , 
+     &                Icon , Nrpext , Kntt1 , Kntt2 , Ibase , Ibasd(2) , 
+     &                Dbase , Dbasd(2) , Ireset(2) , Iq , Ifil , 
+     &                Intcnt , Itotal , Limint , Nwpi , Nwiib , Ibfpad
+      common /locibf/ Irwibf , Lenibf
+      common /mem803/ Minws , Iregws , Maxws , Morews
+      common /dump  / Idump , Idummy
+      equivalence (X(1),ix(1)) , (S(1),X(1))
+      equivalence (P,I) , (Q,J) , (R,K) , (Sindx,L) , (Mindx,K)
+      equivalence (Valint,Iia(1))
+      equivalence (Icount,Kntt1) , (Dcount,Kntt2)
+      data mdim/36/
+      data nfile/0/
+      data zero/0.D0/
+      data ibadr/1 , 4 , 5 , 11 , 15 , 3 , 9 , 10 , 14 , 18 , 7 , 6 , 
+     &     2 , 12 , 16 , 8 , 0 , 0 , 13 , 17/
+C
+C
+C     ******************************************************************
+C
+C     transformation of the a.o. integrals to the m.o. set.
+C     if the core can hold n**3 elements, the transformation
+C     is done in the routine tropen. if the core is not large
+C     enough, the transformation is done in th routine trop80.
+C     this routine holds as many n**2 arrays as possible
+C     in core but otherwise simulates the n**3 in core transformation
+C     as much as possible.
+C
+C     handles open shell (uhf).
+C
+C     the a.o.integrals are read from logical unit 'intape'.
+C     array x holds the current load of a.o.integrals.
+C     v(n**3), s(n**2) and t(n) hold the intermediate results for each
+C     transformes m.o.
+C     array cmo holds the m.o.coefficients.
+C
+C     the transformed integrals are written out in buckets (read-write
+C     files used in post-scf programs) to be processed by link 901
+C     which produces antisymmetrized transformed integrals.
+C     in the following list indices i,j,k,.. refer to occupied orbitals
+C     and labels a,b,c,... refer to virtual orbitals.
+C
+C     integral type    spin-case     bucket no.
+C     -------------    ---------     ---------
+C     (ia/jb)          a,a,a,a          55
+C     (ia/jb)          a,a,b,b          52
+C     (ia/jb)          b,b,b,b          60
+C     (ij/ab)          a,a,a,a          51
+C     (ij/ab)          a,a,b,b          57
+C     (ij/ab)          b,b,a,a          58
+C     (ij/ab)          b,b,b,b          53
+C     (ij/kl)          a,a,a,a          54
+C     (ij/kl)          a,a,b,b          56
+C     (ij/kl)          b,b,b,b          59
+C     (ij/ka)          a,a,a,a          61
+C     (ij/ka)          a,a,b,b          62
+C     (ij/ka)          b,b,a,a          63
+C     (ij/ka)          b,b,b,b          64
+C     (ia/bc)          a,a,a,a          65
+C     (ia/bc)          a,a,b,b          66
+C     (ia/bc)          b,b,a,a          67
+C     (ia/bc)          b,b,b,b          68
+C
+C     the integral (ij/kl) for example refers to
+C     the integral < i(1)j(1) / (1/r12) / k(2)l(2) >
+C
+C     nov/76 seeger and krishnan.
+C
+C     ******************************************************************
+C
+C     options ... iop( ):
+C     ******************************************************************
+C
+C     iop(5) ... rmp or ump
+C     0 ... read in from ilsw
+C     1 ... rmp
+C     2 ... ump
+C
+C     iop(6) ... specifies which single-bar integrals are to be
+C                computed.
+C     0 ... (ia/jb)
+C     1 ... (ia/jb), (ij/ab)
+C     2 ... (ia/jb), (ij/ab), (ij/kl)
+C     3 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka)
+C     4 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka), (ia/bc)
+C     5 ... (ia/jb), (ij/ab), (ij/kl), (ij/ka), (ia/bc), (ab/cd)
+C
+C     in terms of what can be done with what integrals:
+C     0 ... mp2
+C     1 ... hartree-fock stability.
+C     2 ... mp3, cid, ccd, mp4(dq).
+C     3 ... cisd, mp4(sdq), d2escf.
+C     4 ... mp4(sdtq), mp2 derivatives, cid derivatives.
+C     5 ... not implemented.
+C
+C     iop(7) ... test convergence flag
+C     0 ... yes
+C     1 ... no
+C
+C     iop(8) ... option to change the core available
+C     0 ... mdv is set to default value.(see data statement)
+C     1 ... read in mdv (i6 format)
+C
+C     iop(9) ... use trop80 always.(mainly a debugging option)
+C     0 ... no
+C     1 ... yes.
+C
+C     ******************************************************************
+C
+C
+C
+C
+C     note ... s is equivalenced to the integral buffer.  if the
+C     dimensions are to be changed, make sure s is big enough to
+C     hold both the integrals and the necessary intermediate
+C     results.
+C
+C
+C
+99001 format (1x,3I7,5x,4I4,5x,d15.8)
+99002 format (1x,i7,' A.O.-INTEGRALS PROCESSED')
+99003 format (/' DIMENSION EXCEEDS LIMIT'/)
+99004 format (' ',30x,i7,' M.O.-INTEGRALS CREATED')
+99005 format (' UHF INTEGRAL TRANSFORMATION:')
+99006 format (/' (AB/CD) TRANSFORMED INTEGRALS ARE NOT AVAILABLE'/)
+C
+C     ******************************************************************
+C
+C
+C     if the dimension is too big for this routine call trop80
+      iext = Iop(9)
+      if ( iext.gt.0 ) goto 1000
+      if ( Nbasis.gt.mdim ) goto 1000
+C
+C     set the working set size.
+      nspace = Iregws
+      if ( Nbasis.le.25 ) nspace = Minws
+      if ( Nbasis.gt.30 ) nspace = Maxws
+C
+      iopcl = Iop(5) - 1
+      nbuck = Iop(6) + 1
+      icont = Iop(7)
+      iprint = Iop(33)
+      Idump = Iop(34)
+C
+      iopt = .false.
+      if ( iprint.ge.2 ) iopt = .true.
+C
+C     skip this link if not real uhf
+      if ( iopcl.lt.0 ) call ilsw(2,1,iopcl)
+      if ( iopcl.ne.1 ) goto 900
+C
+C     test convergence flag
+      iconv = 0
+      if ( icont.eq.0 ) call ilsw(2,5,iconv)
+      if ( iconv.ne.0 ) call lnk1e
+C
+C     check dimension
+      write (Iout,99005)
+      if ( Nbasis.gt.mdim ) then
+         write (Iout,99003)
+         call lnk1e
+      endif
+C
+C     check nbuck.
+C     0 ... buckets for mp2: (ia/jb).
+C     1 ... buckets for stability: (ia/jb),(ij/ab).
+C     2 ... buckets for cid or mp3: (ij/ab),(ia/jb),(ij/kl).
+C     3 ... buckets for cisd: (ij/ab),(ia/jb),(ik/kl),(ij/ka).
+C     4 ... same as cisd, but includes (ia/bc).
+C     5 ... the complete set of transformed integrals. (not implemented)
+      if ( nbuck.gt.5 ) write (Iout,99006)
+      if ( nbuck.gt.5 ) call lnk1e
+C
+C     read in window information
+      call tread(Inforb,Ispect,Lnforb,1,Lnforb,1,0)
+C
+C     read in the m.o. coefficients
+      call tread(Ispect,Cmo,Lspect,1,Lspect,1,0)
+C
+      nint = 0
+C
+C     ntt is the number of elements in a symmetric matrix of dimension
+C     nbasis.
+C     nttt is the number of elements in the n**3 array.
+      mdim1 = mdim + 1
+      ntt = (Nbasis*(Nbasis+1))/2
+      nttt = Nbasis*ntt
+      nsbeta = Nrorb*Nbasis
+      noap = Noa + 1
+      nobp = Nob + 1
+C
+C     initialize common ibf
+      call tread(Irwibf,Ismode,Lenibf,1,Lenibf,1,0)
+C
+C     calculate the lengths of buckets for transformed integrals.
+      lengs(1) = Noa2*Nva2
+      lengs(2) = Novab
+      lengs(3) = Nob2*Nvb2
+      lengs(4) = Noa2*(Noa2+1)/2
+      lengs(5) = Noava*(Noava+1)/2
+      lengs(6) = Noa2*Nob2
+      lengs(7) = Noa2*Nvb2
+      lengs(8) = Nob2*Nva2
+      lengs(9) = Nob2*(Nob2+1)/2
+      lengs(10) = Nobvb*(Nobvb+1)/2
+      lengs(11) = Noa2*Noava
+      lengs(12) = Noa2*Nobvb
+      lengs(13) = Nob2*Noava
+      lengs(14) = Nob2*Nobvb
+      lengs(15) = Noava*Nva2
+      lengs(16) = Noava*Nvb2
+      lengs(17) = Nobvb*Nva2
+      lengs(18) = Nobvb*Nvb2
+      if ( nbuck.eq.2 ) then
+      elseif ( nbuck.eq.3 ) then
+         goto 100
+      elseif ( nbuck.eq.4 ) then
+         goto 200
+      elseif ( nbuck.eq.5 ) then
+         goto 300
+      else
+C
+         lengs(1) = 0
+         lengs(3) = 0
+         lengs(7) = 0
+         lengs(8) = 0
+      endif
+      lengs(4) = 0
+      lengs(6) = 0
+      lengs(9) = 0
+ 100  lengs(11) = 0
+      lengs(12) = 0
+      lengs(13) = 0
+      lengs(14) = 0
+ 200  lengs(15) = 0
+      lengs(16) = 0
+      lengs(17) = 0
+      lengs(18) = 0
+C
+C     define buckets
+ 300  do 400 I = 1 , 18
+         if ( lengs(I).gt.0 ) call defbuc((I+50),lengs(I))
+ 400  continue
+C
+C     form index arrays ij and nj
+C     ij contains the leading index for indexing into a symmetric array.
+C     nj contains the leading index for indexing into the n**3 array.
+      do 500 I = 1 , mdim1
+         Ij(I) = (I*(I-1))/2
+         Nj(I) = ntt*(I-1)
+ 500  continue
+C
+C     ******************************************************************
+C.....loop over all occupied orbitals, moi
+C     ******************************************************************
+C
+C
+      do 800 moi = 1 , Noa
+C
+         do 700 ipass = 1 , 2
+C
+C
+            nloop = 0
+            mkst = moi
+C
+            if ( ipass.eq.2 ) then
+C
+               if ( moi.gt.Nob .or. moi.lt.1 ) goto 800
+               if ( nbuck.eq.1 ) mkst = nobp
+               indmoi = nsbeta + (moi-1)*Nbasis
+               indmok = nsbeta + (mkst-1)*Nbasis
+               nleng = ntt*(nobp-moi)
+               if ( nbuck.eq.5 ) nleng = ntt*(Nrorb-moi+1)
+            else
+C
+               if ( noap.gt.Nrorb .or. moi.lt.1 ) goto 700
+               if ( nbuck.eq.1 ) mkst = noap
+               indmoi = (moi-1)*Nbasis
+               indmok = (mkst-1)*Nbasis
+               nleng = ntt*(Nrorb-moi+1)
+            endif
+            mken = Nrorb
+            if ( mken.lt.mkst ) goto 700
+C
+C     clear v
+            do 520 J = 1 , nttt
+               V(J) = zero
+ 520        continue
+            iqbufr = 1
+            iqproc = 2
+            Intcnt = 0
+C
+C     initiate input of the a.o.integrals
+C     the following two statements define the starting logical
+C     unit for disc oriented systems.
+            Ntx = 1
+            intape = Iux(2)
+            call iwind(intape)
+            call iread(intape,iqbufr,X)
+            Ifil = 1
+ 540        call iwait(intape)
+            iqbufr = iabs(iqbufr-2) + 1
+            iqproc = iabs(iqproc-2) + 1
+            Ibase = Ibasd(iqproc)
+            Dbase = Dbasd(iqproc)
+            call labscf(ix(Ibase),iflst)
+            if ( iflst.eq.0 ) then
+               if ( Ifil.eq.(nfile+Ntx*Icon) ) then
+                  call iwind(intape)
+                  Ntx = Ntx + 1
+                  intape = Iux(Ntx+1)
+                  call iwind(intape)
+               endif
+               call iread(intape,iqbufr,X)
+               Ifil = Ifil + 1
+            endif
+C
+C
+            if ( Mode.ne.1 ) call lnk1e
+            if ( Kntt1.gt.0 ) then
+               jq = Ireset(1) + Ibase
+               lq = jq + (Kntt1-1)*Nwpi
+C     start processing of labels and integrals.
+               do 550 m = jq , lq , Nwpi
+                  Ja = ix(m)
+                  Iia(1) = ix(m+1)
+                  Iia(2) = ix(m+2)
+                  call unpck4
+                  indij = Ij(I) + J
+                  indkl = Ij(K) + L
+                  ia = Nj(J) + indkl
+                  ib = Nj(I) + indkl
+                  ic = Nj(L) + indij
+                  id = Nj(K) + indij
+                  V(ia) = V(ia) + Cmo(I+indmoi)*Valint
+                  V(ib) = V(ib) + Cmo(J+indmoi)*Valint
+                  V(ic) = V(ic) + Cmo(K+indmoi)*Valint
+                  V(id) = V(id) + Cmo(L+indmoi)*Valint
+ 550           continue
+               Intcnt = Intcnt + Kntt1
+            endif
+C
+            if ( Kntt2.gt.0 ) then
+               lq = Ireset(2) + Ibase
+               jq = lq - (Kntt2-1)*Nwpi
+               do 560 m = jq , lq , Nwpi
+                  Ja = ix(m)
+                  Iia(1) = ix(m+1)
+                  Iia(2) = ix(m+2)
+                  call unpck4
+                  Sindx = Sindx + 1
+                  if ( Sindx.eq.1 ) goto 555
+                  if ( Sindx.eq.2 ) then
+C
+C     ******************************************************************
+C     case 2:  (ab,bc) =>  pq,qr
+C     ******************************************************************
+                     indij = Ij(P) + Q
+                     indkl = Ij(Q) + R
+                     ia = Nj(Q) + indkl
+                     ib = Nj(P) + indkl
+                     ic = Nj(R) + indij
+                     id = Nj(Q) + indij
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(Q+indmoi)*Valint
+                     V(id) = V(id) + Cmo(R+indmoi)*Valint
+                  elseif ( Sindx.eq.3 ) then
+C
+C     ******************************************************************
+C     case 3:  (ac,bc) =>  pq,rq
+C     ******************************************************************
+                     indij = Ij(P) + Q
+                     indkl = Ij(R) + Q
+                     ia = Nj(Q) + indkl
+                     ib = Nj(P) + indkl
+                     ic = Nj(Q) + indij
+                     id = Nj(R) + indij
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(R+indmoi)*Valint
+                     V(id) = V(id) + Cmo(Q+indmoi)*Valint
+                  elseif ( Sindx.eq.4 ) then
+C
+C     ******************************************************************
+C     case 4: (ab,ab) =>  pq,pq
+C     ******************************************************************
+                     indij = Ij(P) + Q
+                     ia = Nj(Q) + indij
+                     ib = Nj(P) + indij
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                  elseif ( Sindx.eq.5 ) then
+C
+C     ******************************************************************
+C     case 5: (aa,bc) =>  pp,qr
+C     ******************************************************************
+                     ia = Nj(P) + Ij(Q) + R
+                     ib = Nj(R) + Ij(P+1)
+                     ic = Nj(Q) + Ij(P+1)
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(R+indmoi)*Valint
+                  elseif ( Sindx.eq.6 ) then
+C
+C     ******************************************************************
+C     case 6:  (ab,cc) =>  pq,rr
+C     ******************************************************************
+                     ia = Nj(Q) + Ij(R+1)
+                     ib = Nj(P) + Ij(R+1)
+                     ic = Nj(R) + Ij(P) + Q
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(R+indmoi)*Valint
+                  elseif ( Sindx.eq.8 ) then
+C
+C     ******************************************************************
+C     case 8:  (aa,aa) =>  pp,pp
+C     ******************************************************************
+                     ia = Nj(P) + Ij(P+1)
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+C
+                  elseif ( Mindx.eq.1 ) then
+C
+C     ******************************************************************
+C     case 7, three sub-cases:
+C     1 -- (ab,bb) =>  pq,qq
+C     2 -- (aa,bb) =>  pp,qq
+C     3 -- (aa,ab) =>  pp,pq
+C     ******************************************************************
+                     ia = Nj(Q) + Ij(Q+1)
+                     ib = Nj(P) + Ij(Q+1)
+                     ic = Nj(Q) + Ij(P) + Q
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(Q+indmoi)*Valint
+                  elseif ( Mindx.eq.2 ) then
+C
+                     ia = Nj(P) + Ij(Q+1)
+                     ib = Nj(Q) + Ij(P+1)
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                  elseif ( Mindx.eq.3 ) then
+C
+                     ia = Nj(P) + Ij(P) + Q
+                     ib = Nj(Q) + Ij(P+1)
+                     ic = Nj(P) + Ij(P+1)
+                     V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                     V(ib) = V(ib) + Cmo(P+indmoi)*Valint
+                     V(ic) = V(ic) + Cmo(Q+indmoi)*Valint
+                  else
+                     goto 555
+                  endif
+                  goto 560
+C
+C     ******************************************************************
+C     case 1:  (ab,ac) =>  pq,pr
+C     ******************************************************************
+ 555              indij = Ij(P) + Q
+                  indkl = Ij(P) + R
+                  ia = Nj(Q) + indkl
+                  ib = Nj(P) + indkl
+                  ic = Nj(R) + indij
+                  id = Nj(P) + indij
+                  V(ia) = V(ia) + Cmo(P+indmoi)*Valint
+                  V(ib) = V(ib) + Cmo(Q+indmoi)*Valint
+                  V(ic) = V(ic) + Cmo(P+indmoi)*Valint
+                  V(id) = V(id) + Cmo(R+indmoi)*Valint
+C
+ 560           continue
+               Intcnt = Intcnt + Kntt2
+            endif
+            if ( iflst.le.0 ) goto 540
+            call iwind(intape)
+C
+C     integral processing complete.  for moi=1, get and print
+C     the total number of integrals treated.
+C     for moi .gt. 1, check intc against the number processed for moi=1.
+C     if the two numbers are not the same, abort.
+            if ( moi.le.1 ) then
+               if ( iprint.gt.0 ) write (Iout,99002) Intcnt
+            endif
+            if ( Intcnt.ne.Itotal ) call lnk1e
+C
+C     ******************************************************************
+C     the second suffix, j, is transformed to mok for all k,l
+C     ******************************************************************
+C
+            do 600 kl = 1 , ntt
+               indmk = indmok
+               do 570 mok = mkst , mken
+                  a0 = zero
+                  jc = kl
+                  do 565 J = 1 , Nbasis
+                     a0 = a0 + Cmo(indmk+J)*V(jc)
+                     jc = jc + ntt
+ 565              continue
+                  indmk = indmk + Nbasis
+                  T(mok) = a0
+ 570           continue
+               jc = kl
+               do 580 mok = mkst , mken
+                  V(jc) = T(mok)
+                  jc = jc + ntt
+ 580           continue
+ 600        continue
+C
+C     ******************************************************************
+C
+C     write partially transformed integrals (moi,mok/k,l) on rwf ijls
+C     nloop=1
+            call twrite(Ijls,V,nleng,1,nleng,1,0)
+C
+C     ******************************************************************
+C     transformation of third and fourth suffixes
+C     ******************************************************************
+C
+C     explanation of the strange array ibadr
+C
+C     the row and column of ibadr are given by variables
+C     ib0 and n2
+C
+C     value of n2
+C     1 ... alpha,alpha
+C     2 ... beta,beta
+C     3 ... alpha,beta
+C     4 ... beta,alpha
+C
+C     value of ib0
+C     1 ... (ia/jb)
+C     2 ... (ij/kl)
+C     3 ... (ij/ab)
+C     4 ... (ij/ka)
+C     5 ... (ia/bc)
+C
+C     from the values of ib0 and n2, the bucket number can
+C     be found out from the array ibadr.
+C
+ 620        mola = 0
+            iadk = 0
+            mstart = 1
+            n2 = nloop + ipass
+            if ( n2.eq.2 .or. n2.eq.4 ) then
+C
+               isl = nsbeta
+               nsl = Nob
+            else
+C
+               isl = 0
+               nsl = Noa
+            endif
+            if ( n2.eq.2 .or. n2.eq.3 ) then
+C
+               isr = nsbeta
+               nsr = Nob
+            else
+C
+               isr = 0
+               nsr = Noa
+            endif
+            nsrp = nsr + 1
+            mken = Nrorb
+            indmok = isl + Nbasis*(mkst-1)
+            mjst = 1
+            if ( n2.le.2 ) mjst = moi
+            if ( n2.eq.4 .and. nbuck.ne.5 ) then
+               mken = Nob
+               mjst = nsrp
+            endif
+            indmoj = isr + Nbasis*(mjst-1)
+C
+            mjsave = mjst
+            indx = 0
+            do 660 mok = mkst , mken
+               if ( mok.gt.nsl ) then
+C
+                  mokocc = .false.
+                  ip1 = 2
+                  mjen = nsr
+                  if ( nbuck.eq.5 ) mjen = Nrorb
+                  if ( n2.eq.4 .and. nbuck.eq.5 ) mjst = nsrp
+               else
+                  mokocc = .true.
+                  ip1 = 1
+                  if ( nbuck.eq.2 ) mjst = nsrp
+                  if ( nbuck.gt.3 ) mjst = 1
+                  mjen = Nrorb
+               endif
+               jdif = mjen - mjst + 1
+               indmoj = isr + Nbasis*(mjst-1)
+               if ( jdif.gt.0 ) then
+C
+C     ******************************************************************
+C     k is transformed to moj for all moj,l and one mok,moi
+C     ******************************************************************
+C
+                  iads = 0
+                  do 630 L = 1 , Nbasis
+C
+C     all k in t for one moi, mok, l
+                     do 622 K = 1 , Nbasis
+                        ll = min0(K,L)
+                        kk = max0(K,L)
+                        moklk = Ij(kk) + ll + iadk
+                        T(K) = V(moklk)
+ 622                 continue
+                     indmj = indmoj
+                     do 626 moj = mjst , mjen
+                        iads = iads + 1
+                        a0 = zero
+                        do 624 K = 1 , Nbasis
+                           a0 = a0 + Cmo(indmj+K)*T(K)
+ 624                    continue
+                        S(iads) = a0
+                        indmj = indmj + Nbasis
+ 626                 continue
+ 630              continue
+C
+                  do 645 moj = mjst , mjen
+                     moja = moj - mjst + 1
+                     if ( mok.gt.nsl .and. moj.gt.nsr ) then
+                        mlst = moj
+                        mlen = Nrorb
+                        ib0 = 5
+C
+                     elseif ( ip1.eq.2 ) then
+C
+                        mlst = nsrp
+                        mlen = Nrorb
+                        ib0 = 3
+                     else
+C
+                        mlst = moj
+                        if ( moj.gt.nsr ) then
+C
+                           ib0 = 1
+                           mlen = Nrorb
+                        else
+                           if ( ((moi.gt.moj) .and. (nloop.eq.0)) .or. 
+     &                          (n2.eq.4) ) then
+C
+                              mlst = nsrp
+                              ib0 = 4
+                           else
+                              ib0 = 2
+                           endif
+                           mlen = nsr
+                           if ( nbuck.gt.3 ) mlen = Nrorb
+                        endif
+                     endif
+                     if ( nloop.eq.0 .and. moj.eq.moi ) mlst = mok
+                     if ( mlen.lt.mlst ) goto 645
+                     indml = isr + (mlst-1)*Nbasis
+                     ibuck = ibadr(ib0,n2)
+C
+                     if ( mola.eq.0 ) ibprev = ibuck
+                     if ( (ibuck.ne.ibprev) .and. (mola.ne.0) ) goto 634
+                     goto 636
+C
+ 632                 ib0 = 4
+                     ibuck = ibadr(ib0,n2)
+                     mlst = nsrp
+ 634                 leng = mola - mstart + 1
+                     call fileio(1,(ibprev+50),leng,V(mstart),0)
+                     ibprev = ibuck
+                     mstart = mola + 1
+C
+C     ******************************************************************
+C     l is transformed to mol for all mol and one moj,mok,moi
+C     ******************************************************************
+C
+ 636                 do 640 mol = mlst , mlen
+                        mola = mola + 1
+                        m1 = moja
+                        a0 = zero
+                        do 638 L = 1 , Nbasis
+                           a0 = a0 + Cmo(indml+L)*S(m1)
+                           m1 = m1 + jdif
+ 638                    continue
+                        indml = indml + Nbasis
+                        nint = nint + 1
+                        V(mola) = a0
+                        if ( iopt ) write (Iout,99001) ibuck , ipass , 
+     &                       nloop , moi , mok , moj , mol , a0
+                        if ( (mok.le.nsl) .and. (moj.le.nsr) ) then
+                           if ( (mol.eq.nsr) .and. (nbuck.gt.3) )
+     &                          goto 632
+                        endif
+ 640                 continue
+ 645              continue
+C.....
+                  mjst = mjsave
+               endif
+               iadk = iadk + ntt
+ 660        continue
+            leng = mola - mstart + 1
+            if ( leng.ne.0 ) call fileio(1,(ibuck+50),leng,V(mstart),0)
+C
+            if ( nloop.eq.0 ) then
+               nloop = 2
+C
+C     read them back (nloop=2)
+               call tread(Ijls,V,nleng,1,nleng,1,0)
+               goto 620
+            endif
+C
+ 700     continue
+ 800  continue
+      write (Iout,99004) nint
+C
+C     ..............
+ 900  if ( Idump.gt.1 ) call fdump
+C     ..............
+C
+      return
+C
+ 1000 call trop80
+      return
+C
+      end
+@* INDEX.

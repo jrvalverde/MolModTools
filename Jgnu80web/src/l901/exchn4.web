@@ -1,0 +1,96 @@
+@* exchn4.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NO                                                        
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+\item[PASSED:] ISCR1                                                     
+\item[PASSED:] ISCR2                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       EXP78   EXPSYM  FILEIO  MATTRN  SUMN    TRACK          
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine exchn4(NO,IBUC1,IBUC2,ISCR1,ISCR2)
+      implicit none
+      integer i , IBUC1 , IBUC2 , In , ind , indj , indk , indl , Iout , 
+     &        ip , Ipunch , ISCR1 , ISCR2 , j , k , kp , l , leng , 
+     &        lst , Mdv
+      integer mdv2 , NO , no2 , no3 , no4 , nom , nos
+      double precision one , V
+      common /v     / V(20000) , Mdv
+      common /io    / In , Iout , Ipunch
+      data one/1.D0/
+C
+C     ******************************************************************
+C
+C     calculates (ij//kl) = (ik/jl) - (il/jk)  in the sequence i,j,k,l
+C     i.lt.j , k.lt.l , i.le.k , and if (i.eq.k) , j.le.l.
+C
+C     input is from ibuc1.
+C     output is in ibuck.
+C     iscr1 and iscr2 are used as scratch buckets.
+C
+C     no is the dimension of i or j or k or l.
+C
+C     nov/78 krishnan
+C
+C     ******************************************************************
+C
+C
+C
+      call track('EXCHN4')
+C
+      mdv2 = Mdv/2
+      nos = NO*(NO+1)/2
+      no2 = NO*NO
+      no3 = no2*NO
+      no4 = no3*NO
+C
+      call expsym(nos,IBUC1,ISCR1)
+      call exp78(NO,NO,ISCR1,ISCR2)
+      call mattrn(NO,NO,NO,NO,2,ISCR2,ISCR1,mdv2)
+      call mattrn(NO,NO,NO,NO,3,ISCR1,ISCR2,mdv2)
+      call sumn(ISCR2,ISCR1,no4,-one)
+C
+      nom = NO - 1
+      call fileio(2,-ISCR1,0,0,0)
+      call fileio(1,-IBUC2,0,0,0)
+C
+      do 100 i = 1 , nom
+         ip = i + 1
+         leng = no3
+         call fileio(2,ISCR1,leng,V,0)
+         ind = 0
+C
+         do 50 j = ip , NO
+            indj = (j-1)*no2
+            do 20 k = i , nom
+               kp = k + 1
+               lst = kp
+               if ( i.eq.k ) lst = j
+               indk = indj + (k-1)*NO
+               do 10 l = lst , NO
+                  indl = indk + l
+                  ind = ind + 1
+                  V(ind) = V(indl)
+ 10            continue
+ 20         continue
+ 50      continue
+C
+         leng = ind
+         call fileio(1,IBUC2,leng,V,0)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

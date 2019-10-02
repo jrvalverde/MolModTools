@@ -1,0 +1,405 @@
+@* cids1.
+
+\begin{verbatim}
+     iterative solution of the ci equations involving all
+     single and double substitutions and m0ller-plesset
+     perturbation theory at second,third and fourth-orders.
+
+     partitioned into 5 links: cids1,...,cids5
+     cids1 sets up the information needed for the matrix multiplication
+     w=v*a, cids2 to cids4 then perform this matrix multiplication,
+     and cids5 finally evaluates all sorts of correlation energies.
+
+
+     Options iop(..)
+
+
+     iop(5) ... method
+     0 ... cids. configuration interaction with all single and double
+           substitutions.
+     1 ... cid. ci with all double substitutions.
+     2 ... mp3. third order perturbation theory.
+     3 ... mp4(dq). fourth order perturbation theory in the space
+           double and quadruple substitutions.
+     4 ... mp4(sdq). fourth order perturbation theory in the space
+           single, double and quadruple substitutions.
+     5 ... mp4(sdtq). full fourth order perturbation theory in the
+           space of single, double, triple and quadruple substitutions.
+     6 ... ccd. coupled cluster theory with double substitutions.
+     7 ... ccsd. coupled cluster theory with single and double
+           substitutions. (not implemented yet).
+
+
+     iop(6) ... criteria for termination of the iteration
+     0 ... default convergence criterion and maxcycle
+     n ... (n=1,...,6) perform max. n cycles
+                       use default convergence criterion
+     7 ... read in maxcycles and convergence criterion (i2,d18.13)
+
+
+     iop(7) ... update the energy in common/gen/
+     0 ... yes, with the correlation energy, ecid in cid, ecisd in cisd
+           eump3 in mp3, and eump4 in mp4 calculations
+     1 ... yes, with eump3.
+     2 ... yes, with emp4(sdq) or emp4(dq) if singles are not
+           available.
+     7 ... no
+
+
+     iop(15) ... are the ci derivatives calculated
+
+     0 ... no.
+     1 ... yes.
+
+
+     iop(16) ... availability of the transformed integrals (ia//bc)
+                 for use in ci. (only necessary for cisd).
+     0 ... not available. use the ao integrals instead with a
+           more expensive algorithm.
+     1 ... yes, they are available. (iop(6) should be set to 4
+           in overlay 8 to get these integrals)
+     2 ... those integrals are not available. use partially transformed
+           integrals (i,nu//lambda,sigma) instead. (this option
+           is not incorporated in this version yet).
+
+
+     iop(18) ... iteration scheme: de= (in a(s)=w(s)/(de-delta(s)))
+                 i.e. in the formation of a new wave function.
+     0 ... use de depending on the method used. (iop(5)).
+           for method = 0,1 ... de = w(0)/a0.
+           for method.gt.1  ... de = 0.
+           note that for perturbation methods (method=2,3,4,5)
+           de is not really needed since the wave function formed
+           never gets used.
+     1 ... w(0)/a0. always.
+     2 ... 0. always.
+
+
+     iop(19) ... inhibit extrapolation
+     0 ... no
+     1 ... yes
+
+
+     iop(20) ... cutoff for a.o.integrals
+     0 ... standard cutoff (10**(-6))
+     1 ... cutoff read in (format(g20.14))
+
+
+     iop(25) ... print pair contribution and weight to correlation
+                 energy
+     0 ... no
+     1 ... yes, at the end of ci
+     2 ... yes, at each cycle
+     3 ... yes, at one cycle given by input (i3)
+     4 ... yes, at first cycle and at end
+
+
+     iop(26) ... normalization of the wavefunction
+     0 ... normalized to a(0)=1.
+     1 ... sum(s) a(s)**2 = 1   (all s)
+     note: perturbation theoretical results are valid with norm=0 only
+
+
+     iop(28) ... printing of dominant configurations.
+     0 ... do not scan the 'a' vector at the end of ci.
+     1 ... scan the 'a' vector at the end of ci and print the
+           dominant configurations.
+
+
+     iop(30) ... calculation of the ci density matrix.
+     0 ... do not calculate the density matrix.
+     1 ... calculate the density matrix at the end of ci.
+
+
+
+     organization of the buckets:
+     see routine doubar in link 901 for details.
+
+\end{verbatim}
+
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    A00     CUTS    DAVAIL  DEHF    DELMAX  ENERGY  IAD3   
+             IAS2    IBCKT   IDB3    IDUMP   INR     IPCYC   IPRINT 
+             IWD3    IWS2    MAXIT   NITER   NORM    QEP     SAVAIL 
+\item[Transmits as argument]  DEP     DV      IAD1    IAD2    IAS1    ICIVAR  IEXTRP 
+             IGENO   INFORB  IOPCL   ISPECT  IW1SAV  IW2SAV  IWD1   
+             IWD2    IWS1    LCIVAR  LEXTRP  LIGEN   LNFORB  NAE    
+             NOAVA   NOBVB   NOVAA   NOVAB   NOVBB   ZERO           
+\item[Uses]  A00     CUTS    DAVAIL  DELMAX  DEP     DV      IAD1   
+             IAD2    IAD3    IAS1    IAS2    ICIVAR  IDB1    IDUMP  
+             IEXTRP  IGENO   IN      INFORB  IOP     IOPCL   IOUT   
+             IPCYC   ISPECT  IW1SAV  IW2SAV  IWD1    IWD2    IWD3   
+             IWS1    IWS2    LCIVAR  LEHF    LEXTRP  LIGEN   LNFORB 
+             MAXIT   MDIM    MDV     NAE     NBASIS  NOAVA   NOBUC  
+             NOBVB   NORM    NOVAA   NOVAB   NOVBB   ONE     SAVAIL 
+             ZERO                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CONDDF  FDUMP   ILSW    INIBUC  LNK1E   NORMDS  PRINTP 
+             TREAD   TWRITE                                         
+\item[Called by]   L909                                                   
+                                                                    
+\end{description}
+@a
+      subroutine cids1(JUMP)
+      implicit none
+      double precision A00 , A0old , Anorm , Atmchg , C , Cmo , cut1 , 
+     &                 Cuts , Dehf , del , Delmax , Den , Dep , Dv , E , 
+     &                 Ee , Energy , F42 , Filmoc , Four
+      double precision Half , One , Onept5 , Qep , Ten , tenp7 , Three , 
+     &                 Two , V , W0 , Zero
+      integer i , Iad1 , Iad2 , Iad3 , Ian , Iapr , Ias1 , Ias2 , 
+     &        Ibckt , Icharg , Icivar , icut , Idb1 , Idb10 , Idb2 , 
+     &        Idb3 , Idb4 , Idb5 , Idb6 , Idb7
+      integer Idb8 , Idb9 , ideriv , Idimmy , Idmm , Idummy , Idump , 
+     &        Ieval , Iextrp , Iflag , Igen , Igeno , In , Inforb , 
+     &        inhexp , Inr , Ioab , Iop , Iopcl , Iout
+      integer ipairp , Ipcyc , Iprint , Ipunch , ischem , Iscr1 , 
+     &        Iscr2 , Iscr3 , Iscr4 , Iscr5 , Iscr6 , Iscr7 , Iscr8 , 
+     &        Iscr9 , Isd , Ispect , iupdat , Iw1sav , Iw2sav , Iwd1
+      integer Iwd2 , Iwd3 , Iws1 , Iws2 , JUMP , La0 , Lanorm , Lccd , 
+     &        Lcisd4 , Lcivar , Ldq4 , Lecid , Lecids , Lehf , Lenrgy , 
+     &        Lextrp , Ligen , Lisd , Llccd , Llccd4
+      integer Lmp2 , Lmp3 , Lnforb , Loab , Lscc1 , Lsdq4 , Lsdtq4 , 
+     &        Lspect , Lvar1 , Maxbuc , Maxit , Mdim , Mdv , mdv2 , 
+     &        method , mit , Multip , Nae , Natoms , Nbasis
+      integer Nbe , Ne , Niter , Noa , Noa2 , Noa3 , Noaob , Noava , 
+     &        Noavb , Nob , Nob2 , Nob3 , Nobuc , nobuc1 , nobuc9 , 
+     &        Nobva , Nobvb , Norm , Novaa , Novab
+      integer Novbb , Nrorb , Nva , Nva2 , Nva3 , Nvavb , Nvb , Nvb2 , 
+     &        Nvb3
+      logical Davail , Savail
+      dimension Ibckt(50) , Dv(6225) , E(175) , Igen(500)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /v     / V(20000) , Mdv
+      common /rwfp  / Igeno , Ligen , Inforb , Lnforb , Icivar , 
+     &                Lcivar , Iextrp , Lextrp
+      common /orb   / Ispect , Lspect , Nrorb , Noa , Nva , Nob , Nvb , 
+     &                Noaob , Noava , Noavb , Nobva , Nobvb , Nvavb , 
+     &                Noa2 , Noa3 , Nob2 , Nob3 , Nva2 , Nva3 , Nvb2 , 
+     &                Nvb3 , Novaa , Novab , Novbb , Maxbuc , Ieval , 
+     &                Ioab , Loab
+      common /civar / A00 , Anorm , W0 , Den , Energy , Dehf , Cuts , 
+     &                Delmax , Maxit , Ipcyc , Norm , Isd , Iflag , 
+     &                Davail , Savail , Niter
+      common /extrap/ Dep(2) , Qep , A0old , Inr , Idummy
+      common /nobuc / Nobuc
+      common /bucknr/ Idb1 , Idb2 , Idb3 , Idb4 , Idb5 , Idb6 , Idb7 , 
+     &                Idb8 , Idb9 , Idb10 , Idmm(11) , Iad1 , Iad2 , 
+     &                Iad3 , Ias1 , Ias2 , Iwd1 , Iwd2 , Iwd3 , Iws1 , 
+     &                Iws2 , Iscr1 , Iscr2 , Iscr3 , Iscr4 , Iscr5 , 
+     &                Iscr6 , Iscr7 , Iscr8 , Iscr9 , Iapr(10)
+      common /locgen/ Lehf , Lmp2 , Lmp3 , Ldq4 , Lsdq4 , Lsdtq4 , 
+     &                Lecid , Lecids , Lscc1 , Lccd , Llccd , Lvar1 , 
+     &                Lcisd4 , Llccd4 , Lenrgy , Lanorm , La0 , Lisd
+      common /moc   / Cmo(6225) , Ee(175) , Filmoc(6400)
+      common /mdmax / Mdim
+      common /const / Zero , Half , One , Onept5 , Two , Three , Four , 
+     &                Ten , F42
+      common /wsav  / Iw1sav , Iw2sav
+      common /onstr / Iopcl
+      common /io    / In , Iout , Ipunch
+      common /print / Iprint
+      common /dump  / Idump , Idimmy
+      equivalence (Ibckt(1),Idb1)
+      equivalence (Dv(1),Igen(1),Cmo(1)) , (E(1),Ee(1))
+      data tenp7/1.D-7/
+C
+C
+C
+99001 format (i2,d18.13)
+99002 format (g20.14)
+99003 format (i3)
+99004 format (
+     &' CONFIGURATION INTERACTION WITH SINGLE- AND DOUBLE SUBSTITUTIONS'
+     &,/1x,63(1H*))
+99005 format (' CONFIGURATION INTERACTION WITH DOUBLE SUBSTITUTIONS',
+     &        /1x,51(1H*))
+99006 format (' MOLLER-PLESSET THIRD ORDER PERTURBATION THEORY',/1x,
+     &        46(1H*))
+99007 format (' UMP4 WITH DOUBLES AND QUADRUPLES',/1x,32(1H*))
+99008 format (' UMP4 WITH SINGLES,DOUBLES AND QUADRUPLES',/1x,40(1H*))
+99009 format (' MP4(SDTQ)',/1x,9(1H*))
+99010 format (' COUPLED CLUSTER THEORY WITH DOUBLE SUBSTITUTIONS',/1x,
+     &        48(1H*))
+99011 format (' ILLEGAL METHOD',/1x,14(1H*))
+99012 format (' ITERATION METHOD: DE=')
+99013 format (' ',22x,'W(0)/A0')
+99014 format (' A.O.-INTEGRAL CUTOFF',22x,d16.8)
+99015 format (' ITERATIONS=',i3,3x,'CONVERGENCE=',d10.3)
+99016 format (' ',22x,'0')
+99017 format (' ',22x,'ILLEGAL')
+99018 format (' ',42x,'NORMALIZATION: A(0)=1')
+99019 format (' ',42x,'NORMALIZATION: SUM(S) A(S)**2 = 1')
+C
+C
+      method = Iop(5)
+      mit = Iop(6)
+      iupdat = Iop(7)
+      ideriv = Iop(15)
+      ischem = Iop(18) + 1
+      inhexp = Iop(19)
+      icut = Iop(20)
+      ipairp = Iop(25)
+      Norm = Iop(26)
+      Iprint = Iop(33)
+      Idump = Iop(34)
+C
+C     initiate common/orb/
+      call tread(Inforb,Ispect,Lnforb,1,Lnforb,1,0)
+      mdv2 = Mdv/2
+C
+      if ( method.eq.0 ) write (Iout,99004)
+      if ( method.eq.1 ) write (Iout,99005)
+      if ( method.eq.2 ) write (Iout,99006)
+      if ( method.eq.3 ) write (Iout,99007)
+      if ( method.eq.4 ) write (Iout,99008)
+      if ( method.eq.5 ) write (Iout,99009)
+      if ( method.eq.6 ) write (Iout,99010)
+      if ( method.ge.7 ) write (Iout,99011)
+      if ( method.lt.7 ) then
+C
+C     print type of iteration (de in: a(s)=w(s)/(de-delta(s)))
+         if ( method.lt.2 .or. method.gt.5 ) then
+            if ( ischem.gt.1 ) write (Iout,99012)
+            if ( ischem.eq.2 ) write (Iout,99013)
+            if ( ischem.eq.3 ) write (Iout,99016)
+            if ( ischem.gt.3 ) write (Iout,99017)
+            if ( ischem.gt.3 ) goto 100
+         endif
+C
+         if ( Nbasis.le.Mdim ) then
+C
+            call ilsw(2,1,Iopcl)
+            if ( Iopcl.lt.2 ) then
+C
+C     read in convergence information for ci iteration
+               del = Zero
+               if ( mit.eq.7 ) read (In,99001) mit , del
+               if ( mit.gt.0 ) Maxit = mit
+               if ( method.ge.2 .and. method.le.5 ) Maxit = 1
+               if ( ideriv.gt.0 ) Delmax = tenp7
+               if ( del.gt.Zero ) Delmax = del
+               if ( method.lt.2 .or. method.gt.5 ) write (Iout,99015)
+     &              Maxit , Delmax
+C
+C     read in cutoff for ao integrals
+               cut1 = Zero
+               if ( icut.eq.1 ) read (In,99002) cut1
+               if ( cut1.gt.Zero ) Cuts = cut1
+               if ( cut1.gt.Zero ) write (Iout,99014) Cuts
+C
+C     read in iteration number at which pair energies are printed
+               Ipcyc = 0
+               if ( ipairp.eq.3 ) read (In,99003) Ipcyc
+C
+C     get hartree-fock energy.
+               call tread(Igeno,Dv,Ligen,1,Ligen,1,0)
+               Dehf = Dv(Lehf)
+C
+C     initialize some of the variables used. the following assumes
+C     that the first-order wave function is used as the guess for ci.
+               Davail = .true.
+               Savail = .false.
+               A00 = One
+C
+               Energy = Zero
+               Inr = 0
+               Qep = Zero
+C
+               Niter = 0
+               if ( Norm.eq.0 .and. method.le.1 ) write (Iout,99018)
+               if ( Norm.eq.1 .and. method.le.1 ) write (Iout,99019)
+C
+C     initiate buckets
+C
+C     initiate bucket numbers
+               do 10 i = 1 , Nobuc
+                  Ibckt(i) = i
+ 10            continue
+               nobuc1 = Nobuc + 1
+               nobuc9 = Nobuc + 9
+               do 20 i = nobuc1 , nobuc9
+                  Ibckt(i) = 3000 + i
+ 20            continue
+C
+               if ( Iopcl.eq.0 ) then
+                  Ias2 = Ias1
+                  Iws2 = Iws1
+                  Iad3 = Iad1
+                  Iwd3 = Iwd1
+                  Idb3 = Idb1
+               endif
+C
+C     initiate a-buckets
+               if ( Noava.gt.0 ) call conddf(Ias1,Noava)
+               if ( Novaa.gt.0 ) call conddf(Iad1,Novaa)
+               if ( Novab.gt.0 ) call conddf(Iad2,Novab)
+               if ( .not.Savail ) call inibuc(Ias1,Noava,Zero)
+               if ( .not.(Davail) ) then
+                  call inibuc(Iad1,Novaa,Zero)
+                  call inibuc(Iad2,Novab,Zero)
+               endif
+               if ( Iopcl.ne.0 ) then
+                  if ( Nobvb.gt.0 ) call conddf(Ias2,Nobvb)
+                  if ( Novbb.gt.0 ) call conddf(Iad3,Novbb)
+                  if ( .not.Savail ) call inibuc(Ias2,Nobvb,Zero)
+                  if ( .not.Davail ) call inibuc(Iad3,Novbb,Zero)
+               endif
+C
+C     normalize 'a' and obtain w(0)
+               call normds
+C
+C     print pair energies for guess wavefunction
+               if ( ipairp.eq.2 .or. ipairp.eq.3 .and. Ipcyc.eq.0 )
+     &              call printp(Nae)
+C
+C     initiate w-buckets
+               if ( Novaa.gt.0 ) call conddf(Iwd1,Novaa)
+               if ( Novab.gt.0 ) call conddf(Iwd2,Novab)
+               if ( Iopcl.ne.0 .and. Novbb.gt.0 )
+     &              call conddf(Iwd3,Novbb)
+               if ( Noava.gt.0 ) call conddf(Iws1,Noava)
+               if ( Iopcl.ne.0 .and. Nobvb.gt.0 )
+     &              call conddf(Iws2,Nobvb)
+               if ( .not.Savail ) call inibuc(Iws1,Noava,Zero)
+               if ( .not.(Davail) ) then
+                  call inibuc(Iwd1,Novaa,Zero)
+                  call inibuc(Iwd2,Novab,Zero)
+               endif
+               if ( Iopcl.ne.0 ) then
+                  if ( .not.Savail ) call inibuc(Iws2,Nobvb,Zero)
+                  if ( .not.Davail ) call inibuc(Iwd3,Novbb,Zero)
+               endif
+C
+C     define buckets in case ci derivatives are calculated.
+               if ( ideriv.gt.0 ) call conddf(Iw1sav,Novab)
+               if ( ideriv.gt.0 ) call conddf(Iw2sav,Novab)
+C
+               call twrite(Icivar,A00,Lcivar,1,Lcivar,1,0)
+               call twrite(Iextrp,Dep,Lextrp,1,Lextrp,1,0)
+C
+C     call matrix multiplier for  w = v * a
+C    
+               if ( Idump.gt.1 ) call fdump
+               JUMP = 101
+               return
+            endif
+         endif
+      endif
+C
+C     abort in case of problems.
+ 100  call lnk1e
+C
+      stop 909
+C
+      end
+@* INDEX.

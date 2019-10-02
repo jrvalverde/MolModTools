@@ -1,0 +1,101 @@
+@* exchn6.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NO                                                        
+\item[INPUT:] NV                                                        
+\item[PASSED:] ISD1                                                      
+\item[PASSED:] ISD2                                                      
+\item[PASSED:] IBUC1                                                     
+\item[PASSED:] IBUC2                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    V                                                      
+\item[Uses]  MDV     V                                              
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       EXPABS  FILEIO  MATTRN  TRACK                          
+\item[Called by]   DOUBAR                                                 
+                                                                    
+\end{description}
+@a
+      subroutine exchn6(NO,NV,ISD1,ISD2,IBUC1,IBUC2)
+      implicit none
+      integer ib , ibp , IBUC1 , IBUC2 , ic , iia , ind1 , ind2 , ISD1 , 
+     &        ISD2 , leng , Mdv , mdv2 , mdv21 , mm , ncore , nleft , 
+     &        nmax , NO , nov
+      integer NV , nv1 , nv2 , nv3
+      double precision V
+      common /v     / V(20000) , Mdv
+C
+C     ******************************************************************
+C
+C     accepts (ia/bc) with b.le.c from isd1
+C     forms (ia//bc) for b.lt.c in isd2
+C     uses ibuc1 and ibuc2 for scratch.
+C
+C     aug/78, krishnan
+C
+C     ******************************************************************
+C
+C
+      call track('EXCHN6')
+C
+      mdv2 = Mdv/2
+      mdv21 = mdv2 + 1
+      nv1 = NV - 1
+      nv2 = NV*NV
+      nv3 = NV*(NV-1)/2
+      nov = NO*NV
+C
+C     expand (ia/bc)
+      call expabs(ISD1,IBUC2,nov,NV)
+C
+C     form (ib/ac) in sequence i,a,b,c
+      call mattrn(NO,NV,NV,NV,2,IBUC2,IBUC1,mdv2)
+C
+C     form (ic/ab) in sequence i,a,b,c
+      call mattrn(NO,NV,NV,NV,3,IBUC1,IBUC2,mdv2)
+C
+      call fileio(2,-IBUC1,0,0,0)
+      call fileio(2,-IBUC2,0,0,0)
+      call fileio(1,-ISD2,0,0,0)
+C
+      nleft = NO*NV
+      nmax = mdv2/nv2
+ 100  ncore = min0(nleft,nmax)
+      nleft = nleft - ncore
+C
+C     input
+      leng = nv2*ncore
+      call fileio(2,IBUC1,leng,V,0)
+      call fileio(2,IBUC2,leng,V(mdv21),0)
+C
+C     form (ia//bc)=(ib/ac)-(ic/ab)
+      mm = 0
+      do 200 iia = 1 , ncore
+         ind1 = (iia-1)*nv2
+         ind2 = ind1 + mdv2
+C
+         do 150 ib = 1 , nv1
+            ibp = ib + 1
+            do 120 ic = ibp , NV
+               mm = mm + 1
+               V(mm) = V(ind1+ic) - V(ind2+ic)
+ 120        continue
+            ind1 = ind1 + NV
+            ind2 = ind2 + NV
+ 150     continue
+ 200  continue
+C
+C     output
+      leng = nv3*ncore
+      call fileio(1,ISD2,leng,V,0)
+C
+      if ( nleft.gt.0 ) goto 100
+C
+      return
+C
+      end
+@* INDEX.
