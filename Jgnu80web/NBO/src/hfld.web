@@ -1,0 +1,66 @@
+@*hfld.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] KEYWD
+\item[OUTPUT:] LENG
+\item[OUTPUT:] ENDD
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    END     NEXT
+\item[Uses]  END     LENGTH  LOOK    NEXT
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   FNDFLD
+\item[Called by]   CHSDRV  CHSINP  CORINP  DELETE  DELINP  GENINP  NBOINP
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine hfld(KEYWD,LENG,ENDD)
+C*****************************************************************************
+      implicit none
+      integer i , Icd , Ipt , kend , KEYWD , LENG , leng1 , Length ,
+     &        Lfn , Look , nbla , Nexp
+      logical ENDD , equal
+C
+      common /nbcrd1/ Icd(80) , Look(80) , Length , Ipt , Lfn , Nexp
+      common /nbcrd2/ Point , End , Next , Exp
+      logical Point , End , Next , Exp
+C
+      dimension KEYWD(LENG) , kend(3)
+C
+      data nbla/1H /
+      data kend/1HE , 1HN , 1HD/
+C
+C  search lfn and find next non-blank string of characters and place
+C  in the vector "keywd".  leng, from the calling program, is maximum
+C  length of string to put in the vector keywd.  if "length" is less
+C  than "leng", leng is set to length upon return:
+C
+      End = .false.
+      if ( Next ) call fndfld
+      ENDD = End
+      leng1 = LENG
+      LENG = min0(Length,LENG)
+C
+C  place leng characters into keywd:
+C
+      do 100 i = 1 , LENG
+         KEYWD(i) = Look(i)
+ 100  continue
+C
+C  fill the rest of keywd with blanks:
+C
+      do 200 i = LENG + 1 , leng1
+         KEYWD(i) = nbla
+ 200  continue
+      Next = .true.
+C
+C  check for end of input:
+C
+      if ( equal(KEYWD,kend,3) ) End = .true.
+      return
+      end
+@* INDEX.

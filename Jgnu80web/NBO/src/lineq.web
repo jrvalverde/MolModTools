@@ -1,0 +1,133 @@
+@*lineq.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] A
+\item[OUTPUT:] X
+\item[INPUT:] B
+\item[OUTPUT:] SCR
+\item[INPUT:] N
+\item[INPUT:] M
+\item[INPUT:] NDIM
+\item[INPUT:] MDIM
+\item[PASSED:] ZERTOL
+\item[OUTPUT:] EPS
+\item[OUTPUT:] MAXIT
+\item[PASSED:] LFNPR
+\item[OUTPUT:] IERR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       FACTOR  FNDSOL
+\item[Called by]   FRMTMO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine lineq(A,X,B,SCR,N,M,NDIM,MDIM,ZERTOL,EPS,MAXIT,LFNPR,
+     &                 IERR)
+C*****************************************************************************
+C
+C  solve the system of linear equations  a * x  =  b  for matrix x
+C                                        ~   ~     ~             ~
+C  input
+C -------
+C  * coefficient matrix a of dimension (n,n) with actual
+C    dimension (ndim,ndim).
+C  * matrix b of dimension (n,m) with actual dimension
+C    (ndim,mdim)
+C  * working space scr dimensioned (ndim,ndim+5).
+C  * zero tolerance zertol.
+C  * threshold on euclidean norm (vector length) of the
+C    error vector relative to the norm of a column of x.
+C  * maximum number of iterations maxit allowed during
+C    iterative improvement.
+C  * logical file number lfnpr for printing during iterative
+C    improvement.  set to zero to no printing is desired.
+C
+C  output
+C --------
+C  * solution x of dimension (n,m) with actual dimension
+C    (ndim,mdim).
+C  * euclidean norm of the final error vector, eps.
+C  * number of iterations taken during interative improvement,
+C    maxit.
+C  * error flag :    ierr = -1   iterative improvement did not
+C                                converge
+C                    ierr =  0   no errors encountered
+C                    ierr =  1   a matrix is not invertible
+C
+C------------------------------------------------------------------------------
+      implicit none
+      double precision A , B , del , EPS , epsmax , SCR , X , zero ,
+     &                 ZERTOL
+      integer i1 , i2 , i3 , i4 , i5 , i6 , IERR , iflag , its ,
+     &        itsmax , jrow , kcol , LFNPR , M , MAXIT , MDIM , N , NDIM
+      dimension A(NDIM,NDIM) , X(NDIM,MDIM) , B(NDIM,MDIM) ,
+     &          SCR(NDIM*(NDIM+5))
+      data zero/0.0/
+C
+      if ( N.lt.1 ) stop 'Dimension N is not positive'
+C
+C  partition scratch space:
+C
+      i1 = 1                         
+C w(ndim,ndim)
+      i2 = i1 + NDIM*NDIM            
+C d(ndim),r(ndim)
+      i3 = i2 + NDIM                 
+C e(ndim)
+      i4 = i3 + NDIM                 
+C xtmp(ndim)
+      i5 = i4 + NDIM                 
+C btmp(ndim)
+      i6 = i5 + NDIM                 
+C ipivot(ndim)
+C
+C  perform gauss elimination with scaled partial pivoting:
+C
+      call dofactor(A,SCR(i1),SCR(i2),SCR(i6),N,NDIM,ZERTOL,iflag)
+      if ( iflag.eq.0 ) then
+         IERR = 1
+         return
+      else
+         IERR = 0
+      endif
+C
+C  loop over columns of x and b:
+C
+      epsmax = zero
+      itsmax = 0
+      do 200 kcol = 1 , M
+         do 50 jrow = 1 , N
+            SCR(i4+jrow-1) = X(jrow,kcol)
+            SCR(i5+jrow-1) = B(jrow,kcol)
+ 50      continue
+         its = MAXIT
+         del = EPS
+C
+C  use back-substitution and iterative improvement to determine
+C  the solution x:
+C
+         call fndsol(A,SCR(i4),SCR(i5),SCR(i1),SCR(i2),SCR(i3),SCR(i6),
+     &               N,NDIM,del,its,LFNPR,IERR)
+         if ( IERR.ne.0 ) return
+C
+C  copy solution into x:
+C
+         do 100 jrow = 1 , N
+            X(jrow,kcol) = SCR(i4+jrow-1)
+ 100     continue
+         if ( del.gt.epsmax ) epsmax = del
+         if ( its.gt.itsmax ) itsmax = its
+ 200  continue
+C
+      EPS = epsmax
+      MAXIT = itsmax
+      return
+      end
+@* INDEX.

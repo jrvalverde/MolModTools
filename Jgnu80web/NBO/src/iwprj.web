@@ -1,0 +1,33 @@
+@*iwprj.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] NCTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NATHYB
+
+\end{description}
+@a
+C*****************************************************************************
+      function iwprj(NCTR)
+      implicit none
+      integer iwprj , NCTR , nctr0
+C*****************************************************************************
+      data nctr0/0/
+C
+C  return 0 (no projection wanted) if nctr is unchanged, 1 otherwise.
+C
+      iwprj = 0
+      if ( NCTR.eq.nctr0 ) return
+      iwprj = 1
+      nctr0 = NCTR
+      return
+      end
+@* INDEX.

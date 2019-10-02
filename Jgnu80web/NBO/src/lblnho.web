@@ -1,0 +1,129 @@
+@*lblnho.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] INHO
+\item[INPUT:] INBO
+\item[INPUT:] ICTR
+\item[INPUT:] NCTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    NHOLBL
+\item[Transmits as argument]  IATNO   LABEL
+\item[Uses]  IATNO   IBXM    LABEL
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       DEBYTE  IDIGIT  NAMEAT
+\item[Called by]   ANLYZE
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine lblnho(INHO,INBO,ICTR,NCTR)
+C*****************************************************************************
+      implicit none
+      integer i , i3 , Iaolbl , Iatcr , Iatno , ib , iblnk , Ibxm , ic ,
+     &        icr , ICTR , ihyp , il , ileft , ilp , INBO , INHO , Ino ,
+     &        ip , ir
+      integer iright , istar , iy , Iznuc , Label , Larc , lbl , Lbl1 ,
+     &        Ll , Lorb , Lorbc , Lstocc , Lu , MAXATM , MAXBAS , MAXD ,
+     &        nameat , Naolbl , Nbolbl , Nbotyp
+      integer Nbouni , NCTR , nd , Nholbl , Nlew , Norbs , Nval
+      parameter (MAXD=2)
+      integer istr(MAXD) , ibyte(4)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl1(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nblbl / Nlew , Nval , Iaolbl(10,MAXBAS) ,
+     &                Naolbl(10,MAXBAS) , Nholbl(10,MAXBAS) ,
+     &                Nbolbl(10,MAXBAS)
+C
+      data iblnk , ic , il , ip , ir , iy , i3 , istar , ihyp/' ' ,
+     &     'c' , 'l' , 'p' , 'r' , 'y' , '3' , '*' , '-'/
+      data icr , ilp/'CR' , 'LP'/
+      data ileft , iright/'(' , ')'/
+C
+      do 100 i = 1 , 10
+         Nholbl(i,INHO) = iblnk
+ 100  continue
+      ib = Ibxm(INBO)
+C
+C  one-center labels:
+C
+      if ( NCTR.eq.1 ) then
+         lbl = nameat(Iatno(Label(ib,4)))
+         call debyte(lbl,ibyte)
+         Nholbl(1,INHO) = ibyte(1)
+         Nholbl(2,INHO) = ibyte(2)
+         call idigit(Label(ib,4),istr,nd,MAXD)
+         if ( nd.eq.1 ) then
+            Nholbl(4,INHO) = istr(1)
+         else
+            Nholbl(3,INHO) = istr(1)
+            Nholbl(4,INHO) = istr(2)
+         endif
+         Nholbl(5,INHO) = ileft
+         if ( Label(ib,1).eq.icr ) then
+            Nholbl(6,INHO) = ic
+            Nholbl(7,INHO) = ir
+            Nholbl(8,INHO) = iright
+         elseif ( Label(ib,1).eq.ilp ) then
+            Nholbl(6,INHO) = il
+            Nholbl(7,INHO) = ip
+            if ( Label(ib,2).eq.istar ) then
+               Nholbl(8,INHO) = istar
+               Nholbl(9,INHO) = iright
+            else
+               Nholbl(8,INHO) = iright
+            endif
+         else
+            Nholbl(6,INHO) = ir
+            Nholbl(7,INHO) = iy
+            Nholbl(8,INHO) = istar
+            Nholbl(9,INHO) = iright
+         endif
+C
+C  two-center and three-center labels:
+C
+      else
+         lbl = nameat(Iatno(Label(ib,3+ICTR)))
+         call debyte(lbl,ibyte)
+         Nholbl(1,INHO) = ibyte(1)
+         Nholbl(2,INHO) = ibyte(2)
+         call idigit(Label(ib,3+ICTR),istr,nd,MAXD)
+         if ( nd.eq.1 ) then
+            Nholbl(4,INHO) = istr(1)
+         else
+            Nholbl(3,INHO) = istr(1)
+            Nholbl(4,INHO) = istr(2)
+         endif
+         Nholbl(5,INHO) = ileft
+         if ( NCTR.eq.2 ) then
+            lbl = nameat(Iatno(Label(ib,6-ICTR)))
+            call debyte(lbl,ibyte)
+            Nholbl(6,INHO) = ibyte(1)
+            Nholbl(7,INHO) = ibyte(2)
+            call idigit(Label(ib,6-ICTR),istr,nd,MAXD)
+            if ( nd.eq.1 ) then
+               Nholbl(9,INHO) = istr(1)
+            else
+               Nholbl(8,INHO) = istr(1)
+               Nholbl(9,INHO) = istr(2)
+            endif
+            Nholbl(10,INHO) = iright
+         else
+            Nholbl(6,INHO) = i3
+            Nholbl(7,INHO) = ihyp
+            Nholbl(8,INHO) = ic
+            Nholbl(9,INHO) = iright
+         endif
+      endif
+      return
+      end
+@* INDEX.

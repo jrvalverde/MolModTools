@@ -1,0 +1,41 @@
+@*halt.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] WORD
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  LFNPR
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]    NOTHING 
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine halt(WORD)
+C*****************************************************************************
+      implicit none
+      double precision blank , WORD
+      integer Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo ,
+     &        Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna ,
+     &        Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      data blank/1H /
+C
+      if ( WORD.eq.blank ) return
+      write (Lfnpr,99001) WORD
+      stop
+C
+99001 format (' Non-integer encountered when trying to read variable ',
+     &        '/',a6,'/')
+      end
+@* INDEX.

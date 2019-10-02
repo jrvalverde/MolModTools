@@ -1,0 +1,86 @@
+@*frmhyb.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] HYB
+\item[OUTPUT:] THYB
+\item[INPUT:] COEF
+\item[OUTPUT:] HYCOEF
+\item[INPUT:] KL
+\item[INPUT:] KU
+\item[OUTPUT:] NHYB
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  LFNPR   NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       SVTNHO
+\item[Called by]   ANLYZE
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine frmhyb(HYB,THYB,COEF,HYCOEF,KL,KU,NHYB)
+C*****************************************************************************
+      implicit none
+      double precision COEF , HYB , HYCOEF , one , temp , thresh ,
+     &                 THYB , zero
+      integer i , ih , ihyb , Ispin , k , KL , KU , Lfnao , Lfnarc ,
+     &        Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab ,
+     &        Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna
+      integer Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Natoms , Nbas , Ndim , NHYB
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      dimension HYB(1) , THYB(Ndim,Ndim) , HYCOEF(Ndim)
+C
+      data zero , one , thresh/0.0D0 , 1.0D0 , 1.0D-4/
+C
+C  form full NAO to NHO tranformation in thyb, adding one hybrid with
+C  each call.  put polarization coef in hycoef for each hybrid.
+C
+C  make sure this hybrid isn't already in the list:
+C
+      if ( dabs(COEF).lt.thresh ) return
+      do 100 ihyb = 1 , NHYB
+         temp = zero
+         ih = 0
+         do 50 k = KL , KU
+            ih = ih + 1
+            temp = temp + HYB(ih)*THYB(k,ihyb)
+ 50      continue
+         if ( dabs(dabs(temp)-one).lt.thresh ) return
+         if ( dabs(temp).gt.thresh ) then
+            write (Lfnpr,99001) NHYB + 1 , temp , ihyb
+            stop
+         endif
+ 100  continue
+C
+C  add this hybrid to the list:
+C
+      NHYB = NHYB + 1
+      if ( NHYB.gt.Nbas ) stop 'Too many hybrids'
+      do 200 i = 1 , Nbas
+         THYB(i,NHYB) = zero
+ 200  continue
+      ih = 0
+      do 300 i = KL , KU
+         ih = ih + 1
+         THYB(i,NHYB) = HYB(ih)
+ 300  continue
+      HYCOEF(NHYB) = COEF
+      if ( NHYB.ne.Nbas ) return
+      call svtnho(THYB)
+      return
+C
+99001 format (/1x,'Hybrid ',i3,' has a ','non-negligible overlap of ',
+     &        f8.5,' with hybrid ',i3,'.')
+      end
+@* INDEX.

@@ -1,0 +1,60 @@
+@*ihtyp.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IBO
+\item[INPUT:] JBO
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  IBXM    LABEL   NBOTYP  NBOUNI
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       BDFIND
+\item[Called by]   DELETE  DLCSTR
+
+\end{description}
+@a
+C*****************************************************************************
+      function ihtyp(IBO,JBO)
+C*****************************************************************************
+      implicit none
+      integer i , iat , Iathy , ib , IBO , Ibxm , ictr , ig , ihtyp ,
+     &        ir , iv , j , jat , jb , JBO , jctr , Label , Larc ,
+     &        Lstocc , MAXATM
+      integer MAXBAS , Nbotyp , Nbouni
+      logical bdfind
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+C
+      data iv , ig , ir/'v' , 'g' , 'r'/
+C
+C  determine whether the ibo->jbo delocalization is vicinal (ihtyp='v'),
+C  geminal (ihtyp='g'), or remote (ihtyp='r'):
+C
+      ihtyp = ir
+      if ( Nbouni(IBO).eq.Nbouni(JBO) ) then
+         ictr = mod(Nbotyp(IBO),10)
+         ib = Ibxm(IBO)
+         jctr = mod(Nbotyp(JBO),10)
+         jb = Ibxm(JBO)
+         do 50 i = 1 , ictr
+            iat = Label(ib,i+3)
+            do 20 j = 1 , jctr
+               jat = Label(jb,j+3)
+               if ( iat.eq.jat ) then
+                  ihtyp = ig
+                  return
+               elseif ( bdfind(iat,jat) ) then
+                  ihtyp = iv
+               endif
+ 20         continue
+ 50      continue
+      endif
+      return
+      end
+@* INDEX.

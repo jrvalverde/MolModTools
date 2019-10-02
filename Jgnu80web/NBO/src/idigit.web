@@ -1,0 +1,52 @@
+@*idigit.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] KINT
+\item[OUTPUT:] IK
+\item[OUTPUT:] ND
+\item[INPUT:] MAXD
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   CHEM    DLCSTR  LBLAO   LBLNAO  LBLNBO  LBLNHO  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine idigit(KINT,IK,ND,MAXD)
+C*****************************************************************************
+      implicit none
+      integer iblnk , id , IK , jint , KINT , MAXD , ND
+      dimension IK(MAXD)
+      data iblnk/' '/
+C
+C  converts the integer kint into the first nd elements of hollerith array
+C  ik(maxd):
+C
+      jint = KINT
+      ND = MAXD
+      do 100 id = MAXD , 1 , -1
+         IK(id) = mod(jint,10) + 48
+         if ( IK(id).gt.48 ) ND = id
+         jint = jint/10
+ 100  continue
+      ND = MAXD - ND + 1
+C
+C  shift integer rep in ik so that the number occupies the first nd
+C  elements:
+C
+      do 200 id = 1 , ND
+         IK(id) = IK(id+MAXD-ND)
+ 200  continue
+      do 300 id = ND + 1 , MAXD
+         IK(id) = iblnk
+ 300  continue
+      return
+      end
+@* INDEX.

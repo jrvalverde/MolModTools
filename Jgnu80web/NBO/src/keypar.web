@@ -1,0 +1,145 @@
+@*keypar.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] STRING
+\item[INPUT:] LEN
+\item[OUTPUT:] IFLG
+\item[INPUT:] LFN
+\item[INPUT:] READ
+\item[OUTPUT:] ERROR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  LFNPR
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CONVIN
+\item[Called by]    NOTHING 
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine keypar(STRING,LEN,IFLG,LFN,READ,ERROR)
+C*****************************************************************************
+      implicit none
+      integer ic , IFLG , il , ip , ir , iv , iw , kfull , klew , kval ,
+     &        LEN , LFN , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm ,
+     &        Lfnin , Lfnmo , Lfnnab
+      integer Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb ,
+     &        Lfnpnh , Lfnpnl , Lfnppa , Lfnpr
+      integer STRING(LEN)
+      logical READ , ERROR
+C
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      data iw , ir , ip , ic , iv , il/1HW , 1HR , 1HP , 1HC , 1HV ,
+     &     1HL/
+      data kfull , kval , klew/4HFULL , 3HVAL , 3HLEW/
+C
+C  interpret the keyword parameter string, storing the result in iflg.
+C  (the default iflg should be passed to this routine through iflg)
+C
+C  the following strings are acceptable:
+C
+C    string = wnnn     means write to the external file nnn (iflg = -nnn)
+C                      (if nnn is omitted, iflg = -lfn)
+C
+C    string = rnnn     means read from the external file nnn (iflg = -nnn*1000)
+C                      (if nnn is omitted, iflg = -lfn)
+C                      (read must be true to allow reading)
+C
+C    string = pnnnc    means print nnn columns to the output file (iflg = nnn)
+C                      (if nnn is omitted, print full matrix, iflg = 'full')
+C                      (the c is optional, it means columns)
+C
+C    string = pval     means print val columns to output file (iflg = 'val')
+C                      (val is the number of core + valence orbitals)
+C                      (only the v is necessary)
+C
+C
+C    string = plew     means print lew columns to output file (iflg = 'lew'
+C                      (lew is the number of occupied orbitals)
+C                      (only the l is necessary)
+C
+C    string = other    iflg is left untouched
+C
+      ERROR = .false.
+C
+C  process string = w..:
+C
+      if ( STRING(1).eq.iw ) then
+         if ( LEN.eq.1 ) then
+            IFLG = -LFN
+            return
+         endif
+         if ( LEN.gt.1 ) then
+            call convin(STRING(2),LEN-1,IFLG,ERROR)
+            if ( ERROR ) return
+            if ( IFLG.gt.1000 ) then
+               write (Lfnpr,99001)
+               write (Lfnpr,99002) IFLG
+               stop
+            endif
+            IFLG = -IFLG
+         endif
+C
+C  process string = r..:
+C
+      elseif ( STRING(1).eq.ir ) then
+         if ( .not.READ ) then
+            ERROR = .true.
+            return
+         endif
+         if ( LEN.eq.1 ) then
+            IFLG = -LFN*1000
+            return
+         endif
+         if ( LEN.gt.1 ) then
+            call convin(STRING(2),LEN-1,IFLG,ERROR)
+            if ( ERROR ) return
+            if ( IFLG.gt.1000 ) then
+               write (Lfnpr,99001)
+               write (Lfnpr,99003) IFLG
+               stop
+            endif
+            IFLG = -IFLG*1000
+         endif
+C
+C  process string = p..:
+C
+      elseif ( STRING(1).eq.ip ) then
+         if ( STRING(2).eq.iv ) then
+            IFLG = kval
+            return
+         endif
+         if ( STRING(2).eq.il ) then
+            IFLG = klew
+            return
+         endif
+         if ( LEN.eq.1 ) then
+            IFLG = kfull
+            return
+         endif
+         if ( LEN.gt.1 ) then
+            if ( STRING(LEN).ne.ic ) then
+               call convin(STRING(2),LEN-1,IFLG,ERROR)
+            else
+               call convin(STRING(2),LEN-2,IFLG,ERROR)
+            endif
+         endif
+      else
+         ERROR = .true.
+      endif
+      return
+C
+99001 format (/1x,'The NBO program will only communicate with external '
+     &        ,'files 0 thru 999.')
+99002 format (1x,'You''re attempting to write to file ',i6,'.')
+99003 format (1x,'You''re attempting to read from file ',i6,'.')
+      end
+@* INDEX.

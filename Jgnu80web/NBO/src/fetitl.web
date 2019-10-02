@@ -1,0 +1,32 @@
+@*fetitl.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] TITLE
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   AWRITE  NBO     WRARC   WRBAS
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fetitl(TITLE)
+C*****************************************************************************
+      implicit none
+      integer nfile
+      double precision TITLE
+      dimension TITLE(10)
+C
+C  fetitl:  fetches the job title from the nbodaf:
+C
+      nfile = 2
+      call nbread(TITLE,10,nfile)
+      return
+      end
+@* INDEX.

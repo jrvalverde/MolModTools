@@ -1,0 +1,105 @@
+@*fndsol.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] A
+\item[OUTPUT:] X
+\item[INPUT:] B
+\item[PASSED:] W
+\item[OUTPUT:] R
+\item[INPUT:] E
+\item[PASSED:] IPIVOT
+\item[INPUT:] N
+\item[INPUT:] NDIM
+\item[OUTPUT:] EPS
+\item[OUTPUT:] MAXIT
+\item[INPUT:] LFNPR
+\item[OUTPUT:] IERR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       COPY    SUBST   VECLEN
+\item[Called by]   LINEQ
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fndsol(A,X,B,W,R,E,IPIVOT,N,NDIM,EPS,MAXIT,LFNPR,IERR)
+C*****************************************************************************
+      implicit none
+      double precision A , B , E , elen , EPS , R , rellen , veclen ,
+     &                 W , X , xlen , zero
+      integer i , IERR , IPIVOT , iter , j , LFNPR , MAXIT , N , NDIM
+      dimension A(NDIM,NDIM) , X(NDIM) , B(NDIM) , W(NDIM,NDIM) ,
+     &          R(NDIM) , E(NDIM) , IPIVOT(NDIM)
+      data zero/0.0D0/
+C
+C  find initial guess for x by back substitution:
+C
+      call copy(B,E,NDIM,N,1)
+      call subst(X,W,E,IPIVOT,N,NDIM)
+      if ( MAXIT.eq.0 ) return
+C
+C  iterate until the vector length of the error vector relative to
+C  x is less than eps:
+C
+      rellen = zero
+      iter = 0
+ 100  if ( rellen.gt.EPS ) then
+         iter = iter + 1
+         do 150 i = 1 , N                
+C calculate the residual, r
+            R(i) = B(i)
+            do 120 j = 1 , N
+               R(i) = R(i) - A(i,j)*X(j)
+ 120        continue
+ 150     continue
+         call subst(E,W,R,IPIVOT,N,NDIM) 
+C find the error vector from
+         elen = veclen(E,N,NDIM)         
+C a*e = r
+         xlen = veclen(X,N,NDIM)
+         rellen = elen/xlen
+         do 200 i = 1 , N
+            X(i) = X(i) + E(i)
+ 200     continue
+C
+C  print out iterative improvement info:
+C
+         if ( LFNPR.gt.0 ) write (LFNPR,99001) iter , rellen
+C
+C  if too many iterations have taken place, halt furthur iterations:
+C
+         if ( iter.eq.MAXIT ) then
+            if ( rellen.gt.EPS ) IERR = -1
+            if ( LFNPR.gt.0 ) then
+               if ( IERR.lt.0 ) then
+                  write (LFNPR,99002)
+               else
+                  write (LFNPR,99003)
+               endif
+            endif
+            EPS = rellen
+            return
+         endif
+C
+C  error vector is converged:
+C
+      else
+         if ( LFNPR.gt.0 ) write (LFNPR,99003)
+         EPS = rellen
+         MAXIT = iter
+         return
+      endif
+      goto 100
+C
+99001 format (1x,'Iter = ',i3,'    relative length = ',f10.7)
+99002 format (1x,'No convergence within the specified number of ',
+     &        'iterations')
+99003 format (1x,'The error vector is converged')
+      end
+@* INDEX.

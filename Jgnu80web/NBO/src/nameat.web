@@ -1,0 +1,49 @@
+@*nameat.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IZ
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   ANLYZE  APRINT  CHEM    CHOOSE  CORE    DIPANL  FNBOAN
+             HYBDIR  LBLAO   LBLNAO  LBLNBO  LBLNHO  LMOANL  MULANA
+             NAOANL  NATHYB  NBODEL  NBOSUM
+
+\end{description}
+@a
+C*****************************************************************************
+      function nameat(IZ)
+      implicit none
+      integer iblank , ighost , IZ , name , nameat
+C*****************************************************************************
+C
+C  return atomic symbol for nuclear charge iz (.le. 103):
+C
+      dimension name(103)
+      data ighost/'gh'/iblank/'  '/
+      data name/' H' , 'He' , 'Li' , 'Be' , ' B' , ' C' , ' N' , ' O' ,
+     &     ' F' , 'Ne' , 'Na' , 'Mg' , 'Al' , 'Si' , ' P' , ' S' ,
+     &     'Cl' , 'Ar' , ' K' , 'Ca' , 'Sc' , 'Ti' , ' V' , 'Cr' ,
+     &     'Mn' , 'Fe' , 'Co' , 'Ni' , 'Cu' , 'Zn' , 'Ga' , 'Ge' ,
+     &     'As' , 'Se' , 'Br' , 'Kr' , 'Rb' , 'Sr' , ' Y' , 'Zr' ,
+     &     'Nb' , 'Mo' , 'Tc' , 'Ru' , 'Rh' , 'Pd' , 'Ag' , 'Cd' ,
+     &     'In' , 'Sn' , 'Sb' , 'Te' , ' I' , 'Xe' , 'Cs' , 'Ba' ,
+     &     'La' , 'Ce' , 'Pr' , 'Nd' , 'Pm' , 'Sm' , 'Eu' , 'Gd' ,
+     &     'Tb' , 'Dy' , 'Ho' , 'Er' , 'Tm' , 'Yb' , 'Lu' , 'Hf' ,
+     &     'Ta' , ' W' , 'Re' , 'Os' , 'Ir' , 'Pt' , 'Au' , 'Hg' ,
+     &     'Tl' , 'Pb' , 'Bi' , 'Po' , 'At' , 'Rn' , 'Fr' , 'Ra' ,
+     &     'Ac' , 'Th' , 'Pa' , ' U' , 'Np' , 'Pu' , 'Am' , 'Cm' ,
+     &     'Bk' , 'Cf' , 'Es' , 'Fm' , 'Md' , 'No' , 'Lr'/
+C
+      if ( IZ.lt.0 .or. IZ.gt.103 ) nameat = iblank
+      if ( IZ.gt.0 ) nameat = name(IZ)
+      if ( IZ.eq.0 ) nameat = ighost
+      return
+      end
+@* INDEX.

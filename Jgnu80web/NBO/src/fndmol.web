@@ -1,0 +1,140 @@
+@*fndmol.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] IATOMS
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    MOLAT   MOLATA  MOLEC   MOLECA  NMOLA   NMOLEC
+\item[Uses]  ISPIN   LFNPR   MOLAT   MOLATA  MOLEC   MOLECA  NATOMS
+             NMOLA   NMOLEC
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       BDFIND
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fndmol(IATOMS)
+C*****************************************************************************
+      implicit none
+      integer i , iat , Iatcr , iatmol , Iatno , IATOMS , imol ,
+     &        imolat , Ino , Ispin , itemp , Iznuc , j , k , latoms ,
+     &        Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm
+      integer Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho ,
+     &        Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr , Ll , Lu , MAXATM , MAXBAS , Molat , Molata , Molec
+      integer Moleca , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        Ndim , Nmola , Nmolec , Norbs
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbmol / Nmolec , Molat(MAXATM) , Molec(MAXATM,MAXATM) ,
+     &                Nmola , Molata(MAXATM) , Moleca(MAXATM,MAXATM)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+      dimension IATOMS(Natoms)
+      logical bdfind
+C
+C  find molecular units :  modified algorithm replacing original which
+C  had problems with determining molecular units for odd numberings of
+C  atoms.   (e. glendening  3/12/88)
+C
+      Nmolec = 0
+      do 100 i = 1 , Natoms
+         Molat(i) = 0
+         do 50 j = 1 , Natoms
+            Molec(i,j) = 0
+ 50      continue
+ 100  continue
+      do 200 i = 1 , Natoms
+         IATOMS(i) = i
+ 200  continue
+      latoms = Natoms
+ 300  Nmolec = Nmolec + 1
+      Molat(Nmolec) = 1
+      Molec(Nmolec,1) = IATOMS(1)
+      latoms = latoms - 1
+      if ( latoms.ne.0 ) then
+         do 350 i = 1 , latoms
+            IATOMS(i) = IATOMS(i+1)
+ 350     continue
+         iat = 1
+ 400     i = 1
+ 450     if ( bdfind(Molec(Nmolec,iat),IATOMS(i)) ) then
+            Molat(Nmolec) = Molat(Nmolec) + 1
+            Molec(Nmolec,Molat(Nmolec)) = IATOMS(i)
+            latoms = latoms - 1
+            if ( i.le.latoms ) then
+               do 460 j = i , latoms
+                  IATOMS(j) = IATOMS(j+1)
+ 460           continue
+            endif
+         else
+            i = i + 1
+         endif
+         if ( i.le.latoms ) goto 450
+         iat = iat + 1
+         if ( iat.le.Molat(Nmolec) .and. latoms.ne.0 ) goto 400
+      endif
+      if ( latoms.gt.0 ) goto 300
+C
+C  sort atoms in molecular units:
+C
+      do 600 i = 1 , Nmolec
+         do 500 j = 1 , Molat(i) - 1
+            do 480 k = 1 , Molat(i) - j
+               if ( Molec(i,k).gt.Molec(i,k+1) ) then
+                  itemp = Molec(i,k)
+                  Molec(i,k) = Molec(i,k+1)
+                  Molec(i,k+1) = itemp
+               endif
+ 480        continue
+ 500     continue
+ 600  continue
+C
+C  alpha spin: save bonding info in nmola,molata,moleca:
+C
+      if ( Ispin.eq.2 ) then
+         Nmola = Nmolec
+         do 650 imol = 1 , Nmolec
+            Molata(imol) = Molat(imol)
+            imolat = Molat(imol)
+            do 620 iatmol = 1 , imolat
+               Moleca(imol,iatmol) = Molec(imol,iatmol)
+ 620        continue
+ 650     continue
+C
+C  beta spin: make sure that beta molecular units are the same as alpha:
+C
+      elseif ( Ispin.eq.-2 ) then
+         if ( Nmola.ne.Nmolec ) goto 800
+         do 700 imol = 1 , Nmolec
+            imolat = Molat(imol)
+            if ( imolat.ne.Molata(imol) ) goto 800
+            do 660 iatmol = 1 , imolat
+               if ( Moleca(imol,iatmol).ne.Molec(imol,iatmol) ) goto 800
+ 660        continue
+ 700     continue
+      endif
+      return
+C
+ 800  write (Lfnpr,99001)
+      Nmola = -Nmola
+      return
+C
+99001 format (/1x,'The molecular units found in the alpha and beta ',
+     &        'manifolds are inequivalent.',/1x,
+     &        'For labelling purposes, ',
+     &        'the molecular units of the beta system will be used.')
+      end
+@* INDEX.

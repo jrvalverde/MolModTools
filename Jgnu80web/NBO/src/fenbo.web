@@ -1,0 +1,108 @@
+@*fenbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[INPUT:] OCC
+\item[INPUT:] ISCR
+\item[OUTPUT:] NELEC
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    IATNO   IBXM    LABEL   NBOTYP  NBOUNI
+\item[Uses]  BETA    NATOMS  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   NBODEL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fenbo(T,OCC,ISCR,NELEC)
+C*****************************************************************************
+      implicit none
+      double precision ele , OCC , T , tenth , zero
+      integer i , Iatno , Ibxm , ii , ISCR , Iscr1 , Iscr2 , Ispin , k ,
+     &        l1 , l3 , l4 , Label , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Natoms
+      integer Nbas , Nbotyp , Nbouni , Ndim , NELEC , nfile
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Iatno(MAXBAS) , Ibxm(MAXBAS) , Iscr1(2*MAXBAS) ,
+     &                Iscr2(2*MAXBAS)
+C
+      dimension T(Ndim,Ndim) , OCC(Ndim) , ISCR(1)
+C
+      data zero , tenth/0.0D0 , 1.0D-1/
+C
+C  fenbo:  fetches NBO information (transformation, occupancies, labels, etc.)
+C          if alpha .eq. .true.  fetch the alpha information
+C          if beta .eq. .true.  fetch the beta information.
+C
+C  fetch the AO to NBO transformation matrix:
+C
+      l1 = Ndim
+      l3 = Ndim*Ndim
+      l4 = Nbas*10
+      nfile = 44
+      if ( Beta ) nfile = 45
+      call nbread(T,l3,nfile)
+C
+C  fetch NBO orbital occupancies:
+C
+      nfile = 27
+      if ( Beta ) nfile = 28
+      call nbread(OCC,l1,nfile)
+C
+C  count up the total number of electrons as an integer nelec:
+C
+      ele = zero
+      do 100 i = 1 , Nbas
+         ele = ele + OCC(i)
+ 100  continue
+      ele = ele + tenth
+      NELEC = ele
+C
+C  fetch the various lists of NBO information for use in the deletions.
+C  unpack the information into label(maxbas,6),ibxm(maxbas),iatno(maxbas),
+C  nbouni(maxbas) and nbotyp(maxbas) from iscr(10*ndim):
+C
+      nfile = 60
+      if ( Beta ) nfile = 61
+      call nbread(ISCR,l4,nfile)
+C
+      ii = 0
+      do 200 k = 1 , 6
+         do 150 i = 1 , Nbas
+            ii = ii + 1
+            Label(i,k) = ISCR(ii)
+ 150     continue
+ 200  continue
+      do 300 i = 1 , Nbas
+         ii = ii + 1
+         Ibxm(i) = ISCR(ii)
+ 300  continue
+      do 400 i = 1 , Natoms
+         ii = ii + 1
+         Iatno(i) = ISCR(ii)
+ 400  continue
+      do 500 i = 1 , Nbas
+         ii = ii + 1
+         Nbouni(i) = ISCR(ii)
+ 500  continue
+      do 600 i = 1 , Nbas
+         ii = ii + 1
+         Nbotyp(i) = ISCR(ii)
+ 600  continue
+C
+      return
+      end
+@* INDEX.

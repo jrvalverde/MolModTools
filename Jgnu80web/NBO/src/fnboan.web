@@ -1,0 +1,245 @@
+@*fnboan.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] BNDOCC
+\item[INPUT:] F
+\item[OUTPUT:] MOLNBO
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  IATNO   NBAS    NDIM
+\item[Uses]  E2THR   IATNO   IBXM    ISPIN   LABEL   LFNPR   MUNIT
+             NBAS    NBOTYP  NBOUNI  NDIM    NMOLEC
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       CONVRT  FEFNBO  NAMEAT  UNPACK
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fnboan(BNDOCC,F,MOLNBO)
+C*****************************************************************************
+      implicit none
+      double precision absfij , Accthr , Athr , aukcal , BNDOCC , conv ,
+     &                 Crtset , de , Dthr , E2thr , ekcal , epert ,
+     &                 Ethr , ethr1 , ethr2 , ethrsh , evkcal , F ,
+     &                 fulloc , hundth
+      integer i , ia , Iatcr , Iathy , Iatno , ib , ibas , Ibxm , ich ,
+     &        Ichoos , imol , inam , Ino , iocc , Iprint , Ipseud ,
+     &        isp , Ispin , Iw3c , Iwapol
+      integer Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp ,
+     &        Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Iznuc , j , ja , jb ,
+     &        jbas , jch , Jcore , jmol , jnam , Jprint
+      integer jsp , jstar , k , Kopt , l3c , Label , lbd , lbl ,
+     &        lblnk1 , lblnk2 , Lfnao , Lfnarc , Lfndaf , Lfndef ,
+     &        Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo
+      integer Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , lhyp , Ll , Lstocc , Lu , MAXATM ,
+     &        MAXBAS , Molat , Molata , Molec , Moleca , Mollst , MOLNBO
+      integer Munit , Mxao , Mxaolm , Mxbo , nameat , Natoms , Nbas ,
+     &        Nbotyp , Nbouni , nctr , Ndim , nele , Nmola , Nmolec ,
+     &        nocc , Norbs , nstar , ntri
+      double precision occfac , one , Prjset , Pthr , ten , Thrset ,
+     &                 totocc , two , zero
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Mollst(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbmol / Nmolec , Molat(MAXATM) , Molec(MAXATM,MAXATM) ,
+     &                Nmola , Molata(MAXATM) , Moleca(MAXATM,MAXATM)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbthr / Thrset , Prjset , Accthr , Crtset , E2thr , Athr ,
+     &                Pthr , Ethr , Dthr
+      dimension BNDOCC(Nbas) , F(Ndim,Ndim) , MOLNBO(2,Nbas,Nmolec)
+      dimension inam(3) , jnam(3) , ich(3,2) , jch(3,2) , isp(3) ,
+     &          jsp(3)
+C
+      data lbd/2HBD/ , l3c/2H3C/ , lblnk1/1H / , lblnk2/2H  / ,
+     &     lhyp/1H-/
+      data hundth/0.01D0/
+      data aukcal/627.51D0/ , evkcal/23.060D0/
+      data zero , one , two , ten/0.0D0 , 1.0D0 , 2.0D0 , 1.0D1/
+C
+C  perform 2nd order analysis of the fock matrix:
+C
+C  ethr1 is the threshold for printing the intramolecular perturbational
+C  energies (0.5 kcal/mol for closed shell, 0.25 kcal/mol for open shell)
+C  similarly, ethr2 is the intermolecular threshold, (0.05 kcal/mol).
+C
+      ethr1 = dabs(E2thr)
+      if ( Ispin.ne.0 .and. E2thr.lt.zero ) ethr1 = ethr1/two
+      ethr2 = dabs(E2thr)/ten
+      if ( Ispin.ne.0 .and. E2thr.lt.zero ) ethr2 = ethr2/two
+C
+C  fetch the NBO fock matrix:
+C
+      ntri = Ndim*(Ndim+1)/2
+      call fefnbo(F)
+      call unpack(F,Ndim,Nbas,ntri)
+C
+C  analyze fock matrix:
+C
+C  make up list molnbo(1,ibas,imol) of core/lp/bond nbos in molec. unit imol
+C               molnbo(2,ibas,imol) of rydberg/antibond nbos in molec. imol
+C
+      do 200 imol = 1 , Nmolec
+         nocc = 0
+         nstar = 0
+         do 50 ibas = 1 , Nbas
+            do 20 i = 1 , 2
+               MOLNBO(i,ibas,imol) = 0
+ 20         continue
+ 50      continue
+         do 100 ibas = 1 , Nbas
+            if ( imol.eq.Nbouni(ibas) ) then
+               if ( Nbotyp(ibas).le.20 ) then
+                  nocc = nocc + 1
+                  MOLNBO(1,nocc,imol) = ibas
+                  if ( Nbotyp(ibas).lt.10 ) goto 100
+               endif
+               nstar = nstar + 1
+               MOLNBO(2,nstar,imol) = ibas
+            endif
+ 100     continue
+ 200  continue
+C
+C  determine the conversion from input energy units to kcal:
+C
+      if ( Munit.eq.0 ) then
+         conv = aukcal
+      elseif ( Munit.eq.1 ) then
+         conv = evkcal
+      else
+         conv = one
+      endif
+C
+C  loop over pairs of units:
+C
+      write (Lfnpr,99004) ethr1
+      if ( Nmolec.gt.1 ) write (Lfnpr,99005) ethr2
+      if ( Munit.eq.0 ) then
+         write (Lfnpr,99006)
+      elseif ( Munit.eq.1 ) then
+         write (Lfnpr,99007)
+      else
+         write (Lfnpr,99008)
+      endif
+      do 300 imol = 1 , Nmolec
+         do 250 jmol = 1 , Nmolec
+            if ( imol.eq.jmol ) write (Lfnpr,99001) imol
+            if ( imol.ne.jmol ) write (Lfnpr,99002) imol , jmol
+            ethrsh = ethr1
+            if ( imol.ne.jmol ) ethrsh = ethr2
+            nele = 0
+            do 220 iocc = 1 , Nbas
+               ibas = MOLNBO(1,iocc,imol)
+               if ( ibas.ne.0 ) then
+                  ib = Ibxm(ibas)
+                  lbl = Label(ib,1)
+                  nctr = 1
+                  if ( lbl.eq.lbd ) nctr = 2
+                  if ( lbl.eq.l3c ) nctr = 3
+                  do 205 i = 1 , 3
+                     ia = Label(ib,i+3)
+                     call convrt(ia,ich(i,1),ich(i,2))
+                     inam(i) = lblnk2
+                     if ( ia.gt.0 ) inam(i) = nameat(Iatno(ia))
+                     isp(i) = lhyp
+                     if ( i.ge.nctr ) isp(i) = lblnk1
+ 205              continue
+                  do 210 jstar = 1 , Nbas
+                     jbas = MOLNBO(2,jstar,jmol)
+                     if ( jbas.ne.0 ) then
+                        if ( ibas.ne.jbas ) then
+                           de = F(jbas,jbas) - F(ibas,ibas)
+                           if ( de.ge.hundth ) then
+                              absfij = abs(F(ibas,jbas))
+                              epert = (absfij**2)/de
+C
+C  compute occupancy factor to multiply by:
+C
+                              totocc = BNDOCC(ibas) + BNDOCC(jbas)
+                              fulloc = two
+                              if ( Ispin.ne.0 ) fulloc = one
+                              occfac = totocc
+                              if ( totocc.gt.fulloc )
+     &                             occfac = two*fulloc - totocc
+C
+C  multiply epert by sum of occupancies of nbos ibas and jbas:
+C
+                              epert = epert*occfac
+                              ekcal = epert*conv
+                              if ( ekcal.ge.ethrsh ) then
+                                 nele = nele + 1
+                                 jb = Ibxm(jbas)
+                                 lbl = Label(jb,1)
+                                 nctr = 1
+                                 if ( lbl.eq.lbd ) nctr = 2
+                                 if ( lbl.eq.l3c ) nctr = 3
+                                 do 206 j = 1 , 3
+                                    ja = Label(jb,j+3)
+                                    call convrt(ja,jch(j,1),jch(j,2))
+                                    jnam(j) = lblnk2
+                                    if ( ja.gt.0 ) jnam(j)
+     &                                 = nameat(Iatno(ja))
+                                    jsp(j) = lhyp
+                                    if ( j.ge.nctr ) jsp(j) = lblnk1
+ 206                             continue
+                                 write (Lfnpr,99009) ibas ,
+     &                                  (Label(ib,k),k=1,3) ,
+     &                                  (inam(k),ich(k,1),ich(k,2),
+     &                                  isp(k),k=1,2) , inam(3) ,
+     &                                  ich(3,1) , ich(3,2) , jbas ,
+     &                                  (Label(jb,k),k=1,3) ,
+     &                                  (jnam(k),jch(k,1),jch(k,2),
+     &                                  jsp(k),k=1,2) , jnam(3) ,
+     &                                  jch(3,1) , jch(3,2) , ekcal ,
+     &                                  de , absfij
+                              endif
+                           endif
+                        endif
+                     endif
+ 210              continue
+               endif
+ 220        continue
+            if ( nele.eq.0 ) write (Lfnpr,99003)
+ 250     continue
+ 300  continue
+      return
+C
+99001 format (/1x,'within unit ',i2)
+99002 format (/1x,'from unit ',i2,' to unit ',i2)
+99003 format (1x,'      None above threshold')
+99004 format (//,1x,'Second Order Perturbation Theory Analysis ',
+     &        'of Fock Matrix in NBO Basis'//,1x,
+     &        '    Threshold for printing:  ',f5.2,' kcal/mol')
+99005 format (1x,'   (Intermolecular threshold:',f5.2,' kcal/mol)')
+99006 format (56x,'  E(2)  E(j)-E(i) F(i,j)'/6x,'Donor NBO (i)',14x,
+     &        'Acceptor NBO (j)',7x,'kcal/mol   a.u.    a.u. ',/1x,
+     &        79('='))
+99007 format (56x,'  E(2)  E(j)-E(i) F(i,j)'/6x,'Donor NBO (i)',14x,
+     &        'Acceptor NBO (j)',7x,'kcal/mol   e.V.    e.V. ',/1x,
+     &        79('='))
+99008 format (56x,'  E(2)  E(j)-E(i) F(i,j)'/6x,'Donor NBO (i)',14x,
+     &        'Acceptor NBO (j)',7x,'kcal/mol   kcal    kcal ',/1x,
+     &        79('='))
+99009 format (1x,i3,'. ',a2,a1,'(',i2,')',a2,3A1,a2,3A1,a2,2A1,'/',i3,
+     &        '. ',a2,a1,'(',i2,')',a2,3A1,a2,3A1,a2,2A1,f8.2,f8.2,f9.3)
+      end
+@* INDEX.

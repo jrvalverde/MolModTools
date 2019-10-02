@@ -1,0 +1,106 @@
+@*frmtmo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[OUTPUT:] TMO
+\item[PASSED:] C
+\item[PASSED:] SCR
+\item[INPUT:] INDEX
+\item[PASSED:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  LFNPR   NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT    FEAOMO  LINEQ
+\item[Called by]   DMNAO   DMSIM   NAODRV  NAOSIM  NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine frmtmo(T,TMO,C,SCR,INDEX,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision C , eps , SCR , T , tmax , TMO , zero , zertol
+      integer ierr , IFLG , INDEX , Iprin , Ispin , it , jrow , kcol ,
+     &        lfn0 , Lfnao , Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin ,
+     &        Lfnmo , Lfnnab , Lfnnao , Lfnnbo , Lfnnho
+      integer Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa ,
+     &        Lfnpr , Ltyp , MAXATM , MAXBAS , maxit , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Naoa , Naoc , Natoms , Nbas , Ndim
+      character*80 title
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbnao / Naoc(MAXBAS) , Naoa(MAXBAS) , Ltyp(MAXBAS) ,
+     &                Iprin(MAXBAS)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      dimension T(Ndim,Ndim) , TMO(Ndim,Ndim) , C(Ndim,Ndim) ,
+     &          SCR(Ndim*(Ndim+5))
+C  dbc
+      character*4 basis
+      dimension basis(4)
+C
+      data basis/' NAO' , ' NHO' , ' NBO' , 'NLMO'/
+      data zero/0.0D0/
+C
+C  input:
+C     t     --  transformation from AO basis to currect basis
+C     index --  current basis = 2,3,4,5 (nao,nho,nbo,nlmo)
+C     iflg  --  number of columns of tmo to print
+C               or external lfn to write to
+C
+C  fetch the AO to MO transformation matrix:
+C
+      call feaomo(C,it)
+      if ( it.eq.0 ) return
+C
+C  find the MO transformation matrix:
+C
+      eps = 1.0E-8
+      maxit = 10
+      lfn0 = 0
+      call lineq(T,TMO,C,SCR,Nbas,Nbas,Ndim,Ndim,zertol,eps,maxit,lfn0,
+     &           ierr)
+      if ( ierr.ne.0 ) then
+         write (Lfnpr,99001) basis(INDEX-1)
+         if ( ierr.eq.1 ) write (Lfnpr,99002) basis(INDEX-1)
+         stop
+      endif
+C
+C  make sure the largest coefficient in each column is positive:
+C
+      do 100 kcol = 1 , Nbas
+         tmax = zero
+         do 50 jrow = 1 , Nbas
+            if ( abs(TMO(jrow,kcol)).gt.abs(tmax) )
+     &           tmax = TMO(jrow,kcol)
+ 50      continue
+         if ( tmax.lt.zero ) then
+            do 60 jrow = 1 , Nbas
+               TMO(jrow,kcol) = -TMO(jrow,kcol)
+ 60         continue
+         endif
+ 100  continue
+C
+C  write or print the MO transformation matrix:
+C
+      if ( INDEX.eq.2 ) title = 'MOs in the NAO basis:'
+      if ( INDEX.eq.3 ) title = 'MOs in the NHO basis:'
+      if ( INDEX.eq.4 ) title = 'MOs in the NBO basis:'
+      if ( INDEX.eq.5 ) title = 'MOs in the NLMO basis:'
+      call aout(TMO,Ndim,Nbas,Nbas,title,INDEX,IFLG)
+      return
+C
+99001 format (/1x,'Error calculating the ',a4,' to MO transformation')
+99002 format (1x,'The AO to ',a4,' transformation is not invertible')
+      end
+@* INDEX.

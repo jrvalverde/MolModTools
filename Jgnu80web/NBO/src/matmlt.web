@@ -1,0 +1,56 @@
+@*matmlt.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] A
+\item[INPUT:] B
+\item[OUTPUT:] V
+\item[INPUT:] NDIM
+\item[INPUT:] N
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   HYBDIR  NBODRV  SIMTRM  SIMTRN  SIMTRS  XCITED
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine matmlt(A,B,V,NDIM,N)
+C*****************************************************************************
+      implicit none
+      double precision A , B , temp , V , zero
+      integer i , ij , ik , ikk , j , k , kj , N , ndif , NDIM
+      dimension A(1) , B(1) , V(NDIM)
+      data zero/0.0D0/
+C
+C  multiply a*b (using scratch vector v), store result in a:
+C
+      ndif = NDIM - N
+      do 200 i = 1 , N
+         kj = 0
+         ikk = i - NDIM
+         do 50 j = 1 , N
+            ik = ikk
+            temp = zero
+            do 20 k = 1 , N
+               ik = ik + NDIM
+               kj = kj + 1
+               temp = temp + A(ik)*B(kj)
+ 20         continue
+            kj = kj + ndif
+            V(j) = temp
+ 50      continue
+         ij = i - NDIM
+         do 100 j = 1 , N
+            ij = ij + NDIM
+            A(ij) = V(j)
+ 100     continue
+ 200  continue
+      return
+      end
+@* INDEX.

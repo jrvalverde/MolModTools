@@ -1,0 +1,44 @@
+@*fefnbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] F
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  BETA    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   FNBOAN  NBODEL  NBOSUM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fefnbo(F)
+C*****************************************************************************
+      implicit none
+      double precision F
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      dimension F(1)
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+C  fefnbo:  fetches the NBO fock matrix, leaving it in triangular form!!
+C           if alpha.eq.true.  we want the alpha fock matrix
+C           if beta.eq.true.   we want the beta fock matrix.
+C
+      nfile = 34
+      if ( Beta ) nfile = 35
+      l2 = Ndim*(Ndim+1)/2
+      call nbread(F,l2,nfile)
+      return
+      end
+@* INDEX.

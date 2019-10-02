@@ -1,0 +1,43 @@
+@*fetnbo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  BETA    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   DIPANL
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fetnbo(T)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l3 , MAXATM , MAXBAS , Munit , Mxao , Mxaolm ,
+     &        Mxbo , Natoms , Nbas , Ndim , nfile
+      double precision T
+      dimension T(1)
+      logical Rohf , Uhf , Ci , Open , Complex , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complex , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+C  fetnbo: fetch the AO to NBO transformation matrix
+C
+      l3 = Ndim*Ndim
+      nfile = 44
+      if ( Beta ) nfile = 45
+      call nbread(T,l3,nfile)
+      return
+      end
+@* INDEX.

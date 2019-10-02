@@ -1,0 +1,88 @@
+@*frmpro.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] P
+\item[INPUT:] IA
+\item[INPUT:] Q
+\item[INPUT:] NK
+\item[OUTPUT:] PK
+\item[OUTPUT:] VK
+\item[OUTPUT:] PI
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  ILL     MXAO    NDIM    NORBS
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   CHOOSE  NATHYB  PRJEXP
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine frmpro(P,IA,Q,NK,PK,VK,PI)
+C*****************************************************************************
+      implicit none
+      integer i , IA , Iatcr , Iatno , icol , Ill , Ino , Ispin , Iul ,
+     &        Iznuc , j , k , l , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Natoms
+      integer nb , Nbas , Ndim , NK , Norbs
+      double precision one , P , PI , PK , Q , VK , zero
+C
+C  form projection matrix p to annihilate components of nk occupied
+C  hybrids for atom ia.
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ill(MAXATM) , Iul(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      dimension P(Mxao,Mxao) , VK(Mxao) , PI(Mxao) , Q(Mxao,Ndim) ,
+     &          PK(Mxao,Mxao)
+      data zero , one/0.0D0 , 1.0D0/
+      nb = Norbs(IA)
+C  initialize p = unit matrix
+      do 100 j = 1 , nb
+         do 50 i = 1 , j
+            P(i,j) = zero
+            P(j,i) = zero
+            if ( i.eq.j ) P(i,j) = one
+ 50      continue
+ 100  continue
+C  form projection matrix p = p1*p2*...*pk*...*pnk to annihilate
+C  components of the nk occupied hybrids vk:  pk = i - vk*vk(t).
+C  loop over occupied hybrids vk, k = 1,...,nk:
+      if ( NK.le.0 ) return
+      do 300 k = 1 , NK
+C  extract occupied hybrid vk from array q
+         icol = Ill(IA) + k - 1
+         do 150 i = 1 , nb
+            VK(i) = Q(i,icol)
+ 150     continue
+C  form projection matrix pk:
+         do 200 j = 1 , nb
+            do 160 i = 1 , j
+               PK(i,j) = -VK(i)*VK(j)
+               PK(j,i) = PK(i,j)
+               if ( i.eq.j ) PK(i,j) = PK(i,j) + one
+ 160        continue
+ 200     continue
+C  accumulate total projector p(k) = p(k-1)*pk
+         do 250 i = 1 , nb
+            do 220 j = 1 , nb
+               PI(j) = zero
+               do 210 l = 1 , nb
+                  PI(j) = PI(j) + P(i,l)*PK(l,j)
+ 210           continue
+ 220        continue
+            do 240 j = 1 , nb
+               P(i,j) = PI(j)
+ 240        continue
+ 250     continue
+ 300  continue
+      return
+      end
+@* INDEX.

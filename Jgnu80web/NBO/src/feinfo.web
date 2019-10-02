@@ -1,0 +1,96 @@
+@*feinfo.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] ICORE
+\item[OUTPUT:] ISWEAN
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    AUHF    CI      MCSCF   MUNIT   NATOMS  NBAS    NDIM
+             OPEN    ORTHO   ROHF    UHF
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  NBWRIT
+\item[Called by]   NBOEAN
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine feinfo(ICORE,ISWEAN)
+C*****************************************************************************
+      implicit none
+      integer Iatcr , Iatno , Ichoos , ICORE , Imval , Ino , Iprint ,
+     &        Ipseud , Ispin , ISWEAN , Iw3c , Iwapol , Iwcubf ,
+     &        Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp , Iwpnao , Iwtnab
+      integer Iwtnao , Iwtnbo , Iznuc , Jcore , Jprint , Kopt , Label ,
+     &        Lang , Larc , Lbl , Lctr , Lfnao , Lfnarc , Lfndaf ,
+     &        Lfndef , Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao
+      integer Lfnnbo , Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh ,
+     &        Lfnpnl , Lfnppa , Lfnpr , Ll , Lorb , Lorbc , Lstemt ,
+     &        Lstocc , Lu , Lval , MAXATM , MAXBAS , Munit , Mxao
+      integer Mxaolm , Mxbo , Natoms , Nbas , Ndim , nfile , Norbs
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      dimension ICORE(*)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbbas / Label(MAXBAS,6) , Lval(MAXBAS) , Imval(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbao  / Lctr(MAXBAS) , Lang(MAXBAS)
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+C
+C  restore wavefunction information from the NBO daf:
+C
+C  restore natoms, ndim, nbas, munit, wavefunction flags, iswean:
+C
+      nfile = 3
+      call nbread(ICORE,6,nfile)
+      Natoms = ICORE(1)
+      Ndim = ICORE(2)
+      Nbas = ICORE(3)
+      Munit = ICORE(4)
+      Rohf = .false.
+      if ( ICORE(5).eq.1 ) Rohf = .true.
+      Uhf = .false.
+      if ( ICORE(6).eq.1 ) Uhf = .true.
+      Ci = .false.
+      if ( ICORE(7).eq.1 ) Ci = .true.
+      Open = .false.
+      if ( ICORE(8).eq.1 ) Open = .true.
+      Mcscf = .false.
+      if ( ICORE(9).eq.1 ) Mcscf = .true.
+      Auhf = .false.
+      if ( ICORE(10).eq.1 ) Auhf = .true.
+      Ortho = .false.
+      if ( ICORE(11).eq.1 ) Ortho = .true.
+      ISWEAN = ICORE(12)
+C
+C  if iswean is 1, set icore(12) to 0 and write to NBO daf.  note, iswean is
+C  set to 1 by the feaoin driver routine.  this tells the energetic analysis
+C  routines to search for the $del keylist.  iswean is reset to 0 here so
+C  that multiple deletions can be read from a single $del keylist:
+C
+      if ( ISWEAN.eq.1 ) then
+         ICORE(12) = 0
+         call nbwrit(ICORE,6,nfile)
+      endif
+      return
+      end
+@* INDEX.

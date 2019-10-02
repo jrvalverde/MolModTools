@@ -1,0 +1,79 @@
+@*loadav.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] LISTAO
+\item[INPUT:] NL
+\item[INPUT:] M
+\item[INPUT:] S
+\item[INPUT:] NDIM
+\item[OUTPUT:] A
+\item[OUTPUT:] B
+\item[INPUT:] MXAOLM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NAO
+
+\end{description}
+@a
+C****************************************************************************
+C
+C  routines called by sr nao:
+C
+C      subroutine loadav(listao,nl,m,s,ndim,a,b,mxaolm)
+C      subroutine atdiag(n,a,b,eval,c)
+C      subroutine setbas(lstocc,lstemt,nocc,nemt,iat,l,nl,nf,ndim)
+C      subroutine newwts(s,t,wt)
+C      subroutine worth(s,t,blk,list,ndim,nbas,n,occ,eval,bigblk)
+C      subroutine shmdt(t,s,ndim,nbas,nocc,lstocc,nemt,lstemt,sblk)
+C      subroutine newryd(t,s,tpnao,dmblk,sblk,evect,occ,eval,eval2,
+C     +                       list,irpnao)
+C      subroutine rydiag(t,s,tpnao,dmblk,sblk,occ,eval,evect,eval2,
+C     +                    iorb,nc,nm,nstart,nrydc,larc,list,irpnao)
+C      subroutine rydsel(lstemt,nemt,nsel1,list1,nsel2,list2,wt)
+C      subroutine rediag(dm,t,tpnao,eval,blk,c,irank,irpnao)
+C      subroutine redblk(t,tpnao,il,dm,blk,eval,c,nf,iorb,nc,irank,irpnao)
+C
+C*****************************************************************************
+      subroutine loadav(LISTAO,NL,M,S,NDIM,A,B,MXAOLM)
+C*****************************************************************************
+      implicit none
+      double precision A , ave , B , one , S , sum , zero
+      integer i , iao , im , j , jao , LISTAO , M , MXAOLM , NDIM , NL
+      dimension S(NDIM,NDIM) , LISTAO(MXAOLM,9) , A(NL,NL) , B(NL,NL)
+      data one , zero/1.0D0 , 0.0D0/
+C
+C  average the AO density matrix elements over the m=2*l+1 components
+C  of l for a particular atom.
+C  load density matrix elements (upper triangle of s, incl. diagonal)
+C  into a, overlap matrix elements (lower triangle of s) into b, for
+C  orbitals of 'list'
+C
+      do 100 j = 1 , NL
+         do 50 i = 1 , j
+C  find average dm element over the values of im:
+            sum = zero
+            do 20 im = 1 , M
+               iao = LISTAO(i,im)
+               jao = LISTAO(j,im)
+               sum = sum + S(iao,jao)
+ 20         continue
+            ave = sum/M
+C  density matrix elements into a:
+            A(i,j) = ave
+            A(j,i) = ave
+C  overlap matrix elements into b:
+            B(i,j) = S(jao,iao)
+            B(j,i) = B(i,j)
+ 50      continue
+         B(j,j) = one
+ 100  continue
+      return
+      end
+@* INDEX.

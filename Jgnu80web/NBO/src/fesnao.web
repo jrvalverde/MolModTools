@@ -1,0 +1,40 @@
+@*fesnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] S
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  UNPACK
+\item[Called by]   DMNAO   LMOANL  NAODRV  WRTNAO  XCITED
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fesnao(S)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      double precision S
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      dimension S(Ndim,Ndim)
+C
+C   fesnao:   fetch the overlap matrix in the pnao or rpnao basis set.
+C
+      nfile = 11
+      l2 = Ndim*(Ndim+1)/2
+      call nbread(S,l2,nfile)
+      call unpack(S,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

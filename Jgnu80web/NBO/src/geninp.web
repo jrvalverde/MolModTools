@@ -1,0 +1,224 @@
+@*geninp.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] NEWDAF
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    BOHR    DENOP   IWCUBF  MUNIT   NATOMS  NBAS    NDIM
+             OPEN    ORTHO   REUSE   UPPER
+\item[Transmits as argument]  LFNIN
+\item[Uses]  LFNIN   LFNPR   NATOMS  NBAS    REUSE
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       EQUAL   HFLD    IFLD    STRTIN
+\item[Called by]   NBO
+
+\end{description}
+@a
+C*****************************************************************************
+C
+C  other system-independent i/o routines:
+C
+C      subroutine geninp(newdaf)
+C      subroutine nboinp(nboopt,idone)
+C      subroutine corinp(iess,icor)
+C      subroutine chsinp(iess,ichs)
+C      subroutine delinp(nboopt,idone)
+C
+C      subroutine rdcore(jcore)
+C      subroutine wrppna(t,occ,iflg)
+C      subroutine rdppna(t,occ,iflg)
+C      subroutine wrtnao(t,iflg)
+C      subroutine rdtnao(dm,t,scr,iflg)
+C      subroutine wrtnab(t,iflg)
+C      subroutine rdtnab(t,dm,bndocc,scr,iflg)
+C      subroutine wrtnbo(t,bndocc,iflg)
+C      subroutine wrnlmo(t,dm,iflg)
+C      subroutine wrbas(scr,iscr,lfn)
+C      subroutine wrarc(scr,iscr,lfn)
+C
+C      subroutine aout(a,mr,nr,nc,title,index,iflg)
+C      subroutine aprint(a,mr,nr,nc,title,index,mcol)
+C      subroutine awrite(a,mr,nr,nc,title,lfn)
+C      subroutine aread(a,mr,nr,nc,job,lfn,error)
+C      subroutine output(a,mr,mc,nr,nc)
+C      subroutine keypar(string,len,iflg,lfn,read,error)
+C      function ioinqr(iflg)
+C      subroutine lblao
+C      subroutine lblnao
+C      subroutine lblnbo
+C      subroutine lblnho(inho,inbo,ictr,nctr)
+C
+C*****************************************************************************
+      subroutine geninp(NEWDAF)
+C*****************************************************************************
+      implicit none
+      integer Ichoos , Iprint , Ipseud , Ispin , Iw3c , Iwapol ,
+     &        Iwcubf , Iwdetl , Iwdm , Iwfock , Iwhybs , Iwmulp ,
+     &        Iwpnao , Iwtnab , Iwtnao , Iwtnbo , Jcore , Jprint ,
+     &        kbodm , kbohr
+      integer kcubf , kend , kev , keywd , kgen , knatom , knbas ,
+     &        kopen , Kopt , kortho , kreuse , kupper , len , Lfnao ,
+     &        Lfnarc , Lfndaf , Lfndef , Lfndm , Lfnin , Lfnmo
+      integer Lfnnab , Lfnnao , Lfnnbo , Lfnnho , Lfnnlm , Lfnpna ,
+     &        Lfnpnb , Lfnpnh , Lfnpnl , Lfnppa , Lfnpr , MAXATM ,
+     &        MAXBAS , Munit , Mxao , Mxaolm , Mxbo , Natoms , Nbas ,
+     &        Ndim
+      logical NEWDAF , end , error , equal
+C
+      dimension keywd(6) , kgen(4) , kend(4) , kreuse(5) , knbas(4) ,
+     &          knatom(6) , kupper(5) , kopen(4) , kortho(5) , kbohr(4)
+     &          , kbodm(4) , kev(2) , kcubf(6)
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbgen / Reuse , Upper , Bohr , Denop
+      logical Reuse , Upper , Bohr , Denop
+C
+      data kgen/1H$ , 1HG , 1HE , 1HN/ , kend/1H$ , 1HE , 1HN , 1HD/ ,
+     &     kreuse/1HR , 1HE , 1HU , 1HS , 1HE/ , knbas/1HN , 1HB , 1HA ,
+     &     1HS/ , knatom/1HN , 1HA , 1HT , 1HO , 1HM , 1HS/ ,
+     &     kupper/1HU , 1HP , 1HP , 1HE , 1HR/ , kopen/1HO , 1HP , 1HE ,
+     &     1HN/ , kortho/1HO , 1HR , 1HT , 1HH , 1HO/ , kbohr/1HB ,
+     &     1HO , 1HH , 1HR/ , kbodm/1HB , 1HO , 1HD , 1HM/ , kev/1HE ,
+     &     1HV/kcubf/1HC , 1HU , 1HB , 1HI , 1HC , 1HF/
+C
+C  initialize variables:
+C
+      Nbas = 0
+      Natoms = 0
+      Munit = 0
+      Reuse = .false.
+      Upper = .false.
+      Bohr = .false.
+      Denop = .true.
+C
+C  search lfnin for $gen:
+C
+      rewind (Lfnin)
+ 100  call strtin(Lfnin)
+      len = 6
+      call hfld(keywd,len,end)
+      if ( len.eq.0 .and. end ) stop 'No $GEN keylist in the input file'
+      if ( .not.equal(keywd,kgen,4) ) goto 100
+C
+C  $gen has been found, now read keywords:
+C
+ 200  len = 6
+      call hfld(keywd,len,end)
+      if ( equal(keywd,kend,4) ) then
+C
+C  end of $gen input encountered, make sure gennbo has all info needed:
+C
+         if ( Reuse ) then
+            NEWDAF = .false.
+            return
+         else
+            NEWDAF = .true.
+         endif
+C
+         Ndim = Nbas
+         if ( Nbas.le.0 ) stop 'NBAS must be specified in $GEN keylist'
+         if ( Nbas.gt.MAXBAS ) stop 'Increase parameter MAXBAS'
+         if ( Natoms.le.0 ) stop
+     &                        'NATOMS must be specified in $GEN keylist'
+         if ( Natoms.gt.MAXATM ) stop 'Increase parameter MAXATM'
+         return
+C
+99001    format (1x,'Unrecognized keyword >',6A1,'<')
+      endif
+C
+C  keyword reuse -- reuse data already stored on the NBO daf:
+C
+      if ( equal(keywd,kreuse,5) ) then
+         Reuse = .true.
+         goto 200
+      endif
+C
+C  keyword nbas -- specify the number of basis functions:
+C
+      if ( equal(keywd,knbas,4) ) then
+         call ifld(Nbas,error)
+         if ( error ) stop
+     &                 'Error reading in number of basis functions NBAS'
+         goto 200
+      endif
+C
+C  keyword natoms -- specify the number of atoms:
+C
+      if ( equal(keywd,knatom,4) ) then
+         call ifld(Natoms,error)
+         if ( error ) stop 'Error reading in number of atoms NATOMS'
+         goto 200
+      endif
+C
+C  keyword upper -- read only upper triangular portions of matrices:
+C
+      if ( equal(keywd,kupper,5) ) then
+         Upper = .true.
+         goto 200
+      endif
+C
+C  keyword open -- open shell species (alpha and beta matrices read):
+C
+      if ( equal(keywd,kopen,4) ) then
+         Open = .true.
+         goto 200
+      endif
+C
+C  keyword ortho -- orthogonal basis set (skip NAO analysis):
+C
+      if ( equal(keywd,kortho,5) ) then
+         Ortho = .true.
+         goto 200
+      endif
+C
+C  keyword bohr -- atomic coordinates, dipole integrals in bohr:
+C
+      if ( equal(keywd,kbohr,4) ) then
+         Bohr = .true.
+         goto 200
+      endif
+C
+C  keyword bodm -- input bond order matrix:
+C
+      if ( equal(keywd,kbodm,4) ) then
+         Denop = .false.
+         goto 200
+      endif
+C
+C  keyword ev -- expectation values of the fock operator are in ev:
+C
+      if ( equal(keywd,kev,2) ) then
+         Munit = 1
+         goto 200
+      endif
+C
+C  keyword cubicf -- use set of cubic f functions:
+C
+      if ( equal(keywd,kcubf,6) ) then
+         Iwcubf = 1
+         goto 200
+      endif
+C
+C  unknown keyword -- halt program:
+C
+      write (Lfnpr,99001) keywd
+      stop
+      end
+@* INDEX.

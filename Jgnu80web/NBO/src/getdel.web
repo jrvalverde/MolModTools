@@ -1,0 +1,115 @@
+@*getdel.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IBO
+\item[INPUT:] OCC
+\item[INPUT:] THR1
+\item[INPUT:] THR2
+\item[OUTPUT:] NL
+\item[OUTPUT:] LIST
+\item[OUTPUT:] DEL
+\item[INPUT:] DELOC
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  MUNIT   NBAS    NBOTYP  NBOUNI  NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   NBOSUM
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine getdel(IBO,OCC,THR1,THR2,NL,LIST,DEL,DELOC,IFLG)
+C*****************************************************************************
+      implicit none
+      double precision aukcal , conv , cutoff , DEL , DELOC , div ,
+     &                 evkcal , OCC , one , tenth , THR1 , THR2 , zero
+      integer i , Iathy , IBO , Ibxm , Ichoos , IFLG , Iprint , Ipseud ,
+     &        Ispin , Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm , Iwfock ,
+     &        Iwhybs , Iwmulp , Iwpnao , Iwtnab , Iwtnao
+      integer Iwtnbo , j , jbo , Jcore , Jprint , kbo , Kopt , Label ,
+     &        Larc , lbo , LIST , Lstocc , MAXATM , MAXBAS , Munit ,
+     &        Mxao , Mxaolm , Mxbo , Natoms , Nbas
+      integer Nbotyp , Nbouni , Ndim , NL
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Nbouni(MAXBAS) , Nbotyp(MAXBAS)
+     &                , Lstocc(MAXBAS) , Ibxm(MAXBAS) , Larc(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      dimension LIST(Ndim) , DEL(Ndim) , DELOC(Ndim,Ndim)
+C
+      data zero , one , cutoff , tenth/0.0D0 , 1.0D0 , 1.0D-4 , 0.1D0/
+      data aukcal , evkcal/627.51 , 23.060/
+C
+C determine the conversion factor to kcal:
+C
+      if ( Munit.eq.0 ) then
+         conv = aukcal
+      elseif ( Munit.eq.1 ) then
+         conv = evkcal
+      else
+         conv = one
+      endif
+C
+C determine the strength of each delocalization:
+C
+      do 100 jbo = 1 , Nbas
+         LIST(jbo) = 0
+         DEL(jbo) = zero
+ 100  continue
+C
+      NL = 0
+      if ( OCC.lt.tenth ) return
+      do 200 jbo = 1 , Nbas
+         if ( IBO.ne.jbo ) then
+            if ( Nbotyp(jbo).ge.10 ) then
+               DEL(jbo) = DELOC(IBO,jbo)*DELOC(IBO,jbo)
+               if ( IFLG.eq.0 ) then
+                  div = abs(DELOC(IBO,IBO)-DELOC(jbo,jbo))
+                  if ( div.ne.zero ) then
+                     DEL(jbo) = OCC*DEL(jbo)/div*conv
+                  else
+                     DEL(jbo) = zero
+                  endif
+               endif
+            endif
+            if ( DEL(jbo).gt.THR2 .and. Nbouni(IBO).ne.Nbouni(jbo) )
+     &           then
+               NL = NL + 1
+               LIST(NL) = jbo
+            elseif ( DEL(jbo).gt.THR1 ) then
+               NL = NL + 1
+               LIST(NL) = jbo
+            endif
+         endif
+ 200  continue
+C
+C  sort delocalizations:
+C
+      do 300 i = 1 , NL
+         do 250 j = 1 , NL - 1
+            kbo = LIST(j)
+            lbo = LIST(j+1)
+            if ( DEL(lbo)-DEL(kbo).gt.cutoff ) then
+               LIST(j) = lbo
+               LIST(j+1) = kbo
+            endif
+ 250     continue
+ 300  continue
+      return
+C
+99001 format (1x,8I10)
+99002 format (1x,8F10.4)
+      end
+@* INDEX.

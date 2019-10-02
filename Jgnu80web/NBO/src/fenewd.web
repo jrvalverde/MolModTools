@@ -1,0 +1,42 @@
+@*fenewd.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]  BETA    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD
+\item[Called by]   DELSCF
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fenewd(DM)
+C*****************************************************************************
+      implicit none
+      double precision DM
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      logical Rohf , Uhf , Ci , Open , Complx , Alpha , Beta , Mcscf ,
+     &        Auhf , Ortho
+      dimension DM(1)
+C
+      common /nbflag/ Rohf , Uhf , Ci , Open , Complx , Alpha , Beta ,
+     &                Mcscf , Auhf , Ortho
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+C fenewd:  fetch the new density matrix (raw AO basis)
+C
+      nfile = 25
+      if ( Beta ) nfile = 26
+      l2 = Ndim*(Ndim+1)/2
+      call nbread(DM,l2,nfile)
+      return
+      end
+@* INDEX.

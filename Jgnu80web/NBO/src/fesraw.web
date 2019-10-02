@@ -1,0 +1,41 @@
+@*fesraw.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] S
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  UNPACK
+\item[Called by]   DMNAO   NAODRV  NBO     NBODRV  WRARC
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine fesraw(S)
+C*****************************************************************************
+      implicit none
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+      double precision S
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      dimension S(Ndim,Ndim)
+C
+C  fesraw:  fetches the overlap matrix (raw ao. basis)
+C           into s(ndim,ndim) a full square matrix.
+C
+      nfile = 10
+      l2 = Ndim*(Ndim+1)/2
+      call nbread(S,l2,nfile)
+      call unpack(S,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

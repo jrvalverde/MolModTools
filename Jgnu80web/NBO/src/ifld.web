@@ -1,0 +1,60 @@
+@*ifld.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[OUTPUT:] INT
+\item[OUTPUT:] ERROR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]    NEXT
+\item[Uses]  EXP     LENGTH  NEXP    POINT
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       RFLD
+\item[Called by]   CHSDRV  DELETE  GENINP  RDCORE
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine ifld(INT,ERROR)
+C*****************************************************************************
+      implicit none
+      integer Icd , INT , Ipt , Length , Lfn , Look , Nexp
+      double precision one , real , sign , small , zero
+      logical ERROR
+C
+      common /nbcrd1/ Icd(80) , Look(80) , Length , Ipt , Lfn , Nexp
+      common /nbcrd2/ Point , End , Next , Exp
+      logical Point , End , Next , Exp
+C
+      data zero , one , small/0.0D0 , 1.0D0 , 1.0D-3/
+C
+C  search lfn for the next string of non-blank characters, see if they
+C  form an integer (if not, error=.true.) and, if so, place its numerical
+C  value in "int":
+C
+      INT = 0
+      call rfld(real,ERROR)
+C
+C  if decimal point or an exponent.lt.0, error = .true.:
+C
+      if ( .not.(Exp) ) then
+         if ( .not.(Point) ) then
+            if ( Nexp.ge.0 ) then
+               if ( Length.ne.0 ) then
+                  sign = one
+                  if ( real.lt.zero ) sign = -one
+                  real = real + small*sign
+                  INT = real
+                  return
+               endif
+            endif
+         endif
+      endif
+C
+      ERROR = .true.
+      Next = .false.
+      return
+      end
+@* INDEX.

@@ -1,0 +1,41 @@
+@*feppao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] DM
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       NBREAD  UNPACK
+\item[Called by]   NAO
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine feppao(DM)
+C*****************************************************************************
+      implicit none
+      double precision DM
+      integer Ispin , l2 , Munit , Mxao , Mxaolm , Mxbo , Natoms ,
+     &        Nbas , Ndim , nfile
+C
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      dimension DM(Ndim,Ndim)
+C
+C  feppao:  fetches the pure AO (pao) density matrix.
+C           (this is not the raw AO basis, but the basis after the
+C           transformation from cartesian to pure d,f,g functions).
+C
+      nfile = 22
+      l2 = Ndim*(Ndim+1)/2
+      call nbread(DM,l2,nfile)
+      call unpack(DM,Ndim,Nbas,l2)
+      return
+      end
+@* INDEX.

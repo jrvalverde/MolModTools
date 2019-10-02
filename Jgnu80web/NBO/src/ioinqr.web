@@ -1,0 +1,49 @@
+@*ioinqr.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   DMNAO   DMSIM   NAO     NAODRV  NAOSIM  NBODIM  NBODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      function ioinqr(IFLG)
+C*****************************************************************************
+      implicit none
+      integer IFLG , ioinqr , kblnk , kfull , klew , kprnt , kread ,
+     &        kval , kwrit
+C
+      data kfull , kval , klew/4HFULL , 3HVAL , 3HLEW/
+      data kblnk , kprnt , kwrit , kread/4H     , 4HPRNT , 4HWRIT ,
+     &     4HREAD/
+C
+C  interpret iflg, determining whether the corresponding matrix should be
+C  printed, written out, or read:
+C
+      if ( IFLG.eq.kfull ) then
+         ioinqr = kprnt
+      elseif ( IFLG.eq.kval ) then
+         ioinqr = kprnt
+      elseif ( IFLG.eq.klew ) then
+         ioinqr = kprnt
+      elseif ( IFLG.gt.0 ) then
+         ioinqr = kprnt
+      elseif ( IFLG.lt.0 .and. IFLG.gt.-1000 ) then
+         ioinqr = kwrit
+      elseif ( IFLG.lt.0 ) then
+         ioinqr = kread
+      else
+         ioinqr = kblnk
+      endif
+      return
+      end
+@* INDEX.

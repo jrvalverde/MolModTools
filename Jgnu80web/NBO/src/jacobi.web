@@ -1,0 +1,256 @@
+@*jacobi.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[INPUT:] N
+\item[OUTPUT:] A
+\item[OUTPUT:] EIVU
+\item[OUTPUT:] EIVR
+\item[INPUT:] NDIM
+\item[INPUT:] NVDIM
+\item[INPUT:] ICONTR
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Uses]   NOTHING 
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]        NOTHING 
+\item[Called by]   ATDIAG  AUGMNT  CHOOSE  NATHYB  NBODEL  ORTHYB  REDBLK
+             REPOL   SYMORT  WORTH
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine jacobi(N,A,EIVU,EIVR,NDIM,NVDIM,ICONTR)
+C*****************************************************************************
+      implicit none
+      double precision A , absaij , abss , aii , aij , ajj , atop ,
+     &                 avgf , c , d , differ , done , dstop , EIVR ,
+     &                 EIVU , eps , five , offtop , oldthr , one
+      double precision pt99 , s , t , test , thrsh , u , zero
+      integer i , i2 , ICONTR , iflag , ii , irow , j , jcol , jcol1 ,
+     &        jj , jm1 , N , NDIM , NVDIM
+C
+C  diagonalize real symmetric matrix a by jacobi rotations:
+C        n: actual dimension of a,eivr
+C     ndim: declared dimension of a,eivr
+C   icontr: control option
+C
+C
+C       ********  modified version, march 1986  *************
+C
+C
+C     icontr = 0: reduce all off-diagonal elements to "done" or smaller
+C                                       -- this sets fulmix=.true.
+C
+C     icontr = 1: do the same as for icontr=0 except do not mix orbitals that
+C       are degenerate to within "differ" if the offdiagonal element connecting
+C       them is less than "differ".
+C                                       -- this sets fulmix=.false.
+C
+C  for the purposes of the NAO and NBO programs, these values are set:
+C
+C     differ = 1.0d-5
+C          threshold for considering two vectors nondegenerate if
+C                         icontr=1
+C     done   = 1.0d-13
+C          this is the parameter for convergence of the off-diagonal
+C             matrix elements.  (absolute)  --- reduced from 1.0d-10
+C             on 8/31/88.  a more converged fock matrix was required
+C             for the NBO deletions with symmetry to work properly
+C             (edg) ---
+C
+C     eps    = 0.5d-13
+C          this parameter has to do with the machine precision and should
+C             be set to a value between "done" and the machine precision.
+C             --- reduced from 1.0d-11.  8/31/88 (edg) ---
+C
+      logical fulmix
+      dimension A(NDIM,1) , EIVR(NVDIM,1) , EIVU(1)
+C  important parameters:
+      data differ , done , eps , pt99/1.0D-5 , 1.0D-13 , 0.5D-13 ,
+     &     0.99D0/
+      data zero , one , five/0.0D0 , 1.0D0 , 5.0D0/
+C
+      fulmix = .true.
+      if ( ICONTR.eq.1 ) fulmix = .false.
+      if ( N.gt.1 ) then
+         do 50 j = 1 , N
+            do 20 i = 1 , N
+               EIVR(i,j) = zero
+ 20         continue
+            EIVR(j,j) = one
+ 50      continue
+C
+C        find the absolutely largest element of a
+C
+C  first check the off-diagonal elements:
+         atop = zero
+         do 100 j = 2 , N
+            jm1 = j - 1
+            do 60 i = 1 , jm1
+               if ( atop.le.dabs(A(i,j)) ) atop = dabs(A(i,j))
+ 60         continue
+ 100     continue
+         offtop = atop
+C  now check the diagonal elements:
+         do 150 j = 1 , N
+            if ( atop.le.dabs(A(j,j)) ) atop = dabs(A(j,j))
+ 150     continue
+C  if matrix is already effectively diagonal,
+C              put diagonal elements in eivu and return
+         if ( atop.ge.done ) then
+            if ( offtop.ge.done ) then
+C
+C        calculate the stopping criterion -- dstop
+C
+               avgf = dfloat(N*(N-1)/2)
+               d = 0.0D0
+               do 160 jj = 2 , N
+                  do 155 ii = 2 , jj
+                     s = A(ii-1,jj)/atop
+                     d = s*s + d
+ 155              continue
+ 160           continue
+               dstop = (1.D-7)*d
+C
+C        calculate the threshold, thrsh
+C
+               thrsh = dsqrt(d/avgf)*atop
+C  to make thrsh different than any matrix element of a, multiply by 0.99
+               thrsh = thrsh*pt99
+               if ( thrsh.lt.done ) thrsh = done
+C
+C        start a sweep
+C
+ 170           iflag = 0
+               do 190 jcol = 2 , N
+                  jcol1 = jcol - 1
+                  do 185 irow = 1 , jcol1
+                     aij = A(irow,jcol)
+C
+C        compare the off-diagonal element with thrsh
+C
+                     absaij = dabs(aij)
+                     if ( absaij.ge.thrsh ) then
+                        aii = A(irow,irow)
+                        ajj = A(jcol,jcol)
+                        s = ajj - aii
+                        abss = dabs(s)
+C  don't rotate the vectors irow and jcol if irow and jcol would still
+C     be degenerate within "differ":
+                        if ( .not.(fulmix) ) then
+                           if ( (abss.lt.differ) .and.
+     &                          (absaij.lt.differ) ) goto 185
+                        endif
+C
+C        check to see if the chosen rotation is less than the rounding error
+C        if so , then do not rotate.
+C
+                        test = eps*abss
+                        if ( absaij.ge.test ) then
+                           iflag = 1
+C
+C        if the rotation is very close to 45 degrees, set sin and cos
+C        to 1/(root 2).
+C
+                           test = eps*absaij
+                           if ( abss.gt.test ) then
+C
+C        calculation of sin and cos for rotation that is not very close
+C        to 45 degrees
+C
+                              t = aij/s
+                              s = 0.25D0/dsqrt(0.25D0+t*t)
+C
+C        cos=c ,  sin=s
+C
+                              c = dsqrt(0.5D0+s)
+                              s = 2.D0*t*s/c
+                           else
+                              s = .707106781D0
+                              c = s
+                           endif
+C
+C        calculation of the new elements of matrix a
+C
+                           do 172 i = 1 , irow
+                              t = A(i,irow)
+                              u = A(i,jcol)
+                              A(i,irow) = c*t - s*u
+                              A(i,jcol) = s*t + c*u
+ 172                       continue
+                           i2 = irow + 2
+                           if ( i2.le.jcol ) then
+                              do 174 i = i2 , jcol
+                                 t = A(i-1,jcol)
+                                 u = A(irow,i-1)
+                                 A(i-1,jcol) = s*u + c*t
+                                 A(irow,i-1) = c*u - s*t
+ 174                          continue
+                           endif
+                           A(jcol,jcol) = s*aij + c*ajj
+                           A(irow,irow) = c*A(irow,irow)
+     &                        - s*(c*aij-s*ajj)
+                           do 176 j = jcol , N
+                              t = A(irow,j)
+                              u = A(jcol,j)
+                              A(irow,j) = c*t - s*u
+                              A(jcol,j) = s*t + c*u
+ 176                       continue
+C
+C        rotation completed
+C
+                           do 178 i = 1 , N
+                              t = EIVR(i,irow)
+                              EIVR(i,irow) = c*t - EIVR(i,jcol)*s
+                              EIVR(i,jcol) = s*t + EIVR(i,jcol)*c
+ 178                       continue
+C
+C        calculate the new norm d and compare with dstop
+C
+                           s = aij/atop
+                           d = d - s*s
+                           if ( d.le.dstop ) then
+C
+C        recalculate dstop and thrsh to discard rounding errors
+C
+                              d = zero
+                              do 182 jj = 2 , N
+                                 do 180 ii = 2 , jj
+                                    s = A(ii-1,jj)/atop
+                                    d = s*s + d
+ 180                             continue
+ 182                          continue
+                              dstop = (1.D-7)*d
+                           endif
+                           oldthr = thrsh
+                           thrsh = dsqrt(d/avgf)*atop*pt99
+                           if ( thrsh.lt.done ) thrsh = done*pt99
+                           if ( thrsh.gt.oldthr ) thrsh = oldthr
+                        endif
+                     endif
+ 185              continue
+ 190           continue
+               if ( thrsh.ge.done ) then
+                  if ( iflag.ne.1 ) thrsh = thrsh/five
+                  goto 170
+               endif
+            endif
+         endif
+      else
+         EIVR(1,1) = one
+         EIVU(1) = A(1,1)
+         return
+      endif
+C
+C        place eigenvalues in eivu
+C
+      do 200 j = 1 , N
+         EIVU(j) = A(j,j)
+ 200  continue
+      return
+      end
+@* INDEX.
