@@ -1,0 +1,91 @@
+@* encode.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] LENGTH                                                    
+\item[INPUT:] FRAC                                                      
+\item[PASSED:] STRING                                                    
+\item[INPUT:] VALUE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       DECCHR  PAD     PUTCHR                                 
+\item[Called by]   PUTFP                                                  
+                                                                    
+\end{description}
+@a
+      subroutine encode(LENGTH,FRAC,STRING,VALUE)
+      implicit none
+      integer ival , LENGTH , nchr , np , npi
+C-----------------------------------------------------------------------
+      double precision VALUE
+      double precision val , valx , sval , ten , chunk
+C     real*16 val,valx,sval,ten,chunk
+      logical point
+      integer FRAC , space , cursor , STRING(*)
+      data ten/10.0D0/
+C      this routine takes the double precision value "value" and encode's the
+C     value to a packed string "string" . the value will be right
+C     justified, with length "length" and with "frac" fractional digits.
+C     depending on the sign of value a ' ' or a '-' will always precede
+C     the number in the character string.
+C
+C-----------------------------------------------------------------------
+C
+C     nchr(valx)=iqint(qlog10(valx)+1)
+      nchr(valx) = int(dlog10(valx)+1)
+      point = .false.
+      cursor = 0
+      val = dabs(VALUE) + 5.0D00*10.0D00**(-FRAC-2)
+C
+      np = 1
+      if ( val.gt.9.0D00 ) np = nchr(val)
+      space = LENGTH - 1 - FRAC - np
+      if ( VALUE.lt.0. ) space = space - 1
+      call pad(STRING,cursor,space,' ')
+      if ( VALUE.lt.0. ) call putchr('-',STRING,cursor)
+      if ( LENGTH.le.FRAC+2 ) goto 200
+C
+ 100  npi = 0
+      if ( val.gt.0.9 ) npi = nchr(val)
+      if ( npi.lt.np ) call pad(STRING,cursor,cursor+np-npi,'0')
+      if ( npi.eq.0 ) goto 300
+      np = npi
+C
+ 200  if ( np+cursor.gt.LENGTH ) goto 400
+      np = np - 9
+      if ( np.lt.0 ) np = 0
+      chunk = 0.2D00 + ten**np
+      sval = val/dint(chunk)
+C     sval=val/qint(chunk)
+      ival = int(sval)
+C     ival=iqint(sval)
+      if ( ival.ne.0 ) then
+         call decchr(ival,STRING,cursor)
+         sval = 0.2D0 + ival*dint(chunk)
+C     sval=0.2d0+ival*qint(chunk)
+         val = val - dint(sval)
+C     val=val-qint(sval)
+         goto 100
+      endif
+C
+ 300  if ( point .or. cursor.eq.LENGTH ) return
+      call putchr('.',STRING,cursor)
+      point = .true.
+      np = LENGTH - cursor
+      chunk = 0.2D00 + ten**np
+      val = val*dint(chunk)
+C     val=val*qint(chunk)
+      goto 100
+C
+C error, number to long:
+ 400  cursor = 0
+      call pad(STRING,cursor,LENGTH,'*')
+      return
+C
+      end
+@* INDEX.

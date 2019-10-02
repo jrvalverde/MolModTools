@@ -1,0 +1,31 @@
+@* aoloop.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] L                                                         
+\item[UNUSED:] I                                                         
+\item[UNUSED:] TQ                                                        
+\item[UNUSED:] X                                                         
+\item[UNUSED:] Y                                                         
+\item[UNUSED:] Z                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine aoloop(L,I,TQ,X,Y,Z)
+      implicit none
+      integer I , L
+      double precision TQ(*) , X(*) , Y(*) , Z(*)
+C     dummy to replace assembler version
+      return
+C
+      end
+@* INDEX.

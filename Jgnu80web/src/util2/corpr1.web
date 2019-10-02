@@ -1,0 +1,65 @@
+@* corpr1.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] IAN                                                       
+\item[INPUT:] C                                                         
+\item[INPUT:] CONVER                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMBG  GEOM                                           
+                                                                    
+\end{description}
+@a
+      subroutine corpr1(NATOMS,IAN,C,CONVER)
+      implicit none
+      double precision C , cloc , CONVER
+      integer i , iaind , IAN , iat , icent , In , Iout , Ipunch , 
+     &        ixyz , NATOMS
+      dimension IAN(*) , C(*) , cloc(3)
+      common /io    / In , Iout , Ipunch
+C
+C
+C     standard coordinate printing routine
+C     units converted from bohrs to angstroms (depending on conver)
+C
+C
+C
+C
+99001 format (1x,72('-'))
+99002 format (1x,'CENTER',8x,'ATOMIC',18x,'COORDINATES (ANGSTROMS)'/1x,
+     &        'NUMBER',8x,'NUMBER',15x,'X',13x,'Y',13x,'Z')
+99003 format (1x,i4,10x,i4,12x,3F14.8)
+99004 format (1x,14x,i4,12x,3F14.8)
+C
+      write (Iout,99001)
+      write (Iout,99002)
+      write (Iout,99001)
+      icent = 0
+      iaind = 0
+      do 100 iat = 1 , NATOMS
+C     convert current center to angstroms, locally.
+         do 50 i = 1 , 3
+            cloc(i) = CONVER*C(i+iaind)
+ 50      continue
+         if ( IAN(iat).lt.0 ) then
+C
+            write (Iout,99004) IAN(iat) , (cloc(ixyz),ixyz=1,3)
+         else
+            icent = icent + 1
+            write (Iout,99003) icent , IAN(iat) , (cloc(ixyz),ixyz=1,3)
+         endif
+         iaind = iaind + 3
+ 100  continue
+      write (Iout,99001)
+      return
+C
+      end
+@* INDEX.

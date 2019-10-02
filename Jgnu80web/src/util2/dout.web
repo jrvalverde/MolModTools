@@ -1,0 +1,39 @@
+@* dout.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] X                                                         
+\item[INPUT:] LB                                                        
+\item[INPUT:] LA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GET2CS  GET3C                                          
+                                                                    
+\end{description}
+@a
+C this is where dorot goes
+      subroutine dout(X,LB,LA)
+      implicit none
+      integer i , In , Iout , Ipunch , j , LA , LB
+      real X
+      dimension X(4,8)
+      common /io    / In , Iout , Ipunch
+C
+C     outputroutine for debugging.
+C
+C
+99001 format (2x,8F12.5)
+C
+      do 100 i = 1 , LB
+         write (Iout,99001) (X(i,j),j=1,LA)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

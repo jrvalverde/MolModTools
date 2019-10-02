@@ -1,0 +1,201 @@
+@* frmrot.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] RP                                                        
+\item[OUTPUT:] RD                                                        
+\item[OUTPUT:] RF                                                        
+\item[INPUT:] MAXTYP                                                    
+\item[INPUT:] IPURE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT                                                  
+\item[Called by]   TRNFRM                                                 
+                                                                    
+\end{description}
+@a
+      subroutine frmrot(RP,RD,RF,MAXTYP,IPURE)
+C ----------------------------------------------------------------------
+      implicit none
+      double precision d , f , f15 , fact , fact1 , five , four , 
+     &                 gsqrt , half , one , pt5 , r1 , r2 , r3 , r3ov2 , 
+     &                 r4 , RD , RF , root15 , root3
+      double precision root5 , RP , t , three , two , z1 , z2 , z3 , 
+     &                 zero
+      integer i , id , ifd , ij , ip , IPURE , j , jd , jfd , k , kd , 
+     &        l , MAXTYP , mu , nu , num
+      dimension RP(3,3) , RD(6,6) , RF(10,10)
+      dimension id(6) , jd(6)
+      dimension kd(6,3) , ifd(10) , jfd(10)
+      dimension d(5) , f(7)
+      data id/1 , 2 , 3 , 2 , 3 , 3/ , jd/1 , 2 , 3 , 1 , 1 , 2/
+      data kd/1 , 4 , 7 , 5 , 6 , 10 , 5 , 2 , 8 , 4 , 10 , 9 , 6 , 9 , 
+     &     3 , 10 , 7 , 8/
+      data ifd/1 , 2 , 3 , 2 , 4 , 5 , 3 , 3 , 6 , 6/
+      data jfd/1 , 2 , 3 , 1 , 1 , 1 , 1 , 2 , 2 , 1/
+      data one/1.0D0/ , two/2.0D0/ , three/3.0D0/ , four/4.0D0/ , 
+     &     five/5.0D0/
+      data f15/15.0D0/ , half/0.5D0/ , pt5/0.5D0/
+      data zero/0.0D0/
+C     this routine forms the rotation matrices for higher angular
+C     momentum functions (d and f) given the rotation matrix
+C     for p-functions.  the calling arguments are:
+C
+C           rp ... this is the 3x3 rotation matrix for p-functions.
+C
+C           rd ... upon return this contains the (5x5 or 6x6) rotation
+C                  matrix for d-functions if maxtyp indicates that this
+C                  should be evaluated.
+C
+C           rf ... if maxtyp indicates that it should be evaluated,
+C                  then this is returned with the (7x7 or 10x10)
+C                  rotation matrix for f-functions.
+C
+C           maxtyp ... this indicates the highest angular momentum
+C                  number included in the basis:
+C                  0 ... s-functions only.
+C                  1 ... p-functions.
+C                  2 ... d-functions.
+C                  3 ... f-functions.
+C
+C           ipure ... number of d and f functions to use:
+C                  0 ... 5d, 7f.
+C                  1 ... 6d, 7f.
+C                  2 ... 5d, 10f.
+C                  3 ... 6d, 10f.
+C ----------------------------------------------------------------------
+C
+C
+      root3 = gsqrt(three)
+      r3ov2 = half*root3
+      root5 = gsqrt(five)
+      root15 = gsqrt(f15)
+      r1 = pt5*gsqrt(five/two)
+      r2 = three/(two*root5)
+      r3 = pt5*root3
+      r4 = pt5*gsqrt(three/two)
+      z1 = four/root5
+      z2 = one/root5
+      z3 = three/root5
+      if ( MAXTYP.gt.1 ) then
+C
+C     form the 6x6 rotation matrix for d-functions.
+         do 50 k = 1 , 6
+            i = id(k)
+            j = jd(k)
+C
+            do 20 l = 1 , 6
+               mu = id(l)
+               nu = jd(l)
+               fact = one
+               fact1 = one
+               if ( i.eq.j .and. mu.ne.nu ) fact1 = root3
+               if ( mu.eq.nu .and. i.ne.i ) fact1 = one/root3
+               if ( mu.eq.nu ) fact = zero
+C
+               RD(k,l) = RP(i,mu)*RP(j,nu)*fact1 + fact*RP(i,nu)
+     &                   *RP(j,mu)*fact1
+ 20         continue
+ 50      continue
+         if ( MAXTYP.ne.2 ) then
+C
+C     form the 10x10 matrix for rotating f-functions.
+C     first, zero rf.
+            do 60 i = 1 , 100
+               RF(i,1) = zero
+ 60         continue
+C
+C     now, fill rf.
+            do 80 ij = 1 , 10
+               i = ifd(ij)
+               j = jfd(ij)
+               do 70 nu = 1 , 3
+                  do 65 mu = 1 , 6
+                     k = kd(mu,nu)
+                     RF(ij,k) = RF(ij,k) + RD(i,mu)*RP(j,nu)
+ 65               continue
+ 70            continue
+ 80         continue
+         endif
+C
+         if ( IPURE.ne.1 .and. IPURE.ne.3 ) then
+C
+C     transform to five d-functions.
+C
+            num = 6
+ 100        do 120 i = 1 , num
+               d(1) = RD(3,i) - pt5*(RD(1,i)+RD(2,i))
+               d(2) = RD(5,i)
+               d(3) = RD(6,i)
+               d(4) = r3ov2*(RD(1,i)-RD(2,i))
+               d(5) = RD(4,i)
+C
+               do 110 j = 1 , 5
+                  RD(j,i) = d(j)
+ 110           continue
+ 120        continue
+C
+C     transpose the matrix and transform the other direction.
+            do 140 i = 1 , 5
+               ip = i + 1
+               do 130 j = ip , 6
+                  t = RD(i,j)
+                  RD(i,j) = RD(j,i)
+                  RD(j,i) = t
+ 130           continue
+ 140        continue
+C
+            if ( num.ne.5 ) then
+               num = 5
+               goto 100
+            endif
+         endif
+C
+         if ( MAXTYP.ne.2 ) then
+            if ( IPURE.lt.2 ) then
+C
+C     transform to seven f-functions.
+C
+               num = 10
+ 150           do 160 i = 1 , num
+C
+                  f(1) = RF(3,i) - r2*(RF(6,i)+RF(9,i))
+                  f(2) = r4*(z1*RF(7,i)-RF(1,i)-z2*RF(4,i))
+                  f(3) = r4*(z1*RF(8,i)-RF(2,i)-z2*RF(5,i))
+                  f(4) = r3*(RF(6,i)-RF(9,i))
+                  f(5) = RF(10,i)
+                  f(6) = r1*(RF(1,i)-z3*RF(4,i))
+                  f(7) = r1*(z3*RF(5,i)-RF(2,i))
+C
+                  do 155 j = 1 , 7
+                     RF(j,i) = f(j)
+C   dbc this was rf(j,i) = f(i)
+ 155              continue
+ 160           continue
+C
+C     transpose the matrix and transform the other direction.
+               do 170 i = 1 , 9
+                  ip = i + 1
+                  do 165 j = ip , 10
+                     t = RF(j,i)
+                     RF(j,i) = RF(i,j)
+                     RF(i,j) = t
+ 165              continue
+ 170           continue
+               if ( num.ne.7 ) then
+                  num = 7
+                  goto 150
+               endif
+            endif
+         endif
+      endif
+C
+      return
+C
+      end
+@* INDEX.

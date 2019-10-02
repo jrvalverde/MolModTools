@@ -1,0 +1,30 @@
+@* crop.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] CHR                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETCHR                                                 
+\item[Called by]   IFALPH                                                 
+                                                                    
+\end{description}
+@a
+      integer function crop(CHR)
+      implicit none
+      integer lcur
+      integer CHR , getchr
+C            this integer function returns as its value the character
+C      in "chr" with all character locations except the first zero-ed.
+C
+      lcur = 0
+      crop = getchr(CHR,lcur)
+      return
+C
+      end
+@* INDEX.

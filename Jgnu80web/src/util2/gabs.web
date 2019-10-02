@@ -1,0 +1,41 @@
+@* gabs.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   AATILD  ABTILD  ASGSYM  CIDS5   CIPRM   CIRSET  CLEAN  
+             CONCLO  CONOPN  CONPHF  CONUSO  CYCCLO  CYCPHF  D2CORR 
+             DGNMAP  DIAG    DOUBAR  DPHNIX  DSTVNT  DXLINR  DXQUAD 
+             EFILL   EFILL1  EHOUDH  EIGEN   EQRT2D  EQUIV   FILL   
+             FILLCP  FINDC2  FINDV   FIRST   FMTGEN  FORMBG  GETREP 
+             GRDOPT  INITBS  INV     LOCMIN  LTOUTD  MINV    MSOPT  
+             NEXTX   NORM1   NORMCH  OFIX    OMEGA   ORAXIS  ORC2V  
+             ORCN    ORDN    ORKEY   ORNAX   ORPLAN  ORPTST  OUT2E  
+             PHFCHK  PRMOUT  PRMTBL  PTGRP   PUT     QINF    RENORM 
+             RMSVEC  ROOTN   RYSPOL  SCANAA  SCANAB  SCANSS  SHLATM 
+             SPHERE  SPHSET  SSSC    SSSO    SSSSIG  STAR    STOICH 
+             TSTC3   TSTC4   TSTC5   TWLDRV  ZTOC                   
+                                                                    
+\end{description}
+@a
+      double precision function gabs(ARG)
+      implicit none
+      double precision dbas , ARG
+C
+C
+C
+C     absolute value
+C
+      gabs = dabs(ARG)
+      return
+C
+      end
+@* INDEX.

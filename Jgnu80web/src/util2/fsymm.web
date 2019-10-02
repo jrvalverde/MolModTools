@@ -1,0 +1,92 @@
+@* fsymm.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] F                                                         
+\item[INPUT:] NSYMOP                                                    
+\item[INPUT:] NEQBAS                                                    
+\item[INPUT:] LIND                                                      
+\item[OUTPUT:] FNEW                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIRCLO  FOFCLO  FOFOPN  FOFPHF  FORMF                  
+                                                                    
+\end{description}
+@a
+      subroutine fsymm(NBASIS,F,NSYMOP,NEQBAS,LIND,FNEW)
+      implicit none
+      double precision dmup , dnup , F , FNEW , one , zero
+      integer imunup , imup , inup , isym , k , LIND , MAXBAS , mu , 
+     &        mup , NBASIS , NEQBAS , NSYMOP , nu , nup
+      parameter (MAXBAS=150)
+      dimension F(*) , FNEW(*) , NEQBAS(MAXBAS,8) , LIND(*)
+      data zero/0.0D0/ , one/1.0D0/
+C
+C*****
+C     routine to 'symmetrize' a matrix constructed from
+C     a partial list of two-electron integrals.
+C
+C     input arguments:
+C     nbasis ... number of basis functions.
+C     f      ... the matrix to symmetrized.
+C     nsymop ... the number of symmetry operations.
+C     neqbas ... a map of equivalent basis functions.
+C     lind   ... the linear indexing array.
+C
+C     output arguments:
+C     fnew   ... output symmetrized matrix.
+C*****
+C
+C
+C     loop over the lower triangle of the output matrix.
+      k = 0
+      do 100 mu = 1 , NBASIS
+         do 50 nu = 1 , mu
+            k = k + 1
+            FNEW(k) = zero
+C
+C     loop over the symmetry operations.
+            do 20 isym = 1 , NSYMOP
+C
+C     get mu-prime and nu-prime and determine their multiplicative
+C     factors.
+               mup = NEQBAS(mu,isym)
+               nup = NEQBAS(nu,isym)
+               dmup = one
+               if ( mup.lt.0 ) dmup = -one
+               dnup = one
+               if ( nup.lt.0 ) dnup = -one
+C
+C     determine the location of the f-matrix element to
+C     be added in.
+               imup = iabs(mup)
+               inup = iabs(nup)
+               if ( imup.lt.inup ) then
+C
+                  imunup = LIND(inup) + imup
+               else
+                  imunup = LIND(imup) + inup
+               endif
+C
+C     add in the current element.
+               FNEW(k) = FNEW(k) + dmup*dnup*F(imunup)
+C
+C ... end of loop over symmetry operations.
+ 20         continue
+C
+C ... end of loop over lower triangle.
+ 50      continue
+ 100  continue
+C
+C     all done, return to caller.
+      return
+C
+      end
+@* INDEX.

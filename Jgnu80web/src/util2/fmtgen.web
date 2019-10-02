@@ -1,0 +1,139 @@
+@* fmtgen.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] F                                                         
+\item[INPUT:] T                                                         
+\item[INPUT:] M                                                         
+\item[OUTPUT:] ICK                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  CUT0S   CUTML   CUTSM   FMZERO  GA      HALF    IOUT   
+             ONE     RPITWO  TOL     TWO     ZERO                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GEXP    GFLOAT  GSQRT                          
+\item[Called by]   FMTSET  FORMFN  GAMGEN  GENL2E                         
+                                                                    
+\end{description}
+@a
+      subroutine fmtgen(F,T,M,ICK)
+      implicit none
+      double precision a , approx , b , Cut0s , Cutml , Cutsm , F , 
+     &                 F20 , F42 , F500 , fimult , fiprop , Fmzero , 
+     &                 Four , Ga , gabs , gexp , gfloat , gsqrt , Half
+      integer i , ICK , In , Iout , Ipunch , ix , M , mm1 , notrms
+      double precision oldsum , One , Rpitwo , sum , T , Ten , Tenm9 , 
+     &                 term , texp , Tol , Two , tx , Zero
+      dimension F(M)
+      common /io    / In , Iout , Ipunch
+      common /fmcons/ Four , One , Half , Two , Zero , Ten , Tenm9 , 
+     &                F20 , F42 , F500
+      common /fm    / Ga(15) , Rpitwo , Fmzero(15) , Tol , Cut0s , 
+     &                Cutsm , Cutml
+      equivalence (approx,oldsum)
+C
+C
+99001 format (41H0FAILURE IN FMGEN FOR SMALL T:  IX > 50, /6H IX = ,i3,
+     &        7H,  T = ,e20.14)
+99002 format (37H0FAILURE IN FMGEN FOR INTERMEDIATE T:/6H  T = ,e20.14)
+C
+C     ick is an error indicator.
+C     on return, ick=0 implies that all is well.
+C     if on return, ick is non-zero, the assymptotic expansion
+C     has failed.
+      ICK = 0
+C     test for type of algorithm.
+      if ( gabs(T).le.Cut0s ) then
+C***********************************************************************
+C        fill f(m) for argument of zero.
+C***********************************************************************
+         do 50 i = 1 , M
+            F(i) = Fmzero(i)
+ 50      continue
+         return
+      else
+C     test for evaluation of the exp.
+         texp = Zero
+         if ( gabs(T).lt.Cutml ) then
+            texp = gexp(-T)
+            if ( gabs(T).lt.Cutsm ) then
+C***********************************************************************
+C        0 .lt. t .lt. 10
+C***********************************************************************
+               a = gfloat(M-1) + Half
+               term = One/a
+               sum = term
+               do 60 ix = 2 , 200
+                  a = a + One
+                  term = term*T/a
+                  sum = sum + term
+                  if ( gabs(term/sum).lt.Tol ) goto 80
+ 60            continue
+               write (Iout,99001) ix , T
+               stop
+            else
+C
+C***********************************************************************
+C        10 .le. t .lt. 42
+C***********************************************************************
+               a = gfloat(M-1)
+               b = a + Half
+               a = a - Half
+               tx = One/T
+               mm1 = M - 1
+               approx = Rpitwo*gsqrt(tx)*(tx**mm1)
+               if ( mm1.ne.0 ) then
+                  do 65 ix = 1 , mm1
+                     b = b - One
+                     approx = approx*b
+ 65               continue
+               endif
+               fimult = Half*texp*tx
+               sum = Zero
+               if ( fimult.eq.0 ) goto 100
+               fiprop = fimult/approx
+               term = One
+               sum = One
+               notrms = idint(T) + mm1
+               do 70 ix = 2 , notrms
+                  term = term*a*tx
+                  sum = sum + term
+                  if ( gabs(term*fiprop/sum).le.Tol ) goto 100
+                  a = a - One
+ 70            continue
+               write (Iout,99002) T
+               ICK = 1
+               return
+            endif
+C
+ 80         F(M) = Half*sum*texp
+         else
+C***********************************************************************
+C        t .ge. 42
+C***********************************************************************
+            tx = gfloat(M) - Half
+            F(M) = Half*Ga(M)/(T**tx)
+         endif
+         goto 200
+C
+ 100     F(M) = approx - fimult*sum
+      endif
+C***********************************************************************
+C        recur downwards to f(1)
+C***********************************************************************
+ 200  tx = T + T
+      sum = gfloat(M+M-3)
+      mm1 = M - 1
+      if ( mm1.ne.0 ) then
+         do 250 ix = 1 , mm1
+            F(M-ix) = (tx*F(M-ix+1)+texp)/sum
+            sum = sum - Two
+ 250     continue
+      endif
+      return
+C
+      end
+@* INDEX.

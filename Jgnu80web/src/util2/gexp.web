@@ -1,0 +1,31 @@
+@* gexp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DIPOLE  DPHNIX  DSTVNT  FERMI   FMTGEN  GENL2E  OVLP   
+             QINF    STVINT  THERMO  TWLDRV                         
+                                                                    
+\end{description}
+@a
+      double precision function gexp(ARG)
+      implicit none
+      double precision dexp , ARG
+C
+C
+C
+C     exponential
+C
+      gexp = dexp(ARG)
+      return
+C
+      end
+@* INDEX.

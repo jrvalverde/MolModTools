@@ -1,0 +1,40 @@
+@* gsqrt.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ASGSYM  BEND    CARPOL  CIDS5   CIPRM   CIRSET  CMPDEN 
+             CMPLTC  CNTLPD  CONOPN  CONPHF  CONUSO  D2CORR  DERIV  
+             DIAG    DIMENS  DIPOLE  DISMAT  DLPINT  DOUBAR  DPHNIX 
+             DQ      DSTVNT  DXLINR  DXQUAD  EHBCKD  EHOUDH  EHOUSD 
+             EIGEN   EQRT2D  FFRCNN  FIRST   FMTGEN  FMTSET  FORMV  
+             FPMAIN  FRCNN   FRMROT  FRMV    GCFACT  GENL2E  GETIJ  
+             GETMAT  GLPINT  GNORM   GRDOPT  MSOPT   NEXTX   OFIX   
+             ORC2V   ORNAX   OVLP    PHFCHK  PUT     QPUTIT  REDOP  
+             RENORM  REPDND  REPULS  RMSFP   RMSVEC  ROOTMT  ROOTN  
+             RYSPOL  SCHMDT  SEARCH  SPHSET  SPIN    SPINDM  STR    
+             STVINT  THERMO  TORS    TRIANG  TWLDRV  VEC     VIBFRQ 
+             ZTOC                                                   
+                                                                    
+\end{description}
+@a
+      double precision function gsqrt(ARG)
+      implicit none
+      double precision dsqrt , ARG
+C
+C
+C     square root
+C
+      gsqrt = dsqrt(ARG)
+      return
+C
+      end
+@* INDEX.

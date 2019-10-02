@@ -1,0 +1,47 @@
+@* cputim.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] I                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       TIMEO                                                  
+\item[Called by]   FIRST   GNU80   NTRAN   TIMER                          
+                                                                    
+\end{description}
+@a
+C      subroutine captlz(cline,dline,eol)
+C      implicit integer (a-z)
+C      integer getchr
+C          this routine copies an upper case version of the input
+C     string into the output string.  these strings may be the same,
+C     if desired.
+C     this routine just copies instr to outstr on the ibm version.
+C      if (eol.eq.0) return
+C      do 10 i = 1,eol
+C          ii = i - 1
+C          ij = getchr(cline,ii)
+C          ii = i - 1
+C          call puticr(ij,dline,ii)
+C   10 continue
+C      return
+C
+C      end
+      real function cputim(I)
+      implicit none
+      integer I , j , l
+C     this function calls a system function which
+C     returns the cumulative time since the first invocation
+C     of the function. (in seconds)
+C     warning this is a real function
+      call timeo(l,j)
+      cputim = 0.001*j
+      return
+C
+      end
+@* INDEX.

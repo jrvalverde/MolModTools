@@ -1,0 +1,45 @@
+@* convgd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] RESULT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CONTST  GRDOPT                                         
+                                                                    
+\end{description}
+@a
+      subroutine convgd(A,B,RESULT)
+      implicit none
+      double precision A , B
+      integer RESULT(3) , y , e , s , n , o , blank
+      data y , e , s , n , o , blank/'Y' , 'E' , 'S' , 'N' , 'O' , ' '/
+C
+C
+C     if a.lt.b then set result to 'yes', else set result to 'no'
+C
+C
+C
+C
+      if ( A.ge.B ) then
+         RESULT(1) = n
+         RESULT(2) = o
+         RESULT(3) = blank
+         return
+      endif
+C
+      RESULT(1) = y
+      RESULT(2) = e
+      RESULT(3) = s
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,30 @@
+@* gacos.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   CIDS5   TRIANG  ZTOC                                   
+                                                                    
+\end{description}
+@a
+      double precision function gacos(ARG)
+      implicit none
+      double precision dacos , ARG
+C
+C
+C
+C     arc cosine
+C
+      gacos = dacos(ARG)
+      return
+C
+      end
+@* INDEX.

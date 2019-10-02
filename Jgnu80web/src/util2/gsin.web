@@ -1,0 +1,30 @@
+@* gsin.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   POLCAR  REPCST  REPDST  ROTATE  ROTMAT  TSTC5   ZTOC   
+                                                                    
+\end{description}
+@a
+      double precision function gsin(ARG)
+      implicit none
+      double precision dsin , ARG
+C
+C
+C
+C     sine
+C
+      gsin = dsin(ARG)
+      return
+C
+      end
+@* INDEX.

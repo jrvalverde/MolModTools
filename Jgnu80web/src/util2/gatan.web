@@ -1,0 +1,36 @@
+@* gatan.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   C2AXES  CNAXIS  DIPOLE  DLPINT  DPHNIX  DSTVNT  FINDC2 
+             FINDCN  FINDV   FMTSET  FPEXIT  FWGRP   GENL2E  GLPINT 
+             INITFP  LDATA   OCTA    OPER    ORAXIS  ORC2V   ORCN   
+             ORD2H   ORDN    ORPLAN  ORYZ    OVLP    PRMTBL  PTGRP  
+             RENORM  REPCNV  REPCST  REPDNH  REPDST  ROTCOR  SIGHCN 
+             SNAXIS  SPHERE  STVINT  TETRA   THERMO  TSTC3   TSTC4  
+             TSTC5   TWLDRV  VERT    VIBFRQ  ZGET    ZPRINT  ZTOC   
+                                                                    
+\end{description}
+@a
+      double precision function gatan(ARG)
+      implicit none
+      double precision datan , ARG
+C
+C
+C
+C     arc tangent
+C
+      gatan = datan(ARG)
+      return
+C
+      end
+@* INDEX.

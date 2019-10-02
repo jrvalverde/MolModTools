@@ -1,0 +1,58 @@
+@* digtst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] FWG                                                       
+\item[OUTPUT:] IPOS                                                      
+\item[OUTPUT:] DIGIT                                                     
+\item[OUTPUT:] IVAL                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   PRSFWG                                                 
+                                                                    
+\end{description}
+@a
+      subroutine digtst(FWG,IPOS,DIGIT,IVAL)
+      implicit none
+      integer i , IPOS , IVAL
+      integer FWG(*) , num(10)
+      logical DIGIT
+      data num/1H0 , 1H1 , 1H2 , 1H3 , 1H4 , 1H5 , 1H6 , 1H7 , 1H8 , 
+     &     1H9/
+C
+C
+C      test the current position in fwg for a number.
+C      input:  fwg,   the framework group string.
+C              ipos,  the character in fwg to test.  if a digit is
+C                     found then ipos is left pointing at the first
+C                     character passed the number (independent of how
+C                     long it is.)
+C      output: digit, a logical variable set true if fwg(ipos) is a
+C                     digit.
+C              ival,  the value of the digit in the range 0- .
+C
+C
+C
+C
+      IVAL = 0
+      DIGIT = .false.
+C
+ 100  do 200 i = 1 , 10
+         if ( FWG(IPOS).eq.num(i) ) then
+            DIGIT = .true.
+            IPOS = IPOS + 1
+            IVAL = 10*IVAL + i - 1
+            goto 100
+         endif
+C
+ 200  continue
+      return
+C
+      end
+@* INDEX.

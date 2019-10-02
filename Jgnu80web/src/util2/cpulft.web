@@ -1,0 +1,26 @@
+@* cpulft.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] IDUM                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FIRST                                                  
+                                                                    
+\end{description}
+@a
+      double precision function cpulft(IDUM)
+      implicit none
+      integer IDUM
+C
+      cpulft = 1.0D10
+      return
+C
+      end
+@* INDEX.

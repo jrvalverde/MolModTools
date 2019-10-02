@@ -1,0 +1,31 @@
+@* fld.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] STB                                                       
+\item[INPUT:] NBITS                                                     
+\item[INPUT:] LOC                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   LABSCF                                                 
+                                                                    
+\end{description}
+@a
+      integer function fld(STB,NBITS,LOC)
+      implicit none
+      integer lloc , LOC , loc1 , NBITS , power , STB
+C
+      power = 2**(STB+NBITS)
+      loc1 = LOC/power
+      lloc = LOC - loc1*power
+      fld = lloc/(2**STB)
+      return
+C
+      end
+@* INDEX.

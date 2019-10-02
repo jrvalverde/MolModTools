@@ -1,0 +1,38 @@
+@* aadd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] C                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   D2ESPD  FOFPHF  FORMF   RHFOPN                         
+                                                                    
+\end{description}
+@a
+      subroutine aadd(N,A,B,C)
+      implicit none
+      double precision A , B , C
+      integer i , N
+C     routine to do vector operation:
+C
+C     c = a + b
+C
+      dimension A(*) , B(*) , C(*)
+C
+      do 100 i = 1 , N
+         C(i) = A(i) + B(i)
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.

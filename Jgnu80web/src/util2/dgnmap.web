@@ -1,0 +1,81 @@
+@* dgnmap.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] A                                                         
+\item[INPUT:] NB                                                        
+\item[INPUT:] NCOL                                                      
+\item[OUTPUT:] MAP                                                       
+\item[OUTPUT:] NDGN                                                      
+\item[OUTPUT:] NOSYM                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS                                                   
+\item[Called by]   BLDTBL  VIBTBL                                         
+                                                                    
+\end{description}
+@a
+      subroutine dgnmap(A,NB,NCOL,MAP,NDGN,NOSYM)
+      implicit none
+      double precision gabs
+      integer i , imin , j , MAP , NB , NCOL , NDGN , NOSYM
+C ----------------------------------------------------------------------
+      double precision A(NB,NCOL) , thrsh
+      dimension MAP(NCOL)
+      data thrsh/1.0D-2/
+C          this routine looks at an overlap between transformed and
+C     untransformed orbitals (in "a"), and determines which of the
+C     orbitals are degenerate.  if any transformation mixes two
+C     orbitals, they are assumed to be degenerate.  if at any time,
+C     the an inconsistency is detected (an orbital belongs to two
+C     different degeneracy groups), then "nosym" is set to one.
+C     the matrix "a" is dimensioned and filled to (nb x ncol).
+C
+C          the degeneracy map will be all zeroes in case there are
+C     no degeneracies.  for degeneracies, "map(i)=j" indicates that
+C     the i-th orbital belongs to the j-th degeneracy group.  there
+C     should be at least one other orbital which also belongs to
+C     this degeneracy group.  "ndgn" is returned with the number of
+C     degeneracy groups.
+C     r. a. whiteside - august 1979
+C ----------------------------------------------------------------------
+C
+      if ( NCOL.le.1 ) return
+      do 100 i = 2 , NCOL
+         imin = i - 1
+         do 50 j = 1 , imin
+C
+C                  skip if off-diagonal element is zero.
+            if ( gabs(A(i,j)).ge.thrsh ) then
+C
+C                  if neither is currently in a degeneracy group,
+C                  create a new group and put these into it.
+               if ( MAP(i).eq.0 .and. MAP(j).eq.0 ) then
+C
+                  NDGN = NDGN + 1
+                  MAP(i) = NDGN
+                  MAP(j) = NDGN
+               else
+C
+C                  if only one is currently in a dgn group, then
+C                  add the new one to the group.
+                  if ( MAP(i).eq.0 .and. MAP(j).ne.0 ) MAP(i) = MAP(j)
+                  if ( MAP(i).ne.0 .and. MAP(j).eq.0 ) MAP(j) = MAP(i)
+C
+C                  if they are already assigned to different dgn
+C                  groups, then we're confused.
+                  if ( MAP(i).ne.0 .and. MAP(j).ne.0 .and. MAP(i)
+     &                 .ne.MAP(j) ) NOSYM = 1
+               endif
+            endif
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

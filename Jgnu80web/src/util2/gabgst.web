@@ -1,0 +1,56 @@
+@* gabgst.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+\item[OUTPUT:] GA                                                        
+\item[OUTPUT:] GB                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   FORMF                                                  
+                                                                    
+\end{description}
+@a
+      subroutine gabgst(NBASIS,GA,GB)
+      implicit none
+      double precision GA , GB , pt25 , temp
+      integer i , j , k , NBASIS
+      dimension GA(*) , GB(*)
+      data pt25/0.25D0/
+C
+C***********************************************************************
+C     routine to split ga and gb out of gs and gt for the
+C     open shell raffenetti case.
+C
+C     arguments::
+C
+C     nbasis ... number of basis functions.
+C     ga     ... input:  contains gs.
+C                output: contains ga.
+C     gb     ... input:  contains gt.
+C                output: contains gb.
+C***********************************************************************
+C
+C
+C     process all elements.
+      k = 0
+      do 100 i = 1 , NBASIS
+         do 50 j = 1 , i
+            k = k + 1
+            temp = pt25*GB(k)
+            GB(k) = GA(k) + temp
+            GA(k) = GA(k) - temp
+ 50      continue
+ 100  continue
+C
+C     return to caller.
+      return
+C
+      end
+@* INDEX.

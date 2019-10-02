@@ -1,0 +1,37 @@
+@* gfloat.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IARG                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   ANNIL   C2AXES  CIDS5   CNAXIS  CONCLO  CONOPN  CONUSO 
+             DIMENS  DLPINT  FFRCNN  FILCHG  FINDCN  FIRST   FMTGEN 
+             FMTSET  FPX     GENL2E  GESOPT  GETIJ   GLPINT  HUCKEL 
+             INITBS  INITMS  LOCMIN  MSOPT   OCTA    OPER    QPDP   
+             RAWST   RMSVEC  ROOTN   SEARCH  SIGHCN  SNAXIS  SPIN   
+             SPINDM  STVINT  SYMNUM  TETRA   TRACAB  TRCL80  TROP80 
+             VERT    WINC    ZTOC                                   
+                                                                    
+\end{description}
+@a
+      double precision function gfloat(IARG)
+      implicit none
+      integer IARG
+      double precision dfloat
+C
+C
+C
+C     integer to working-precision conversion
+C
+      gfloat = dfloat(IARG)
+      return
+C
+      end
+@* INDEX.

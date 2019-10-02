@@ -1,0 +1,30 @@
+@* gasin.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      double precision function gasin(ARG)
+      implicit none
+      double precision dasin , ARG
+C
+C
+C
+C     arc sine
+C
+      gasin = dasin(ARG)
+      return
+C
+      end
+@* INDEX.

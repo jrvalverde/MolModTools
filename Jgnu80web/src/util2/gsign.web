@@ -1,0 +1,31 @@
+@* gsign.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG1                                                      
+\item[INPUT:] ARG2                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   DXQUAD  FIRST   STAR    ZTOC                           
+                                                                    
+\end{description}
+@a
+      double precision function gsign(ARG1,ARG2)
+      implicit none
+      double precision dsign , ARG1 , ARG2
+C
+C
+C
+C     transfer of sign ... result is dabs(arg1) * sign of arg2
+C
+      gsign = dsign(ARG1,ARG2)
+      return
+C
+      end
+@* INDEX.

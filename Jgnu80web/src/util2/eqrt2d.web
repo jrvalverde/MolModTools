@@ -1,0 +1,173 @@
+@* eqrt2d.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] D                                                         
+\item[OUTPUT:] E                                                         
+\item[INPUT:] N                                                         
+\item[OUTPUT:] Z                                                         
+\item[INPUT:] IZ                                                        
+\item[OUTPUT:] IER                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GABS    GSQRT   LNK1E                                  
+\item[Called by]   DIAGD                                                  
+                                                                    
+\end{description}
+@a
+      subroutine eqrt2d(D,E,N,Z,IZ,IER)
+      implicit none
+      double precision b , c , D , E , eps , f , g , gabs , gsqrt , h , 
+     &                 one , p , r , s , Z , zero
+      integer i , IER , ii , ip1 , IZ , j , k , l , m , mm1 , mm1pl , N
+      dimension D(*) , E(*) , Z(IZ,*)
+      data zero , one/.0D0 , 1.D0/
+C
+C   function            - find the eigenvalues and eigenvectors of a
+C                           tridiagonal matrix, t, using ql
+C                           transformations.
+C   parameters   d      - the array of length n contains the diagonal
+C                           elements of tridiagonal matrix t.
+C                           the eigenvalues of t in ascending order
+C                           overwrite the input d
+C                e      - input array of length n contains the
+C                           sub-diagonal elements of t. e(1) is not
+C                           used.
+C                n      - order of tridiagonal matrix t
+C                z      - input = the n x n identity matrix. replaced
+C                           by the n x n matrix giving the normalized
+C                           eigenvectors (column by column) of t
+C                iz     - row dimension of z in calling program
+C                ier    - error parameter
+C                         terminal error=128+n
+C                           n=1 means 30 successive iterations are made
+C                             without an eigenvalue being located
+C      implemented by rolf seeger
+C      numer. math., 11, 181 (1968)
+C
+C
+C=    dimension idelp(2)
+C=    equivalence (rdelp,idelp(1))
+C=    equivalence        (rdelp,eps)
+C=    data idelp/'00002580'x,0/
+C                                  tol is a machine dependent constant,
+C                                  tol = eta/eps, where eta is the
+C                                  smallest positive number represent-
+C                                  able in the computer and eps is the
+C                                  smallest positive number for which
+C                                  1+eps.ne.1.
+      eps = 2.**(-37)
+C=    eta=2.**(-218)
+C=    tol=eta/eps
+C=
+      IER = 0
+      if ( N.ne.1 ) then
+C                                  move the last n-1 elements
+C                                  of e into the first n-1 locations
+         do 50 i = 2 , N
+            E(i-1) = E(i)
+ 50      continue
+         E(N) = zero
+         b = zero
+         f = zero
+         do 150 l = 1 , N
+            j = 0
+            h = eps*(gabs(D(l))+gabs(E(l)))
+            if ( b.lt.h ) b = h
+C                                  look for small sub-diagonal element
+            do 60 m = l , N
+               k = m
+               if ( gabs(E(k)).le.b ) goto 80
+C
+ 60         continue
+ 80         m = k
+            if ( m.ne.l ) then
+ 90            if ( j.eq.30 ) goto 300
+               j = j + 1
+C                                  form shift
+               p = (D(l+1)-D(l))/(2.*E(l))
+               r = gsqrt(p*p+one)
+               if ( p.ge.zero ) h = D(l) - E(l)/(p+r)
+               if ( p.lt.zero ) h = D(l) - E(l)/(p-r)
+               do 100 i = l , N
+                  D(i) = D(i) - h
+ 100           continue
+               f = f + h
+C                                  ql transformation
+               p = D(m)
+               c = one
+               s = zero
+               mm1 = m - 1
+               mm1pl = mm1 + l
+               if ( l.le.mm1 ) then
+                  do 105 ii = l , mm1
+                     i = mm1pl - ii
+                     g = c*E(i)
+                     h = c*p
+                     if ( gabs(p).lt.gabs(E(i)) ) then
+C
+                        c = p/E(i)
+                        r = gsqrt(c*c+one)
+                        E(i+1) = s*E(i)*r
+                        s = one/r
+                        c = c/r
+                     else
+                        c = E(i)/p
+                        r = gsqrt(c*c+one)
+                        E(i+1) = s*p*r
+                        s = c/r
+                        c = one/r
+                     endif
+                     p = c*D(i) - s*g
+                     D(i+1) = h + s*(c*g+s*D(i))
+C                                  form vector
+                     do 102 k = 1 , N
+                        h = Z(k,i+1)
+                        Z(k,i+1) = s*Z(k,i) + c*h
+                        Z(k,i) = c*Z(k,i) - s*h
+ 102                 continue
+ 105              continue
+               endif
+               E(l) = s*p
+               D(l) = c*p
+               if ( gabs(E(l)).gt.b ) goto 90
+            endif
+            D(l) = D(l) + f
+ 150     continue
+C                                  order eigenvalues and eigenvectors
+         do 200 i = 1 , N
+            k = i
+            p = D(i)
+            ip1 = i + 1
+            if ( ip1.le.N ) then
+               do 160 j = ip1 , N
+                  if ( D(j).lt.p ) then
+                     k = j
+                     p = D(j)
+                  endif
+ 160           continue
+            endif
+            if ( k.ne.i ) then
+               D(k) = D(i)
+               D(i) = p
+               do 170 j = 1 , N
+                  p = Z(j,i)
+                  Z(j,i) = Z(j,k)
+                  Z(j,k) = p
+ 170           continue
+            endif
+ 200     continue
+      endif
+      goto 400
+C
+ 300  IER = 1
+      call lnk1e
+ 400  return
+C
+      end
+@* INDEX.

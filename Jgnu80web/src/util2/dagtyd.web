@@ -1,0 +1,31 @@
+@* dagtyd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] I                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine dagtyd(I)
+      implicit none
+      integer k
+      integer I(8) , ii(8)
+      data ii/' Thi' , 's is' , ' a m' , 'essa' , 'ge  ' , 'from' , 
+     &     '  DA' , 'GTYD'/
+C
+      do 100 k = 1 , 8
+         I(k) = ii(k)
+ 100  continue
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,30 @@
+@* glog10.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] ARG                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      double precision function glog10(ARG)
+      implicit none
+      double precision dlog10 , ARG
+C
+C
+C
+C     base 10 (common) logarithm
+C
+      glog10 = dlog10(ARG)
+      return
+C
+      end
+@* INDEX.

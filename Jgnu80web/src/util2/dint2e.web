@@ -1,0 +1,41 @@
+@* dint2e.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] TABLE                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  C0      C1      C2      C3      CM1     CM2     M      
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   RPOL2                                                  
+                                                                    
+\end{description}
+@a
+      double precision function dint2e(TABLE)
+      implicit none
+      double precision Ap , At , Bp , Bt , C0 , C1 , C2 , C3 , Cm1 , 
+     &                 Cm2 , TABLE , x
+      integer M
+      dimension TABLE(*)
+      common /mtpc  / At , Bt , Ap , Bp , Cm1 , C0 , C1 , C2 , M
+      equivalence (Cm2,Bp) , (C3,Bt)
+C
+C***********************************************************************
+C     routine to perform everett interpolation with throw-back to
+C     fourth order using table.
+C***********************************************************************
+C
+C
+C
+      x = Cm2*TABLE(M+1) + Cm1*TABLE(M+2) + C0*TABLE(M+3)
+     &    + C1*TABLE(M+4) + C2*TABLE(M+5) + C3*TABLE(M+6)
+      dint2e = x
+C
+      return
+C
+      end
+@* INDEX.

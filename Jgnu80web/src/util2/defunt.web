@@ -1,0 +1,44 @@
+@* defunt.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IN      IOUT    IPUNCH  IUNIT                          
+\item[Uses]  IN      IOUT    IPUNCH                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GNU80                                                  
+                                                                    
+\end{description}
+@a
+      subroutine defunt
+      implicit none
+      integer In , Iout , Ipunch , Iunit
+      common /io    / In , Iout , Ipunch
+      common /munit / Iunit(20)
+C
+C***********************************************************************
+C     routine defunt ... establish logical unit assignments for
+C     the gaussian system.
+C
+C     arguments:
+C
+C     iunit ... table to receive logical unit assignments.
+C
+C***********************************************************************
+C
+C
+      In = 5
+      Iout = 6
+      Ipunch = 7
+      Iunit(2) = In
+      Iunit(3) = Iout
+      Iunit(4) = Ipunch
+      Iunit(5) = 9
+      Iunit(6) = 8
+      Iunit(12) = 3
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,57 @@
+@* getind.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] LAMAX                                                     
+\item[INPUT:] LBMAX                                                     
+\item[INPUT:] LCMAX                                                     
+\item[INPUT:] LDMAX                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    INDC                                                   
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   GENL2E                                                 
+                                                                    
+\end{description}
+@a
+      subroutine getind(LAMAX,LBMAX,LCMAX,LDMAX)
+      implicit none
+      integer imax , Indc , indx , itotal , la , LAMAX , lap , lb , 
+     &        LBMAX , lbp , lc , LCMAX , lcp , ld , LDMAX , ldp
+      common /indc  / Indc(256)
+C
+C***********************************************************************
+C     routine to generate common/indc/.
+C     this routine also computes the required length of the c-array.
+C     to see the length, print itotal.  for f-functions, the maximum
+C     length is 1792.
+C***********************************************************************
+C
+C
+      itotal = 0
+      indx = 1
+      do 100 lap = 1 , LAMAX
+         la = lap - 1
+         do 50 lbp = 1 , LBMAX
+            lb = lbp - 1
+            do 20 lcp = 1 , LCMAX
+               lc = lcp - 1
+               do 10 ldp = 1 , LDMAX
+                  ld = ldp - 1
+                  imax = la + lb + lc + ld + 1
+                  Indc(la*64+lb*16+lc*4+ld+1) = indx
+                  indx = indx + imax
+                  itotal = itotal + imax
+ 10            continue
+ 20         continue
+ 50      continue
+ 100  continue
+C
+      return
+C
+      end
+@* INDEX.
