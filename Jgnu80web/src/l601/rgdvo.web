@@ -1,0 +1,65 @@
+@* rgdvo.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IOP                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    ICMP    IFCOND  IFDENS  IFDIST  IFGROS  IFMO    IFOORC 
+             IFPOP   JOP                                            
+\item[Uses]  IFOORC                                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ILSW                                                   
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rgdvo(IOP)
+      implicit none
+      integer i , Icmp , Ifcond , Ifdens , Ifdist , Ifgros , Ifmo , 
+     &        Ifoorc , Ifpop , Ifspin , IOP , Jop , Mnchrg , nops
+      dimension IOP(*)
+      dimension Jop(10)
+      common /iopt  / Ifoorc , Ifdist , Ifmo , Ifdens , Ifpop , Ifgros , 
+     &                Mnchrg , Ifcond , Ifspin , Icmp
+      equivalence (Jop(1),Ifoorc)
+      data nops/8/
+C
+C
+C
+C***********************************************************************
+C     set the default values of the options.
+C***********************************************************************
+C
+C
+C
+C
+C
+C
+      call ilsw(2,1,Ifoorc)
+      Ifdist = 0
+      Ifmo = 1
+      Ifdens = 0
+      Ifpop = 1
+      Ifgros = 1
+      Ifcond = 1
+C
+C     read the non-default options.
+C
+      do 100 i = 1 , nops
+         if ( IOP(i+4).lt.1 ) then
+         elseif ( IOP(i+4).eq.1 ) then
+            Jop(i) = 1
+         else
+C
+            Jop(i) = 0
+         endif
+ 100  continue
+      Icmp = Ifoorc/2
+      Ifoorc = mod(Ifoorc,2)
+      return
+C
+      end
+@* INDEX.

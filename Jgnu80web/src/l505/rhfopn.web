@@ -1,0 +1,368 @@
+@* rhfopn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    DA      DGEN    ICNVG   ICYC    IDUMP   IEXT    IFCNVG 
+             IGUESS  IJ      IPCH    IPRINT  NTT                    
+\item[Transmits as argument]  D       FA      IBF     IDUM    IGEN    IRWC1   IRWC2  
+             IRWC3   IRWC4   IRWCA   IRWEV   IRWFA   IRWFB   IRWGEN 
+             IRWPA   IRWPB   IRWPT   IRWT    NAE     NBASIS  NBE    
+             NTTMAX  PSAVE                                          
+\item[Uses]  D       DA      DGEN    FA      IBF     ICNVG   ICYC   
+             IDUM    IDUMP   IGEN    IOP     IOUT    IPCH    IPRINT 
+             IRWC1   IRWC2   IRWC3   IRWC4   IRWCA   IRWEV   IRWFA  
+             IRWFB   IRWGEN  IRWPA   IRWPB   IRWPT   IRWT    ISYM2E 
+             NAE     NBASIS  NBE     NE      NTT     NTTMAX  PSAVE  
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       AADD    BINWT   CYCPHF  DRUM    ILSW    LNK1E   PHFCHK 
+             PHFPRT  TREAD   TWRITE  VIRIAL                         
+\item[Called by]   L505                                                   
+                                                                    
+\end{description}
+@a
+      subroutine rhfopn(JUMP)
+      implicit none
+      double precision acurcy , Atmchg , C , Cc , Coeff , D , Da , Dd , 
+     &                 De , Dgen , energy , F , Fa , Fb , Ff , Filabc , 
+     &                 finac , t , ten , tenrgy
+      double precision vir , zero
+      integer i , Ian , Ibf , Icharg , Icnvg , Icyc , icyc1 , icyc64 , 
+     &        icyc8 , Id505 , Idum , Idump , Iext , Ifcnvg , Ifill , 
+     &        Igen , Iguess , ihalt , Ij , In
+      integer Iop , Iout , Ipch , Iprint , Ipunch , Irstrt , Irwc1 , 
+     &        Irwc2 , Irwc3 , Irwc4 , Irwca , Irwcb , Irwev , Irwfa , 
+     &        Irwfb , Irwgen , Irwh , irwibf , Irwpa , Irwpb
+      integer Irwpt , Irws , Irwt , Isym2e , isymm , itemp , j , 
+     &        jcycle , JUMP , k , LENB , lim , LNEQ , MAXBAS , maxcyc , 
+     &        Maxnbf , MAXNTT , MAXPRM , MAXS21 , MAXSH1
+      integer MAXSHL , MEMLEN , Multip , Nae , Natoms , Nbasis , Nbe , 
+     &        Ne , neq , neqbas , nsq , nsymop , Ntt , Nttmax
+C
+C these parameters are for common /b/ and related matters
+C     maxshl is the maximum number of shells
+C     maxprm is the maximum number of primitives
+C     lenb is the length of /b/ (in units of 8 bytes)
+C     maxsh1 and maxs21 are sillies for equivalencing
+C
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+C
+C these parameters are for mostly scf routines:
+C     maxbas is the maximum number of basis functions
+C     maxshl is the maximum number of shells (from above)
+C     memlen is the length of common /memry/
+C     lenfil is the length of the "left-over" of /memry/
+C            when the requirements of the current routine are met.
+C     moutd  and mplus1 are sillies to get the reading and
+C            equivalencing of neqbas and neqshl right
+      parameter (MAXBAS=150,MEMLEN=50000,MAXNTT=((MAXBAS*(MAXBAS+1))/2),
+     &           LNEQ=(4*MAXBAS+4*MAXSHL))
+C
+      integer Psave
+      dimension neqbas(MAXBAS,8)
+      dimension Da(1) , D(1) , Fa(1) , Fb(1) , Idum(1)
+      dimension Igen(1)
+      dimension irwibf(2)
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      common /memry / Dd(70,70) , De(70) , F(70,70) , Ff(70) , 
+     &                Coeff(70,70) , Cc(70) , Id505 , Ifill , 
+     &                Filabc(35089)
+      common /max505/ Maxnbf , Nttmax
+      common /gen   / Dgen(47)
+      common /ops505/ Ipch , Iprint , Idump , Iguess , Icnvg , Icyc , 
+     &                Irstrt , Iext , Ifcnvg
+      common /irw505/ Irwgen , Irws , Irwt , Irwh , Irwev , Irwca , 
+     &                Irwcb , Irwpa , Irwpb , Irwpt , Irwfa , Irwfb , 
+     &                Irwc1 , Irwc2 , Irwc3 , Irwc4
+      common /ibf   / Ibf(30)
+      common /psave / Psave
+      common /io    / In , Iout , Ipunch
+      common /jnkphf/ Ntt , Ij(71)
+      equivalence (Da(1),Dd(1,1)) , (D(1),Dd(36,36))
+      equivalence (Fa(1),F(1,1)) , (Fb(1),F(36,36))
+      equivalence (Idum(1),Coeff(1,1))
+      equivalence (Igen(1),Dgen(1))
+      equivalence (Isym2e,Ibf(30))
+      data irwibf/508 , 15/ , isymm/551/ , neq/565/
+      data ten/10.0D00/ , finac/0.5D-06/ , zero/0.0D00/
+C     ******************************************************************
+C
+C
+C1l505
+C     link 505 ... program rhfopn
+C     solves the binkley, pople dobosh equations for a
+C     spin-restricted open shell system.  the wavefunction
+C     produced is not compatible with the gaussian-78 post
+C     scf procedures (ci, mp, ccd, etc.).
+C2
+C
+C     ******************************************************************
+C
+C     options ... iop( )
+C
+C2iop(5)
+C     iop(5) ... specification of initial guess.
+C     this option is not currently used.  the initial guess,
+C     link 401 or 402 must be used with the appropriate options.
+C
+C2iop(6)
+C     iop(6) ... convergence on the density matrix.
+C     0 ...5.0d-7 (note that this is less than in the closed shell rhf
+C                  program because here, we are converging on three
+C                  matrices.
+C     n, 1.le.n.le.7 ... final convergence=10**(-2*n).
+C
+C2iop(7)
+C     iop(7) ... maximum number of scf cycles.
+C     0 ... 20 cycles.  (note that each cycle involves the formation
+C                        of three fock matrices;  appropriate time
+C                        should be allowed.
+C     n, 1.le.n.le.6 ... number of cycles is 2**(iop(7)-1).
+C                        a value of one will permit only a single cycle.
+C     7 ... maxcyc=64*iop(22)+8*iop(23)+iop(24).
+C
+C2iop(13)
+C     iop(13) ... termination due to convergence failure.
+C     0 ... terminate run for scf convergence failure.
+C     1 ... do not terminate.
+C
+C2iop(15)
+C     iop(15) ... control of three-point extrapolation.
+C     0 ... use three point extrapolation when possible.
+C     1 ... lock-out three-point extrapolation.
+C     2 ... lock-out additionally the four-point extrapolation.
+C
+C2iop(16)
+C     iop(16) ... control of use of convergence routine.
+C     0 ... use convergence routine.
+C     1 ... lock-out convergence routine.
+C
+C2iop(32)
+C     iop(32) ... punch option.
+C     0 ... no punched output.
+C     1 ... punch eigenvalues and m. o. coefficients at end of scf.
+C     2 ... punch the density matrices (alpha and beta) at the end
+C           of the scf.
+C     3 ... punch the eigenvalues, m. o. coefficients and the density
+C           matrices at the end of the scf.
+C
+C2iop(33)
+C     iop(33) ... print option.
+C     0 ... no print.
+C     1 ... print the eigenvalues and m. o. coefficients at the end
+C           of the scf.
+C     2 ... print the eigenvalues, m. o. coefficients and the density
+C           matrices at the end of the scf.
+C     3 ... print the eigenvalues, m. o. coefficients and the density
+C           matrices each cycle in the scf.
+C     4 ... full print each cycle (use only in desperation).
+C
+C2iop(34)
+C     iop(34) ... dump option.
+C     0 ... no dump mode.
+C     1 ... dump mode, sets iop(33)=4.
+C
+C
+C
+C     ******************************************************************
+C
+C
+C     data irwgen/501/,irws/514/,irwh/515/,irwt/516/
+C     data irwev/522/,irwca/524/,irwcb/526/,irwpa/528/
+C     data irwpb/530/,irwpt/532/
+C     data irwfa/536/,irwfb/538/
+C     data irwc1/2551/,irwc2/2552/,irwc3/2553/,irwc4/2554/
+C
+C
+C     data one/1.0d0/
+C
+C
+99001 format (' ','SCF DONE:  E(RHF) = ',g19.12,' A.U. AFTER ',i4,
+     &        ' CYCLES'/1x,'           CONVG  = ',d13.4,12x,' -V/T = ',
+     &        f7.4)
+99002 format ('  NTT = ',i6,' NE = ',i6,' NAE = ',i6,' NBE = ',i6)
+99003 format (45H RESTRICTED HARTREE FOCK SCF FOR OPEN SHELLS.)
+99004 format (1H )
+99005 format (1H ,41HREQUESTED CONVERGENCE ON DENSITY MATRIX =,d11.4,
+     &        8H WITHIN ,i3,8H CYCLES.)
+99006 format (1x,4HITER,2x,17HELECTRONIC-ENERGY,7x,11HCONVERGENCE,4x,
+     &        13HEXTRAPOLATION/1x,4(1H-),2x,17(1H-),7x,11(1H-),4x,
+     &        13(1H-))
+99007 format (43H0CONVERGENCE FAILURE ... ERROR TERMINATION.)
+99008 format ('+',20x,g19.12)
+C     ******************************************************************
+C     *  initialize this overlay.                                      *
+C     ******************************************************************
+      call drum
+C
+C     load options from iop into local common/ops505/.
+      ihalt = iabs(Iop(13)-1)
+      Ipch = Iop(32)
+      Iprint = Iop(33)
+      Idump = Iop(34)
+      if ( Idump.gt.2 ) Iprint = 4
+      Iguess = Iop(5)
+      Icnvg = Iop(6)
+      Icyc = Iop(7)
+      Iext = Iop(15)
+      icyc64 = Iop(22)
+      icyc8 = Iop(23)
+      icyc1 = Iop(24)
+      Ifcnvg = Iop(16)
+      Ntt = (Nbasis*(Nbasis+1))/2
+      call ilsw(2,21,Psave)
+C
+C     set rhf open shell bits in ilsw.
+      call ilsw(1,1,0)
+      call ilsw(1,22,1)
+C
+C     clear /abc505/.
+      lim = 3*(Nbasis**2+Nbasis)
+      do 100 i = 1 , lim
+         Da(i) = zero
+ 100  continue
+C
+C     define rw-files created in this link.
+      call twrite(Irwfa,Da(1),Nttmax,1,Ntt,1,0)
+      call twrite(Irwfb,Da(1),Nttmax,1,Ntt,1,0)
+C
+C     define rw-files used as scratch by the convergence routine.
+      call twrite(Irwc1,Da(1),2*Nttmax,1,2*Ntt,1,0)
+      call twrite(Irwc2,Da(1),2*Nttmax,1,2*Ntt,1,0)
+      call twrite(Irwc3,Da(1),2*Nttmax,1,2*Ntt,1,0)
+      call twrite(Irwc4,Da(1),2*Nttmax,1,2*Ntt,1,0)
+C
+C     print header line (always), and check the ortho-normality
+C     of the input wave-function.  phfchk will a4ttempt to fix
+C     a bad wave-function.
+      write (Iout,99003)
+      call phfchk(Nbasis)
+C
+C     fill linear indexing array (required by fofphf and fsymm).
+      do 200 i = 1 , 71
+         Ij(i) = (i*(i-1))/2
+ 200  continue
+C
+C     read in initial density matrices from the rw-files.
+      call tread(Irwpa,Da,Nttmax,1,Ntt,1,0)
+      call tread(Irwpb,D,Nttmax,1,Ntt,1,0)
+C
+C     determine the density matrix convergence criterion.
+      acurcy = finac
+      if ( Icnvg.ne.0 ) acurcy = ten**(-2*Icnvg)
+C
+C     determine the maximum number of allowed cycles.
+      maxcyc = 20
+      if ( Icyc.lt.1 ) then
+      elseif ( Icyc.eq.1 ) then
+         maxcyc = 1
+      else
+C
+         maxcyc = 2**(Icyc-1)
+         if ( Icyc.eq.7 ) maxcyc = 64*icyc64 + 8*icyc8 + icyc1
+      endif
+C
+C     set up /ibf/.
+      call tread(irwibf(1),Ibf(1),irwibf(2),1,irwibf(2),1,0)
+C
+C     set up for using two-electron integral symmetry if it is
+C     available.
+      if ( Isym2e.ne.0 ) then
+         call tread(isymm,Idum(1),1,1,1,1,0)
+         nsymop = Idum(1)
+         call tread(neq,Idum(1),LNEQ,1,LNEQ,1,0)
+         k = 8*MAXSHL
+         do 250 j = 1 , 8
+            do 220 i = 1 , MAXBAS
+               k = k + 1
+               neqbas(i,j) = Idum(k)
+ 220        continue
+ 250     continue
+      endif
+C
+      if ( Iprint.ge.3 ) write (Iout,99002) Ntt , Ne , Nae , Nbe
+      write (Iout,99005) acurcy , maxcyc
+      if ( Psave.eq.0 ) write (Iout,99006)
+C
+C     call routine cycphf to do the actual iterating.  this routine
+C     returns when either maxcyc is reached, or the convergence
+C     criterion is met.
+      call cycphf(jcycle,energy,acurcy,maxcyc,Nae,Nbe,Nbasis,nsymop,
+     &            neqbas)
+C
+C     compute the total density matrix.
+      call tread(Irwpa,Da,Ntt,1,Ntt,1,0)
+      call tread(Irwpb,Fa,Ntt,1,Ntt,1,0)
+      call aadd(Ntt,Da,Fa,Da)
+      call twrite(Irwpt,Da,Ntt,1,Ntt,1,0)
+C
+C     recover /gen/ from the rw-files.
+      call tread(Irwgen,Igen(1),47,1,47,1,0)
+      tenrgy = energy + Dgen(41)
+C
+C     given the final wave-function, compute the virial ratio.
+      call virial(Nbasis,tenrgy,Da,Fa,Irwpt,Irwt,vir,t)
+C
+C     print the final results.
+      write (Iout,99004)
+      write (Iout,99008) (tenrgy,i=1,4)
+      write (Iout,99001) tenrgy , jcycle , acurcy , vir
+C
+C     insert the new values into /gen/.
+      Dgen(32) = tenrgy
+      Dgen(40) = vir
+      Dgen(42) = t
+      Dgen(43) = tenrgy
+C
+C     write the updated /gen/ back out into the rw-files.
+      call twrite(Irwgen,Igen(1),47,1,47,1,0)
+C
+C     if requested, print the final matrices and eigenvlues.
+      if ( Iprint.ne.0 ) call phfprt(Nbasis)
+C
+C     possibly binwt the final results.
+      nsq = Nbasis*Nbasis
+      if ( Ipch.lt.1 ) then
+      elseif ( Ipch.eq.1 ) then
+         call tread(Irwev,Da,Nttmax,1,2*Nbasis,1,0)
+         call binwt(Da,2*Nbasis,1HE)
+         call tread(Irwca,Da,nsq,1,nsq,1,0)
+         call binwt(Da,2*nsq,1HC)
+      else
+C
+         if ( Ipch.lt.2 ) goto 300
+         if ( Ipch.ne.2 ) then
+C
+            call tread(Irwev,Da,Nttmax,1,2*Nbasis,1,0)
+            call binwt(Da,2*Nbasis,1HE)
+            call tread(Irwca,Da,nsq,1,nsq,1,0)
+            call binwt(Da,2*nsq,1HC)
+         endif
+         call tread(Irwpa,Da,Nttmax,1,Ntt,1,0)
+         call binwt(Da,2*Ntt,1HP)
+         call tread(Irwpb,Da,Nttmax,1,Ntt,1,0)
+         call binwt(Da,2*Ntt,1HP)
+      endif
+C
+C
+C     possibly terminate scf for convergence failure.
+ 300  call ilsw(2,5,itemp)
+      if ( ihalt*itemp.ne.0 ) then
+         write (Iout,99007)
+         call lnk1e
+      endif
+C
+C     ..............
+      JUMP = 0
+C     ..............
+      return
+C
+      end
+@* INDEX.

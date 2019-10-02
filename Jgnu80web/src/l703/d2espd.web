@@ -1,0 +1,318 @@
+@* d2espd.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] JUMP                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IPURD   MXCORE                                         
+\item[Transmits as argument]  C       CORE    EXX     IPURF   IRWB    IRWFX   IRWPA  
+             IRWPB   IRWPT   IRWPTI  IRWSYM  NATOMS  NBASIS         
+\item[Uses]  C       CORE    EXX     IOP     IOUT    IPURD   IPURF  
+             IRWB    IRWFX   IRWPA   IRWPB   IRWPT   IRWPTI  IRWSYM 
+             MXCORE  NATOMS  NBASIS                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       AADD    ACLEAR  DPHNIX  DRUM    GETNB6  ILSW    LNK1E  
+             REDOB   REDOP   TREAD   TWRITE                         
+\item[Called by]   L703                                                   
+                                                                    
+\end{description}
+@a
+      subroutine d2espd(JUMP)
+      implicit none
+      double precision Atmchg , C , C1 , C2 , C3 , C4 , Core , Exx , 
+     &                 Shladf , X , Y , Z
+      integer i , iacc , iad , Ian , Icharg , idm , idn , idump , iend , 
+     &        ifrc , ifxyz , In , inao , initf , Iop , Iout , ipad , 
+     &        iprint , Ipunch , Ipurd
+      integer Ipurf , ipvec , Irwb , Irwfx , Irwpa , Irwpb , Irwpt , 
+     &        Irwpti , Irwsym , iscf , iscfp , isymgr , itemp , ivee , 
+     &        j , Jan , jfxyz , jtrans , JUMP , jvee
+      integer k , LENB , MAXPRM , MAXS21 , MAXSH1 , MAXSHL , Maxtyp , 
+     &        mout , Multip , Mxcore , Nae , nat3 , Natoms , nbas6d , 
+     &        Nbasis , Nbe , nden , Ne , neqatm , neqtmp
+      integer nosym , Nshell , nsymop , ntt , ntt6d
+      integer Shella , Shelln , Shellt , Shellc , Aos , Aon
+      logical usesym
+C this is atom (not shell) related
+      dimension neqtmp(800) , ipvec(10)
+      dimension jtrans(3,8) , neqatm(100,8) , mout(846) , ipad(19)
+      common /memry / Core(49999) , Mxcore
+      common /iop   / Iop(50)
+      common /mol   / Natoms , Icharg , Multip , Nae , Nbe , Ne , 
+     &                Nbasis , Ian(101) , Atmchg(100) , C(300)
+      parameter (MAXSHL=100,MAXPRM=(3*MAXSHL),MAXSH1=(MAXSHL+1),
+     &           MAXS21=(2*MAXSHL+1),LENB=(15*MAXSHL+7*MAXSHL/2+1))
+      common /b     / Exx(MAXPRM) , C1(MAXPRM) , C2(MAXPRM) , C3(MAXPRM)
+     &                , X(MAXSHL) , Y(MAXSHL) , Z(MAXSHL) , Jan(MAXSHL)
+     &                , Shella(MAXSHL) , Shelln(MAXSHL) , Shellt(MAXSHL)
+     &                , Shellc(MAXSHL) , Aos(MAXSHL) , Aon(MAXSHL) , 
+     &                Nshell , Maxtyp
+      dimension C4(MAXSHL) , Shladf(MAXSHL)
+      equivalence (C4(1),C3(MAXSH1)) , (Shladf(1),C3(MAXS21))
+      common /io    / In , Iout , Ipunch
+      common /irw703/ Irwb(2) , Irwpt , Irwpa , Irwpb , Irwpti , Irwfx , 
+     &                Irwsym
+      common /ipure / Ipurd , Ipurf
+      equivalence (nsymop,mout(1))
+      equivalence (jtrans(1,1),mout(2))
+      equivalence (neqatm(1,1),mout(26))
+      equivalence (ipad(1),mout(829))
+C      data mxcore/16557/
+ 
+C
+C***********************************************************************
+C     control routine for the 'in-core' calculation of the
+C     two-electron contributions to the hartree-fock first
+C     derivatives.
+C
+C     ******************************************************************
+C     iop(  )  ... options:
+C     ******************************************************************
+C
+C     iop(27) ... file initialization control.
+C     1 ... the contributions computed in dphnix are added
+C           to previous information contained in rw-file irwfx.
+C
+C     iop(28) ... integral evaluation option.
+C     0 ... compute as normal. (sp done in l702, spd done here.)
+C     1 ... do all gradient integrals in l703.
+C
+C     iop(33) ... print option.
+C     0 ... no printing.
+C     1 ... print final contributions to fxyz.
+C
+C     iop(34) ... dump option.
+C     0 ... no dumping.
+C     1 ... usual system stuff.
+C     2 ... dump derivative contributions from within shell loops.
+C
+C     ******************************************************************
+C
+C     this routine serves two major purposes:
+C     1.  perform initialization chores, like recovering pertinent
+C         common blocks from the rw-files.
+C     2.  allocate memory.  certain arrays depend on the number
+C         of basis functions and number of atoms.
+C         space for these things is allocated from the single array
+C         'core'.
+C***********************************************************************
+C
+C
+C
+C
+C     the following dimension will accomodate:
+C     up to 127 basis function, plus
+C     up to 100 atoms.
+C     just for reference, 'core' is used to allocate storage
+C     for a scalar, two 3*natoms arrays, and
+C     for two ntt arrays.
+C
+C     allocate storage for symmetry stuff.  eventually,
+C     this should be put into 'core', but will have to wait
+C     until neqatm is variably dimensioned.
+C=    common/grsym/nsymop,jtrans(3,8),neqatm(100,8),ipad(19)
+C
+C
+C
+99001 format (' ALLOCATION FAILURE IN D2ESP.'/5x,'NEEDS',i6,
+     &        '   BUT ONLY HAS',i6,' WORDS.')
+99002 format (' NO CODE YET FOR COMPLEX UHF ... SORRY.')
+99003 format (' NO CODE YET FOR ROHF ... SORRY.')
+C
+C
+C***********************************************************************
+C     initialize this link.
+C***********************************************************************
+C temporary stopgap
+      Mxcore = 49999
+C
+      call drum
+C
+C     ******************************************************************
+C     fill local options.
+C     ******************************************************************
+      initf = Iop(27)
+      iacc = Iop(28)
+      isymgr = Iop(30)
+      iprint = Iop(33)
+      idump = Iop(34)
+      ntt = (Nbasis*(Nbasis+1))/2
+      nat3 = 3*Natoms
+C
+C     defer execution of this link, if possible.
+      call ilsw(2,24,ifrc)
+      if ( ifrc.eq.1 ) goto 400
+C
+C     ******************************************************************
+C     fetch /b/ from the rw-files.
+      call tread(Irwb(1),Exx(1),LENB,1,LENB,1,0)
+C
+C     read the ilsw to determine if purd d-functions are in use.
+C     also, fill ipurf.
+      call ilsw(2,2,Ipurd)
+      call ilsw(2,16,Ipurf)
+C     determine the number of functions there would be if this were
+C     a 6-d run.
+      ntt6d = ntt
+      if ( Ipurd.ne.1 ) then
+         call getnb6(nbas6d)
+         ntt6d = (nbas6d*(nbas6d+1))/2
+      endif
+C
+C     ******************************************************************
+C     determine type of scf.
+C     definition of iscf:
+C        iscf = 0 ... rrhf
+C               1 ... ruhf
+C               2 ... crhf
+C               3 ... cuhf
+C               4 ... rohf
+C     ******************************************************************
+      call ilsw(2,1,iscf)
+      iscfp = iscf + 1
+C \# \# temp code for number of density matrices.
+      nden = 1
+      if ( iscf.ne.0 ) nden = 2
+C \# \# \#  code goes here for rohf to set iscf to 4.
+C
+C     ******************************************************************
+C     allocate storage in 'core'.
+C     ******************************************************************
+C           core(1)=vee
+      ivee = 1
+C           fxyz(3*natoms)
+      ifxyz = ivee + 1
+C           allocate nden density matrices.
+      idm = ifxyz + 3*Natoms
+      idn = idm
+C \# \# \#temp
+      if ( nden.eq.2 ) idn = idm + ntt6d
+C           check for over-run.
+      iend = idn + ntt6d - 1
+      if ( iend.gt.Mxcore ) then
+         write (Iout,99001) iend , Mxcore
+         call lnk1e
+      endif
+C
+C     ******************************************************************
+C     read in density matrices from rw-files.
+C     ******************************************************************
+      if ( iscfp.eq.2 ) then
+C
+C     real-uhf.
+         call tread(Irwpa,Core(idm),ntt,1,ntt,1,0)
+         call tread(Irwpb,Core(idn),ntt,1,ntt,1,0)
+      elseif ( iscfp.eq.3 ) then
+C
+C     complex rhf.
+         call tread(Irwpt,Core(idm),ntt,1,ntt,1,0)
+         call tread(Irwpti,Core(idn),ntt,1,ntt,1,0)
+      elseif ( iscfp.eq.4 ) then
+C
+C     complex uhf ... no code yet.
+         write (Iout,99002)
+         call lnk1e
+         goto 100
+      elseif ( iscfp.eq.5 ) then
+         goto 100
+      else
+C
+C     real-rhf.
+         call tread(Irwpt,Core(idm),ntt,1,ntt,1,0)
+      endif
+      goto 200
+C
+C     restricted open-shell.
+ 100  write (Iout,99003)
+      call lnk1e
+C \# \# \#temp
+C   code to set up address vector for density matrices.
+ 200  ipvec(1) = idm
+      ipvec(2) = idn
+C \# \# \#
+C     convert any 5-d density matrices to 6-d density matrices.
+      if ( Ipurd.ne.1 ) then
+C     first, reformat /b/.
+         inao = iend + 1
+         itemp = inao + nbas6d - 1
+         if ( itemp.gt.Mxcore ) then
+            write (Iout,99001) iend , Mxcore
+            call lnk1e
+         endif
+         call redob(Nbasis,Core(inao),iprint)
+C     loop over all density matrices.
+         do 250 i = 1 , nden
+            iad = ipvec(i)
+            call redop(Nbasis,nbas6d,Core(inao),Core(iad),iprint)
+ 250     continue
+C     set ipurd to one so that setord will load 6-d constants
+C     into /order/.
+         Ipurd = 1
+      endif
+C
+C     ******************************************************************
+C     if symmetry is available, recover the information
+C     from the rw-files, and prepare to use it.
+C     ******************************************************************
+      call ilsw(2,26,nosym)
+      usesym = (nosym.eq.0) .and. (isymgr.eq.0)
+      if ( usesym ) then
+C \# \# \#temp
+         call tread(Irwsym,nsymop,422,1,422,1,0)
+C \# \# \#temp: pack down.
+         k = 0
+         do 300 j = 1 , nsymop
+            do 260 i = 1 , Natoms
+               k = k + 1
+               neqtmp(k) = neqatm(i,j)
+ 260        continue
+ 300     continue
+      endif
+C
+C
+C
+C***********************************************************************
+C     calculate 2-electron contribution to hartree-fock forces.
+C     routine returns with vee, and force contributions in
+C     fxyz.
+C***********************************************************************
+C
+      call dphnix(iacc,iscf,Core(idm),Core(idn),Core(ivee),Core(ifxyz),
+     &            C,Natoms,usesym,nsymop,jtrans,neqtmp,iprint,idump)
+C
+C     ******************************************************************
+C     when done, output the final results to the rw-files.
+C     note that the things to twrite are conveniently located
+C     at the head of 'core'.
+C     in this step, we process the initf option.  whatever has been
+C     computed in dphnix is then merged with the rw-file copy.
+C     in this way, if printing is requested, just the d-contribution
+C     will be printed.
+C     ******************************************************************
+C
+C     if requested, recover previous gradient information
+C     from rw-files.
+C     this requires allocation of more work space.  this space
+C     is made coincident with the density matrices since we are
+C     now done with them.
+      jvee = idm
+      jfxyz = jvee + 1
+      call aclear(nat3,Core(jfxyz))
+      if ( initf.eq.1 ) call tread(Irwfx,Core(jvee),nat3+1,1,nat3+1,1,0)
+C
+C     merge the new data with the old.
+      call aadd(nat3,Core(ifxyz),Core(jfxyz),Core(jfxyz))
+C
+C     write things out.
+      call twrite(Irwfx,Core(jvee),nat3+1,1,nat3+1,1,0)
+C
+C     ..............
+ 400  JUMP = 0
+C     ..............
+      return
+C
+      end
+@* INDEX.

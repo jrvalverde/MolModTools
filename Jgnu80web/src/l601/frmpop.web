@@ -1,0 +1,74 @@
+@* frmpop.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[PASSED:] IAN                                                       
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NADIM                                                     
+\item[INPUT:] NBDIM                                                     
+\item[INPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[OUTPUT:] GAMMA                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]  IOUT                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       ATOMPR  TQUERY  TREAD                                  
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine frmpop(NATOMS,IAN,NBASIS,NADIM,NBDIM,A,B,GAMMA)
+      implicit none
+      double precision A , B , GAMMA , zero
+      integer ia , IAN , In , Iout , Ipunch , irwfci , irwps , len , 
+     &        mu , NADIM , NATOMS , NBASIS , NBDIM , nu
+      dimension IAN(*)
+      dimension A(NBDIM,NADIM) , B(NBDIM,NBDIM) , GAMMA(*)
+      common /io    / In , Iout , Ipunch
+      data irwfci/517/ , irwps/534/ , zero/0.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to compute the fermi contact term for each nucleus in
+C     an open shell run.
+C*********************************************************************
+C
+C
+C
+C
+C
+C***********************************************************************
+99001 format (40H  FERMI CONTACT ANALYSIS (ATOMIC UNITS).)
+C***********************************************************************
+C
+C     bypass this routine if the integrals are not available.
+      call tquery(irwfci,len)
+      if ( len.eq.0 ) return
+C     also, check for spin density.
+      call tquery(irwps,len)
+      if ( len.eq.0 ) return
+      write (Iout,99001)
+C     read in the fermi contact integrals and the spin density matrix.
+      call tread(irwfci,A,NBDIM,NADIM,NBASIS,NATOMS,0)
+      call tread(irwps,B,NBDIM,NBDIM,NBASIS,NBASIS,1)
+C     sum up the contribution for each atom.
+      do 100 ia = 1 , NATOMS
+         GAMMA(ia) = zero
+         do 50 mu = 1 , NBASIS
+            do 20 nu = 1 , NBASIS
+               GAMMA(ia) = GAMMA(ia) + B(mu,nu)*A(mu,ia)*A(nu,ia)
+ 20         continue
+ 50      continue
+ 100  continue
+C     print out the results via atompr.
+      call atompr(NATOMS,IAN,GAMMA,NATOMS,1,1)
+      return
+C
+      end
+@* INDEX.

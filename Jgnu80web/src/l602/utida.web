@@ -1,0 +1,33 @@
+@* utida.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] TODAY                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SAVSCF                                                 
+                                                                    
+\end{description}
+@a
+      subroutine utida(TODAY)
+      implicit none
+      real*8 TODAY , calend
+C.....installation-dependent date routine.
+C     returns date in form  mm/dd/yy
+C
+C.....neucc version (harwell library call)
+C     call za09as(today)
+C.....siue version
+C      call date1(today)
+C.....cdc version
+C     call date (today)
+      TODAY = 0.0D00
+      return
+      end
+@* INDEX.

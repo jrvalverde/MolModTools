@@ -1,0 +1,31 @@
+@* orbtyp.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] AA                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine orbtyp(AA)
+      implicit none
+      real AA
+      integer i
+C
+C
+C
+C     this is a dummy subroutine now.
+C
+      i = 1
+      return
+C
+      end
+@* INDEX.

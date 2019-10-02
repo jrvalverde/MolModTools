@@ -1,0 +1,107 @@
+@* ecnfig.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[PASSED:] MULTIP                                                    
+\item[INPUT:] NAE                                                       
+\item[INPUT:] NBE                                                       
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] ORBSYM                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  IOUT    LBLREP  NSYMOP                                 
+\item[Uses]  CHRTBL  IOUT    LBLREP  NREPS   NSYMOP                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CAPTLZ  DECCHR  GETB    ILSW    PUTB    PUTBC   PUTCHR 
+             SKIP    STROUT  TQUERY  TREAD                          
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ecnfig(MULTIP,NAE,NBE,NBASIS,ORBSYM)
+      implicit none
+      double precision chelt , Chrtbl , one , rcnfig , Symops
+      integer i , In , iorb , Iout , Iprmut , Ipunch , irep , irpsav , 
+     &        irwrep , irwsm , iscf , istr , isym , jstr , k , ksp , 
+     &        kspmax , lbl , Lblrep , lc
+      integer len , lim , lrwrep , mc , MULTIP , NAE , NBASIS , NBE , 
+     &        nocc , norb , Nreps , Nsymop
+      integer ORBSYM
+      dimension ORBSYM(*) , irwsm(2) , nocc(2) , rcnfig(10)
+      dimension istr(8) , jstr(40)
+      common /io    / In , Iout , Ipunch
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(100,10)
+      data irwrep , lrwrep , irwsm(1) , irwsm(2)/562 , 767 , 563 , 564/
+      data one/1.D0/
+C
+99001 format (' UNABLE TO DETERMINE ELECTRONIC STATE.')
+C
+      nocc(1) = NAE
+      nocc(2) = NBE
+      call ilsw(2,1,iscf)
+      if ( iscf.lt.2 ) then
+         kspmax = iscf + 1
+         call tquery(irwrep,len)
+         if ( len.ne.lrwrep ) return
+         call tread(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+         if ( Nsymop.eq.0 ) return
+         if ( Nreps.eq.0 ) return
+         do 50 i = 1 , Nsymop
+            rcnfig(i) = one
+ 50      continue
+         call tquery(irwsm(1),len)
+         len = min0(len,NBASIS)
+         do 100 ksp = 1 , kspmax
+            call tread(irwsm(ksp),ORBSYM,len,1,len,1,0)
+            norb = nocc(ksp)
+            do 80 iorb = 1 , norb
+               lbl = ORBSYM(iorb)
+               do 60 i = 1 , Nsymop
+                  chelt = Chrtbl(i,lbl)
+                  if ( iscf.eq.0 ) chelt = chelt**2
+                  rcnfig(i) = rcnfig(i)*chelt
+ 60            continue
+ 80         continue
+ 100     continue
+         do 150 irep = 1 , Nreps
+            irpsav = irep
+            do 120 isym = 1 , Nsymop
+               if ( rcnfig(isym).ne.Chrtbl(isym,irep) ) goto 150
+ 120        continue
+            goto 200
+C
+ 150     continue
+      endif
+      write (Iout,99001)
+      goto 300
+C
+C                  build output string.
+ 200  lc = 0
+      call decchr(MULTIP,istr,lc)
+      call putchr('-',istr,lc)
+      mc = 0
+C                  get the symmetry label.
+      if ( irpsav.ne.1 ) then
+         lim = irpsav - 1
+         do 250 k = 1 , lim
+            call skip(2,Lblrep,mc)
+ 250     continue
+      endif
+      call getb(2,jstr,len,Lblrep,mc)
+C
+      call putb(jstr,len,istr,lc)
+      call captlz(istr,istr,lc)
+C                  output string.
+      mc = 0
+      call putbc(' THE ELECTRONIC STATE IS ',25,jstr,mc)
+      call putb(istr,lc,jstr,mc)
+      call putchr('.',jstr,mc)
+      call strout(Iout,jstr,mc,1)
+ 300  return
+C
+      end
+@* INDEX.

@@ -1,0 +1,33 @@
+@* utiti.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[OUTPUT:] DAYTIM                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   SAVSCF                                                 
+                                                                    
+\end{description}
+@a
+      subroutine utiti(DAYTIM)
+      implicit none
+      real*8 DAYTIM , timday
+C.....installation-dependent time-of-day routine
+C     returns time in form   hh.mm.ss
+C
+C.....neucc version (harwell library call)
+C     call za08as(daytim)
+C.....siue version
+C      call clockf(daytim)
+      DAYTIM = 0.0D00
+C.....cdc version
+C     call clock (daytim)
+      return
+      end
+@* INDEX.

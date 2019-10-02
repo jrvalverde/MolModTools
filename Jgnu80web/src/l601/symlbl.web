@@ -1,0 +1,88 @@
+@* symlbl.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] IUHF                                                      
+\item[PASSED:] SYM                                                       
+\item[INPUT:] NBASIS                                                    
+\item[OUTPUT:] NOSYM                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  LBLREP  NSYMOP                                         
+\item[Uses]  LBLREP  NSYMOP                                         
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GETB    PUTB    PUTCHR  PUTDEL  SKIP    TQUERY  TREAD  
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine symlbl(IUHF,SYM,NBASIS,NOSYM)
+C ----------------------------------------------------------------------
+      implicit none
+      integer i , Iprmut , irwrep , irwsa , irwsb , IUHF , j , l , 
+     &        Lblrep , lc , len , lim , lrwrep , MAXBAS , MAXSHL , 
+     &        NBASIS , nc , NOSYM , Nreps , Nsymop
+      integer orbsym , SYM , tmp
+      parameter (MAXBAS=150,MAXSHL=100)
+      double precision Chrtbl , Symops
+      dimension orbsym(MAXBAS) , tmp(5) , SYM(*)
+      common /repcom/ Nsymop , Nreps , Lblrep(32) , Chrtbl(10,16) , 
+     &                Symops(9,10) , Iprmut(MAXSHL,10)
+      data irwrep/562/ , lrwrep/767/
+      data irwsa/563/ , irwsb/564/
+C          a routine to build a delimited string containing orbital
+C     symmetry labels.  these are returned in "symm".  "nbasis" is the
+C     number of basis functions.  "iuhf" indicates whether alpha or
+C     beta assignments are to be used:  0/1 --- alpha/beta.
+C ----------------------------------------------------------------------
+C                        character table and labels for symms.
+C
+C
+C                        storage for integer symm assignments.
+C
+C                        read in integer assignments.
+      NOSYM = 1
+      call tquery(irwsa,len)
+      if ( len.le.0 ) return
+      call tquery(irwrep,len)
+      if ( len.ne.lrwrep ) return
+      if ( IUHF.eq.1 ) call tquery(irwsb,len)
+      if ( IUHF.eq.1 .and. len.le.0 ) return
+      nc = 0
+      l = (NBASIS-1)/2 + 1
+      if ( IUHF.eq.0 ) call tread(irwsa,orbsym,l,1,l,1,0)
+      if ( IUHF.eq.1 ) call tread(irwsb,orbsym,l,1,l,1,0)
+C
+C                        read in /repcom/.
+      call tread(irwrep,Nsymop,lrwrep,1,lrwrep,1,0)
+C
+      do 100 i = 1 , NBASIS
+         lc = 0
+         if ( orbsym(i).eq.0 ) return
+         if ( orbsym(i).ne.1 ) then
+C
+C                  position to right label.
+            lim = orbsym(i) - 1
+            do 20 j = 1 , lim
+               call skip(2,Lblrep,lc)
+ 20         continue
+         endif
+C
+C                  get string.
+         call getb(2,tmp,len,Lblrep,lc)
+C
+C                  build label into "sym".
+         call putchr('(',SYM,nc)
+         call putb(tmp,len,SYM,nc)
+         call putchr(')',SYM,nc)
+         call putdel(2,SYM,nc)
+ 100  continue
+      NOSYM = 0
+C
+      return
+C
+      end
+@* INDEX.

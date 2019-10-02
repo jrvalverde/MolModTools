@@ -1,0 +1,147 @@
+@* phfchk.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NBASIS                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    B                                                      
+\item[Transmits as argument]  A       AA      BB      C       IRWCA   IRWS    MAXNBF 
+\item[Uses]  A       AA      B       BB      C       IOUT    IPRINT 
+             IRWCA   IRWS    MAXNBF                                 
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       EIGEN   GABS    GSQRT   LNK1E   MATOUT  MATPAC  TREAD  
+             TWRITE                                                 
+\item[Called by]   CYCPHF  RHFOPN                                         
+                                                                    
+\end{description}
+@a
+      subroutine phfchk(NBASIS)
+      implicit none
+      double precision A , Aa , B , Bb , C , Cc , Filabc , gabs , 
+     &                 gsqrt , one , temp , thresh
+      integer i , Icnvg , Icyc , Id505 , Idump , Iext , Ifcnvg , Ifill , 
+     &        iflag , Iguess , im1 , In , Iout , Ipch , Iprint , 
+     &        Ipunch , Irstrt , Irwc1 , Irwc2 , Irwc3
+      integer Irwc4 , Irwca , Irwcb , Irwev , Irwfa , Irwfb , Irwgen , 
+     &        Irwh , Irwpa , Irwpb , Irwpt , Irws , Irwt , j , Maxnbf , 
+     &        Maxntt , NBASIS
+C      common /abc505/a(70,70),aa(70),b(70,70),bb(70),c(70,70),cc(70),
+      common /memry / A(70,70) , Aa(70) , B(70,70) , Bb(70) , C(70,70) , 
+     &                Cc(70) , Id505 , Ifill , Filabc(35089)
+      common /io    / In , Iout , Ipunch
+      common /irw505/ Irwgen , Irws , Irwt , Irwh , Irwev , Irwca , 
+     &                Irwcb , Irwpa , Irwpb , Irwpt , Irwfa , Irwfb , 
+     &                Irwc1 , Irwc2 , Irwc3 , Irwc4
+      common /max505/ Maxnbf , Maxntt
+      common /ops505/ Ipch , Iprint , Idump , Iguess , Icnvg , Icyc , 
+     &                Irstrt , Iext , Ifcnvg
+      data thresh/1.0D-07/ , one/1.0D0/
+C
+C
+C
+C***********************************************************************
+C     routine to check, and if necessary, re-orthonormalize the
+C     m. o. coefficients.  this is done in the following manner:
+C
+C     1.  calculate the matrix w = c(dagger) * s * c.
+C     2.  examine the matrix w by comparing its diagonal elements
+C         vs. one, and its off-diagonal elements vs. zero.
+C     3.  if necessary, re-orthonormalize by replacing c with
+C         c' = c * w**(-1/2).
+C***********************************************************************
+99001 format (' BAD DIAGONAL ELEMENT: ',i3,d20.10)
+99002 format (' BAD OFF-DIAGONAL ELEMENT: ',2I3,d20.10)
+99003 format (' C(DAGGER)*S*C FROM PHF')
+99004 format (' ORTHONORMALIZATION REQUIRED ... PHFCHK.')
+99005 format (' OFFENDING EIGENVALUE ... CANNOT ORTHONORMALIZE:',i3,
+     &        d20.13)
+99006 format (' FROM PHFCHK, RE-ORTHONORMALIZED COEFFICIENT ARRAY:')
+C
+C..... step 1 ... form the matrix w = c(dagger) * s * c.
+      call tread(Irws,A,Maxnbf,Maxnbf,NBASIS,NBASIS,1)
+      call tread(Irwca,B,Maxnbf,Maxnbf,NBASIS,NBASIS,0)
+C
+C     form s*c, put result in c.
+      call matpac(A,B,C,Maxnbf,NBASIS,1)
+C
+C     form c(dagger)*s*c. result to a.
+      call matpac(B,C,A,Maxnbf,NBASIS,2)
+C
+C..... step 2 ... test the matrix w.
+C     result now in a, check it.
+C     scan diagonal first.
+      iflag = 0
+      do 100 i = 1 , NBASIS
+         if ( gabs(A(i,i)-one).ge.thresh ) then
+            write (Iout,99001) i , A(i,i)
+            iflag = 1
+         endif
+ 100  continue
+C     scan off-diagonal.
+      do 200 i = 1 , NBASIS
+         im1 = i - 1
+         if ( im1.gt.0 ) then
+            do 120 j = 1 , im1
+               if ( gabs(A(i,j)).ge.thresh ) then
+                  iflag = 1
+                  write (Iout,99002) i , j , A(i,j)
+               endif
+ 120        continue
+         endif
+ 200  continue
+C     test iflag.
+      if ( Iprint.lt.3 ) then
+         if ( iflag.le.0 ) goto 300
+      endif
+      write (Iout,99003)
+      call matout(A,Maxnbf,Maxnbf,NBASIS,NBASIS)
+C
+C..... step 3 ... re-orthonormalize if necessary.
+ 300  if ( iflag.gt.0 ) then
+         write (Iout,99004)
+C
+C     first, calculate w**(-1/2).  this requires as a first step
+C     that we diagonalize the matrix w.
+         call eigen(NBASIS,A,B,Bb,Aa)
+C     after diagonalization,
+C      a  ... destroyed.
+C      b  ... contains the eigenvectors.
+C      aa ... was scratched.
+C      bb ... contains the eigenvalues.
+C     multiply each eigenvector through by the inverse
+C     square-root of its eigenvalue to get w**(-1/2).
+C     this matrix is formed in the array b.
+         do 350 j = 1 , NBASIS
+C     get the inverse square-root of the current eigenvalue.
+C     watch out for negative.
+            if ( Bb(j).le.0 ) then
+               write (Iout,99005) j , Bb(j)
+               call lnk1e
+            endif
+            temp = one/gsqrt(Bb(j))
+            do 320 i = 1 , NBASIS
+               B(i,j) = B(i,j)*temp
+ 320        continue
+ 350     continue
+C     post-multiply the current coefficient array with
+C     w**(-1/2) to get the new (re-orthonormalized) coefficient
+C     array.
+         call tread(Irwca,A,Maxnbf,Maxnbf,NBASIS,NBASIS,0)
+         call matpac(A,B,C,Maxnbf,NBASIS,1)
+C     replace the coefficient array in the rw-files.
+         call twrite(Irwca,C,Maxnbf,Maxnbf,NBASIS,NBASIS,0)
+C     test for printing.
+         if ( Iprint.gt.2 ) then
+            write (Iout,99006)
+            call matout(C,Maxnbf,Maxnbf,NBASIS,NBASIS)
+         endif
+      endif
+C
+C     all done, return.
+      return
+C
+      end
+@* INDEX.

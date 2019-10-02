@@ -1,0 +1,131 @@
+@* dq.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NATOMS                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] ATMCHG                                                    
+\item[INPUT:] ICHARG                                                    
+\item[INPUT:] C                                                         
+\item[INPUT:] MDIM                                                      
+\item[OUTPUT:] A                                                         
+\item[INPUT:] B                                                         
+\item[INPUT:] TOE                                                       
+\item[INPUT:] TOANG                                                     
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    GEN                                                    
+\item[Transmits as argument]  IRWDIP  IRWGEN  IRWPA   IRWPB   IRWX                   
+\item[Uses]  GEN     IFOORC  IOUT    IRWDIP  IRWGEN  IRWPA   IRWPB  
+             IRWX                                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT   TQUERY  TREAD   TWRITE                         
+\item[Called by]   MULPOP                                                 
+                                                                    
+\end{description}
+@a
+      subroutine dq(NATOMS,NBASIS,ATMCHG,ICHARG,C,MDIM,A,B,TOE,TOANG)
+      implicit none
+      double precision A , an , ATMCHG , B , C , d , debye , dtotal , 
+     &                 dx , dy , dz , Gen , gsqrt , tenten , TOANG , 
+     &                 TOE , zero
+      integer i , ICHARG , Idum , idx , Ifoorc , In , Iolbl , Iout , 
+     &        Ipunch , Irwca , Irwcb , Irwdip , Irweig , Irwgen , 
+     &        Irwpa , Irwpb , Irwpt , Irws , Irwsc1 , Irwscr
+      integer Irwx , Irwy , Irwz , j , k , len , MDIM , NATOMS , NBASIS
+      dimension A(MDIM,MDIM) , B(MDIM,MDIM) , Irwdip(3) , d(3)
+      dimension ATMCHG(*) , C(*)
+      common /io    / In , Iout , Ipunch
+      common /iopt  / Ifoorc , Idum(9)
+      common /irw601/ Irweig , Irwca , Irwcb , Irwpa , Irwpb , Irws , 
+     &                Iolbl , Irwx , Irwy , Irwz , Irwpt , Irwgen , 
+     &                Irwscr , Irwsc1
+      common /gen   / Gen(47)
+      equivalence (dx,d(1)) , (dy,d(2)) , (dz,d(3)) , (Irwx,Irwdip(1))
+      data zero/0.0D0/ , tenten/1.D-10/
+C
+C
+C***********************************************************************
+C     this routine will compute the dipole moment (including the
+C     x, y, and z components) of the hartree-fock wavefunction.
+C     it requires two nbasis by nbasis arrays for scratch working
+C     space, and the followiing rw-files:
+C
+C     irwpa ... alpha (or closed shell) density matrix.
+C     irwpb ... beta density matrix (only for open shell runs).
+C     irwx  ... x-dipole integrals.
+C     irwy  ... y-dipole integrals.
+C     irwz  ... z-dipole integrals.
+C***********************************************************************
+C
+C
+C
+C
+C
+C
+C***********************************************************************
+99001 format (1x,'DIPOLE MOMENT (DEBYE): X=',f7.4,3x,'Y=',f7.4,3x,'Z=',
+     &        f7.4,3x,'TOTAL=',f7.4)
+C***********************************************************************
+C
+C     bypass calculation if rw-files are undefined.
+      call tquery(Irwx,len)
+      if ( len.eq.0 ) return
+C     bypass calculation if molecule is charged.
+      if ( ICHARG.eq.0 ) then
+C     compute the conversion factor from atomic units to debye
+C     1 debye = 10**(-18) esu-cm
+         debye = TOANG*TOE/tenten
+C     recover the alpha (total) density matrix.
+         call tread(Irwpa,A,MDIM,MDIM,NBASIS,NBASIS,1)
+         if ( Ifoorc.gt.0 ) then
+C     if open shell, get also the beta density matrix.
+            call tread(Irwpb,B,MDIM,MDIM,NBASIS,NBASIS,1)
+C     combine the density matrices.
+            do 20 i = 1 , NBASIS
+               do 10 j = 1 , NBASIS
+                  A(i,j) = A(i,j) + B(i,j)
+ 10            continue
+ 20         continue
+         endif
+C
+C     loop over x, y, and z, getting the components of the
+C     dipole vector.
+         do 100 k = 1 , 3
+            d(k) = zero
+C     get the appropriate dipole matrix.
+            call tread(Irwdip(k),B,MDIM,MDIM,NBASIS,NBASIS,1)
+C     trace with the density.
+            do 40 i = 1 , NBASIS
+               do 30 j = 1 , NBASIS
+                  d(k) = d(k) - A(i,j)*B(i,j)
+ 30            continue
+ 40         continue
+C     add in the nuclear contribution.
+            do 60 i = 1 , NATOMS
+               an = ATMCHG(i)
+               idx = 3*(i-1)
+               d(k) = d(k) + C(idx+k)*an
+ 60         continue
+ 100     continue
+C     scale out of atomic units.
+         dx = d(1)*debye
+         dy = d(2)*debye
+         dz = d(3)*debye
+C     compute total dipole.
+         dtotal = gsqrt(dx*dx+dy*dy+dz*dz)
+C     print the result out.
+         write (Iout,99001) dx , dy , dz , dtotal
+C
+C     store total dipole into /gen/.
+         call tread(Irwgen,Gen,47,1,47,1,0)
+         Gen(22) = dtotal
+         call twrite(Irwgen,Gen,47,1,47,1,0)
+      endif
+C
+      return
+C
+      end
+@* INDEX.

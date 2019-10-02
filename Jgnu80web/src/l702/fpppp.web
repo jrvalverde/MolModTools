@@ -1,0 +1,771 @@
+@* fpppp.
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    VE00    VE11    VE12    VE13    VE14    VE21    VE22   
+             VE23    VE24    VE31    VE32    VE33    VE34           
+\item[Uses]  A12     A1234I  A34I    C1110   C1120   C1130   C1210  
+             C1220   C1230   C1310   C1320   C1330   C2110   C2120  
+             C2130   C2210   C2220   C2230   C2310   C2320   C2330  
+             C3110   C3120   C3130   C3210   C3220   C3230   C3310  
+             C3320   C3330   CPPPP   CPPSP   CPSPP   CPSSP   CSPPP  
+             CSPSP   CSSPP   CSSSP   E       FQ2     FQ3     FQ4    
+             GOOOO   GOOXO   GOOYO   GOOZO   GXOOO   GXOXO   GXOYO  
+             GXOZO   GXXOO   GXXXO   GXXYO   GXXZO   GXYOO   GXYXO  
+             GXYYO   GXYZO   GXZOO   GXZXO   GXZYO   GXZZO   GYOOO  
+             GYOYO   GYOZO   GYXOO   GYXXO   GYXYO   GYXZO   GYYOO  
+             GYYXO   GYYYO   GYYZO   GYZOO   GYZXO   GYZYO   GYZZO  
+             GZOOO   GZOZO   GZXOO   GZXXO   GZXYO   GZXZO   GZYOO  
+             GZYXO   GZYYO   GZYZO   GZZOO   GZZXO   GZZYO   GZZZO  
+             OPOX    OPOY    OPOZ    OPXO    OPXOX   OPXX    OPXY   
+             OPXZ    OPYO    OPYOY   OPYX    OPYY    OPYZ    OPZO   
+             OPZOZ   OPZX    OPZY    OPZZ    OQOX    OQOY    OQOZ   
+             OQXO    OQXOX   OQXX    OQXY    OQXZ    OQYO    OQYOY  
+             OQYX    OQYY    OQYZ    OQZO    OQZOZ   OQZX    OQZY   
+             OQZZ    PQXX    PQXY    PQXZ    PQYY    PQYZ    PQZZ   
+             QA      QA1     QA2     V0000   V0010   V0020   V0030  
+             V0100   V0110   V0120   V0130   V0200   V0210   V0220  
+             V0230   V0300   V0310   V0320   V0330   V1000   V1010  
+             V1020   V1030   V1100   V1110   V1120   V1130   V1200  
+             V1210   V1220   V1230   V1300   V1310   V1320   V1330  
+             V2000   V2010   V2020   V2030   V2100   V2110   V2120  
+             V2130   V2200   V2210   V2220   V2230   V2300   V2310  
+             V2320   V2330   V3000   V3010   V3020   V3030   V3100  
+             V3110   V3120   V3130   V3200   V3210   V3220   V3230  
+             V3300   V3310   V3320   V3330   VE00    VE11    VE12   
+             VE13    VE14    VE21    VE22    VE23    VE24    VE31   
+             VE32    VE33    VE34                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   TWLDRV                                                 
+                                                                    
+\end{description}
+@a
+      subroutine fpppp
+      implicit none
+      double precision A1 , A12 , A1234 , A1234i , A12i , A2 , A3 , 
+     &                 A34 , A34i , A4 , c1011 , c1012 , c1013 , c1021 , 
+     &                 c1022 , c1023 , c1031 , c1032 , c1033 , C1110
+      double precision C1120 , C1130 , C1210 , C1220 , C1230 , C1310 , 
+     &                 C1320 , C1330 , c2011 , c2012 , c2013 , c2021 , 
+     &                 c2022 , c2023 , c2031 , c2032 , c2033 , C2110 , 
+     &                 C2120 , C2130
+      double precision C2210 , C2220 , C2230 , C2310 , C2320 , C2330 , 
+     &                 c3011 , c3012 , c3013 , c3021 , c3022 , c3023 , 
+     &                 c3031 , c3032 , c3033 , C3110 , C3120 , C3130 , 
+     &                 C3210 , C3220
+      double precision C3230 , C3310 , C3320 , C3330 , Cpppp , Cppsp , 
+     &                 Cpspp , Cpssp , Csppp , Cspsp , Csspp , Csssp , 
+     &                 E , Fq0 , Fq1 , Fq2 , Fq3 , Fq4 , Fq5 , Goooo
+      double precision Gooxo , gooxx , gooxy , gooxz , Gooyo , gooyy , 
+     &                 gooyz , Goozo , goozz , Gxooo , Gxoxo , gxoxx , 
+     &                 Gxoyo , gxoyy , gxoyz , Gxozo , gxozz , Gxxoo , 
+     &                 Gxxxo , gxxxx
+      double precision gxxxy , gxxxz , Gxxyo , gxxyx , gxxyy , gxxyz , 
+     &                 Gxxzo , gxxzx , gxxzy , gxxzz , Gxyoo , Gxyxo , 
+     &                 gxyxx , gxyxy , gxyxz , Gxyyo , gxyyx , gxyyy , 
+     &                 gxyyz , Gxyzo
+      double precision gxyzx , gxyzy , gxyzz , Gxzoo , Gxzxo , gxzxx , 
+     &                 gxzxy , gxzxz , Gxzyo , gxzyx , gxzyy , gxzyz , 
+     &                 Gxzzo , gxzzx , gxzzy , gxzzz , Gyooo , gyoxx , 
+     &                 Gyoyo , gyoyy
+      double precision Gyozo , gyozz , Gyxoo , Gyxxo , gyxxx , gyxxy , 
+     &                 gyxxz , Gyxyo , gyxyx , gyxyy , gyxyz , Gyxzo , 
+     &                 gyxzx , gyxzy , gyxzz , Gyyoo , Gyyxo , gyyxx , 
+     &                 gyyxy , gyyxz
+      double precision Gyyyo , gyyyx , gyyyy , gyyyz , Gyyzo , gyyzx , 
+     &                 gyyzy , gyyzz , Gyzoo , Gyzxo , gyzxx , gyzxy , 
+     &                 gyzxz , Gyzyo , gyzyx , gyzyy , gyzyz , Gyzzo , 
+     &                 gyzzx , gyzzy
+      double precision gyzzz , Gzooo , gzoxx , gzoyy , Gzozo , gzozz , 
+     &                 Gzxoo , Gzxxo , gzxxx , gzxxy , gzxxz , Gzxyo , 
+     &                 gzxyx , gzxyy , gzxyz , Gzxzo , gzxzx , gzxzy , 
+     &                 gzxzz , Gzyoo
+      double precision Gzyxo , gzyxx , gzyxy , gzyxz , Gzyyo , gzyyx , 
+     &                 gzyyy , gzyyz , Gzyzo , gzyzx , gzyzy , gzyzz , 
+     &                 Gzzoo , Gzzxo , gzzxx , gzzxy , gzzxz , Gzzyo , 
+     &                 gzzyx , gzzyy
+      double precision gzzyz , Gzzzo , gzzzx , gzzzy , gzzzz , h , 
+     &                 hfq3 , Opox , Opoy , Opoz , Opxo , Opxox , Opxx , 
+     &                 Opxy , Opxz , Opyo , Opyoy , Opyx , Opyy , Opyz
+      double precision Opzo , Opzoz , Opzx , Opzy , Opzz , Oqox , Oqoy , 
+     &                 Oqoz , Oqxo , Oqxox , Oqxx , Oqxy , Oqxz , Oqyo , 
+     &                 Oqyoy , Oqyx , Oqyy , Oqyz , Oqzo , Oqzoz
+      double precision Oqzx , Oqzy , Oqzz , p25 , p25fq2 , p75fq2 , 
+     &                 Pqx , Pqxx , Pqxy , Pqxz , Pqy , Pqyy , Pqyz , 
+     &                 Pqz , Pqzz , ptoq , ptoqs , Qa , Qa1 , Qa2
+      double precision qfq4 , S1 , S12 , S2 , S3 , S34 , S4 , sfq3 , 
+     &                 temp , tfq3 , three , V0000 , v0001 , v0002 , 
+     &                 v0003 , V0010 , v0011 , v0012 , v0013 , V0020
+      double precision v0021 , v0022 , v0023 , V0030 , v0031 , v0032 , 
+     &                 v0033 , V0100 , v0101 , v0102 , v0103 , V0110 , 
+     &                 v0111 , v0112 , v0113 , V0120 , v0121 , v0122 , 
+     &                 v0123 , V0130
+      double precision v0131 , v0132 , v0133 , V0200 , v0201 , v0202 , 
+     &                 v0203 , V0210 , v0211 , v0212 , v0213 , V0220 , 
+     &                 v0221 , v0222 , v0223 , V0230 , v0231 , v0232 , 
+     &                 v0233 , V0300
+      double precision v0301 , v0302 , v0303 , V0310 , v0311 , v0312 , 
+     &                 v0313 , V0320 , v0321 , v0322 , v0323 , V0330 , 
+     &                 v0331 , v0332 , v0333 , V1000 , v1001 , v1002 , 
+     &                 v1003 , V1010
+      double precision v1011 , v1012 , v1013 , V1020 , v1021 , v1022 , 
+     &                 v1023 , V1030 , v1031 , v1032 , v1033 , V1100 , 
+     &                 v1101 , v1102 , v1103 , V1110 , V1120 , V1130 , 
+     &                 V1200 , v1201
+      double precision v1202 , v1203 , V1210 , V1220 , V1230 , V1300 , 
+     &                 v1301 , v1302 , v1303 , V1310 , V1320 , V1330 , 
+     &                 V2000 , v2001 , v2002 , v2003 , V2010 , v2011 , 
+     &                 v2012 , v2013
+      double precision V2020 , v2021 , v2022 , v2023 , V2030 , v2031 , 
+     &                 v2032 , v2033 , V2100 , v2101 , v2102 , v2103 , 
+     &                 V2110 , V2120 , V2130 , V2200 , v2201 , v2202 , 
+     &                 v2203 , V2210
+      double precision V2220 , V2230 , V2300 , v2301 , v2302 , v2303 , 
+     &                 V2310 , V2320 , V2330 , V3000 , v3001 , v3002 , 
+     &                 v3003 , V3010 , v3011 , v3012 , v3013 , V3020 , 
+     &                 v3021 , v3022
+      double precision v3023 , V3030 , v3031 , v3032 , v3033 , V3100 , 
+     &                 v3101 , v3102 , v3103 , V3110 , V3120 , V3130 , 
+     &                 V3200 , v3201 , v3202 , v3203 , V3210 , V3220 , 
+     &                 V3230 , V3300
+      double precision v3301 , v3302 , v3303 , V3310 , V3320 , V3330 , 
+     &                 Ve00 , Ve11 , Ve12 , Ve13 , Ve14 , Ve21 , Ve22 , 
+     &                 Ve23 , Ve24 , Ve31 , Ve32 , Ve33 , Ve34 , vp4
+      double precision vpppp
+      dimension E(256)
+      common /ffq   / Fq0 , Fq1 , Fq2 , Fq3 , Fq4 , Fq5
+      common /fp4   / Qa , Qa1 , Qa2 , A12i , A34i , A1234i
+      common /fp4   / A1 , A2 , A3 , A4 , A12 , A34 , A1234 , Pqx , 
+     &                Pqy , Pqz , Pqxx , Pqyy , Pqzz , Pqxy , Pqxz , 
+     &                Pqyz , V0000 , V0010 , V0020 , V0030 , V0100 , 
+     &                V0200 , V0300 , V0110 , V0120 , V0130 , V0210 , 
+     &                V0220 , V0230 , V0310 , V0320 , V0330 , V1010 , 
+     &                V1020 , V1030 , V2010 , V2020 , V2030 , V3010 , 
+     &                V3020 , V3030 , V1000 , V2000 , V3000 , V1100 , 
+     &                V2100 , V3100 , V1200 , V2200 , V3200 , V1300 , 
+     &                V2300 , V3300 , V1110 , V2110 , V3110 , V1210 , 
+     &                V2210 , V3210 , V1310 , V2310 , V3310 , V1120 , 
+     &                V2120 , V3120 , V1220 , V2220 , V3220 , V1320 , 
+     &                V2320 , V3320 , V1130 , V2130 , V3130 , V1230 , 
+     &                V2230 , V3230 , V1330 , V2330 , V3330
+      common /fp4   / C1110 , C2110 , C3110 , C1210 , C2210 , C3210 , 
+     &                C1320 , C2320 , C3320 , C1130 , C2130 , C3130 , 
+     &                C1230 , C2230 , C3230 , C1310 , C2310 , C3310 , 
+     &                C1120 , C2120 , C3120 , C1220 , C2220 , C3220 , 
+     &                C1330 , C2330 , C3330 , Opxo , Opyo , Opzo , 
+     &                Opox , Opoy , Opoz , Opxox , Opyoy , Opzoz , 
+     &                Opxx , Opxy , Opxz , Opyx , Opyy , Opyz , Opzx , 
+     &                Opzy , Opzz , Oqxo , Oqyo , Oqzo , Oqox , Oqoy , 
+     &                Oqoz , Oqxox , Oqyoy , Oqzoz , Oqxx , Oqxy , 
+     &                Oqxz , Oqyx , Oqyy , Oqyz , Oqzx , Oqzy , Oqzz , 
+     &                S1 , S2 , S3 , S4 , S12 , S34
+      common /fp4   / E , Goooo , Gooxo , Gooyo , Goozo , Gxooo , 
+     &                Gxoxo , Gxoyo , Gxozo , Gxxoo , Gxxxo , Gxxyo , 
+     &                Gxxzo , Gxyoo , Gxyzo , Gxzoo , Gyooo , Gyoyo , 
+     &                Gyozo , Gyyoo , Gyyxo , Gyyyo , Gyyzo , Gyzoo , 
+     &                Gzooo , Gzozo , Gzzoo , Gzzxo , Gzzyo , Gzzzo , 
+     &                Ve00 , Ve11 , Ve12 , Ve13 , Ve14 , Ve21 , Ve22 , 
+     &                Ve23 , Ve24 , Ve31 , Ve32 , Ve33 , Ve34 , Csssp , 
+     &                Csspp , Cspsp , Cpssp , Csppp , Cpspp , Cppsp , 
+     &                Cpppp
+      equivalence (Gxyoo,Gyxoo)
+      equivalence (Gxzoo,Gzxoo)
+      equivalence (Gyzoo,Gzyoo)
+      equivalence (Gyxxo,Gxyxo,Gxxyo)
+      equivalence (Gzxxo,Gxzxo,Gxxzo)
+      equivalence (Gzyyo,Gyzyo,Gyyzo)
+      equivalence (Gxyyo,Gyxyo,Gyyxo)
+      equivalence (Gxzzo,Gzxzo,Gzzxo)
+      equivalence (Gyzzo,Gzyzo,Gzzyo)
+      equivalence (Gxyzo,Gyzxo,Gzxyo,Gzyxo,Gyxzo,Gxzyo)
+      equivalence (gyyxx,gyxyx,gyxxy,gxyyx,gxyxy,gxxyy)
+      equivalence (gzzxx,gzxzx,gzxxz,gxzzx,gxzxz,gxxzz)
+      equivalence (gzzyy,gzyzy,gzyyz,gyzzy,gyzyz,gyyzz)
+      equivalence (gyxxx,gxyxx,gxxyx,gxxxy)
+      equivalence (gzxxx,gxzxx,gxxzx,gxxxz)
+      equivalence (gxyyy,gyxyy,gyyxy,gyyyx)
+      equivalence (gzyyy,gyzyy,gyyzy,gyyyz)
+      equivalence (gxzzz,gzxzz,gzzxz,gzzzx)
+      equivalence (gyzzz,gzyzz,gzzyz,gzzzy)
+      equivalence (gxyzz,gxzyz,gxzzy,gyxzz,gyzxz,gyzzx,gzxyz,gzxzy,
+     &             gzyxz,gzyzx,gzzxy,gzzyx)
+      equivalence (gyzxx,gyxzx,gyxxz,gzyxx,gzxyx,gzxxy,gxyzx,gxyxz,
+     &             gxzyx,gxzxy,gxxyz,gxxzy)
+      equivalence (gzxyy,gzyxy,gzyyx,gxzyy,gxyzy,gxyyz,gyzxy,gyzyx,
+     &             gyxzy,gyxyz,gyyzx,gyyxz)
+      data three/3.0D0/
+      data p25/0.25D0/
+      data h/0.5D0/
+C
+C
+C
+C     data one5/1.5d0/
+C     data one/1.0d0/
+      v0001 = Oqox*Goooo + Gooxo
+      v0002 = Oqoy*Goooo + Gooyo
+      v0003 = Oqoz*Goooo + Goozo
+      Ve00 = Ve00 + (v0001*E(2)+v0002*E(3)+v0003*E(4))*Csssp
+      temp = V0000*Csssp
+      Ve14 = temp*E(2)
+      Ve24 = temp*E(3)
+      Ve34 = temp*E(4)
+      ptoq = -A12*A34i
+      ptoqs = ptoq**2
+      gooxx = Gxxoo*ptoqs
+      gooyy = Gyyoo*ptoqs
+      goozz = Gzzoo*ptoqs
+      gooxy = Gxyoo*ptoqs
+      gooxz = Gxzoo*ptoqs
+      gooyz = Gyzoo*ptoqs
+      v0011 = Oqxx*Goooo + Oqxox*Gooxo + gooxx
+      v0022 = Oqyy*Goooo + Oqyoy*Gooyo + gooyy
+      v0033 = Oqzz*Goooo + Oqzoz*Goozo + goozz
+      v0012 = Oqxo*v0002 + Oqoy*Gooxo + gooxy
+      v0013 = Oqxo*v0003 + Oqoz*Gooxo + gooxz
+      v0021 = Oqyo*v0001 + Oqox*Gooyo + gooxy
+      v0023 = Oqyo*v0003 + Oqoz*Gooyo + gooyz
+      v0031 = Oqzo*v0001 + Oqox*Goozo + gooxz
+      v0032 = Oqzo*v0002 + Oqoy*Goozo + gooyz
+      Ve00 = Ve00 + (v0011*E(6)+v0012*E(7)+v0013*E(8)+v0021*E(10)
+     &       +v0022*E(11)+v0023*E(12)+v0031*E(14)+v0032*E(15)
+     &       +v0033*E(16))*Csspp
+      Ve14 = Ve14 + (V0010*E(6)+V0020*E(10)+V0030*E(14))*Csspp
+      Ve24 = Ve24 + (V0010*E(7)+V0020*E(11)+V0030*E(15))*Csspp
+      Ve34 = Ve34 + (V0010*E(8)+V0020*E(12)+V0030*E(16))*Csspp
+      Ve13 = Ve13 + (v0001*E(6)+v0002*E(7)+v0003*E(8))*Csspp
+      Ve23 = Ve23 + (v0001*E(10)+v0002*E(11)+v0003*E(12))*Csspp
+      Ve33 = Ve33 + (v0001*E(14)+v0002*E(15)+v0003*E(16))*Csspp
+      v0101 = Oqox*V0100 + Opox*Gooxo + Gxoxo
+      v0102 = Oqoy*V0100 + Opox*Gooyo + Gxoyo
+      v0103 = Oqoz*V0100 + Opox*Goozo + Gxozo
+      v0201 = Oqox*V0200 + Opoy*Gooxo + Gxoyo
+      v0202 = Oqoy*V0200 + Opoy*Gooyo + Gyoyo
+      v0203 = Oqoz*V0200 + Opoy*Goozo + Gyozo
+      v0301 = Oqox*V0300 + Opoz*Gooxo + Gxozo
+      v0302 = Oqoy*V0300 + Opoz*Gooyo + Gyozo
+      v0303 = Oqoz*V0300 + Opoz*Goozo + Gzozo
+      Ve00 = Ve00 + (v0101*E(18)+v0102*E(19)+v0103*E(20)+v0201*E(34)
+     &       +v0202*E(35)+v0203*E(36)+v0301*E(50)+v0302*E(51)
+     &       +v0303*E(52))*Cspsp
+      Ve14 = Ve14 + (V0100*E(18)+V0200*E(34)+V0300*E(50))*Cspsp
+      Ve24 = Ve24 + (V0100*E(19)+V0200*E(35)+V0300*E(51))*Cspsp
+      Ve34 = Ve34 + (V0100*E(20)+V0200*E(36)+V0300*E(52))*Cspsp
+      Ve12 = Ve12 + (v0001*E(18)+v0002*E(19)+v0003*E(20))*Cspsp
+      Ve22 = Ve22 + (v0001*E(34)+v0002*E(35)+v0003*E(36))*Cspsp
+      Ve32 = Ve32 + (v0001*E(50)+v0002*E(51)+v0003*E(52))*Cspsp
+      v1001 = Oqox*V1000 + Opxo*Gooxo + Gxoxo
+      v1002 = Oqoy*V1000 + Opxo*Gooyo + Gxoyo
+      v1003 = Oqoz*V1000 + Opxo*Goozo + Gxozo
+      v2001 = Oqox*V2000 + Opyo*Gooxo + Gxoyo
+      v2002 = Oqoy*V2000 + Opyo*Gooyo + Gyoyo
+      v2003 = Oqoz*V2000 + Opyo*Goozo + Gyozo
+      v3001 = Oqox*V3000 + Opzo*Gooxo + Gxozo
+      v3002 = Oqoy*V3000 + Opzo*Gooyo + Gyozo
+      v3003 = Oqoz*V3000 + Opzo*Goozo + Gzozo
+      Ve00 = Ve00 + (v1001*E(66)+v1002*E(67)+v1003*E(68)+v2001*E(130)
+     &       +v2002*E(131)+v2003*E(132)+v3001*E(194)+v3002*E(195)
+     &       +v3003*E(196))*Cpssp
+      Ve14 = Ve14 + (V1000*E(66)+V2000*E(130)+V3000*E(194))*Cpssp
+      Ve24 = Ve24 + (V1000*E(67)+V2000*E(131)+V3000*E(195))*Cpssp
+      Ve34 = Ve34 + (V1000*E(68)+V2000*E(132)+V3000*E(196))*Cpssp
+      Ve11 = Ve11 + (v0001*E(66)+v0002*E(67)+v0003*E(68))*Cpssp
+      Ve21 = Ve21 + (v0001*E(130)+v0002*E(131)+v0003*E(132))*Cpssp
+      Ve31 = Ve31 + (v0001*E(194)+v0002*E(195)+v0003*E(196))*Cpssp
+      v1101 = Oqox*V1100 + C1110
+      v1102 = Oqoy*V1100 + C1120
+      v1103 = Oqoz*V1100 + C1130
+      v1201 = Oqox*V1200 + C1210
+      v1202 = Oqoy*V1200 + C1220
+      v1203 = Oqoz*V1200 + C1230
+      v1301 = Oqox*V1300 + C1310
+      v1302 = Oqoy*V1300 + C1320
+      v1303 = Oqoz*V1300 + C1330
+      v2101 = Oqox*V2100 + C2110
+      v2102 = Oqoy*V2100 + C2120
+      v2103 = Oqoz*V2100 + C2130
+      v2201 = Oqox*V2200 + C2210
+      v2202 = Oqoy*V2200 + C2220
+      v2203 = Oqoz*V2200 + C2230
+      v2301 = Oqox*V2300 + C2310
+      v2302 = Oqoy*V2300 + C2320
+      v2303 = Oqoz*V2300 + C2330
+      v3101 = Oqox*V3100 + C3110
+      v3102 = Oqoy*V3100 + C3120
+      v3103 = Oqoz*V3100 + C3130
+      v3201 = Oqox*V3200 + C3210
+      v3202 = Oqoy*V3200 + C3220
+      v3203 = Oqoz*V3200 + C3230
+      v3301 = Oqox*V3300 + C3310
+      v3302 = Oqoy*V3300 + C3320
+      v3303 = Oqoz*V3300 + C3330
+      Ve00 = Ve00 + (v1101*E(82)+v1102*E(83)+v1103*E(84)+v1201*E(98)
+     &       +v1202*E(99)+v1203*E(100)+v1301*E(114)+v1302*E(115)
+     &       +v1303*E(116)+v2101*E(146)+v2102*E(147)+v2103*E(148)
+     &       +v2201*E(162)+v2202*E(163)+v2203*E(164)+v2301*E(178)
+     &       +v2302*E(179)+v2303*E(180)+v3101*E(210)+v3102*E(211)
+     &       +v3103*E(212)+v3201*E(226)+v3202*E(227)+v3203*E(228)
+     &       +v3301*E(242)+v3302*E(243)+v3303*E(244))*Cppsp
+      Ve14 = Ve14 + (V1100*E(82)+V1200*E(98)+V1300*E(114)+V2100*E(146)
+     &       +V2200*E(162)+V2300*E(178)+V3100*E(210)+V3200*E(226)
+     &       +V3300*E(242))*Cppsp
+      Ve24 = Ve24 + (V1100*E(83)+V1200*E(99)+V1300*E(115)+V2100*E(147)
+     &       +V2200*E(163)+V2300*E(179)+V3100*E(211)+V3200*E(227)
+     &       +V3300*E(243))*Cppsp
+      Ve34 = Ve34 + (V1100*E(84)+V1200*E(100)+V1300*E(116)+V2100*E(148)
+     &       +V2200*E(164)+V2300*E(180)+V3100*E(212)+V3200*E(228)
+     &       +V3300*E(244))*Cppsp
+      Ve12 = Ve12 + (v1001*E(82)+v1002*E(83)+v1003*E(84)+v2001*E(146)
+     &       +v2002*E(147)+v2003*E(148)+v3001*E(210)+v3002*E(211)
+     &       +v3003*E(212))*Cppsp
+      Ve22 = Ve22 + (v1001*E(98)+v1002*E(99)+v1003*E(100)+v2001*E(162)
+     &       +v2002*E(163)+v2003*E(164)+v3001*E(226)+v3002*E(227)
+     &       +v3003*E(228))*Cppsp
+      Ve32 = Ve32 + (v1001*E(114)+v1002*E(115)+v1003*E(116)+v2001*E(178)
+     &       +v2002*E(179)+v2003*E(180)+v3001*E(242)+v3002*E(243)
+     &       +v3003*E(244))*Cppsp
+      Ve11 = Ve11 + (v0101*E(82)+v0102*E(83)+v0103*E(84)+v0201*E(98)
+     &       +v0202*E(99)+v0203*E(100)+v0301*E(114)+v0302*E(115)
+     &       +v0303*E(116))*Cppsp
+      Ve21 = Ve21 + (v0101*E(146)+v0102*E(147)+v0103*E(148)+v0201*E(162)
+     &       +v0202*E(163)+v0203*E(164)+v0301*E(178)+v0302*E(179)
+     &       +v0303*E(180))*Cppsp
+      Ve31 = Ve31 + (v0101*E(210)+v0102*E(211)+v0103*E(212)+v0201*E(226)
+     &       +v0202*E(227)+v0203*E(228)+v0301*E(242)+v0302*E(243)
+     &       +v0303*E(244))*Cppsp
+      gxoyz = Gxyzo*ptoq
+      gxoxx = Gxxxo*ptoq
+      gyoyy = Gyyyo*ptoq
+      gzozz = Gzzzo*ptoq
+      gyoxx = Gxxyo*ptoq
+      gzoxx = Gxxzo*ptoq
+      gxoyy = Gyyxo*ptoq
+      gzoyy = Gyyzo*ptoq
+      gxozz = Gzzxo*ptoq
+      gyozz = Gzzyo*ptoq
+      c1011 = Oqxx*Gxooo + Oqxox*Gxoxo + gxoxx
+      c1022 = Oqyy*Gxooo + Oqyoy*Gxoyo + gxoyy
+      c1033 = Oqzz*Gxooo + Oqzoz*Gxozo + gxozz
+      c2011 = Oqxx*Gyooo + Oqxox*Gxoyo + gyoxx
+      c2022 = Oqyy*Gyooo + Oqyoy*Gyoyo + gyoyy
+      c2033 = Oqzz*Gyooo + Oqzoz*Gyozo + gyozz
+      c3011 = Oqxx*Gzooo + Oqxox*Gxozo + gzoxx
+      c3022 = Oqyy*Gzooo + Oqyoy*Gyozo + gzoyy
+      c3033 = Oqzz*Gzooo + Oqzoz*Gzozo + gzozz
+      c1012 = Oqxy*Gxooo + Oqxo*Gxoyo + Oqoy*Gxoxo + gyoxx
+      c1013 = Oqxz*Gxooo + Oqxo*Gxozo + Oqoz*Gxoxo + gzoxx
+      c1021 = Oqyx*Gxooo + Oqyo*Gxoxo + Oqox*Gxoyo + gyoxx
+      c1023 = Oqyz*Gxooo + Oqyo*Gxozo + Oqoz*Gxoyo + gxoyz
+      c1031 = Oqzx*Gxooo + Oqzo*Gxoxo + Oqox*Gxozo + gzoxx
+      c1032 = Oqzy*Gxooo + Oqzo*Gxoyo + Oqoy*Gxozo + gxoyz
+      c2012 = Oqxy*Gyooo + Oqxo*Gyoyo + Oqoy*Gxoyo + gxoyy
+      c2013 = Oqxz*Gyooo + Oqxo*Gyozo + Oqoz*Gxoyo + gxoyz
+      c2021 = Oqyx*Gyooo + Oqyo*Gxoyo + Oqox*Gyoyo + gxoyy
+      c2023 = Oqyz*Gyooo + Oqyo*Gyozo + Oqoz*Gyoyo + gzoyy
+      c2031 = Oqzx*Gyooo + Oqzo*Gxoyo + Oqox*Gyozo + gxoyz
+      c2032 = Oqzy*Gyooo + Oqzo*Gyoyo + Oqoy*Gyozo + gzoyy
+      c3012 = Oqxy*Gzooo + Oqxo*Gyozo + Oqoy*Gxozo + gxoyz
+      c3013 = Oqxz*Gzooo + Oqxo*Gzozo + Oqoz*Gxozo + gxozz
+      c3021 = Oqyx*Gzooo + Oqyo*Gxozo + Oqox*Gyozo + gxoyz
+      c3023 = Oqyz*Gzooo + Oqyo*Gzozo + Oqoz*Gyozo + gyozz
+      c3031 = Oqzx*Gzooo + Oqzo*Gxozo + Oqox*Gzozo + gxozz
+      c3032 = Oqzy*Gzooo + Oqzo*Gyozo + Oqoy*Gzozo + gyozz
+      v0111 = Opox*v0011 + c1011
+      v0112 = Opox*v0012 + c1012
+      v0113 = Opox*v0013 + c1013
+      v0121 = Opox*v0021 + c1021
+      v0122 = Opox*v0022 + c1022
+      v0123 = Opox*v0023 + c1023
+      v0131 = Opox*v0031 + c1031
+      v0132 = Opox*v0032 + c1032
+      v0133 = Opox*v0033 + c1033
+      v0211 = Opoy*v0011 + c2011
+      v0212 = Opoy*v0012 + c2012
+      v0213 = Opoy*v0013 + c2013
+      v0221 = Opoy*v0021 + c2021
+      v0222 = Opoy*v0022 + c2022
+      v0223 = Opoy*v0023 + c2023
+      v0231 = Opoy*v0031 + c2031
+      v0232 = Opoy*v0032 + c2032
+      v0233 = Opoy*v0033 + c2033
+      v0311 = Opoz*v0011 + c3011
+      v0312 = Opoz*v0012 + c3012
+      v0313 = Opoz*v0013 + c3013
+      v0321 = Opoz*v0021 + c3021
+      v0322 = Opoz*v0022 + c3022
+      v0323 = Opoz*v0023 + c3023
+      v0331 = Opoz*v0031 + c3031
+      v0332 = Opoz*v0032 + c3032
+      v0333 = Opoz*v0033 + c3033
+      Ve00 = Ve00 + (v0111*E(22)+v0112*E(23)+v0113*E(24)+v0121*E(26)
+     &       +v0122*E(27)+v0123*E(28)+v0131*E(30)+v0132*E(31)
+     &       +v0133*E(32)+v0211*E(38)+v0212*E(39)+v0213*E(40)
+     &       +v0221*E(42)+v0222*E(43)+v0223*E(44)+v0231*E(46)
+     &       +v0232*E(47)+v0233*E(48)+v0311*E(54)+v0312*E(55)
+     &       +v0313*E(56)+v0321*E(58)+v0322*E(59)+v0323*E(60)
+     &       +v0331*E(62)+v0332*E(63)+v0333*E(64))*Csppp
+      Ve14 = Ve14 + (V0110*E(22)+V0120*E(26)+V0130*E(30)+V0210*E(38)
+     &       +V0220*E(42)+V0230*E(46)+V0310*E(54)+V0320*E(58)
+     &       +V0330*E(62))*Csppp
+      Ve24 = Ve24 + (V0110*E(23)+V0120*E(27)+V0130*E(31)+V0210*E(39)
+     &       +V0220*E(43)+V0230*E(47)+V0310*E(55)+V0320*E(59)
+     &       +V0330*E(63))*Csppp
+      Ve34 = Ve34 + (V0110*E(24)+V0120*E(28)+V0130*E(32)+V0210*E(40)
+     &       +V0220*E(44)+V0230*E(48)+V0310*E(56)+V0320*E(60)
+     &       +V0330*E(64))*Csppp
+      Ve13 = Ve13 + (v0101*E(22)+v0102*E(23)+v0103*E(24)+v0201*E(38)
+     &       +v0202*E(39)+v0203*E(40)+v0301*E(54)+v0302*E(55)
+     &       +v0303*E(56))*Csppp
+      Ve23 = Ve23 + (v0101*E(26)+v0102*E(27)+v0103*E(28)+v0201*E(42)
+     &       +v0202*E(43)+v0203*E(44)+v0301*E(58)+v0302*E(59)
+     &       +v0303*E(60))*Csppp
+      Ve33 = Ve33 + (v0101*E(30)+v0102*E(31)+v0103*E(32)+v0201*E(46)
+     &       +v0202*E(47)+v0203*E(48)+v0301*E(62)+v0302*E(63)
+     &       +v0303*E(64))*Csppp
+      Ve12 = Ve12 + (v0011*E(22)+v0012*E(23)+v0013*E(24)+v0021*E(26)
+     &       +v0022*E(27)+v0023*E(28)+v0031*E(30)+v0032*E(31)
+     &       +v0033*E(32))*Csppp
+      Ve22 = Ve22 + (v0011*E(38)+v0012*E(39)+v0013*E(40)+v0021*E(42)
+     &       +v0022*E(43)+v0023*E(44)+v0031*E(46)+v0032*E(47)
+     &       +v0033*E(48))*Csppp
+      Ve32 = Ve32 + (v0011*E(54)+v0012*E(55)+v0013*E(56)+v0021*E(58)
+     &       +v0022*E(59)+v0023*E(60)+v0031*E(62)+v0032*E(63)
+     &       +v0033*E(64))*Csppp
+      v1011 = Opxo*v0011 + c1011
+      v1012 = Opxo*v0012 + c1012
+      v1013 = Opxo*v0013 + c1013
+      v1021 = Opxo*v0021 + c1021
+      v1022 = Opxo*v0022 + c1022
+      v1023 = Opxo*v0023 + c1023
+      v1031 = Opxo*v0031 + c1031
+      v1032 = Opxo*v0032 + c1032
+      v1033 = Opxo*v0033 + c1033
+      v2011 = Opyo*v0011 + c2011
+      v2012 = Opyo*v0012 + c2012
+      v2013 = Opyo*v0013 + c2013
+      v2021 = Opyo*v0021 + c2021
+      v2022 = Opyo*v0022 + c2022
+      v2023 = Opyo*v0023 + c2023
+      v2031 = Opyo*v0031 + c2031
+      v2032 = Opyo*v0032 + c2032
+      v2033 = Opyo*v0033 + c2033
+      v3011 = Opzo*v0011 + c3011
+      v3012 = Opzo*v0012 + c3012
+      v3013 = Opzo*v0013 + c3013
+      v3021 = Opzo*v0021 + c3021
+      v3022 = Opzo*v0022 + c3022
+      v3023 = Opzo*v0023 + c3023
+      v3031 = Opzo*v0031 + c3031
+      v3032 = Opzo*v0032 + c3032
+      v3033 = Opzo*v0033 + c3033
+      Ve00 = Ve00 + (v1011*E(70)+v1012*E(71)+v1013*E(72)+v1021*E(74)
+     &       +v1022*E(75)+v1023*E(76)+v1031*E(78)+v1032*E(79)
+     &       +v1033*E(80)+v2011*E(134)+v2012*E(135)+v2013*E(136)
+     &       +v2021*E(138)+v2022*E(139)+v2023*E(140)+v2031*E(142)
+     &       +v2032*E(143)+v2033*E(144)+v3011*E(198)+v3012*E(199)
+     &       +v3013*E(200)+v3021*E(202)+v3022*E(203)+v3023*E(204)
+     &       +v3031*E(206)+v3032*E(207)+v3033*E(208))*Cpspp
+      Ve14 = Ve14 + (V1010*E(70)+V1020*E(74)+V1030*E(78)+V2010*E(134)
+     &       +V2020*E(138)+V2030*E(142)+V3010*E(198)+V3020*E(202)
+     &       +V3030*E(206))*Cpspp
+      Ve24 = Ve24 + (V1010*E(71)+V1020*E(75)+V1030*E(79)+V2010*E(135)
+     &       +V2020*E(139)+V2030*E(143)+V3010*E(199)+V3020*E(203)
+     &       +V3030*E(207))*Cpspp
+      Ve34 = Ve34 + (V1010*E(72)+V1020*E(76)+V1030*E(80)+V2010*E(136)
+     &       +V2020*E(140)+V2030*E(144)+V3010*E(200)+V3020*E(204)
+     &       +V3030*E(208))*Cpspp
+      Ve13 = Ve13 + (v1001*E(70)+v1002*E(71)+v1003*E(72)+v2001*E(134)
+     &       +v2002*E(135)+v2003*E(136)+v3001*E(198)+v3002*E(199)
+     &       +v3003*E(200))*Cpspp
+      Ve23 = Ve23 + (v1001*E(74)+v1002*E(75)+v1003*E(76)+v2001*E(138)
+     &       +v2002*E(139)+v2003*E(140)+v3001*E(202)+v3002*E(203)
+     &       +v3003*E(204))*Cpspp
+      Ve33 = Ve33 + (v1001*E(78)+v1002*E(79)+v1003*E(80)+v2001*E(142)
+     &       +v2002*E(143)+v2003*E(144)+v3001*E(206)+v3002*E(207)
+     &       +v3003*E(208))*Cpspp
+      Ve11 = Ve11 + (v0011*E(70)+v0012*E(71)+v0013*E(72)+v0021*E(74)
+     &       +v0022*E(75)+v0023*E(76)+v0031*E(78)+v0032*E(79)
+     &       +v0033*E(80))*Cpspp
+      Ve21 = Ve21 + (v0011*E(134)+v0012*E(135)+v0013*E(136)+v0021*E(138)
+     &       +v0022*E(139)+v0023*E(140)+v0031*E(142)+v0032*E(143)
+     &       +v0033*E(144))*Cpspp
+      Ve31 = Ve31 + (v0011*E(198)+v0012*E(199)+v0013*E(200)+v0021*E(202)
+     &       +v0022*E(203)+v0023*E(204)+v0031*E(206)+v0032*E(207)
+     &       +v0033*E(208))*Cpspp
+      qfq4 = (Qa1*Qa2)**2*Fq4
+      temp = A1234i**2
+      hfq3 = h*Qa*Fq3*temp
+      tfq3 = three*hfq3
+      sfq3 = tfq3 + tfq3
+      p25fq2 = p25*Fq2*temp
+      p75fq2 = three*p25fq2
+      temp = Pqxx*qfq4
+      gxxxx = Pqxx*(temp-sfq3) + p75fq2
+      gyxxx = Pqxy*(temp-tfq3)
+      gzxxx = Pqxz*(temp-tfq3)
+      gzyxx = Pqyz*(temp-hfq3)
+      gyyxx = Pqyy*(temp-hfq3) - Pqxx*hfq3 + p25fq2
+      temp = Pqyy*qfq4
+      gyyyy = Pqyy*(temp-sfq3) + p75fq2
+      gxyyy = Pqxy*(temp-tfq3)
+      gzxyy = Pqxz*(temp-hfq3)
+      gzyyy = Pqyz*(temp-tfq3)
+      gzzyy = Pqzz*(temp-hfq3) - Pqyy*hfq3 + p25fq2
+      temp = Pqzz*qfq4
+      gzzzz = Pqzz*(temp-sfq3) + p75fq2
+      gxyzz = Pqxy*(temp-hfq3)
+      gxzzz = Pqxz*(temp-tfq3)
+      gyzzz = Pqyz*(temp-tfq3)
+      gxxzz = Pqxx*(temp-hfq3) - Pqzz*hfq3 + p25fq2
+      vp4 = (Opxx*v0011+Opxox*c1011+Oqxx*Gxxoo+Oqxox*Gxxxo+gxxxx)*E(86)
+      vp4 = (Opxx*v0012+Opxox*c1012+Oqxy*Gxxoo+Oqxo*Gxxyo+Oqoy*Gxxxo+
+     &      gxxxy)*E(87) + vp4
+      vp4 = (Opxx*v0013+Opxox*c1013+Oqxz*Gxxoo+Oqxo*Gxxzo+Oqoz*Gxxxo+
+     &      gxxxz)*E(88) + vp4
+      vp4 = (Opxx*v0021+Opxox*c1021+Oqyx*Gxxoo+Oqyo*Gxxxo+Oqox*Gxxyo+
+     &      gxxyx)*E(90) + vp4
+      vp4 = (Opxx*v0022+Opxox*c1022+Oqyy*Gxxoo+Oqyoy*Gxxyo+gxxyy)*E(91)
+     &      + vp4
+      vp4 = (Opxx*v0023+Opxox*c1023+Oqyz*Gxxoo+Oqyo*Gxxzo+Oqoz*Gxxyo+
+     &      gxxyz)*E(92) + vp4
+      vp4 = (Opxx*v0031+Opxox*c1031+Oqzx*Gxxoo+Oqzo*Gxxxo+Oqox*Gxxzo+
+     &      gxxzx)*E(94) + vp4
+      vp4 = (Opxx*v0032+Opxox*c1032+Oqzy*Gxxoo+Oqzo*Gxxyo+Oqoy*Gxxzo+
+     &      gxxzy)*E(95) + vp4
+      vp4 = (Opxx*v0033+Opxox*c1033+Oqzz*Gxxoo+Oqzoz*Gxxzo+gxxzz)*E(96)
+     &      + vp4
+      vp4 = (Opxy*v0011+Opxo*c2011+Opoy*c1011+Oqxx*Gxyoo+Oqxox*Gxyxo+
+     &      gxyxx)*E(102) + vp4
+      vp4 = (Opxy*v0012+Opxo*c2012+Opoy*c1012+Oqxy*Gxyoo+Oqxo*Gxyyo+
+     &      Oqoy*Gxyxo+gxyxy)*E(103) + vp4
+      vp4 = (Opxy*v0013+Opxo*c2013+Opoy*c1013+Oqxz*Gxyoo+Oqxo*Gxyzo+
+     &      Oqoz*Gxyxo+gxyxz)*E(104) + vp4
+      vp4 = (Opxy*v0021+Opxo*c2021+Opoy*c1021+Oqyx*Gxyoo+Oqyo*Gxyxo+
+     &      Oqox*Gxyyo+gxyyx)*E(106) + vp4
+      vp4 = (Opxy*v0022+Opxo*c2022+Opoy*c1022+Oqyy*Gxyoo+Oqyoy*Gxyyo+
+     &      gxyyy)*E(107) + vp4
+      vp4 = (Opxy*v0023+Opxo*c2023+Opoy*c1023+Oqyz*Gxyoo+Oqyo*Gxyzo+
+     &      Oqoz*Gxyyo+gxyyz)*E(108) + vp4
+      vp4 = (Opxy*v0031+Opxo*c2031+Opoy*c1031+Oqzx*Gxyoo+Oqzo*Gxyxo+
+     &      Oqox*Gxyzo+gxyzx)*E(110) + vp4
+      vp4 = (Opxy*v0032+Opxo*c2032+Opoy*c1032+Oqzy*Gxyoo+Oqzo*Gxyyo+
+     &      Oqoy*Gxyzo+gxyzy)*E(111) + vp4
+      vp4 = (Opxy*v0033+Opxo*c2033+Opoy*c1033+Oqzz*Gxyoo+Oqzoz*Gxyzo+
+     &      gxyzz)*E(112) + vp4
+      vp4 = (Opxz*v0011+Opxo*c3011+Opoz*c1011+Oqxx*Gxzoo+Oqxox*Gxzxo+
+     &      gxzxx)*E(118) + vp4
+      vp4 = (Opxz*v0012+Opxo*c3012+Opoz*c1012+Oqxy*Gxzoo+Oqxo*Gxzyo+
+     &      Oqoy*Gxzxo+gxzxy)*E(119) + vp4
+      vp4 = (Opxz*v0013+Opxo*c3013+Opoz*c1013+Oqxz*Gxzoo+Oqxo*Gxzzo+
+     &      Oqoz*Gxzxo+gxzxz)*E(120) + vp4
+      vp4 = (Opxz*v0021+Opxo*c3021+Opoz*c1021+Oqyx*Gxzoo+Oqyo*Gxzxo+
+     &      Oqox*Gxzyo+gxzyx)*E(122) + vp4
+      vp4 = (Opxz*v0022+Opxo*c3022+Opoz*c1022+Oqyy*Gxzoo+Oqyoy*Gxzyo+
+     &      gxzyy)*E(123) + vp4
+      vp4 = (Opxz*v0023+Opxo*c3023+Opoz*c1023+Oqyz*Gxzoo+Oqyo*Gxzzo+
+     &      Oqoz*Gxzyo+gxzyz)*E(124) + vp4
+      vp4 = (Opxz*v0031+Opxo*c3031+Opoz*c1031+Oqzx*Gxzoo+Oqzo*Gxzxo+
+     &      Oqox*Gxzzo+gxzzx)*E(126) + vp4
+      vp4 = (Opxz*v0032+Opxo*c3032+Opoz*c1032+Oqzy*Gxzoo+Oqzo*Gxzyo+
+     &      Oqoy*Gxzzo+gxzzy)*E(127) + vp4
+      vp4 = (Opxz*v0033+Opxo*c3033+Opoz*c1033+Oqzz*Gxzoo+Oqzoz*Gxzzo+
+     &      gxzzz)*E(128) + vp4
+      vp4 = (Opyx*v0011+Opyo*c1011+Opox*c2011+Oqxx*Gyxoo+Oqxox*Gyxxo+
+     &      gyxxx)*E(150) + vp4
+      vp4 = (Opyx*v0012+Opyo*c1012+Opox*c2012+Oqxy*Gyxoo+Oqxo*Gyxyo+
+     &      Oqoy*Gyxxo+gyxxy)*E(151) + vp4
+      vp4 = (Opyx*v0013+Opyo*c1013+Opox*c2013+Oqxz*Gyxoo+Oqxo*Gyxzo+
+     &      Oqoz*Gyxxo+gyxxz)*E(152) + vp4
+      vp4 = (Opyx*v0021+Opyo*c1021+Opox*c2021+Oqyx*Gyxoo+Oqyo*Gyxxo+
+     &      Oqox*Gyxyo+gyxyx)*E(154) + vp4
+      vp4 = (Opyx*v0022+Opyo*c1022+Opox*c2022+Oqyy*Gyxoo+Oqyoy*Gyxyo+
+     &      gyxyy)*E(155) + vp4
+      vp4 = (Opyx*v0023+Opyo*c1023+Opox*c2023+Oqyz*Gyxoo+Oqyo*Gyxzo+
+     &      Oqoz*Gyxyo+gyxyz)*E(156) + vp4
+      vp4 = (Opyx*v0031+Opyo*c1031+Opox*c2031+Oqzx*Gyxoo+Oqzo*Gyxxo+
+     &      Oqox*Gyxzo+gyxzx)*E(158) + vp4
+      vp4 = (Opyx*v0032+Opyo*c1032+Opox*c2032+Oqzy*Gyxoo+Oqzo*Gyxyo+
+     &      Oqoy*Gyxzo+gyxzy)*E(159) + vp4
+      vp4 = (Opyx*v0033+Opyo*c1033+Opox*c2033+Oqzz*Gyxoo+Oqzoz*Gyxzo+
+     &      gyxzz)*E(160) + vp4
+      vp4 = (Opyy*v0011+Opyoy*c2011+Oqxx*Gyyoo+Oqxox*Gyyxo+gyyxx)*E(166)
+     &      + vp4
+      vp4 = (Opyy*v0012+Opyoy*c2012+Oqxy*Gyyoo+Oqxo*Gyyyo+Oqoy*Gyyxo+
+     &      gyyxy)*E(167) + vp4
+      vp4 = (Opyy*v0013+Opyoy*c2013+Oqxz*Gyyoo+Oqxo*Gyyzo+Oqoz*Gyyxo+
+     &      gyyxz)*E(168) + vp4
+      vp4 = (Opyy*v0021+Opyoy*c2021+Oqyx*Gyyoo+Oqyo*Gyyxo+Oqox*Gyyyo+
+     &      gyyyx)*E(170) + vp4
+      vp4 = (Opyy*v0022+Opyoy*c2022+Oqyy*Gyyoo+Oqyoy*Gyyyo+gyyyy)*E(171)
+     &      + vp4
+      vp4 = (Opyy*v0023+Opyoy*c2023+Oqyz*Gyyoo+Oqyo*Gyyzo+Oqoz*Gyyyo+
+     &      gyyyz)*E(172) + vp4
+      vp4 = (Opyy*v0031+Opyoy*c2031+Oqzx*Gyyoo+Oqzo*Gyyxo+Oqox*Gyyzo+
+     &      gyyzx)*E(174) + vp4
+      vp4 = (Opyy*v0032+Opyoy*c2032+Oqzy*Gyyoo+Oqzo*Gyyyo+Oqoy*Gyyzo+
+     &      gyyzy)*E(175) + vp4
+      vp4 = (Opyy*v0033+Opyoy*c2033+Oqzz*Gyyoo+Oqzoz*Gyyzo+gyyzz)*E(176)
+     &      + vp4
+      vp4 = (Opyz*v0011+Opyo*c3011+Opoz*c2011+Oqxx*Gyzoo+Oqxox*Gyzxo+
+     &      gyzxx)*E(182) + vp4
+      vp4 = (Opyz*v0012+Opyo*c3012+Opoz*c2012+Oqxy*Gyzoo+Oqxo*Gyzyo+
+     &      Oqoy*Gyzxo+gyzxy)*E(183) + vp4
+      vp4 = (Opyz*v0013+Opyo*c3013+Opoz*c2013+Oqxz*Gyzoo+Oqxo*Gyzzo+
+     &      Oqoz*Gyzxo+gyzxz)*E(184) + vp4
+      vp4 = (Opyz*v0021+Opyo*c3021+Opoz*c2021+Oqyx*Gyzoo+Oqyo*Gyzxo+
+     &      Oqox*Gyzyo+gyzyx)*E(186) + vp4
+      vp4 = (Opyz*v0022+Opyo*c3022+Opoz*c2022+Oqyy*Gyzoo+Oqyoy*Gyzyo+
+     &      gyzyy)*E(187) + vp4
+      vp4 = (Opyz*v0023+Opyo*c3023+Opoz*c2023+Oqyz*Gyzoo+Oqyo*Gyzzo+
+     &      Oqoz*Gyzyo+gyzyz)*E(188) + vp4
+      vp4 = (Opyz*v0031+Opyo*c3031+Opoz*c2031+Oqzx*Gyzoo+Oqzo*Gyzxo+
+     &      Oqox*Gyzzo+gyzzx)*E(190) + vp4
+      vp4 = (Opyz*v0032+Opyo*c3032+Opoz*c2032+Oqzy*Gyzoo+Oqzo*Gyzyo+
+     &      Oqoy*Gyzzo+gyzzy)*E(191) + vp4
+      vp4 = (Opyz*v0033+Opyo*c3033+Opoz*c2033+Oqzz*Gyzoo+Oqzoz*Gyzzo+
+     &      gyzzz)*E(192) + vp4
+      vp4 = (Opzx*v0011+Opzo*c1011+Opox*c3011+Oqxx*Gzxoo+Oqxox*Gzxxo+
+     &      gzxxx)*E(214) + vp4
+      vp4 = (Opzx*v0012+Opzo*c1012+Opox*c3012+Oqxy*Gzxoo+Oqxo*Gzxyo+
+     &      Oqoy*Gzxxo+gzxxy)*E(215) + vp4
+      vp4 = (Opzx*v0013+Opzo*c1013+Opox*c3013+Oqxz*Gzxoo+Oqxo*Gzxzo+
+     &      Oqoz*Gzxxo+gzxxz)*E(216) + vp4
+      vp4 = (Opzx*v0021+Opzo*c1021+Opox*c3021+Oqyx*Gzxoo+Oqyo*Gzxxo+
+     &      Oqox*Gzxyo+gzxyx)*E(218) + vp4
+      vp4 = (Opzx*v0022+Opzo*c1022+Opox*c3022+Oqyy*Gzxoo+Oqyoy*Gzxyo+
+     &      gzxyy)*E(219) + vp4
+      vp4 = (Opzx*v0023+Opzo*c1023+Opox*c3023+Oqyz*Gzxoo+Oqyo*Gzxzo+
+     &      Oqoz*Gzxyo+gzxyz)*E(220) + vp4
+      vp4 = (Opzx*v0031+Opzo*c1031+Opox*c3031+Oqzx*Gzxoo+Oqzo*Gzxxo+
+     &      Oqox*Gzxzo+gzxzx)*E(222) + vp4
+      vp4 = (Opzx*v0032+Opzo*c1032+Opox*c3032+Oqzy*Gzxoo+Oqzo*Gzxyo+
+     &      Oqoy*Gzxzo+gzxzy)*E(223) + vp4
+      vp4 = (Opzx*v0033+Opzo*c1033+Opox*c3033+Oqzz*Gzxoo+Oqzoz*Gzxzo+
+     &      gzxzz)*E(224) + vp4
+      vp4 = (Opzy*v0011+Opzo*c2011+Opoy*c3011+Oqxx*Gzyoo+Oqxox*Gzyxo+
+     &      gzyxx)*E(230) + vp4
+      vp4 = (Opzy*v0012+Opzo*c2012+Opoy*c3012+Oqxy*Gzyoo+Oqxo*Gzyyo+
+     &      Oqoy*Gzyxo+gzyxy)*E(231) + vp4
+      vp4 = (Opzy*v0013+Opzo*c2013+Opoy*c3013+Oqxz*Gzyoo+Oqxo*Gzyzo+
+     &      Oqoz*Gzyxo+gzyxz)*E(232) + vp4
+      vp4 = (Opzy*v0021+Opzo*c2021+Opoy*c3021+Oqyx*Gzyoo+Oqyo*Gzyxo+
+     &      Oqox*Gzyyo+gzyyx)*E(234) + vp4
+      vp4 = (Opzy*v0022+Opzo*c2022+Opoy*c3022+Oqyy*Gzyoo+Oqyoy*Gzyyo+
+     &      gzyyy)*E(235) + vp4
+      vp4 = (Opzy*v0023+Opzo*c2023+Opoy*c3023+Oqyz*Gzyoo+Oqyo*Gzyzo+
+     &      Oqoz*Gzyyo+gzyyz)*E(236) + vp4
+      vp4 = (Opzy*v0031+Opzo*c2031+Opoy*c3031+Oqzx*Gzyoo+Oqzo*Gzyxo+
+     &      Oqox*Gzyzo+gzyzx)*E(238) + vp4
+      vp4 = (Opzy*v0032+Opzo*c2032+Opoy*c3032+Oqzy*Gzyoo+Oqzo*Gzyyo+
+     &      Oqoy*Gzyzo+gzyzy)*E(239) + vp4
+      vp4 = (Opzy*v0033+Opzo*c2033+Opoy*c3033+Oqzz*Gzyoo+Oqzoz*Gzyzo+
+     &      gzyzz)*E(240) + vp4
+      vp4 = (Opzz*v0011+Opzoz*c3011+Oqxx*Gzzoo+Oqxox*Gzzxo+gzzxx)*E(246)
+     &      + vp4
+      vp4 = (Opzz*v0012+Opzoz*c3012+Oqxy*Gzzoo+Oqxo*Gzzyo+Oqoy*Gzzxo+
+     &      gzzxy)*E(247) + vp4
+      vp4 = (Opzz*v0013+Opzoz*c3013+Oqxz*Gzzoo+Oqxo*Gzzzo+Oqoz*Gzzxo+
+     &      gzzxz)*E(248) + vp4
+      vp4 = (Opzz*v0021+Opzoz*c3021+Oqyx*Gzzoo+Oqyo*Gzzxo+Oqox*Gzzyo+
+     &      gzzyx)*E(250) + vp4
+      vp4 = (Opzz*v0022+Opzoz*c3022+Oqyy*Gzzoo+Oqyoy*Gzzyo+gzzyy)*E(251)
+     &      + vp4
+      vp4 = (Opzz*v0023+Opzoz*c3023+Oqyz*Gzzoo+Oqyo*Gzzzo+Oqoz*Gzzyo+
+     &      gzzyz)*E(252) + vp4
+      vp4 = (Opzz*v0031+Opzoz*c3031+Oqzx*Gzzoo+Oqzo*Gzzxo+Oqox*Gzzzo+
+     &      gzzzx)*E(254) + vp4
+      vp4 = (Opzz*v0032+Opzoz*c3032+Oqzy*Gzzoo+Oqzo*Gzzyo+Oqoy*Gzzzo+
+     &      gzzzy)*E(255) + vp4
+      vp4 = (Opzz*v0033+Opzoz*c3033+Oqzz*Gzzoo+Oqzoz*Gzzzo+gzzzz)*E(256)
+     &      + vp4
+      vpppp = vp4*Cpppp
+      Ve00 = Ve00 + vpppp
+      Ve14 = Ve14 + (V1110*E(86)+V1120*E(90)+V1130*E(94)+V1210*E(102)
+     &       +V1220*E(106)+V1230*E(110)+V1310*E(118)+V1320*E(122)
+     &       +V1330*E(126)+V2110*E(150)+V2120*E(154)+V2130*E(158)
+     &       +V2210*E(166)+V2220*E(170)+V2230*E(174)+V2310*E(182)
+     &       +V2320*E(186)+V2330*E(190)+V3110*E(214)+V3120*E(218)
+     &       +V3130*E(222)+V3210*E(230)+V3220*E(234)+V3230*E(238)
+     &       +V3310*E(246)+V3320*E(250)+V3330*E(254))*Cpppp
+      Ve24 = Ve24 + (V1110*E(87)+V1120*E(91)+V1130*E(95)+V1210*E(103)
+     &       +V1220*E(107)+V1230*E(111)+V1310*E(119)+V1320*E(123)
+     &       +V1330*E(127)+V2110*E(151)+V2120*E(155)+V2130*E(159)
+     &       +V2210*E(167)+V2220*E(171)+V2230*E(175)+V2310*E(183)
+     &       +V2320*E(187)+V2330*E(191)+V3110*E(215)+V3120*E(219)
+     &       +V3130*E(223)+V3210*E(231)+V3220*E(235)+V3230*E(239)
+     &       +V3310*E(247)+V3320*E(251)+V3330*E(255))*Cpppp
+      Ve34 = Ve34 + (V1110*E(88)+V1120*E(92)+V1130*E(96)+V1210*E(104)
+     &       +V1220*E(108)+V1230*E(112)+V1310*E(120)+V1320*E(124)
+     &       +V1330*E(128)+V2110*E(152)+V2120*E(156)+V2130*E(160)
+     &       +V2210*E(168)+V2220*E(172)+V2230*E(176)+V2310*E(184)
+     &       +V2320*E(188)+V2330*E(192)+V3110*E(216)+V3120*E(220)
+     &       +V3130*E(224)+V3210*E(232)+V3220*E(236)+V3230*E(240)
+     &       +V3310*E(248)+V3320*E(252)+V3330*E(256))*Cpppp
+      Ve13 = Ve13 + (v1101*E(86)+v1102*E(87)+v1103*E(88)+v1201*E(102)
+     &       +v1202*E(103)+v1203*E(104)+v1301*E(118)+v1302*E(119)
+     &       +v1303*E(120)+v2101*E(150)+v2102*E(151)+v2103*E(152)
+     &       +v2201*E(166)+v2202*E(167)+v2203*E(168)+v2301*E(182)
+     &       +v2302*E(183)+v2303*E(184)+v3101*E(214)+v3102*E(215)
+     &       +v3103*E(216)+v3201*E(230)+v3202*E(231)+v3203*E(232)
+     &       +v3301*E(246)+v3302*E(247)+v3303*E(248))*Cpppp
+      Ve23 = Ve23 + (v1101*E(90)+v1102*E(91)+v1103*E(92)+v1201*E(106)
+     &       +v1202*E(107)+v1203*E(108)+v1301*E(122)+v1302*E(123)
+     &       +v1303*E(124)+v2101*E(154)+v2102*E(155)+v2103*E(156)
+     &       +v2201*E(170)+v2202*E(171)+v2203*E(172)+v2301*E(186)
+     &       +v2302*E(187)+v2303*E(188)+v3101*E(218)+v3102*E(219)
+     &       +v3103*E(220)+v3201*E(234)+v3202*E(235)+v3203*E(236)
+     &       +v3301*E(250)+v3302*E(251)+v3303*E(252))*Cpppp
+      Ve33 = Ve33 + (v1101*E(94)+v1102*E(95)+v1103*E(96)+v1201*E(110)
+     &       +v1202*E(111)+v1203*E(112)+v1301*E(126)+v1302*E(127)
+     &       +v1303*E(128)+v2101*E(158)+v2102*E(159)+v2103*E(160)
+     &       +v2201*E(174)+v2202*E(175)+v2203*E(176)+v2301*E(190)
+     &       +v2302*E(191)+v2303*E(192)+v3101*E(222)+v3102*E(223)
+     &       +v3103*E(224)+v3201*E(238)+v3202*E(239)+v3203*E(240)
+     &       +v3301*E(254)+v3302*E(255)+v3303*E(256))*Cpppp
+      Ve12 = Ve12 + (v1011*E(86)+v1012*E(87)+v1013*E(88)+v1021*E(90)
+     &       +v1022*E(91)+v1023*E(92)+v1031*E(94)+v1032*E(95)
+     &       +v1033*E(96)+v2011*E(150)+v2012*E(151)+v2013*E(152)
+     &       +v2021*E(154)+v2022*E(155)+v2023*E(156)+v2031*E(158)
+     &       +v2032*E(159)+v2033*E(160)+v3011*E(214)+v3012*E(215)
+     &       +v3013*E(216)+v3021*E(218)+v3022*E(219)+v3023*E(220)
+     &       +v3031*E(222)+v3032*E(223)+v3033*E(224))*Cpppp
+      Ve22 = Ve22 + (v1011*E(102)+v1012*E(103)+v1013*E(104)+v1021*E(106)
+     &       +v1022*E(107)+v1023*E(108)+v1031*E(110)+v1032*E(111)
+     &       +v1033*E(112)+v2011*E(166)+v2012*E(167)+v2013*E(168)
+     &       +v2021*E(170)+v2022*E(171)+v2023*E(172)+v2031*E(174)
+     &       +v2032*E(175)+v2033*E(176)+v3011*E(230)+v3012*E(231)
+     &       +v3013*E(232)+v3021*E(234)+v3022*E(235)+v3023*E(236)
+     &       +v3031*E(238)+v3032*E(239)+v3033*E(240))*Cpppp
+      Ve32 = Ve32 + (v1011*E(118)+v1012*E(119)+v1013*E(120)+v1021*E(122)
+     &       +v1022*E(123)+v1023*E(124)+v1031*E(126)+v1032*E(127)
+     &       +v1033*E(128)+v2011*E(182)+v2012*E(183)+v2013*E(184)
+     &       +v2021*E(186)+v2022*E(187)+v2023*E(188)+v2031*E(190)
+     &       +v2032*E(191)+v2033*E(192)+v3011*E(246)+v3012*E(247)
+     &       +v3013*E(248)+v3021*E(250)+v3022*E(251)+v3023*E(252)
+     &       +v3031*E(254)+v3032*E(255)+v3033*E(256))*Cpppp
+      Ve11 = Ve11 + (v0111*E(86)+v0112*E(87)+v0113*E(88)+v0121*E(90)
+     &       +v0122*E(91)+v0123*E(92)+v0131*E(94)+v0132*E(95)
+     &       +v0133*E(96)+v0211*E(102)+v0212*E(103)+v0213*E(104)
+     &       +v0221*E(106)+v0222*E(107)+v0223*E(108)+v0231*E(110)
+     &       +v0232*E(111)+v0233*E(112)+v0311*E(118)+v0312*E(119)
+     &       +v0313*E(120)+v0321*E(122)+v0322*E(123)+v0323*E(124)
+     &       +v0331*E(126)+v0332*E(127)+v0333*E(128))*Cpppp
+      Ve21 = Ve21 + (v0111*E(150)+v0112*E(151)+v0113*E(152)+v0121*E(154)
+     &       +v0122*E(155)+v0123*E(156)+v0131*E(158)+v0132*E(159)
+     &       +v0133*E(160)+v0211*E(166)+v0212*E(167)+v0213*E(168)
+     &       +v0221*E(170)+v0222*E(171)+v0223*E(172)+v0231*E(174)
+     &       +v0232*E(175)+v0233*E(176)+v0311*E(182)+v0312*E(183)
+     &       +v0313*E(184)+v0321*E(186)+v0322*E(187)+v0323*E(188)
+     &       +v0331*E(190)+v0332*E(191)+v0333*E(192))*Cpppp
+      Ve31 = Ve31 + (v0111*E(214)+v0112*E(215)+v0113*E(216)+v0121*E(218)
+     &       +v0122*E(219)+v0123*E(220)+v0131*E(222)+v0132*E(223)
+     &       +v0133*E(224)+v0211*E(230)+v0212*E(231)+v0213*E(232)
+     &       +v0221*E(234)+v0222*E(235)+v0223*E(236)+v0231*E(238)
+     &       +v0232*E(239)+v0233*E(240)+v0311*E(246)+v0312*E(247)
+     &       +v0313*E(248)+v0321*E(250)+v0322*E(251)+v0323*E(252)
+     &       +v0331*E(254)+v0332*E(255)+v0333*E(256))*Cpppp
+      return
+C
+      end
+@* INDEX.
