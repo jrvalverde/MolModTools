@@ -1,0 +1,123 @@
+\documentstyle{book}
+\begin{document}
+\newpage
+\setcounter{page}{1}
+\markboth{\bf FILEIO}{\bf FILEIO}
+\begin{description}
+\item[NAME] FILEIO \\
+Random access Input/Output
+\item[SYNOPSIS] \ \\
+{\tt
+   subroutine FILEIO(IOPER, IFILNO, LEN, Q, IPOS) \\
+   double precision Q(1) \\
+   integer IOPER, IFILNO, LEN, IPOS \\
+}
+\item[DESCRIPTION] \ \\
+{\bf FILEIO} performs all the  functions  dealing  with the logically
+{\em random-access} I/O of gnu80.
+ 
+Although {\bf FILEIO} may appear to maintain a large  number  of
+files  (up  to 200), all of this data is actually stored into a
+{\em single}  disk file in the usual FORTRAN sense.  
+This (FORTRAN random access) file is divided  up by {\bf FILEIO}
+and  portions of it are allocated to each of the logical files
+(buckets and read-write files). Thus ``files '' in
+{\bf FILEIO} terminology are not the same as ``files'' 
+in standard FORTRAN terminology. It is therefore necessary to
+use one or the other consistently in a program. gnu80 uses
+``files'' always to mean {\bf FILEIO}-compatible
+files. Thus data {\em must} always be read or written by {\bf FILEIO}
+and {\em not} by standard FORTRAN READ or WRITE statements.
+Of course, {\bf FILEIO} itself uses standard FORTRAN statements
+to do the actual I/O!
+
+The two types of file ``buckets'' and ``read-write
+files'' only differ conceptually not essentially; roughly
+speaking, read-write files are inter-link communication
+and buckets are scratch space (particularly during integral
+transformations).
+
+For each file (bucket or read-write  file),  {\bf FILEIO}  
+maintains  both  read  and  write pointers.  A write operation on a
+file, for instance, starts at the position of the write pointer
+for  that  file.   For each value written, the write pointer is
+incremented.  The read pointer behaves the same way on read operations.
+\item[ARGUMENTS:] \ \\
+\begin{description}
+\item[IOPER]   type of I/O operation to perform:
+\begin{description} 
+\item[0] define file   {\tt IFILNO}  to have length  {\tt LEN}   
+\item[+1]  synchronous write operation. Control   returns  to  the
+calling routine when the write is completed.
+(this operation defines a file with length {\tt LEN} if the file
+was not previously defined). Note that in gnu80 {\em portable}
+FORTRAN I/O is used so that {\em all } I/O is synchronous notwithstanding
+information to the contrary.
+\item[+2]  synchronous read operation.
+\item[4]  define subfile.
+\item[5]  delete the file indicated by {\tt IFILNO}.
+\item[6]  delete all routine-volatile files (those  with  numbers
+larger that 2999).
+\item[7]  delete all the link-volatile files.  This should  not
+be done by a user directly, but rather let {\tt NEXTOV} do this
+for you when overlaying.
+\item[8]  delete all overlay-volatile files.  Once again, don't do
+this unless you're sure you know what you're doing.
+\item[9]  {\bf FILEIO} open.  This is done in chain at the beginning of
+the program, and should not be used elsewhere.
+\item[10]  {\bf FILEIO} close.  This is done automatically by {\tt NEXTOV} on
+its way out, and should not be used elsewhere.
+\item[11]  this returns the length of the specified file (in {\tt LEN}).
+if the file is undefined, then 0 is returned.  Thus,
+you can check for the existence of a file before trying
+to read from it.
+\item[12]  {\bf FILEIO} initialization. This is done by {\tt MAIN} at the
+beginning of the run, and should not be done elsewhere.
+\end{description}
+\item[IFILNO] The absolute value of {\tt IFILNO} is the number  of  the  file
+which is to be read, written, defined, or deleted.  Any
+non-zero value in permitted, but the following  
+conventions are to be observed in gnu80:
+\begin{description} 
+\item[1-499]  permanent buckets.
+\item[500-999] permanent read-write files.
+\item[1000-1499]  overlay volatile buckets.  These are  
+deleted automatically before each new overlay.
+\item[1500-1999]  overlay volatile read-write files.
+\item[2000-2499]  link volatile buckets.  These  are  
+automatically deleted before each new link.
+\item[2500-2999]  link volatile read-write files.
+\item[3000-3499]  routine volatile buckets.  These are  
+deleted when {\bf FILEIO} is called with {\tt IOPER=6},
+and also before each new link.
+\item[3500-3999]  routine volatile read-write files.
+\end{description} 
+For read or write operations, supplying the {\em negative}
+of  the  file number causes the read or write 
+pointer to be rewound (reset to the base of the file) 
+before  the operation. Note that this is done before the
+argument {\tt IPOS} is processed.  For file deletion or file
+definition operations, the sign of the file number is
+ignored.
+\item[LEN]   This quantity is the number of double precision values
+(quadruples of bytes, usually)  to be transferred in a read or a write 
+operation, or the number of these values to be allocated
+in a define file operation.
+\item[Q] a double precision array for the data read or written.
+\item[IPOS] Used to help specify the position in the   file
+at  which  an I/O operation will commence. The value of
+the read or write pointer is incremented by {\tt IPOS} before
+the read or write operation is performed. The possible
+rewind of the pointer (as specified by  the  {\em sign}  of
+{\tt IFILNO}) is done before {\tt IPOS} is considered.  Thus, a 
+{\em positive} file number means that {\tt IPOS} specifies  the  new
+position relative to the current position; a {\em negative}
+{\tt IFILNO} means {\tt IPOS} specifies the new  position relative
+to the begining of the file.
+\end{description}
+\item[SEE ALSO] \ \\
+{\bf NTRAN, TREAD, TWRITE}
+\item[DIAGNOSTICS] \ \\
+None directly, but {\bf NTRAN} provides some.
+\end{description}
+\end{document}

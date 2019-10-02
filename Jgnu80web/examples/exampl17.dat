@@ -1,0 +1,15 @@
+#N RHF/3-21G OPT=TS
+
+HCN  ---  >  HNC Transition state RHF/3-21G
+
+0 1
+C
+N 1 NC
+X 2 QN 1 90.0
+H 3 HQ 2 90.0 1 0.0 0
+
+NC=1.18
+QN=1.15
+HQ=0.803
+
+

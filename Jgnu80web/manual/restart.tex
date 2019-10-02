@@ -1,0 +1,207 @@
+\documentstyle[12pt]{article}
+\begin{document}
+\section{Restarting a gnu80 Run}
+\label{restart}
+Usually, when a gnu80 job exits (either normally or abnormally), it
+leaves potentially useful data on the disk in the form of read-write
+files, two-electron integrals,  or post-SCF buckets.  
+
+The {\bf RESTART}
+feature allows a subsequent gnu80 job to recover and use these data,
+provided they have been placed in non-scratch files. In the normal course
+of events, gnu80 uses scratch files for both electron-repulsion
+integral storage and general file use. It is possible, by the
+use of {\em file control records} to make these files permanent.
+There are two files, the ``integral'' file (for repulsion
+integrals) and the ``read-write'' file (for general data
+storage, inter-link communication etc.etc.).
+
+The files are made permanent by placing one or two file control records
+{\bf before} the Job Control Record in a gnu80 job input.
+They both have the ` \% ' symbol in the first column of the record
+and have the form:
+\begin{description}
+\item[\%int=filename1] 
+\item[\%rwf=filename2] 
+\end{description}
+where ``filename1'' and ``filename2''
+are two (different!) filenames which satisfy the naming conventions of
+the local operating system (this is not checked by gnu80, of course).
+Note that, as usual in gnu80, case is not significant and both files
+will be generated with {\em upper-case} names. This may well cause
+some surprises if a lower-case name was intended (in Unix, for example).
+
+Both records have all blanks ignored (even {\em within} filenames, 
+and examples are: \\
+\ \\
+{\bf \%int = repulsion.int} \\
+\ \\
+{\bf \%RWF=dump.rwf}
+\ \\
+\ \\
+If you need blanks in your filenames, you must change the code
+in {\tt SUBROUTINE L0CMND} to omit blank stripping.
+
+If a job is to be restarted
+using these saved files, the restart job must
+have the same file control records
+before the Job Command Record.
+Sometimes, if files are to be updated during a sequence
+of restarted runs, it is advisable to
+copy the saved files and restart with the copies.
+
+The ROUTE is stored on the read-write file, so a job can only be 
+{\em re}-started, not submitted as a continuation. 
+It may be restarted at any point up to and including
+the point at which it finished a complete Link. For example,
+if a job has actually run to completion it may be restarted anywhere 
+in the original ROUTE.
+
+Thus must be indicated {\em where} the job  is to be restarted.  
+This is done
+with a record of the form:  \\
+\ \\
+{\bf \#RESTART Lxxx(N)}  \\
+\ \\
+The ` \#' must be in column 1, and ` Lxxx(N)' 
+indicates that the job is to
+restart at the N'th occurrence of link Lxxx. N is optional, and defaults
+to 1. In fact, ` Lxxx' is optional also, and if not given, the job
+restarts at the link in which the previous job terminated. Since the
+original input  file is lost, you must supply any input to the job that
+the remaining links will need. 
+
+{\bf Note that the RESTART Command starts immediately after the \#,
+there is no blank as in the Job Command Record}
+
+It is also possible to supply  a new
+route while  restarting.  In this case, the route information in the
+read-write file is updated while the  rest of the data remains intact.
+this is accomplished with the {\bf  RESTART} command:  \\
+\ \\
+\ \\
+{\bf \#RESTART L1  \\
+\#P new route goes here....}  \\
+\ \\
+\ \\
+This causes execution to resume with Link1, which will read a new
+route. One must, of course, supply any data input required by the new
+route. This is a method of avoiding the re-computation of the
+repulsion integrals in a job related to an earlier one. Of course,
+the new ROUTE must explicitly omit the calculation which is being
+avoided (this usually means a {\bf NONSTD} command).
+\newpage
+Thus a job originally submitted as: \\
+\ \\
+{\bf \%int = repulsion.int} \\
+{\bf \%RWF=dump.rwf} \\
+{\bf \# HF/6-31g} \\
+(blank record) \\
+Data Records \\
+\ \\
+can be restarted at the SCF stage by: \\
+\ \\
+{\bf \%int = repulsion.int} \\
+{\bf \%RWF=dump.rwf} \\
+{\bf \#RESTART L501} \\
+(blank record) \\
+\ \\
+\ \\
+always provided that the original job got as far as generating the
+data for Link 501.
+\subsection{Restarting; An Example}
+It often happens that it is difficult to get a Geometry Optimisation
+to {\em start} in the sense that it is difficult to get a converged set
+of MO coefficients for the initial geometry. Usually, since the 
+changes in geometry are small during the geometry optimisation, once a set of
+converged MO coefficients has been obtained for one point
+these coefficients are good enough to ensure that, 
+when used as a starting point for other geometries close by, things will
+go smoothly. 
+
+This is particularly galling if one has done a huge calculation of 
+molecular integrals and the SCF does not converge. It is useful to be able
+to try the SCF again with some different convergence aids. Here is a pair
+of jobs which illustrate this practice.
+\newpage
+The first job is an SCF calculation on the water molecule 
+with a standard basis:
+\begin{verbatim}
+     %INT=example.int
+     %RWF=example.rwf
+     # HF/3-21G,VSHIFT=500
+
+       Test of the use of RESTART
+
+     0 1
+     O
+     H 1 0.956
+     H 1 0.956 2 104.5
+
+\end{verbatim}
+In point of fact this run does go to completion with the convergence
+aid of ``Level Shifter" set to $0.5$ ({\tt VSHIFT = 500};
+actual value $500/1000$) but such a job may have failed to converge.
+
+Notice that the two files {\bf must} be saved to use for a {\tt RESTART}.
+\newpage
+Now we may restart the job from where it finished with a different
+Level Shifter:
+
+\begin{verbatim}
+      %INT=example.int
+      %RWF=example.rwf
+      %SAVE=H2O.SAVE
+      #RESTART L1
+      # NONSTD
+      5/9=3500,32=1/1,2;
+      99//99;
+
+\end{verbatim}
+
+This time the Route has to be given explicitly by use of the {\tt NONSTD}
+command; it was constructed by setting up a test Command Record anticipating
+success and therefore saving the converged MO coefficients:
+
+\begin{verbatim}
+      # HF/3-21G,VSHIFT=3500,SAVE=MO
+\end{verbatim}
+
+and editing the output Route from gnu80.
+
+The meaning of the items are:
+\begin{itemize}
+\item
+The Leading {\tt 5} is the Overlay to be run ( Overlay 5 is the
+SCF overlay)
+\item
+{\tt 9=3500} is just {\tt VSHIFT=3500} in Overlay 5
+\item
+{\tt 32=1} is just {\tt SAVE=MO} in Overlay 5
+\item
+{\tt 1,2} are the Links to be run in Overlay 5 ({\tt L501, L502}
+\end{itemize}
+This job, when successfully run will generate a converged set 
+of MO coefficients and save them for future use in an optimisation, say,
+on file {\tt H2O.SAVE} suitable for use in a job like:
+\newpage
+\begin{verbatim}
+     %GUESS=H2O.SAVE
+     # HF/3-21G,VSHIFT=500,GUESS=READ,OPT
+
+         Re-using the Converged MO coefficients
+
+     0 1
+     O
+     H1 O ROH
+     H2 O ROH H1 104.5
+
+     ROH=0.956
+
+\end{verbatim}
+      
+None of the working files are saved, again anticipating success.
+\subsubsection{Error Messages}
+If a Link is specified on the {\bf RESTART} record which is
+not in the original ROUTE, an error message is given and the job terminates.
+\end{document}

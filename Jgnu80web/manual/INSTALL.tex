@@ -1,0 +1,75 @@
+\documentclass{article}
+\begin{document}
+\section{\sf Installation of {\tt gnu80}}
+\begin{center}
+  \fbox{
+    \parbox{4.5in}{\bf Insofar as the source code of {\tt gnu80} is
+      designed to be portable FORTRAN 77, there are no installation
+      instructions except ``Generate the Fortran source from the FWEB
+      files, Compile the FORTRAN and link it to form an executable
+      module'' .
+
+      However, if you need a simpler route, go to the directory {\tt
+        gnu80web} and change the first line to read: \\
+\ \\
+        {\tt PREFIX="full path to where you are"} \\
+
+       and then say: \\
+\ \\
+      {\tt ./build\_gnu80 > \& build\_gnu80.log \&} \\
+\ \\
+    After some time you should find the file {\tt a.out} has been 
+    created in that
+    directory together with a (large) {\tt build\_gnu80.log} file with
+    all the gory details of what has happened during the build.
+    
+    If you do not have (or do not like) FWEB then you will have to go
+    into the {\tt src} and {\tt NBO} directories and edit off all the
+    FWEB details from the Fortran source which will be \emph{very}
+    tedious.  } }
+\end{center}
+
+However, there are one or two points where the FORTRAN 77 standard is
+not precise enough to ensure complete portability and it is wise to be
+aware of these:
+\begin{itemize}
+\item The {\em units} of the {\tt RECL} (record length) parameter in a
+  direct access {\tt OPEN} statement
+\begin{verbatim}
+      OPEN(UNIT=file,ACCESS='DIRECT',RECL=record_length, ...)
+\end{verbatim}
+  is not defined by the standard;
+  typically it may be bytes or quadruples of bytes. \\
+  In {\tt gnu80} as supplied a unit of {\em bytes} is assumed and {\tt
+    RECL}
+  is set to 16380 (=4*4095). \\
+  To use the existing file I/O routines (via {\tt NTRAN}) the record
+  length must be enough to store 4095 default-length {\tt INTEGERS}.
+  If a different buffer is required, then {\tt SUBROUTINE NTRAN} must
+  have the occurences of 4095 changed and the {\tt RECL} parameter
+  changed accordingly.
+\item The mode of storage of (particularly) characters in variables of
+  type {\tt INTEGER} is not defined by the standard (see {\tt IORD}
+  \ref{iord}).
+\item The coding used to store characters is not defined although the
+  ASCII code is almost universally implemented. {\tt gnu80} asumes
+  that the ASCII code is used but it is hoped that the use of EBCDIC
+  will not cause difficulties!
+\end{itemize}
+In addition to these points {\em within} the standard, there is an
+important and systematic departure from the standard in this release
+of {\tt gnu80}. Characters are stored in variables of non-{\tt
+  CHARACTER} type either by reading in A-format or by {\tt DATA}
+initialisation statements. This is endemic in the code and cannot be
+eradicated from this release!
+\begin{center}
+  \fbox{
+    \parbox{3.5in}{\bf If the storage of {\tt CHARACTER} constants in
+      variables of non-{\tt CHARACTER} type is a compilation {\em
+        error} on the target machine/compiler, not simply a {\em
+        warning}, then this release of {\tt gnu80} cannot be installed
+      on that system.  }
+  }
+\end{center}
+\end{document}
+

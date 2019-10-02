@@ -1,0 +1,40 @@
+\newpage
+\setcounter{page}{1}
+\markboth{\bf TREAD}{\bf TREAD}
+\begin{description}
+\item[NAME] TREAD \\
+LCAOMOSCF calculations
+\item[SYNOPSIS] \ \\
+{\tt
+   subroutine TREAD(FILE,X,M,N,MM,NN,K) \\
+   double precision X(1) \\
+   integer FILE, M, N, MM, NN, K \\
+}
+\item[DESCRIPTION] \ \\
+TREAD reads data from the gnu80 internal file number {\tt FILE}
+into the double precision array {\tt X}. In the calling segment
+X must be {\tt DIMENSION}ed {\tt MM} by {\tt NN}. The data read
+is stored in this array as far as {\tt M} by {\tt N} consistent
+with FORTRAN matrix storage rules. {\tt K} indicates whether or
+not the matrix has been stored in a compressed mode (for symmetric
+matrices) i.e. contains only M(M+1)/2 elements, not M**2.
+The routine is called to read actual matrices from files {\em and}
+to read COMMON blocks in which case usually {\tt N=NN=1}
+and {\tt M=MM=} length of file (in units of double precision reals,
+padded out if necessary)
+\item[ARGUMENTS:] \ \\
+\begin{description}
+\item[FILE]  The gnu80 internal file number
+\item[X] Array to receive the data read.
+\item[M] Actual number of rows in read matrix.
+\item[N] Actual number of columns in read matrix.
+\item[MM] Number of rows in the DIMENSION statement of calling program.
+\item[NN] Number of columns in the DIMENSION statement of calling program.
+\item[K] {\tt K = 0} means that all the matrix is read, {\tt K = 1}
+means only ``half'' was read.
+\end{description}
+\item[SEE ALSO] \\ \\\\
+TWRITE, TQUERY, NTRAN, FILEIO
+\item[DIAGNOSTICS]
+None; but NTRAN tracks errors
+\end{description}

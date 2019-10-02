@@ -1,0 +1,178 @@
+\contentsline {chapter}{\numberline {1}\sf Introduction}{1}
+\contentsline {chapter}{\numberline {1.A}\sf Standard Nomenclature}{4}
+\contentsline {section}{\numberline {1.A.1}\sf The Hamiltonian}{4}
+\contentsline {section}{\numberline {1.A.2}\sf Many-electron Wavefunctions}{5}
+\contentsline {section}{\numberline {1.A.3}\sf Spin-Orbitals}{6}
+\contentsline {section}{\numberline {1.A.4}\sf Linear Expansions for the Spatial Orbitals}{6}
+\contentsline {section}{\numberline {1.A.5}\sf Primitive Gaussians}{7}
+\contentsline {section}{\numberline {1.A.6}\sf Single Determinant Energy Expression}{9}
+\contentsline {section}{\numberline {1.A.7}\sf Notation for Repulsion integrals}{10}
+\contentsline {section}{\numberline {1.A.8}\sf Spatial Orbital Repulsion Integrals}{11}
+\contentsline {section}{\numberline {1.A.9}\sf Basis Function Repulsion Integrals}{12}
+\contentsline {chapter}{\numberline {2}\sf Standard Methods}{15}
+\contentsline {section}{\numberline {2.1}\sf Preview}{15}
+\contentsline {section}{\numberline {2.2}\sf Input Organisation}{18}
+\contentsline {section}{\numberline {2.3}\sf The Command Record}{20}
+\contentsline {subsection}{\numberline {2.3.1}\sf Models of Electronic Structure}{22}
+\contentsline {subsubsection}{\sf Commands with Options Associated with the Model Commands}{24}
+\contentsline {subsection}{\numberline {2.3.2}\sf Basis Sets Internal to {\tt gnu80}}{26}
+\contentsline {subsection}{\numberline {2.3.3}\sf ECP Basis Set Types in gnu80 and g94}{27}
+\contentsline {subsection}{\numberline {2.3.4}\sf GEN: User-supplied Bases}{28}
+\contentsline {subsection}{\numberline {2.3.5}\sf nD, nF; Cartesians or Cubic Harmonics?}{28}
+\contentsline {subsection}{\numberline {2.3.6}\sf Model/Basis Summary}{29}
+\contentsline {subsection}{\numberline {2.3.7}\sf Uses of the Quantum Model}{30}
+\contentsline {subsubsection}{\sf OPTIONS for the OPT Command; OPT=xxxx}{30}
+\contentsline {subsection}{\numberline {2.3.8}\sf Miscellaneous Commands}{32}
+\contentsline {subsection}{\numberline {2.3.9}\sf Commands not yet Implemented}{35}
+\contentsline {subsection}{\numberline {2.3.10}\sf System Defaults}{35}
+\contentsline {subsection}{\numberline {2.3.11}\sf Examples of Valid Command Records}{36}
+\contentsline {section}{\numberline {2.4}\sf Title Input Section}{37}
+\contentsline {section}{\numberline {2.5}\sf Molecule Input Section}{37}
+\contentsline {subsection}{\numberline {2.5.1}\sf The Z-Matrix, an Overview}{37}
+\contentsline {subsection}{\numberline {2.5.2}\sf The Z-matrix, Reference}{44}
+\contentsline {section}{\numberline {2.6}\sf Variable and Constant Input Sections}{47}
+\contentsline {section}{\numberline {2.7}\sf GEN Basis Set Input}{48}
+\contentsline {section}{\numberline {2.8}\sf Alteration of Configuration}{48}
+\contentsline {section}{\numberline {2.9}\sf Program Limitations}{49}
+\contentsline {subsection}{\numberline {2.9.1}\sf Z-matrix Limitations}{49}
+\contentsline {subsection}{\numberline {2.9.2}\sf Basis Set Limitations}{50}
+\contentsline {subsubsection}{\sf General input data limitations}{50}
+\contentsline {subsection}{\numberline {2.9.3}\sf Integral Evaluation Limitations}{51}
+\contentsline {subsection}{\numberline {2.9.4}\sf SCF and POST-SCF Limitations}{54}
+\contentsline {subsection}{\numberline {2.9.5}\sf Basis Set Ranges}{54}
+\contentsline {subsection}{\numberline {2.9.6}\sf Concluding Remarks}{55}
+\contentsline {chapter}{\numberline {2.A}\sf Standard Methods: Input/Output Examples}{56}
+\contentsline {section}{\numberline {2.A.1}\sf Introduction}{56}
+\contentsline {subsection}{\numberline {2.A.1.1}\sf Example 1 HF calculation at fixed Geometry}{57}
+\contentsline {subsubsection}{\sf Alternative, Using the Element names for atom reference}{57}
+\contentsline {subsection}{\numberline {2.A.1.2}\sf Example 2. Simple Geometry Optimisation}{59}
+\contentsline {subsection}{\numberline {2.A.1.3}\sf Example 3 A General Optimisation}{60}
+\contentsline {subsection}{\numberline {2.A.1.4}\sf Example 4 Use of CONSTANTS}{61}
+\contentsline {subsection}{\numberline {2.A.1.5}\sf Example 5 A more General Z-matrix}{62}
+\contentsline {subsection}{\numberline {2.A.1.6}\sf Example 6 Use of a Dummy Centre}{63}
+\contentsline {subsection}{\numberline {2.A.1.7}\sf Example 7 Direct use of HNH angle}{64}
+\contentsline {subsection}{\numberline {2.A.1.8}\sf Example 8 Use of a Dummy atom to maintain ``symmetry''}{65}
+\contentsline {subsubsection}{\sf Examples 9 and 10 Bond Angle Limitations}{67}
+\contentsline {subsection}{\numberline {2.A.1.9}\sf Example 9 Linear HCN}{67}
+\contentsline {subsection}{\numberline {2.A.1.10}\sf Example 10 Use of a Half-Angle}{68}
+\contentsline {subsection}{\numberline {2.A.1.11}\sf Example 11 A preparation run for an Open-Shell species}{69}
+\contentsline {subsection}{\numberline {2.A.1.12}\sf Example 12 Use of Example 11 in a Production Run}{70}
+\contentsline {subsection}{\numberline {2.A.1.13}\sf Example 13 Moller-Plesset Run}{71}
+\contentsline {subsection}{\numberline {2.A.1.14}\sf Example 14 Configuration Interaction Run}{72}
+\contentsline {section}{\numberline {2.A.2}\sf Output Examples}{73}
+\contentsline {subsection}{\numberline {2.A.2.1}\sf Example 1 and 3---14}{74}
+\contentsline {subsubsection}{\sf Example 1}{74}
+\contentsline {subsubsection}{\sf Example 3}{75}
+\contentsline {subsubsection}{\sf Example 4}{76}
+\contentsline {subsubsection}{\sf Example 5}{77}
+\contentsline {subsubsection}{\sf Example 6}{78}
+\contentsline {subsubsection}{\sf Example 7}{80}
+\contentsline {subsubsection}{\sf Example 8}{82}
+\contentsline {subsubsection}{\sf Example 9}{84}
+\contentsline {subsubsection}{\sf Example 10}{86}
+\contentsline {subsubsection}{\sf Example 11}{88}
+\contentsline {subsubsection}{\sf Example 12}{89}
+\contentsline {subsubsection}{\sf Example 13}{91}
+\contentsline {subsubsection}{\sf Example 14}{92}
+\contentsline {subsection}{\numberline {2.A.2.2}\sf Example 2}{94}
+\contentsline {chapter}{\numberline {2.B}\sf Banana Skins}{112}
+\contentsline {section}{\numberline {2.B.3}\sf Non-existent Functions}{112}
+\contentsline {section}{\numberline {2.B.4}\sf Anions}{113}
+\contentsline {section}{\numberline {2.B.5}\sf Dissociation Limits}{113}
+\contentsline {section}{\numberline {2.B.6}\sf Spin Eigenfunction Constraints}{114}
+\contentsline {chapter}{\numberline {3}\sf General Use of {\tt gnu80}}{115}
+\contentsline {section}{\numberline {3.1}\sf Beyond ` Standard Methods'}{115}
+\contentsline {section}{\numberline {3.2}\sf Program Structure}{116}
+\contentsline {subsection}{\numberline {3.2.1}\sf Introduction}{116}
+\contentsline {subsection}{\numberline {3.2.2}\sf Overview of {\tt gnu80}}{116}
+\contentsline {section}{\numberline {3.3}\sf Program Options}{118}
+\contentsline {section}{\numberline {3.4}\sf Non-Default OPTIONs}{118}
+\contentsline {section}{\numberline {3.5}\sf Non-Standard Routes}{119}
+\contentsline {section}{\numberline {3.6}\sf General Basis Sets: non-STO}{120}
+\contentsline {subsection}{\numberline {3.6.1}\sf Shells}{121}
+\contentsline {subsection}{\numberline {3.6.2}\sf Exponents and Scale Factors}{121}
+\contentsline {subsubsection}{\sf Example}{129}
+\contentsline {subsubsection}{\sf Example 16, Output summary}{133}
+\contentsline {section}{\numberline {3.7}\sf General Basis Sets: STO type}{134}
+\contentsline {subsubsection}{\sf An Example: Zinc Dimethyl}{135}
+\contentsline {section}{\numberline {3.8}\sf Non-Standard Optimization Input}{137}
+\contentsline {section}{\numberline {3.9}\sf RESTARTing a {\tt gnu80} Run}{138}
+\contentsline {subsection}{\numberline {3.9.1}\sf Restarting; An Example}{140}
+\contentsline {subsection}{\numberline {3.9.2}\sf Portability of RESTART Files}{143}
+\contentsline {subsection}{\numberline {3.9.3}\sf Disaster Recovery}{143}
+\contentsline {subsubsection}{\sf Error Messages}{143}
+\contentsline {chapter}{\numberline {A}\sf List of links in {\tt gnu80}}{144}
+\contentsline {chapter}{\numberline {B}\sf Link Descriptions and Options}{147}
+\contentsline {section}{\numberline {B.1}\sf OVERLAY 1}{147}
+\contentsline {subsubsection}{\sf OPTIONS for OVERLAY 1}{148}
+\contentsline {section}{\numberline {B.2}\sf OVERLAY 2 (Link 202 only)}{150}
+\contentsline {subsection}{\numberline {B.2.1}\sf OPTIONS for OVERLAY 2}{151}
+\contentsline {section}{\numberline {B.3}\sf OVERLAY 3}{152}
+\contentsline {subsection}{\numberline {B.3.1}\sf OPTIONS for OVERLAY 3}{152}
+\contentsline {section}{\numberline {B.4}\sf OVERLAY 4 (Link 401 only)}{157}
+\contentsline {subsection}{\numberline {B.4.1}\sf OPTIONS for OVERLAY 4}{158}
+\contentsline {section}{\numberline {B.5}\sf OVERLAY 5}{161}
+\contentsline {subsection}{\numberline {B.5.1}\sf OPTIONS for OVERLAY 5 (501,502,505 but not 503)}{161}
+\contentsline {section}{\numberline {B.6}\sf Link 503 SCFDM}{165}
+\contentsline {subsection}{\numberline {B.6.1}\sf OPTIONS for Link 503}{165}
+\contentsline {section}{\numberline {B.7}\sf OVERLAY 6 (Link 601 only)}{168}
+\contentsline {subsection}{\numberline {B.7.1}\sf OPTIONS for OVERLAY 6}{168}
+\contentsline {section}{\numberline {B.8}\sf OVERLAY 7}{169}
+\contentsline {subsection}{\numberline {B.8.1}\sf OPTIONS for Link 701}{169}
+\contentsline {subsection}{\numberline {B.8.2}\sf OPTIONS for Link 702}{169}
+\contentsline {subsection}{\numberline {B.8.3}\sf OPTIONS for Link 703}{170}
+\contentsline {section}{\numberline {B.9}\sf OVERLAY 8}{171}
+\contentsline {subsection}{\numberline {B.9.1}\sf OPTIONS for OVERLAY 8}{172}
+\contentsline {section}{\numberline {B.10}\sf OVERLAY 9}{173}
+\contentsline {subsection}{\numberline {B.10.1}\sf OPTIONS for OVERLAY 9}{173}
+\contentsline {chapter}{\numberline {D}\sf Modifications to {\tt gnu80}}{177}
+\contentsline {section}{\numberline {D.1}\sf Warning}{177}
+\contentsline {section}{\numberline {D.2}\sf Preview}{178}
+\contentsline {section}{\numberline {D.3}\sf Data Communication in {\tt gnu80}}{179}
+\contentsline {section}{\numberline {D.4}\sf {\tt gnu80} Read/Write Files}{186}
+\contentsline {section}{\numberline {D.5}\sf Basic I/O Routines}{191}
+\contentsline {section}{\numberline {D.6}\sf Two-electron Integral Storage}{199}
+\contentsline {subsection}{\numberline {D.6.1}\sf Introduction}{199}
+\contentsline {subsection}{\numberline {D.6.2}\sf Storage Formats}{199}
+\contentsline {subsection}{\numberline {D.6.3}\sf Buffer construction}{201}
+\contentsline {subsection}{\numberline {D.6.4}\sf I/O Considerations}{201}
+\contentsline {subsection}{\numberline {D.6.5}\sf Implementation Considerations}{202}
+\contentsline {section}{\numberline {D.7}\sf Parsing the Command Record}{202}
+\contentsline {subsection}{\numberline {D.7.1}\sf {\tt QPARSE} use}{203}
+\contentsline {section}{\numberline {D.8}\sf The {\tt QPARSE} Table}{204}
+\contentsline {subsection}{\numberline {D.8.1}\sf Transition Definitions}{206}
+\contentsline {subsection}{\numberline {D.8.2}\sf {\tt QPARSE} Alphabet}{207}
+\contentsline {section}{\numberline {D.9}\sf Character Manipulation in {\tt gnu80}}{210}
+\contentsline {section}{\numberline {D.10}\sf Main Character Manipulation Routines}{214}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION GETCHR}{215}
+\contentsline {subsubsection}{\sf SUBROUTINE PUTCHR}{215}
+\contentsline {subsubsection}{\sf SUBROUTINE PUTICR}{216}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION IORD}{216}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION LORD}{217}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION ILORD}{217}
+\contentsline {subsubsection}{\sf LOGICAL FUNCTION IFALPH}{217}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION CROP}{218}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION INTCHR}{218}
+\contentsline {subsubsection}{\sf LOGICAL FUNCTION STREQ}{218}
+\contentsline {subsubsection}{\sf SUBROUTINE STROUT}{218}
+\contentsline {subsubsection}{\sf SUBROUTINE LOCSTR}{219}
+\contentsline {subsubsection}{\sf SUBROUTINE APPFP}{219}
+\contentsline {subsubsection}{\sf SUBROUTINE APPFFD}{219}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION DELTYP}{219}
+\contentsline {subsubsection}{\sf INTEGER FUNCTION NCHRPW}{220}
+\contentsline {chapter}{\numberline {4.A}\sf {\tt gnu80} COMMON BLOCKS}{221}
+\contentsline {section}{\numberline {4.A.1}\sf COMMON /MOL/}{221}
+\contentsline {section}{\numberline {4.A.2}\sf COMMONs {\tt /ZMAT/ and /ZSUBST/}}{223}
+\contentsline {subsubsection}{\sf {\tt /ZMAT/}}{223}
+\contentsline {subsubsection}{\sf {\tt /ZSUBST/}}{224}
+\contentsline {section}{\numberline {4.A.3}\sf COMMON /B/}{225}
+\contentsline {section}{\numberline {4.A.4}\sf COMMON /INFO/}{229}
+\contentsline {section}{\numberline {4.A.5}\sf COMMON /PHYCON/}{230}
+\contentsline {section}{\numberline {4.A.6}\sf COMMON /MUNIT/}{231}
+\contentsline {section}{\numberline {4.A.7}\sf COMMON /IOP/}{232}
+\contentsline {section}{\numberline {4.A.8}\sf COMMON /ILSW1/}{233}
+\contentsline {section}{\numberline {4.A.9}\sf COMMON /GEN/}{237}
+\contentsline {chapter}{\numberline {E}\sf Stubs, Ghosts and Error Messages}{239}
+\contentsline {section}{\numberline {E.1}\sf Stubs and Ghosts}{239}
+\contentsline {section}{\numberline {E.2}\sf Error Messages}{240}
+\contentsline {chapter}{\numberline {F}\sf Installation of {\tt gnu80}}{241}

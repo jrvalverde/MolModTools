@@ -1,0 +1,77 @@
+\documentstyle[12pt]{article}
+\begin{document}
+\section{\sf NONDEF and IOP; gnu80 and g92}
+The use of {\bf NON DEF}ault options in {\tt gnu80} or {\tt g92} is quite
+common when performing calculations on systems of complex
+and recalcitrant electronic structure.
+
+At the moment (11/92), the method of {\em supplying} these non-default
+options is different in {\tt gnu80} and {\tt g92} although attempts are
+made to maintain the non-default options in {\tt gnu80} as a proper
+subset of the ones available in {\tt g92}.
+\subsection{\tt gnu80}
+Users of {\tt gnu80} will be familiar with the method:
+\begin{itemize}
+\item
+Use the {\bf NONDEF} Command on the Command Record; like
+\begin{verbatim}
+      # HF/3-21G,OPT,NONDEF
+\end{verbatim}
+\item
+Then supply the non-default options in a separate input {\em section}
+{\em i.e.} 
+\begin{enumerate}
+\item
+one blank record to terminate the Command Record, 
+\item
+then
+line(s) of non-default options, in the usual format
+{\small
+\begin{verbatim}
+    Overlay Number/Option number=Value, [Option Number=Value,...];
+\end{verbatim}
+}
+\item
+then a terminating blank record. 
+\end{enumerate}
+For example;
+\begin{verbatim}
+      # HF/3-21G,OPT,NONDEF
+
+      5/6=9;
+
+        Very Tight Convergence requested in SCF by use
+         of IOPT(6) = 9  (Convergence criterion 10**(-9))
+
+      0 1
+      Hg
+      .....  etc  .....
+
+\end{verbatim}
+sets Option Number 6 equal to 9 in Overlay 5 (the SCF Overlay).
+\item
+Now continue with the Title and Z-matrix input sections as usual.
+\end{itemize}
+\subsection{\tt g92}
+In {\tt g92} the whole thing is done on the Command Record, using the 
+Command {\bf IOP}. The same rules apply for the naming conventions
+etc. so that the above example becomes for {\tt g92}:
+\begin{verbatim}
+      $RunGauss
+      # HF/3-21G,OPT,IOP(5/6=9)
+
+        Very Tight Convergence requested in SCF by use
+         of IOPT(6) = 9  (Convergence criterion 10**(-9))
+
+      0 1
+      Hg
+      .....  etc  .....
+\end{verbatim}
+\subsection{\sf Harmonisation}
+{\tt gnu80} will be changed to accept the {\tt g92}-style Command
+but the {\bf NONDEF} command will be retained since it has some
+advantages and also to provide downward compatibility with existing
+job files. When the change has been done it will be announced; it is
+not imminent.
+\end{document}
+

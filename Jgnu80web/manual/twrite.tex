@@ -1,0 +1,40 @@
+\newpage
+\setcounter{page}{1}
+\markboth{\bf TWRITE}{\bf TWRITE}
+\begin{description}
+\item[NAME] TWRITE \\
+LCAOMOSCF calculations
+\item[SYNOPSIS] \ \\
+{\tt
+   subroutine TWRITE(FILE,X,M,N,MM,NN,K) \\
+   double precision X(1) \\
+   integer FILE, M, N, MM, NN, K \\
+}
+\item[DESCRIPTION] \ \\
+TWRITE writes data to the gnu80 internal file number {\tt FILE}
+from the double precision array {\tt X}. In the calling segment
+X must be {\tt DIMENSION}ed {\tt MM} by {\tt NN}. The data written
+is taken from this array as far as {\tt M} by {\tt N} consistent
+with FORTRAN matrix storage rules. {\tt K} indicates whether or
+not the matrix has been stored in a compressed mode (for symmetric
+matrices) i.e. contains only M(M+1)/2 elements, not M**2.
+The routine is called to write actual matrices to files {\em and}
+to write COMMON blocks in which case usually {\tt N=NN=1}
+and {\tt M=MM=} length of file (in units of double precision reals,
+padded out if necessary)
+\item[ARGUMENTS:] \ \\
+\begin{description}
+\item[FILE]  The gnu80 internal file number
+\item[X] Array containing the data to be written.
+\item[M] Actual number of rows in the matrix X.
+\item[N] Actual number of columns in the matrix X.
+\item[MM] Number of rows in the DIMENSION statement of calling program.
+\item[NN] Number of columns in the DIMENSION statement of calling program.
+\item[K] {\tt K = 0} means that all the matrix is write, {\tt K = 1}
+means only ``half'' was write.
+\end{description}
+\item[SEE ALSO] \\ \\\\
+TREAD, TQUERY, NTRAN, FILEIO
+\item[DIAGNOSTICS]
+None; but NTRAN tracks errors
+\end{description}

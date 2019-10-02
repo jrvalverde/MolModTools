@@ -1,0 +1,21 @@
+# NONSTD
+1//1;
+2//2;
+3/6=3,11=9,25=14,30=1/1,2,3;
+4/16=1/1;
+5//1,2;
+6//1;
+99//99;
+
+Water at Experimental Geometry, Route Read in Omitting 
+Calculation of repulsion integrals which are in H2O.INT
+See EXAMPL21.DAT for complementary job
+
+0 1
+O
+H1 O ROH
+H1 O ROH H1 A
+
+ROH=0.956
+A=104.5
+

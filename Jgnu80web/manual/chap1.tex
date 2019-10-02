@@ -1,0 +1,94 @@
+\chapter{\sf Introduction} 
+\label{chap1}
+{\tt gnu80} is a set of programs to perform the most commonly-required
+tasks of quantum chemistry.
+The numerical work involved in performing these tasks falls naturally into
+modules and the programs of {\tt gnu80} reflect this 
+underlying modularity.
+
+The basic assumption involved in all the programs is the
+``Expansion Method'' or ``Algebraic Approximation'' ;
+an approximate wavefunction for a molecular system (molecule, ion,
+radical, group of molecules) may be built up from
+(anti-symmetrised) products of Linear Combinations of Basis Functions.
+The basis functions themselves are linear combinations of Gaussian
+Functions. 
+The approximate Molecular Hamiltonian embodies the non-relativistic
+Born-Oppenheimer model; the so-called elecetrostatic model, the
+only forces acting between the particles are those due to
+Coulomb's law.
+
+With these two basic assumptions all calculations of molecular 
+electronic structure fall into three stages:
+\begin{enumerate}
+\item The calculation of the energy integrals involving the
+one- and two-particle operators in the Hamiltonian and the basis
+functions; kinetic energy and nuclear attraction (``one-electron'' 
+integrals) and the far more numerous electron-electron repulsion
+integrals (``two-electron'' integrals).
+\item Use of these energy integrals and matrix techniques to 
+solve the algebraic representation of the equations of
+the quantum mechanical model used.
+\item Analysis of the results of the calculation
+\end{enumerate}
+{\tt gnu80} provides implementations of these procedures with the 
+provision of several different quantum mechanical models
+of the molecular electronic structure. 
+Control programs are also provided for the automatic optimisation of
+molecular geometries by seeking turning points in the total energy
+of the molecule with respect to changes in those geometries.
+
+There are two main areas of research in which {\tt gnu80} may be useful:
+\begin{enumerate}
+\item {\em Chemical research using quantum chemistry tools;}
+the calculation of the structure and properties of transient or
+otherwise experimentally inaccessible species to help in the
+resolution of chemical problems, elucidation of reaction
+paths etc.
+\item {\em Quantum chemistry research;} calculations which are aimed at
+an understanding of the electronic structure of molecules and
+exploring the utility and limitations of the 
+quantum mechanical models themselves.
+\end{enumerate}
+{\tt gnu80} provides two distinct but related methods of working
+which, broadly speaking, are suitable for the two main uses of the system:
+\begin{enumerate}
+\item Use of Standard Methods
+\item General Use
+\end{enumerate}
+Both of these approaches must, of course, use the same
+capabilities of {\tt gnu80} and share the same ultimate limitations;
+types of quantum mechanical model and classes of Gaussian function available.
+Within these restrictions outlined earlier (electrostatic
+Hamiltonian and Gaussian Algebraic Approximation) the quantum
+mechanical models available are:
+\begin{itemize}
+\item ``Hartree-Fock'' , this term has come to mean a
+whole class of models related by the general idea of a one-term
+(single-determinant) approximation; the best single determinant (UHF),
+the best single determinant of doubly-occupied orbitals (RHF),
+the best single determinant of doubly- and singly-occupied orbitals
+for open-shell species (ROHF). 
+\item Variational Methods including electron correlation; 
+Configuration Interaction  of double excitations from a Hartree-Fock
+determinant.
+\item Perturbation Methods of including electron correlation;
+Moller-Plesset perturbation theory to second and third order using
+the Hartree-Fock determinant as zero-order function.
+\end{itemize}
+When a quantum mechanical model has been chosen, considerations
+of the accuracy required and the available computational resources
+must be made in order to make a choice of the {\em numerical}
+limiations of the calculation.
+This choice dictates the number and type of Gaussian functions to be used.
+{\tt gnu80} has libraries of standard Gaussian basis functions
+(particularly useful for Standard Methods) and the capability
+of accepting basis functions of the user's choice.
+
+Thus the combination of the quantum mechanical {\em model}
+and the {\em numerical} choice of basis are primary items of
+data to {\tt gnu80} which are independent of the particular 
+molecular system under investigation. This information must
+be given in both Standard Methods and General Use; Chapter
+\ref{chap2} describes the use of Standard Methods and
+Chapter \ref{chap3} outlines General Use.

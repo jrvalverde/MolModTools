@@ -1,0 +1,127 @@
+\documentstyle{book}
+\begin{document}
+\newpage
+\setcounter{page}{1}
+\markboth{\bf NTRAN}{\bf NTRAN}
+\begin{description}
+\item[NAME] NTRAN \\
+Lowest level I/O routine.
+\item[SYNOPSIS] \ \\
+{\tt
+   subroutine NTRAN(UNIT, OP, NWRDS, X, L) \\
+   double precision X(1) \\
+   integer UNIT, OP, NWRDS, L \\
+}
+\item[DESCRIPTION] \ \\
+This routine is developed to handle the I/O requests of {\bf FILEIO} and
+to perform all asynchronous I/O. (two electron storage).  It provides
+gnu80 with a {\em word addressable} disc I/O capability.  It is called
+by {\bf FILEIO} and the routines {\bf IREAD, IWRITE, IWIND} etc. 
+which are ENTRY points to {\bf INTEGI}
+
+\begin{center}
+\fbox{
+\parbox{3.5in}{
+\bf NTRAN can nominally handle synchronous and asynchronous I/O requests.
+In the gnu80 implementation all I/O is portable FORTRAN 77 and so
+there is no asynchronous I/O but the code has been left in (as
+comments) in case this facility is ever supported by future FORTRANs.
+}
+}
+\end{center}
+
+Synchronous I/O is random access (on 4 byte word level),
+{\bf NTRAN} is designed to allow the FORTRAN programmer to store and
+fetch arbitrary data from disc.  Arbitrary means that any 
+number of 4 byte words may be transferred to or from any location
+on a disc file.
+Asynchronous I/O is basically sequential, and more restricted
+than synchronous I/O, in the sense that only an {\em integer} number
+of records can be written or read. This implies that 
+the same number of words must be read back as were written out on that
+record previously.
+All operations or options are performed only on the specified
+unit.
+The synchronous I/O is performed with the use of a direct access unit.
+At the moment this is fixed (through a {\tt DEFINE FILE}
+statement). Because of this {\bf NTRAN} can only handle one direct access
+unit ({\tt DEFINE}d to FORTRAN unit  18), but the code could be extended to
+handle other direct access without much effort.  Currently gnu80
+only uses one asynchronous unit (3) but {\bf NTRAN} is coded to handle 2
+more (just define them through an appropriate {\bf NTRAN} call).
+
+Usage notes:
+\begin{enumerate}
+\item  {\tt UNIT} must always be equal to one of the 
+logical unit numbers stored
+in the array {\tt UNITS}, even for calls which are not device specific.
+\item  Don't rewind before a reposition. If necessary, 
+{\bf NTRAN} will do this
+automatically. To reposition {\bf NTRAN} will either: \\
+Read records until the specified position is reached, and if
+necessary write records to extend the file. \\
+Backspace the unit until the specified location is reached \\
+Rewind the unit and skip records to the specified location.
+\item Only use {\tt OP}=23 (wait) if you want to use the  data read or
+redefine the array used in a write operation. All other
+waits are performed automatically if needed. Use the negative
+form of the op parameter if you want to simulate synchro-
+nous I/O on an otherwise asynchronous unit.
+\item The correct sequence of operation is (synchronous) \\
+a) define unit (26) \\
+b) reopen unit if it is an old file (21) \\
+c) reposition unit (6) \\
+d) read/write (2,1) \\
+e) go to c \\
+asynchronous: \\
+a) define unit (27) \\
+b) rewind unit (10) \\
+c) read or write \\
+d) a rewind (10)  should be issued
+between read and write operations
+\end{enumerate}
+\item[ARGUMENTS:] \ \\
+\begin{description}
+\item[UNIT]  the fortran logical unit number of the file to be
+accessed.  {\tt UNIT} maps onto a local unit number
+via the array {\tt UNITS}.  All calls to {\bf NTRAN}
+require a valid unit.  Note that the value of {\tt IUNIT}
+is used as a local event flag number to signal
+I/O completion of asynchronous I/O.
+\item[OP] specifies the operation to carry out. A {\em negative}
+value indicates that {\bf NTRAN} is not to return control
+to the calling program until the requested I/O
+operation is complete. (only for 1 and 2)
+\begin{description}
+\item[+/- 1] write
+\item[+/- 2] read
+\item[6] reposition
+\item[10] rewind
+\item[21] reopen old unit, {\tt NWRDS} = number of records in old file.
+\item[22] close unit (only for synchronous I/O)
+\item[23] wait
+\item[26] define synchronous  unit (always done first)
+\item[27] define asynchronous unit (always done first)
+\item[29] print switch, {\tt NWRDS}=0 =>off, {\tt NWRDS}$\not=$ 0 => on
+\end{description}
+\item[NWRDS] the number of words involved in the operation.
+A radix (number of 8 bit bytes per user datum)
+of 4 is assumed, thus nwrds specifies the number of
+longwords to transfer.
+\item[X] data to be transferred.
+\item[L] status word: \\
+-1 indicates operation in progress \\
+-3 indicates end of file was encountered during 
+synchronous read \\
+-2 indicates error \\
+$>0$ indicates successful completion of the request,
+{\tt L} containing the number of words transferred. \\
+Note that as currently coded {\bf NTRAN} will abort the job
+if an error occurs, therefore L=-3 should not occur.
+\end{description}
+\item[SEE ALSO] \ \\
+{\bf FILEIO}
+\item[DIAGNOSTICS] \ \\
+Provides error trapping {\em before} the FORTRAN diagnostics.
+\end{description}
+\end{document}

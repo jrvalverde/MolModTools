@@ -1,0 +1,17 @@
+%INT=h2o.int
+%RWF=h2o.rwf
+%SAVE=save.exm
+# HF/STO-3G,SAVE=MO
+
+Job to generate repulsion integrals in
+   h2o.int, RWF file and MOs in save.exm
+  to use in RESTART JOB exampl22r.dat
+
+0 1
+O
+H1 O ROH
+H1 O ROH H1 A
+
+ROH=0.956
+A=104.5
+

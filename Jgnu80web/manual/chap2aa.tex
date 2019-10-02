@@ -1,0 +1,670 @@
+\section{\sf Output Examples}
+\label{outex}
+It is, for obvious reasons, undesirable  to give complete
+output listing for all the input examples listed in Section \ref{inex}.
+However, it {\em is} useful to have, for reference purposes, a record
+of what the results of each example are. So, for each example
+there is, in this Section, {\em one page} of severely
+edited output which gives the essence of the calculation.
+The exception to this type of display is Example 2 which is, perhaps
+the most common type of {\tt gnu80} run; geometry optimisation
+at the HF/STO-3G level. In this case the full output is listed together
+with some commentary.
+\newpage
+\subsection{\sf Example 1 and 3---14}
+\subsubsection{\sf Example 1}
+{\small
+\begin{verbatim}
+SCF DONE:  E(RHF) =  -74.9627570354     A.U. AFTER    6 CYCLES
+            CONVG  =    0.4234d-04             -V/T =   2.004974
+ COMPONENT                       A.U.                   KCAL/MOL
+ ---------------------------------------------------------------
+ TOTAL                      -74.962757035408          -47040.629
+ ELECTRONIC                 -84.169308351904          -52817.924
+ NUCLEAR REPULSION            9.206551316496            5777.295
+ KINETIC                     74.591723452750           46807.798
+ POTENTIAL                 -149.554480488158          -93848.428
+ ELECTRONIC POTENTIAL      -158.761031804654          -99625.723
+ ONE-ELECTRON POTENTIAL    -196.983005149312         -123610.775
+ TWO-ELECTRON POTENTIAL      38.221973344659           23985.053
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2)
+  THE ELECTRONIC STATE IS 1-A1.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -20.24160  -1.26904  -0.61852  -0.45319  -0.39132
+   1 1   O  1S         -0.99413   0.23274   0.00000  -0.10325   0.00000
+   2        2S         -0.02659  -0.83304   0.00000   0.53728   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000   0.60650   0.00000   0.00000
+   5        2PZ        -0.00436  -0.13005   0.00000  -0.77698   0.00000
+   6 2   H  1S          0.00599  -0.15880   0.44495  -0.27733   0.00000
+   7 3   H  1S          0.00599  -0.15880  -0.44495  -0.27733   0.00000
+          TOTAL ATOMIC CHARGES.
+              1
+  1   O   8.367459
+  2   H   0.816270
+  3   H   0.816270
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 1.7276   TOTAL= 1.7276
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 3}
+{\small
+\begin{verbatim}
+
+                      ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       R1          0.9893   -DE/DX =    0.000052                      !
+ !       R2          0.9894   -DE/DX =   -0.000009                      !
+ !        A        100.0135   -DE/DX =    0.00007                       !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.9065689700 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED OFF.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A') (A') (A') (A') (A")
+       VIRTUAL:  (A') (A')
+  THE ELECTRONIC STATE IS 1-A'.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A')      (A')      (A')      (A')      (A")
+     EIGENVALUES --   -20.25159  -1.25757  -0.59383  -0.45976  -0.39263
+   1 1   O  1S         -0.99422  -0.23376   0.00001  -0.10404   0.00000
+   2        2S         -0.02585   0.84444  -0.00005   0.53821   0.00000
+   3        2PX        -0.00319   0.09411  -0.39377  -0.57908   0.00000
+   4        2PY         0.00000   0.00000   0.00000   0.00000   1.00000
+   5        2PZ        -0.00268   0.07897   0.46944  -0.48576   0.00000
+   6 2   H  1S          0.00558   0.15560   0.44923  -0.29509   0.00000
+   7 3   H  1S          0.00558   0.15558  -0.44922  -0.29513   0.00000
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 4}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !        R          0.9867   -DE/DX =    0.000072                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.9188268795 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2)
+  THE ELECTRONIC STATE IS 1-A1.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -20.24477  -1.25333  -0.60334  -0.44828  -0.38917
+   1 1   O  1S          0.99420   0.23402   0.00000   0.10125   0.00000
+   2        2S          0.02597  -0.84450   0.00000  -0.52539   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000   0.60484   0.00000   0.00000
+   5        2PZ         0.00405  -0.11908   0.00000   0.77187   0.00000
+   6 2   H  1S         -0.00565  -0.15655   0.44665   0.28889   0.00000
+   7 3   H  1S         -0.00565  -0.15655  -0.44665   0.28889   0.00000
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 5}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       CF          1.404    -DE/DX =    0.000001                      !
+ !       CH          1.0794   -DE/DX =    0.000021                      !
+ !       HCF       109.3882   -DE/DX =    0.000004                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 3-21G     (S, S=P, 5D, 7F)
+  24 BASIS FUNCTIONS       39 PRIMITIVE GAUSSIANS
+   9 ALPHA ELECTRONS        9 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   37.0948856107 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (A1) (A1) (E) (E) (A1) (E) (E)
+       VIRTUAL:  (A1) (E) (E) (A1) (E) (E) (A1) (A1) (E) (E) (A1)
+                 (E) (E) (A1) (A1)
+ UNABLE TO DETERMINE ELECTRONIC STATE.
+                           1         2         3         4         5
+                         (A1)      (A1)      (A1)      (A1)       (E)
+     EIGENVALUES --   -26.11975 -11.24559  -1.54808  -0.95383  -0.67357
+                           6         7         8         9        10
+                          (E)      (A1)       (E)       (E)      (A1)
+     EIGENVALUES --    -0.67357  -0.63411  -0.51726  -0.51726   0.27861
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 6}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       NH          1.0026   -DE/DX =   -0.000036                      !
+ !       HNX        73.6317   -DE/DX =    0.000042                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 3-21G     (S, S=P, 5D, 7F)
+  15 BASIS FUNCTIONS       24 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   12.0363428366 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (E) (E) (A1)
+       VIRTUAL:  (A1) (E) (E) (E) (E) (A1) (A1) (E) (E) (A1)
+ UNABLE TO DETERMINE ELECTRONIC STATE.
+                           1         2         3         4         5
+                         (A1)      (A1)       (E)       (E)      (A1)
+     EIGENVALUES --   -15.43152  -1.12003  -0.62031  -0.62031  -0.38894
+                           6         7         8         9        10
+                         (A1)       (E)       (E)       (E)       (E)
+     EIGENVALUES --     0.27525   0.37737   0.37737   1.18654   1.18654
+  15        1S  (O)     0.24962
+          CONDENSED TO ATOMS (ALL ELECTRONS)
+              1          2          3          4
+  1   N   6.867228   0.336337   0.336337   0.336337
+  2   H   0.336337   0.436131  -0.032274  -0.032274
+  3   H   0.336337  -0.032274   0.436131  -0.032274
+  4   H   0.336337  -0.032274  -0.032274   0.436131
+          TOTAL ATOMIC CHARGES.
+              1
+  1   N   7.876238
+  2   H   0.707921
+  3   H   0.707921
+  4   H   0.707921
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 1.7521   TOTAL= 1.7521
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 7}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       NH          1.0026   -DE/DX =   -0.00005                       !
+ !       HNH       112.3966   -DE/DX =   -0.000004                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 3-21G     (S, S=P, 5D, 7F)
+  15 BASIS FUNCTIONS       24 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   12.0364013291 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (E) (E) (A1)
+       VIRTUAL:  (A1) (E) (E) (E) (E) (A1) (A1) (E) (E) (A1)
+ UNABLE TO DETERMINE ELECTRONIC STATE.
+                           1         2         3         4         5
+                         (A1)      (A1)       (E)       (E)      (A1)
+     EIGENVALUES --   -15.43150  -1.12001  -0.62032  -0.62032  -0.38892
+                           6         7         8         9        10
+                         (A1)       (E)       (E)       (E)       (E)
+     EIGENVALUES --     0.27526   0.37738   0.37738   1.18660   1.18660
+          CONDENSED TO ATOMS (ALL ELECTRONS)
+              1          2          3          4
+  1   N   6.867255   0.336349   0.336349   0.336349
+  2   H   0.336349   0.436084  -0.032267  -0.032267
+  3   H   0.336349  -0.032267   0.436084  -0.032267
+  4   H   0.336349  -0.032267  -0.032267   0.436084
+          TOTAL ATOMIC CHARGES.
+              1
+  1   N   7.876301
+  2   H   0.707900
+  3   H   0.707900
+  4   H   0.707900
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 1.7513   TOTAL= 1.7513
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 8}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !     HALFCC        0.7371   -DE/DX =   -0.00006                       !
+ !       OX          1.2713   -DE/DX =   -0.000051                      !
+ !       CH          1.0707   -DE/DX =    0.000014                      !
+ !       HCC       119.2413   -DE/DX =    0.000031                      !
+ !      HCCO       103.2904   -DE/DX =    0.000055                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 3-21G     (S, S=P, 5D, 7F)
+  35 BASIS FUNCTIONS       57 PRIMITIVE GAUSSIANS
+  12 ALPHA ELECTRONS       12 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   74.3281278409 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (B2) (A1) (A1) (A1) (B2) (B1) (A1) (A2) (B2)
+                 (A1) (B1)
+       VIRTUAL:  (A1) (B2) (B1) (A1) (B2) (A2) (B2) (A1) (B1) (B2)
+  THE ELECTRONIC STATE IS 1-A1.
+                           1         2         3         4         5
+                         (A1)      (B2)      (A1)      (A1)      (A1)
+     EIGENVALUES --   -20.46808 -11.23219 -11.23184  -1.39571  -0.94125
+                           6         7         8         9        10
+                         (B2)      (B1)      (A1)      (A2)      (B2)
+     EIGENVALUES --    -0.86460  -0.70946  -0.64316  -0.55335  -0.52035
+                          11        12        13        14        15
+                         (A1)      (B1)      (A1)      (B2)      (B1)
+     EIGENVALUES --    -0.44599  -0.44550   0.27678   0.27965   0.31400
+          TOTAL ATOMIC CHARGES.
+              1
+  1   C   6.191493
+  2   O   8.551892
+  3   C   6.191493
+  4   H   0.766280
+  5   H   0.766280
+  6   H   0.766280
+  7   H   0.766280
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z=-2.7845   TOTAL= 2.7845
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 9}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       CN          1.1325   -DE/DX =   -0.000135                      !
+ !       CH          1.0588   -DE/DX =    0.000142                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 6-31G*     (S, S=P, 6D, 7F)
+  32 BASIS FUNCTIONS       60 PRIMITIVE GAUSSIANS
+   7 ALPHA ELECTRONS        7 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   24.3124728053 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED OFF.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (SG) (SG) (SG) (SG) (SG) (PI) (PI)
+       VIRTUAL:  (PI) (PI) (SG) (SG) (PI) (PI) (SG) (SG) (PI) (PI)
+                 (SG) (SG) (SG) (DLTA) (DLTA) (PI) (PI) (DLTA)
+                 (DLTA) (PI) (PI) (SG) (SG) (SG) (SG)
+ UNABLE TO DETERMINE ELECTRONIC STATE.
+                           1         2         3         4         5
+                         (SG)      (SG)      (SG)      (SG)      (SG)
+     EIGENVALUES --   -15.59707 -11.28843  -1.24284  -0.80838  -0.57381
+                           6         7         8         9        10
+                         (PI)      (PI)      (PI)      (PI)      (SG)
+     EIGENVALUES --    -0.49705  -0.49705   0.20433   0.20433   0.23318
+          CONDENSED TO ATOMS (ALL ELECTRONS)
+              1          2          3
+  1   N   6.475039   0.928252  -0.024403
+  2   C   0.928252   4.654130   0.351305
+  3   H  -0.024403   0.351305   0.360523
+          TOTAL ATOMIC CHARGES.
+              1
+  1   N   7.378888
+  2   C   5.933687
+  3   H   0.687425
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 3.2086   TOTAL= 3.2086
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 10}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       CN          1.1398   -DE/DX =   -0.000449                      !
+ !       CO          1.3084   -DE/DX =   -0.000121                      !
+ !       OH          0.9703   -DE/DX =    0.000022                      !
+ !      HALF        90.6316   -DE/DX =    0.000051                      !
+ !       COH       114.1532   -DE/DX =   -0.00011                       !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: 3-21G     (S, S=P, 5D, 7F)
+  29 BASIS FUNCTIONS       48 PRIMITIVE GAUSSIANS
+  11 ALPHA ELECTRONS       11 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY   58.2705799512 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED OFF.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A') (A') (A') (A') (A') (A') (A') (A") (A') (A')
+       VIRTUAL:  (A') (A') (A") (A') (A') (A") (A') (A') (A') (A')
+  THE ELECTRONIC STATE IS 1-A'.
+                           1         2         3         4         5
+                         (A')      (A')      (A')      (A')      (A')
+     EIGENVALUES --   -20.57074 -15.50999 -11.29438  -1.48307  -1.26122
+                           6         7         8         9        10
+                         (A')      (A')      (A")      (A')      (A')
+     EIGENVALUES --    -0.85979  -0.68335  -0.65765  -0.55829  -0.47341
+                          11        12        13        14        15
+                         (A")      (A')      (A')      (A")      (A')
+     EIGENVALUES --    -0.45424   0.18647   0.24987   0.26428   0.36665
+          TOTAL ATOMIC CHARGES.
+              1
+  1   N   7.428592
+  2   C   5.317444
+  3   O   8.703003
+  4   H   0.550962
+ DIPOLE MOMENT (DEBYE): X= 2.1123   Y= 0.0000   Z= 3.2717   TOTAL= 3.8943
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 11}
+{\small
+\begin{verbatim}
+ NUMBER OF SYMMETRY OPERATIONS:  2
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        4 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    7.4893197651 HARTREES
+ RAFFENETTI 2 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+   INITIAL GUESS WAVE FUNCTION.
+ REAL ALPHA MO COEFFICIENTS.
+                           1         2         3         4         5
+   1 1   N  1S         -1.00079  -0.19876   0.00000  -0.02648   0.00000
+   2        2S          0.00128   0.76494   0.00000   0.14715   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000  -0.52797   0.00000   0.00000
+   5        2PZ        -0.00195  -0.04939   0.00000  -0.96265   0.00000
+   6 2   H  1S          0.00462   0.23018  -0.46197  -0.07274   0.00000
+   7 3   H  1S          0.00462   0.23018   0.46197  -0.07274   0.00000
+ REAL BETA MO COEFFICIENTS.
+                           1         2         3         4         5
+   1 1   N  1S         -1.00079  -0.19876   0.00000  -0.02648   0.00000
+   2        2S          0.00128   0.76494   0.00000   0.14715   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000  -0.52797   0.00000   0.00000
+   5        2PZ        -0.00195  -0.04939   0.00000  -0.96265   0.00000
+   6 2   H  1S          0.00462   0.23018  -0.46197  -0.07274   0.00000
+   7 3   H  1S          0.00462   0.23018   0.46197  -0.07274   0.00000
+ INITIAL GUESS ORBITAL SYMMETRIES.
+   ALPHA ORBITALS
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (B2) (A1)
+   BETA ORBITALS
+       OCCUPIED: (A1) (A1) (B2) (A1)
+       VIRTUAL:  (B1) (B2) (A1)
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 12}
+{\small
+\begin{verbatim}
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !       NH          1.015    -DE/DX =   -0.00006                       !
+ !       HNH       131.292    -DE/DX =    0.000012                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        4 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    7.5846617923 HARTREES
+ RAFFENETTI 2 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ UHF OPEN SHELL SCF.
+ ORBITAL SYMMETRIES.
+   ALPHA ORBITALS
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2)
+   BETA ORBITALS
+       OCCUPIED: (A1) (A1) (B2) (B1)
+       VIRTUAL:  (A1) (A1) (B2)
+  THE ELECTRONIC STATE IS 2-A1.
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -15.26364  -1.05077  -0.61200  -0.45160  -0.33075
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (B1)      (A1)
+     EIGENVALUES --   -15.23574  -0.93643  -0.57761  -0.27520   0.28110
+          ATOMIC SPIN DENSITIES.
+              1          2          3
+  1   N   1.030351  -0.020328  -0.020328
+  2   H  -0.020328   0.017559   0.007920
+  3   H  -0.020328   0.007920   0.017559
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 0.7624   TOTAL= 0.7624
+  FERMI CONTACT ANALYSIS (ATOMIC UNITS).
+              1
+  1   N   0.515487
+  2   H   0.009898
+  3   H   0.009898
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 13}
+{\small
+\begin{verbatim}
+SCF DONE:  E(RHF) =  -76.0235780622     A.U. AFTER   14 CYCLES
+            CONVG  =    0.1016d-07             -V/T =   2.002297
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2) (B2) (A1) (A1) (B1) (B2) (A1) (A2) (A1)
+                 (B1) (B2) (A1) (B2) (B1) (A2) (A1) (A1) (B2) (A1)
+  THE ELECTRONIC STATE IS 1-A1.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -20.55824  -1.34479  -0.71084  -0.56854  -0.49750
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 2.1591   TOTAL= 2.1591
+ RANGE OF M.O.'S USED FOR CORRELATION:   2  25
+ RHF INTEGRAL TRANSFORMATION:
+                                 5395 M.O.-INTEGRALS CREATED
+ NORM(A1)=  0.10246d+01
+ E2=       -0.19576446d+00        EUMP2=      -0.76219342518d+02
+ MOLLER-PLESSET THIRD ORDER PERTURBATION THEORY
+ **********************************************
+ E3=       -0.64696469d-02        EUMP3=      -0.76225812165d+02
+ VARIATIONAL ENERGIES WITH THE FIRST-ORDER WAVEFUNCTION:
+ E(VAR1)=  -0.76216222061d+02     E(CID,4)=   -0.76219291969d+02
+\end{verbatim}
+}
+\newpage
+\subsubsection{\sf Example 14}
+{\small
+\begin{verbatim}
+SCF DONE:  E(RHF) =  -76.0235780622     A.U. AFTER   14 CYCLES
+            CONVG  =    0.1016d-07             -V/T =   2.002297
+ RANGE OF M.O.'S USED FOR CORRELATION:   2  25
+ RHF INTEGRAL TRANSFORMATION:
+                                 5395 M.O.-INTEGRALS CREATED
+ NORM(A1)=  0.10246d+01
+ E2=       -0.19576446d+00        EUMP2=      -0.76219342518d+02
+ CONFIGURATION INTERACTION WITH DOUBLE SUBSTITUTIONS
+ ***************************************************
+ ITERATIONS= 30   CONVERGENCE= 0.200d-05
+ ITERATION STEP#  1
+ ******************
+ E3=       -0.64696469d-02        EUMP3=      -0.76225812165d+02
+ DE(CI)=   -0.19264400d+00        E(CI)=      -0.76216222061d+02
+ NORM(A)=   0.10237356d+01
+ SIZE-CONSISTENCY CORRECTION: 
+ S.C.C.=   -0.71077439d-02        E(CI,SIZE)= -0.76223329804d+02
+ ITERATION STEP#  2
+ ******************
+ DE(CI)=   -0.19599910d+00        E(CI)=      -0.76219577165d+02
+ NORM(A)=   0.10246551d+01
+ SIZE-CONSISTENCY CORRECTION: 
+ S.C.C.=   -0.75220564d-02        E(CI,SIZE)= -0.76227099221d+02
+ ITERATION STEP#  3
+ ******************
+  ....
+  ....
+ ITERATION STEP#  6
+ ******************
+ EXTRAPOLATION PERFORMED
+ DE(CI)=   -0.19629698d+00        E(CI)=      -0.76219875043d+02
+ NORM(A)=   0.10250212d+01
+ SIZE-CONSISTENCY CORRECTION: 
+ S.C.C.=   -0.76495816d-02        E(CI,SIZE)= -0.76227524625d+02
+ ITERATION STEP#  7
+ ******************
+ DE(CI)=   -0.19629722d+00        E(CI)=      -0.76219875282d+02
+ NORM(A)=   0.10250232d+01
+ SIZE-CONSISTENCY CORRECTION: 
+ S.C.C.=   -0.76502237d-02        E(CI,SIZE)= -0.76227525506d+02
+ ***************************************************************
+\end{verbatim}
+}
+\newpage
+\subsection{\sf Example 2}
+Here is an annotated copy of the output
+generated by Example 2 of   Section \ref{inex};
+perhaps the most common type of {\tt gnu80} run.
+The geometry of the water molecule is optimised using
+the (closed-shell) HF model and a simple STO-3G
+orbital basis; the geometry is constrained to remain at
+$C_{2v}$ throughout the optimisation
+by the form of the Molecule input section.
+
+This is typical output from a job which requests 
+{\bf OPT}imization of a Hartree-Fock
+structure.  The following points are of general interest:
+\begin{enumerate}
+\item  The command record is reproduced.
+\item  The detailed route through the links in the program is given.  This
+is a standard route generated from the command record.  For detailed
+interpretation of the route information, see \ref{app3b}.
+\item  The title input section is reproduced.
+\item  The charge, multiplicity and input Z-matrix are reproduced together
+with initial values of the parameters.  Any inconsistencies (e.g.
+incompatible multiplicity and electron number, parameter names not
+defined in Z-matrix, etc.) would be noted here and the run aborted.
+\item  The string GRADGRAD... delimit output from the Berny optimization
+program, link 103.  On the initialization pass through this link, a
+table giving the initial values of the variables to be optimized is
+printed.  Diagonal second derivatives of the energy with respect to
+the variables are needed by the optimization program initial values
+are estimated via an empirical procedure.
+\item  The initial Z-matrix is listed with the numerical values of all
+parameters substituted.  This is followed by a set of Cartesian
+coordinates generated from this information and a matrix of
+internuclear distance.  The last two of these are useful for debugging
+Z-matrix input.  Note that, by default, the run is aborted at this
+point if an interatomic distance of less than 0.5A is computed or
+if an invalid Z-matrix parameter (such as a negative length) is
+encountered.
+\item  The next part of the output refers to symmetry aspects of the molecule.
+The stoichiometry, framework group    and the corresponding number of
+degrees of freedom    are listed.  (Some fairly evident shorthand
+symbols such as SGV for $\sigma_v$ are used in the framework notation.) If
+the number of variables is equal to the number of degrees of freedom,
+the optimization is {\em full} within the symmetry constraints imposed by
+the framework group (implicit in the Z-matrix).  If the number of
+variables is less than the number of degrees of freedom, the optimization
+is {\em partial}.  After the framework group has been determined, axes are
+rotated to a standard orientation in which symmetry elements coincide
+with Cartesian elements.  (Full explanation of the standard orientation
+is in {\tt SUBROUTINE ORDOC} in link 202.)  This does not take place if the
+symmetry is so low that if leads to no useful gain in efficiency.  The
+new Cartesian coordinates are listed and then the number of symmetry
+operations actually used by the program is given. 
+({\tt gnu80} only makes use of twofold operations, so this number
+may be less than total number of symmetry operations.)
+\item  Quantum mechanical data such as basis sets, number of electrons and
+number and nature of two-electron integrals are printed next.  (See
+Section \ref{stor2e} for a description of integral formats.)  Note that the
+information following the basis set in parentheses is in error but it is
+only the {\em printing} which is in error!
+\item  The initial guess program prints the 
+symmetries of the orbitals occupied
+in the initial wave function.  If the orbital symmetry assignment fails,
+this part of the output will contain some question marks, but the job
+will proceed.  If the GUESS=PRINT command had been given, the full
+initial-guess wave function would have been printed here.
+\item The result of the SCF calculation (RHF in this example) is given
+next.
+A convergance failure would have been noted 
+had it occurred and would have been followed
+by abortion of the run.  If this occurs, the initial guess should be
+checked and the job rebsummitted with the SCFDM keyword command.  CONVG
+is the RMS difference between the density matrix elements in consecutive
+cycles of the classical SCF procedure.  -V/T is the virial ratio.
+\item The orbital symmetries of the wavefunction are then given and this is
+followed by the full function and the one-electron eigenvalues.  The
+latter give the Koopmans' approximation to the corresponding ionization
+potentials (in Hartrees).  In general only the first five virtual
+molecular orbitals are printed.  Note that the printed symmetry of the
+wave function is wrong if there are any degenerate occupied molecular
+orbitals.
+\item A Mulliken population analysis is next carried out; the dipole moment
+is also given.  All of this output uses the standard orientation.  If
+the optimization (OPT) command had not been used, the output would have
+ended here.  As the population analysis matrix is symmetric it is
+necessary to double the values of the off-diagonal elements to get
+an overlap population.
+\item The axes are next restored to the original set (as noted in the output)
+This is followed by a calculation of the Cartesian forces (in Hartrees/
+Bohr) and the corresponding derivatives with respect to the internal
+coordinates (lengths and angles used in the Z-matrix).  If the FORCE
+command had been used instead of OPT, the output would have ended here.
+\item The program then proceeds to the next step in the optimization.
+Note that all of the output from the optimization program is in atomic
+units.  Using the current second-derivative (Hessian) matrix and the
+calculated first derivative vector, projection is made to a new set of
+values for the variables. (NEW X).  In general, each step is composed
+of a linear search along the line connecting the current and previous
+points and a Newton-Raphson (quadratic) step.  Under certain conditions
+one of these searches may be omitted in which case an appropriate
+explanation is printed.
+\item There are four conditions which must be met before it is deemed that
+a stationary point has been located.  A table is printed showing the
+current status of each of the conditions.
+\item A new Hartree-Fock calculation is now initiated and carried through
+in the same way as before (except that the previous wave function is
+used for the new initial guess).  This leads to further optimization
+steps.
+\item The optimization is terminated when all four conditions are
+simultaneously met, as indicated by message OPTIMIZATION COMPLETED.
+(If the optimization procedure fails then resubmission with OPT=MS is
+recommended.)  A table of the values of the variables at the stationary
+point is then printed along with the final forces.  Note that the
+variable values are printed an Angstroms and degrees but that the
+derivatives are given in Hartree/Bohr or Hartree/radian.
+\item The final wave function and Mulliken analysis is printed.
+\end{enumerate}

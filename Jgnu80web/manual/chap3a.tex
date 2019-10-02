@@ -1,0 +1,952 @@
+\appendix
+\chapter{\sf List of links in {\tt gnu80}}
+\label{app3a}
+The following is a list of the {\bf Links} of {\tt gnu80}
+and a brief summary of their function.
+\begin{description}
+\item[MAIN] initialization, controls overlaying.
+\item[L001]  reads route, initializes disc files, fills error-function
+interpolation table.
+\item[L101]     Reads:
+\begin{enumerate}
+\item Title
+\item Z-matrix
+\item Variables (if any)
+\item Constants (if any)
+\end{enumerate}
+\item[L102]     controls ``Fletcher-Powell'' optimization.
+\item[L103]     controls ``Berny'' optimization.
+\item[L105]     controls ``Murtaugh-Sargent'' optimization.
+\item[L202]     calculates coordinates from Z-matrix and determines:
+\begin{enumerate}
+\item Stoichiometry
+\item Framework group
+\item Symmetry Information.
+\item Rotates molecule to standard (centre of charge) orientation.
+\end{enumerate}
+\item[L301]     Generates basis set information.
+\item[L302]     Computes overlap, kinetic, and potential integrals.
+\item[L303]     Computes x-, y- and z-dipole integrals.
+\item[L305]     Setup for pseudo-potential integrals; obselete, it is now a
+dummy and its removal is overdue.
+\item[L306]     Computes pseudo-potential integrals.
+\item[L310]     Primitive two-electron integral program (spdf). for testing
+purposes only.
+\item[L311]     sp two-electron integral program.
+\item[L314]     (sp)d two-electron integral program.
+\item[L401]     Generates initial guess at density matrix.
+\item[L501]     RHF closed shell SCF.
+\item[L502]     UHF open shell SCF.
+\item[L503]     Direct Minimization SCF (does RHF/UHF, real/complex).
+\item[L505]     Restricted open-shell SCF program.
+\item[L601]     Mulliken population analysis; Fermi contact analysis for open
+shell systems; computes dipole moment.
+\item[L602]     Provides output for interfacing with the {\bf RPAC}
+suite of programs for Random-Phase Approximation Calculations of molecular
+properties.
+\item[L701]     Calculates one-electron integral first derivatives.
+\item[L702]     Calculates two-electron integral first derivatives for sp
+functions.
+\item[L703]     Calculates two-electron integral first derivatives for spd
+functions.
+\item[L705]     Calculates pseudo-potential first derivative integrals for sp
+bases.
+\item[L716]     Converts forces to internal coordinate forces and communicates
+with optimization control programs.
+\item[L801]     Setup program for transformation of two-electron integrals;
+Generates molecular orbital coefficient matrix and eigenvalues
+removing the orbitals which are not used in the correlation
+study.
+\item[L802]     RHF closed-shell transformation of two-electron integrals.
+\item[L803]     UHF open-shell transformation of two-electron integrals.
+\item[L901]     Computes anti-symmetrized two-electron integrals; computes MP2
+energy and Moller-Plesset first-order wave-function.
+\item[L909]     Initialization for CID and higher-order energy perturbation
+calculations.
+\item[L910-L912] Carry out higher-order perturbation calculations, or one CID
+iteration.
+\item[L913]     Calculates various energies. in the case of a CID calculation,
+L913 tests for convergence, and if necessary returns to L910
+for the start of the next iteration.
+\item[L9999]    Terminates the run normally.
+\end{description}
+\chapter{\sf Link Descriptions and Options}
+\label{app3b}
+\section{\sf OVERLAY 1} 
+Gaussian system input and optimization control
+In the {\tt gnu80} system, OVERLAY 1 contains those programs which
+read in geometry and optimization input and those which control
+optimization calculations. Currently, the following Links are
+implemented:
+\begin{description}
+\item[Link 101] Basic input. this Link reads in the title, Z-matrix,
+variables, and constants sections of the input.
+\item[Link 102] Fletcher-Powell optimization program. this Link implements
+the algorithm of Fletcher and Powell as modified by
+Binkley and Pople.  It, along with the interface code
+present in other Links, is capable of driving geometry
+optimizations.  Derivative information is gained by
+numerical differentiation of the energy with respect to
+the geometrical variables.
+\item[Link 103] Gradient optimization program. This program is used in
+conjunction with those Links which produce analytical
+energy derivatives to perform geometry optimizations.
+\item[Link 105] Murtaugh-Sargent optimization program.  This program also
+uses analytically determined first derivatives to optimize
+geometry with respect to energy; in general, it
+is not as efficient as Link 103, it has a more stable
+algorithm and is less prone to aimless wandering on the
+potential surface.
+Note that most of the options for Link 103 are only examined in the
+first call to the Link in any given run.
+\end{description}
+\subsubsection{\sf OPTIONS for OVERLAY 1}
+\begin{description}
+\item[IOP(5)] L103  mode of optimization  \\
+0  find local minimum \\
+1  find a saddle point \\ 
+N find a stationary point on the energy surface with N negative
+eigenvalues of the 2nd derivative matrix
+\item[IOP(6)] L103 and L105  maximum number of steps {\bf (OPTCYC=N)} \\
+0  {\tt NSTEP = MIN(20,NVAR+10)} \\
+N {\tt NSTEP=N}
+\item[IOP(7)] L103 and L105  convergence on the first derivative
+and estimated displacement for the optimization:  \\
+(RMS first derivative) $<$ {\tt CONFV}, \\
+(RMS estimated displacement) $<$ {\tt CONVX=4*CONFV} \\
+0  {\tt CONFV = 0.0003} Hartree/bohr or radian \\
+N {\tt CONFV = 0.001 / N}
+\item[IOP(8)] L103  maximum step size allowed during optimization \\
+0  {\tt DXMAXT = 0.2} bohr or radian \\
+N {\tt DMAXT = 0.01 * N}
+\item[IOP(10)] L103  input of initial second derivative matrix
+all values must be in atomic units (Hartree, bohr, and radians). \\
+0  NO \\
+1 {\tt READ ((FC(I,J),J=1,I),I=1,NVAR)}  {\tt (8F10.6)} \\
+2  {\tt READ I,J, FC(I,J)}      {\tt (5I3,F20.0)} end with a blank record. \\
+3  read from guess file \\
+\item[IOP(12)] L103  optimization control parameters \\
+0  use default values \\
+1  read in new values for all parameters (see {\tt INITBS}) \\
+\item[IOP(14)] L103  minimum RMS force for which a linear search
+will be attempted  \\
+0  {\tt FSWTCH = 0.01} Hartrees/bohr or /radian \\
+N {\tt FSWTCH = 0.001 * N}
+\item[IOP(15)] L103  abort if derivatives too large \\
+This has been disabled due to the fact taht large
+detivatives do genuinely appear in molecules of high symmetry
+(when one variable may change much geometry) and molecules containing
+heavy atoms. The Original usage is given below: \\
+0  {\tt FMAXT = 1.0} Hartree / bohr or radian \\
+N {\tt FMAXT = 0.1 * N}
+\item[IOP(16)] L103  maximum allowable magnitude of the eigenvalues of the
+second derivative matrix. If the limit is exceeded, the size of
+the eigenvalue is reduce to the maximum, and processing
+continues. \\
+0  {\tt EIGMAX = 25.0} Hartree / bohr**2 or radian**2 \\
+N {\tt EIGMAX = 0.1 * N}
+\item[IOP(17)] L103 minimum allowable magnitude of the eigenvalues
+of the second derivative matrix. similar to IOP(16)  \\
+0  {\tt EIGMIN = 0.0001} \\
+N {\tt EIGMIN = 1.0 / N}
+\item[IOP(18)] L103  star only option {\bf (OPT=STARONLY)}  \\
+0  proceed normally \\
+1  second derivatives will be computed as directed on the variable \\
+definition records. NO optimization will occur. 
+\item[IOP(19)] L103  skip linear search.  \\
+0  NO \\
+1  YES. \\
+\item[IOP(20)] L101  input units {\bf (UNITS=)}  \\
+0  angstroms degrees \\
+1  bohrs  degrees \\
+2  angstroms radians \\
+3  bohrs  radians \\
+\item[IOP(29)] L101  Specification of nuclear centers  \\
+Note that this option is usually set in conjuntion with IOP(29)
+in Link 202.  \\
+0  by Z-matrix \\
+1  by direct coordinate input \\
+\item[IOP(30)] L101  Nuclear Charges \\
+0  nuclear charge equals atomic number \\
+1  read in center name or number {\tt I}, read in charge {\tt CHG} (floating 
+point) nuclear charge for {\tt I}-th nucleus is replaced by {\tt CHG}.
+recordset must be ended by blank record.
+\item[IOP(32)] L103  writing of second derivatives to the punch unit (GUESS
+file) at the conclusion of the optimization.  \\
+0  NO \\
+1  YES \\
+\item[IOP(33)] L101 L102 L103  debug print  \\
+0  off \\
+1  on \\
+\item[IOP(34)] L101 L102 L103  debug + dump print  \\
+0  off \\
+1  on \\
+\end{description}
+\section{\sf OVERLAY 2 (Link 202 only)}
+Procedure to determine the coordinates, given the Z-matrix, and to
+analyze the molecular symmetry, if requested.
+This Link receives the Z-matrix or coordinates from the RW-files, and
+determines the framework group of the molecule and produces the
+standard (3 by 3) transformation matrices. When input consists of a
+Z-matrix, routine {\tt ZTOC} is called upon to obtain the coordinates.
+\subsection{\sf OPTIONS for OVERLAY 2}
+\begin{description}
+\item[IOP(9)]  printing of distance matrix. \\
+0  print distance matrix (only if there are more than 
+two atoms in the molecule). \\
+1  do not print the distance matrix. \\
+\item[IOP(10)]  Tetrahedral angle fixing.  \\
+0  angles within 0.001 degree of 109.471 will be set to
+{\tt acos(-1/3).} \\
+1  do not test for such angles. \\
+\item[IOP(11)]  printing of Z-matrix and resultant coordinates.  \\
+0  print. \\
+1  do not print. \\
+\item[IOP(12)]  Crowding abort control  \\
+0  if two atoms are less than 0.5 angstroms apart, abort the run. \\
+1  do not abort the run for small interatomic distances. \\
+\item[IOP(15)]  Symmetry control.  \\
+0  leave symmetry in whatever state it is presently in. \\
+1  unconditionally turn symmetry off. Note that {\tt SYMM} is still \\
+called, and will determine the framework group.  However, the
+molecule is not oriented.
+\item[IOP(29)]  direct coordinate input
+Note that this option is usually set in conjunction with
+IOP(29) in L101.  \\
+0  coordinates were input via the Z-matrix. \\
+1  coordinates were input directly. \\
+\end{description}
+\section{\sf OVERLAY 3}
+Gaussian system integral package.  \\
+Overlay 3 consists of the necessary programs to evaluate the one-
+and two-electron integrals required for an SCF calculation. \\
+This
+package consists of the following Links:
+\begin{description}
+\item[L301]   Constructs basis set, either through internally stored data or
+through input and performs other initialization chores for the
+integral programs.
+\item[L302]   Calculates the Overlap {\bf (S)}, 
+Kinetic Energy  {\bf (T)} and Core-Hamiltonian {\bf (H)}
+one-electron integrals.
+\item[L303]   Calculates the x-, y- and z-dipole integrals (one-electron).
+\item[L305]   Formula generator for the pseudo-potential program. OBSELETE
+\item[L306]   Evaluates one-electron pseudo-potential integrals.
+\item[L310]   Evaluates s-, p-, d- and f-type two-electron integrals by use of
+general formula; used only for testing.
+\item[L311]   Evaluates two-electron integrals for those shell combinations
+that contain s- and p-functions.
+\item[L314]   Evaluates s-, p-, d- and f-type two-electron integrals using the
+method of Rys polynomials.
+\end{description}
+Note that there is some overlap in functionality between the
+two-electron integral programs listed above. In standard calculations,
+one would normally use Links 301, 302, 303, 311 and 314 to obtain all
+the necessary integrals for basis functions up (and including)
+d-functions. If d-functions are not present in the route, L314 can be
+omitted.
+
+\subsection{\sf OPTIONS for OVERLAY 3}
+\begin{description}
+\item[IOP(5)]  Type of basis set  \\
+0  Minimal STO-2G to STO-6G  \\
+1  Extended 4-31G,5-31G,6-31G \\
+2  Minimal STO-NG (valence functions only) \\
+3  Extended LP-N1G (valence basis for coreless Hartree-Fock 
+pseudopotentials)  \\
+\ \ \ The Los Alamos Split Valence Basis is equivalent to
+LP-31G.
+4  Extended 6-311G (UMP2 frozen core optimized) basis. \\
+* and ** effected by IOP(21) as usual.  \\
+use IOP(8) to select 5d/6d.  \\
+5  Split Valence N-21G (or NN-21G) basis for first or 
+second row atoms. (various implementations may omit
+second row atoms.) see IOP(6) for determination of the
+number of Gaussians in the inner shell.  \\
+7  GENERAL;  see routine {\tt GBASIS} for input instructions. \\
+\item[IOP(6)]  Number of Gaussian functions \\
+N STO-NG, N-31G, LP-N1G, STO-NG-valence, N-21G.  \\
+Note: if IOP(5)=3 and IOP(6)=8; LP-31G for Li, Be, B, Na, Mg, Al
+LP-41G for other row one and two
+atoms.  \\
+Default Options:  \\
+  IOP(6)=0  \\
+if IOP(5)=0 N=3 STO-3G  \\
+if IOP(5)=1 N=4 4-31G  \\
+if IOP(5)=2 N=3 STO-3G (valence)  \\
+if IOP(5)=3 N=3  \\
+if IOP(5)=5 N=3  \\
+When IOP(5)=7 (general bases), this option is used to control where the
+basis is taken from:  \\
+0  read general basis from the input stream. \\
+1  read the general basis from the rw-files and merge with 
+the coordinates in blank common to produce the current
+basis.  \\
+This option is useful when doing general basis geometry optimizations.
+\item[IOP(7)]  Polarization type.  \\
+0  none. \\
+1  Add a set of second-order Gaussians {\bf (6D)} to first row n-31G 
+atoms (N-31G* basis),
+or, \\
+if IOP(5)=0, add a set of d-functions {\bf (5D)} to second
+row STO-NG atoms (STO-NG* basis).
+or, \\
+if IOP(5)=3, add a set of 5d to rows 1 and 2  \\
+2  Does the same as IOP(7)=1, but additionally adds a set 
+of p-functions to N-31G hydrogen atoms (N-31G** basis). \\
+\item[IOP(8)]  Selection of second-order Gaussians/true d-functions. \\
+0  selection determined by the basis: \\
+N-31G*      6d  \\
+N-31G**     6d  \\
+N-21G*      5d  \\
+STO-NG*     5d  \\
+LP-N1G*     5d  \\
+LP-N1G**    5d  \\
+General Basis  5d.  \\
+1  use 5d throughout.  ({\bf 5d}) \\
+2  use 6d throughout.  ({\bf 6d}) \\
+\item[IOP(9)]  selection of third-order/true f-functions. \\
+0  reserved for when f-functions are part of standard bases. \\
+1  use 7f throughout. \\
+2  use 10f throughout. \\
+Note f-functions only partly implemented.
+\item[IOP(10)]  Modification of internally stored bases.  \\
+0  none. \\
+1  Read in replacement scale-factors. Standard scale-factors
+are listed below.  \\
+2  Read in replacement polarization exponents for N-31G*, 
+N-31G** and STO-NG* bases. standard values are listed
+after the standard scale-factors.  \\
+3  combination of 1 and 2 above (ie. read in both scale-factors 
+and polarization exponents).  \\
+For general basis runs, this option has the following
+definitions:  \\
+0  Not a scale-factor run. \\
+1  Continuation entry for scale-factor optimization. \\
+2  Initialization entry for a scale-factor optimization run. \\
+See routine {\tt GBASIS} for further details on scale-factor
+optimizations.
+\item[IOP(11)]  Control of two-electron integral storage format.  \\
+0  Standard integral format is used. \\
+1  Raffenetti 1 integral format is used. Can only be used with the 
+closed shell SCF.  \\
+2  Raffenetti 2 integral format. Suitable for use with the open 
+shell (UHF) SCF.  \\
+3  Raffenetti 3 integral format. Suitable for use with open shell 
+RHF SCF and the post-SCF procedures.  \\
+\item[IOP(16)]  Check for pseudopotential run. See IOP(17) through
+IOP(19) for more details. \\
+0  NO \\
+1  YES \\
+NOTE IOP(17)-IOP(19) apply only if IOP(16)=1
+\item[IOP(17)]  Specification of pseudopotentials  \\
+0  Use internally stored 'Coreless Hartree-Fock' \\
+7  Read in from input stream (see {\tt PINPUT} for details) \\
+\item[IOP(18)]  Printing of pseudopotentials  \\
+0  Print only when these are read \\
+1  Print \\
+2  Do not print \\
+\item[IOP(19)]  Specification of substitution potential type  \\
+0  Do not use any substitution potentials \\
+N Replace the standard potential of this run (eg.CHF),
+with a substitution potential of type N wherever such
+a substitution potential exists.  \\
+\item[IOP(23)]  Definition of two-electron integral scale factor.
+(for a discussion of how two-electron integrals are
+stored, see the program documentation).  \\
+0  default, 10**8. \\
+N (10**8)*(10**N).
+\item[IOP(24)]  Printing of Gaussian function table.  \\
+0  Table is printed only if non-standard features are used. \\
+1  Print table. \\
+2  Do not print table. \\
+10 Print out the basis in a form suitable for GEN input \\
+\item[IOP(25)]  Number of last two-electron integral Link.
+\item[IOP(26)]  Test option {\bf (TEST)}  \\
+0  proceed as normal \\
+1  print Gaussian function table and abort job after L301 \\
+\item[IOP(27)]  Handling of small two-electron integrals.  \\
+0  Discard integrals with magnitude less than 10**-6. \\
+N Discard integrals with magnitude less than 10**-N.  \\
+Beware of underflow when N is made large.
+\item[IOP(28)]  Polarization option  \\
+0  NO special features invoked. \\
+10 Compute all two-electron integrals in L310 \\
+Note: L310 should be included in the route by the use of
+the {\bf NONSTD} command.  \\
+Note: option 25 should be set to 10.  \\
+14 Compute all two-electron integrals in L314. \\
+\item[IOP(29)]  Rotation of coordinates.  \\
+0  Coordinates are not rotated. \\
+1  Read 1 record in {\tt 3E20.10} format giving the three Euler 
+angles $\phi,$ $\theta$ and $\chi$.  \\
+\item[IOP(30)]  Control of two-electron integral symmetry.  \\
+0  Two-electron integral symmetry is turned off. \\
+1  Two-electron integral symmetry is turned on. Note, 
+however, the {\tt SUBROUTINE SET2E} will interrogate {\tt ILSW} to
+see if the symmetry rw-files exist. If they don't, symmetry
+has been turned off elsewhere, and {\tt SET2E} will also
+turn it off here.
+\item[IOP(32)]  Punching of {\tt COMMON/B/} in compressed form.  \\
+0  NO punching. \\
+1  punch {\tt COMMON/B/} in compressed form. The data is written to 
+the GUESS file for possible use by the initial guess
+in a subsequent job.  \\
+\item[IOP(33)]  Integral package printing.  \\
+0  NO integrals are printed. \\
+1  Print one-electron integrals. \\
+3  Print two-electron integrals in standard format. \\
+4  Print two-electron integrals in debug format. \\
+5  Combination of 1 and 3. \\
+6  Combination of 1 and 4. \\
+\item[IOP(34)]  Dump option.  \\
+0  NO dump. \\
+1  Control words printed (as usual). \\
+2  Additionally, {\tt COMMON/B/} is dumped at the beginning 
+of each integral Link.  \\
+3  Additionally, the integrals are printed (standard format). \\
+\end{description}
+\section{\sf OVERLAY 4 (Link 401 only)}
+This is a program which produces an initial guess to the solution
+of the SCF equations.  This guess is in the form of molecular orbital
+coefficients and/or density matrices which are stored on the
+appropriate read-write files.  The steepest descents procedure (Link
+503) requires MO coefficients as an initial guess, while the classical 
+SCF procedures (Links 501 and 502) require density matrices.  Since a
+density matrix can be produced from the MO coefficients, but not vice
+versa, the former is a more constraining requirement.
+There are several ways in which this guess may be produced.  One
+easy way is to diagonalize the core hamiltonian.  In general, this is
+not a very good guess, but it is applicable to any basis set, and is
+available as an option.
+
+Another type of guess is called the H\"{u}ckel guess, which is modeled
+after extended Huckel MO theory.  Essentially, the initial guess is
+formed from internally stored constants (for more details see
+{\tt SUBROUTINE  HUCKEL}).  These constants were determined from studies on
+internal minimal and split valence basis sets (STO-3G, 4-31G, 6-31G),
+so the use of this type of guess with bases other than these is not
+recommended.
+
+This Huckel guess can be applied to other bases in the following
+way:  the guess MO coefficients are formed from internal data as if
+there were an STO-3G basis set on the molecule.  The guess MO vectors
+in the desired basis are then formed by choosing the vectors which give
+the best least-squares fit to those described in the STO-3G basis.
+Since this will usually produce fewer than N basis vectors,the MO
+coefficient matrix must be completed with orthonormal vectors of the
+proper symmetry if the full matrix is required (Link 503).  This
+procedure is called a projected H\"{u}ckel guess, and is applicable to any
+basis set.
+
+A still better type of guess, usually, is to read the coefficient
+or density matrix from the input stream.  If the matrix read in is for a basis
+other than the one used in the current run, the matrix can be projected
+(by a least-squares fit) into the desired basis.  Since the projected
+MO vectors can be normalized and orthogonalized, and this is not
+possible for a projected density matrix, projection of MO coefficients
+usually produces a better guess than projection of the density matrix.
+\subsection{\sf OPTIONS for OVERLAY 4}
+\begin{description}
+\item[IOP(5)]  Type of guess.  \\
+0  Default.  This gives a Huckel guess for minimal bases, or 
+a projected huckel guess otherwise.  \\
+1  Read guess from GUESS file. \\
+2  Guess from core Hamiltonian. \\
+3  Blocked Huckel guess. \\
+4  Projected Huckel guess. \\
+5  Renormalize and orthogonalize the coefficients which are 
+currently on the read-write files. \\
+\item[IOP(6)]  Forced projection when guess is read in  \\
+0  Do not force projection. \\
+1  Force projected guess, even when bases are identical. \\
+2  Suppress projection. \\
+\item[IOP(7)]  SCF constraints.  \\
+0  use {\tt ILSW} to determine. \\
+1  real RHF. \\
+2  real UHF. \\
+3  complex RHF. \\
+4  complex UHF. \\
+5  complex, but use {\tt ILSW} to decide whether RHF/UHF. \\
+\item[IOP(8)]  Alteration of configuration.  \\
+0  Do not alter configuration. \\
+1  Read in pairs of integers (2I3) indicating which pairs of MOs 
+are to be interchanged.  Pairs are read until a blank record is
+encountered.  \\
+Note:  \\
+If the configuration is altered on an open shell system, two sets
+of data as described above will be expected first for $\alpha$,
+second for $\beta$.
+\item[IOP(10)]  Orbitals to mix with complex.  \\
+0  Mix the HOMO with the LUMO. \\
+1  Read from records (2I3) pairs of integers indicating which pairs of 
+orbitals are to be mixed.  Reading is terminated by a blank record.  \\
+Note:  \\
+The same considerations for open shell systems which
+applied in IOP(8) apply here, also.
+\item[IOP(12)]  Off-diagonal scale factor for H\"{u}ckel guess.  \\
+0  Default.  (K/2=.875) \\
+N (K/2=N*.4375)
+\item[IOP(16)]  Completion of coefficient matrix after projection.  \\
+0  Complete the coefficient matrix after projection. \\
+1  Do not complete. \\
+\item[IOP(22)]  Type of basis set.  \\
+0  Use {\tt ILSW} to determine. \\
+1  Minimal basis. \\
+2  Extended basis. \\
+7  General basis. \\
+\item[IOP(23)]  five/six d, seven/ten f.  \\
+0  use {\tt ILSW} to determine. \\
+1  five d, seven f. \\
+2  six d, seven f. \\
+3  five d, ten f. \\
+4  six d, ten f. \\
+\item[IOP(24)]  Polarization functions on hydrogen.  \\
+0  Use {\tt ILSW} to determine. \\
+1  NO polarization functions on hydrogen. \\
+2  A set of p functions on each hydrogen. \\
+\item[IOP(25)]  Polarization functions on first row atoms.  \\
+0  Use {\tt ILSW} to determine. \\
+1  NO polarization functions. \\
+2  A set of d functions on each first row atom. \\
+\item[IOP(26)]  Polarization functions on second row atoms.  \\
+0  Use {\tt ILSW} to determine. \\
+1  NO polarization functions. \\
+2  A set of d functions on second row atoms. \\
+Note that whenever {\tt ILSW} is over-ridden, it is also over-written.
+\item[IOP(33)]  Printing of guess.  \\
+0  NO printing. \\
+1  Print the MO coefficients. \\
+2  Print everything. \\
+\item[IOP(34)]  Dump option.
+0  NO dump. \\
+1  Turn on all possible printing. \\
+\end{description}
+\section{\sf OVERLAY 5}
+\begin{description}
+\item[Link 501] Perform Roothaan SCF procedure using the method
+of repeated diagonalizations.
+\item[Link 502]  solution of the Pople-Nesbet equations by the method of
+repeated diagonalizations.  J. Chem. Phys. 22, 571 (1954)
+\item[Link 505]  Solves the Binkley, Pople and Dobosh equations for a
+spin-restricted open shell system. The wavefunction
+produced is not compatible with the {\tt gnu80} post-SCF
+procedures (CI, MP2, MP3).
+\end{description}
+% UP TO HERE IN CLEAN-UP
+\subsection{\sf OPTIONS for OVERLAY 5 (501,502,505 but not 503)}
+\begin{description}
+\item[IOP(5)] L501,L502  location of input density matrix.  \\
+0  density matrix is taken from the rw-files. \\
+1  the density matrix is read in via routine {\tt BINRD}. \\
+\item[IOP(6)] L501,L502 requested convergence on the density matrix.  \\
+0  iterations are performed until the RMS convergence on the density 
+matrix is $<$ 10**(-5) or {\tt MAXCYC} is reached.  \\
+N (1 $<$ N $<$ 8) requested convergence is 10**(-N).  \\
+\item[IOP(6)] L505   convergence on the density matrix.  \\
+0  5.0D-7 (Note that this is less than in the closed shell RHF 
+program because here we are converging on three matrices.  \\
+N 1 $<$ N $<$ 8 final convergence=10**(-2*N).  \\
+\item[IOP(7)] L501,L502  maximum number of SCF iterations. 
+{\bf (SCFCYC= )}  \\
+0  up to 32 iterations will be performed. \\
+N up to N iterations.  \\
+\item[IOP(7)] L505  maximum number of SCF cycles.  \\
+0  20 cycles. (Note that each cycle involves the formation of three 
+Fock matrices;  appropriate time should be allowed.  \\
+N 1 $<$ N $<$ 7 number of cycles is 2**(IOP(7)-1).  a value of
+one will permit only a single cycle.  \\
+7  {\tt MAXCYC}=64*IOP(22)+8*IOP(23)+IOP(24). \\
+\item[IOP(8)] L501,L502  energy convergence.  \\
+0  convergence on the density matrix. 
+see option 6 for details.  \\
+N (0 $<$ N $<$ 7)  the SCF is assumed to have converged when the
+change in the energy is .le. 10**(-3-N).  \\
+7  input desired value via {\tt INCRD}, see below. \\
+Note that if this option is set, the density matrix criterion is not
+used at all.
+\item[IOP(11)] L501,L502  extrapolation control.  \\
+0  both three-point and four-point extrapolation are performed when 
+applicable.  \\
+1  three-point extrapolation is inhibited, but the program will 
+still perform four-point extrapolation when possible.  \\
+2  both three-point and four-point extrapolation schemes are 'locked 
+out' (ie. disabled).  \\
+\item[IOP(12)] L501,L502  entry mode.  \\
+0  normal entry mode, regular SCF is performed. \\
+1  control is passed immediately to the punch/print code (IOP(32)). 
+this is useful at the termination of an optimization run.  \\
+\item[IOP(13)] L501,L502,L505  action on convergence failure.  \\
+0  the run is terminated in error mode (via {\tt LNK1E}) if the SCF fails 
+to converge.  \\
+1  the run is allowed to continue, but the convergence failure bit 
+in {\tt ILSW} is set.  \\
+\item[IOP(14)] L501  UHF test option.  \\
+0  no. \\
+1  YES, turn the current run into a UHF run at the end of this Link. 
+\item[IOP(14)] L502 control of annihilation of spin contaminants.  \\
+0  calculation is performed (provided of course that enough space 
+exists in the rw-files).  \\
+1  calculation is bypassed. \\
+2  calculation is performed, contingent on space, and the system 
+rw-files for the appropriate density matrices are updated (useful
+if one wants a population analysis).  \\
+\item[IOP(16)] L505  control of use of convergence routine.  \\
+0  use convergence routine. \\
+1  lock-out convergence routine. \\
+\item[IOP(32)] L501,L505  punch (via {\tt BINWT}) option. {\bf Obselete}  \\
+0  NO punching is performed. \\
+1  the molecular orbital coefficients are written to the guess file 
+at the end of the job.  These may provided as an initial guess to
+a subsequent job (see Link 401).  \\
+2  the MO coefficients and the density matrix are punched at the end 
+of the SCF.  \\
+3  the MO coefficients and the density matrix are punched at the end 
+of each iteration of the SCF.  \\
+\item[IOP(32)] L502 whether to save the MO coefficients or density matrices
+on the guess file.  \\
+0  don't save. \\
+1  save final MO coefficients. \\
+2  save final density matrices. \\
+3  save both. \\
+4  save both each cycle of the SCF. \\
+\item[IOP(33)] L501,L502,L505 print option.  \\
+0  only summary results are printed (with possible control from the 
+'no-print' option).  \\
+1  the eigenvalues and the MO coefficients are printed at the end of 
+the SCF.  \\
+2  same as IOP(33)=1, but additionally the density matrix is 
+printed.  \\
+3  same as IOP(33)=2, but at the end of each iteration. \\
+4  same as IOP(33)=3, but all matrix transactions are printed \\
+(BEWARE: much output even on small molecules.)
+\item[IOP(34)] L501,L502,L505  dump option.  \\
+Standard system defaults apply here.  \\
+Input via routine incrd: (L501,L502)  \\
+If IOP(8) = 7 or IOP(6)=8, program will read one record in
+free-field format to obtain the user supplied values for density matrix
+convergence and energy convergence.  \\
+This one record has two fields:  \\
+Field one: floating point  density matrix convergence criterion  \\
+Field two: floating point  energy convergence criterion.  \\
+The appropriate field is only used if the associated option
+is set to 7.  \\
+\end{description}
+\section{\sf Link 503  SCFDM}
+Solution of the Pople-Nesbet equations by means of a direct
+minimization method involving a sequence of univariate searches.  
+\subsection{\sf OPTIONS for Link 503}
+\begin{description}
+\item[IOP(6)]  convergence on density matrix  \\
+0  5.*10**(-5) \\
+N 10**(-N)  \\
+\item[IOP(7)]  maximum number of univariate searches  \\
+0  32 \\
+N N cycles.  \\
+\item[IOP(8)]  selection of the procedure of direct minimization  \\
+0  steepest descent with search parameters default \\
+1  steepest descent with search parameters read (see below) \\
+2  classical SCF (Roothaan's method of repeated diagonalization \\
+4  conjugate gradients with search parameters default \\
+5  conjugate gradients with search parameters read (see below) 
+the search parameters are: {\tt MAX}: number of search points (I1)
+{\tt MIN}: number of search points (I1)
+initial stepsize, {\tt TAU} (G18.5)
+scaling factor for subsequent {\tt TAU} (G20.5) and
+{\tt Q} (G20.5)  \\
+\item[IOP(9)]  switch to classical SCF after density matrix has
+achieved a certain convergency  \\
+0  NO \\
+1  YES, criterion default: 10(**-3) \\
+2  YES, criterion read in (format G16.10) \\
+\item[IOP(11)]  apply extrapolation procedures for classical SCF
+0  four-point only \\
+1  four-point only \\
+2  none \\
+\item[IOP(12)]  null entry for final saving of data.  \\
+0  normal entry. \\
+1  null entry (zero cycles). this is for saving 
+final MO coefs in optimizations. see IOP(32).  \\
+\item[IOP(14)]  reordering of the orbitals (maintaining continuity
+of the wavefunction along the search path)  \\
+0  on: Bessel criterion \\
+1  on: stronger individual-overlap criterion \\
+2  off \\
+\item[IOP(15)]  controls the auto-adjustment of {\tt TAU} in {\tt INTOPN}  \\
+0  done \\
+1  {\tt TAU} is kept fixed \\
+\item[IOP(16)]  inhibit performance of minimization of alternate
+wavefunction provided by second order procedures  \\
+0  NO \\
+1  YES \\
+\item[IOP(17)]  condition the off-diagonal terms of the MO-Fock
+matrix:  \\
+-set to zero if {\tt GABS(F(I,J)).LE.FUZZY}  \\
+-delete coupling terms between almost degenerate  \\
+{\tt (DELTA E .LE. DEGEN)} MO vectors  \\
+0  {\tt FUZZY}=1.d-10, {\tt DEGEN}=2.d-5 \\
+1  fuzzy and degen read in (2d20.14) \\
+\item[IOP(18)]  cutoff criteria in symmetry determination of MOs.  \\
+-symmetry is determined if largest off-diagonal MO  \\
+Fock-matrix element {\tt GABS(F(I,J)).GE.STHRS}  \\
+-elements {\tt GABS(F(I,J)).LE.L8AN} are considered to be zero  \\
+0  {\tt STHRS}=1.d-4, {\tt SPAN}=5.d-7 \\
+1  {\tt STHRS} and {\tt SPAN} read in (2d20.14) \\
+\item[IOP(19)]  print {\tt F(1),T}. (read one record with {\tt START},
+{\tt END} in 2i2)  \\
+0  NO \\
+1  YES \\
+\item[IOP(20)]  max-time exit (in order to dump for restart. see
+DOUBAR)  \\
+0  NO \\
+1  YES \\
+to obtain a max-time dump, proceed as follows:
+set this option to 1,
+the next Link to be performed should be L901 ({\tt DOUBAR}),
+set IOP(15) there to 6.  \\
+Note: set IOP(14) on the integral route record (write integrals on
+tape). of course, tape 'c' has to be assigned  \\
+To restart from such a dump:
+the Link preceeding SCF should be {\tt DOUBAR}.
+set the following options there: IOP(15)=7, IOP(19)=1
+after that blank common, the integrals and the rwf are loaded
+\item[IOP(21)]  action if {\tt OTEST} detects problems:  \\
+0  abort run via {\tt LNK1E}. \\
+1  continue run. \\
+\item[IOP(31)]  override print-save option  \\
+0  NO (use ILSW) \\
+1  force print-save on \\
+2  force print-save off \\
+\item[IOP(32)]  save the MO coefficients and/or the density
+matrix on the guess file.  \\
+0  none \\
+1  MO coefficients only \\
+2  density matrix only \\
+3  both \\
+\item[IOP(33)]  printing  \\
+0  NO printing \\
+1  print MO coefficients at end \\
+2  print everything at end \\
+3  print everything each cycle ... and at end \\
+\end{description}
+\section{\sf OVERLAY 6 (Link 601 only)}
+This program performs a Mulliken population analysis for 
+a computed wave
+function.
+\subsection{\sf OPTIONS for OVERLAY 6}
+\begin{description}
+\item[IOP(5)]  open or closed shell.  \\
+0  use {\tt ILSW} to determine. \\
+1  forced open shell. \\
+2  forced closed shell. \\
+The remaining options are print/no-print options. if the
+value of the option is zero, the default value (given below) is
+assumed. if the option is set to 1, the information is printed,
+and if it is 2, the printing is suppressed.  \\
+0  default. \\
+1  print. \\
+2  do not print. \\
+\item[IOP(6)]  distance matrix. default: no-print.
+\item[IOP(7)]  molecular orbital coefficients. default: print.
+\item[IOP(8)]  density matrix. default: no-print.
+\item[IOP(9)]  full population analysis. default: print.
+\item[IOP(10)]  gross orbital charges. default: print.
+\item[IOP(11)]  gross orbital type charges. default: no-print.
+\item[IOP(12)]  condensed to atoms. default: print.
+\end{description}
+\section{\sf OVERLAY 7}
+OVERLAY 7 is concerned with calculation of first and second
+derivatives of the energy with respect to nuclear coordinates.
+\begin{description}
+\item[Link 701] calculates and uses one-electron integral derivatives
+to get first energy derivatives.
+\item[Link 702] calculates and uses two-electron integral (sp only)
+derivatives to get first energy derivatives.
+\item[Link 703] calculates and uses two-electron integral (spd)
+derivatives to get first energy derivatives.
+\item[Link 705] calculates and uses one-electron pseudopotential
+integrals.
+\item[Link 716] completes evaluation of energy derivatives and
+transforms results to internal coordinates.
+\end{description}
+\subsection{\sf OPTIONS for Link 701}
+\begin{description}
+\item[IOP(33)]  print option.  \\
+0  NO printing. \\
+1  print atomic derivative contributions at end. \\
+\item[IOP(34)]  dump option.  \\
+0  NO dumping. \\
+1  usual system stuff. \\
+2  dump derivative contributions from within shell loops. \\
+\end{description}
+\subsection{\sf OPTIONS for Link 702}
+\begin{description}
+\item[IOP(18)]  establish critical cut-offs within shell loops.  \\
+0  use standard values. \\
+N {\tt VTOL}=10**(-IOP(18)-3) \\
+Note: this is a 'use at own risk' option, and hence is not documented
+fully. briefly, setting this option may speed things up, but it
+can also sometimes give unpredictable results.  \\
+\item[IOP(27)]  file initialization control.  \\
+1  read in previous derivative contributions 
+from file {\tt IRWFX} before computing anything.  \\
+\item[IOP(28)]  skip option to defer integral evaluation  
+to L703.  \\
+0  compute as normal. \\
+1  do all gradient integrals in L703. \\
+\item[IOP(34)]  dump option.
+0  NO dumping. \\
+1  usual system stuff. \\
+2  dump derivative contributions from within shell loops. \\
+\end{description}
+\subsection{\sf OPTIONS for Link 703}
+\begin{description}
+\item[IOP(27)]  file initialization control. \\
+1  the contributions computed in dphnix are added 
+to previous information contained in read/write file IRWFX.  \\
+\item[IOP(28)]  integral evaluation option.  \\
+0  compute as normal. (sp done in L702, spd done here.) \\
+1  do all gradient integrals in L703. \\
+\item[IOP(33)]  print option.  \\
+0  NO printing. \\
+1  print final contributions to {\tt FXYZ}. \\
+\item[IOP(34)]  dump option.  \\
+0  NO dumping. \\
+1  usual system stuff. \\
+2  dump derivative contributions from within shell loops. \\
+options for Link 716
+\item[IOP(7)] use of internal coordinates  \\
+0  YES \\
+1  NO \\
+\item[IOP(27)]. does L702 read previous force information  \\
+0  NO \\
+1  YES \\
+\item[IOP(30)]  use of symmetry in OVERLAY 7  \\
+0  use (subject to availability). \\
+1  don't use \\
+\end{description}
+\section{\sf OVERLAY 8}
+The purpose of this OVERLAY is to do the transformation of the
+two-electron integrals from the AO to MO basis. 
+\begin{description}
+\item[Link 801]  this Link prepares the MO coefficients and the one-electron
+energies for the post-SCF programs as follows:  a selected set of
+MOs (selected using IOP(10)) is written onto read/write file number
+ISPECT.  Some
+quantities commonly used in post-SCF routines are evaluated and
+written on read/write file number INFORB.
+\item[Link 802]  this Link does the 2-electron integral transformation for
+RHF systems.
+\item[Link 803]  this Link does the 2-electron integral transformation for
+UHF systems.
+\end{description}
+\subsection{\sf OPTIONS for OVERLAY 8}
+\begin{description}
+\item[IOP(5)]  RHF or UHF \\
+0  read in from ilsw \\
+1  RHF \\
+2  UHF \\
+\item[IOP(6)]  specifies which single-bar integrals are to be
+computed. \\
+0  (ia|jb) \\
+1  (ia|jb), (ij|ab) \\
+2  (ia|jb), (ij|ab), (ij|kl) \\
+3  (ia|jb), (ij|ab), (ij|kl), (ij|ka) \\
+4  (ia|jb), (ij|ab), (ij|kl), (ij|ka), (ia|bc) \\
+5  (ia|jb), (ij|ab), (ij|kl), (ij|ka), (ia|bc), (ab|cd) \\
+in terms of what can be done with what integrals: \\
+0  MP2 \\
+2  MP3, CI \\
+\item[IOP(7)]  test SCF convergence flag \\
+0  YES \\
+1  NO \\
+\item[IOP(8)]  option to change the core available \\
+0  {\tt MDV} is set to default value.(see {\tt DATA} statement) \\
+1  read in {\tt MDV} (i6 format) \\
+\item[IOP(9)]  use {\tt TRCL80} always.(mainly a debugging option) \\
+0  NO \\
+1  YES. \\
+\item[IOP(10)]  window is selected as follows: \\
+0  all molecular orbitals are taken \\
+1  the core MOs are frozen \\
+2  a record is read in (2i3) indicating the start and the end 
+\item[IOP(30)]  the molecular orbitals outside the window are set to zero,
+thus simulating the window without changing anything else (for
+test purposes). \\
+0  NO \\
+1  YES \\
+\item[IOP(31)]  perform primitive post-SCF operations \\
+0  none \\
+1  CI \\
+\end{description}
+\section{\sf OVERLAY 9}
+\begin{description}
+\item[Link 901]
+Conversion of the set of single-bar integrals provided by the
+AO-to-MO transformation routine to the packed set of
+double-bar integrals and a-coefficients. this program also
+calculates the second order Moller-Plesset perturbation
+energy {\tt E(MP2)}.
+\item[Link 909]
+Iterative solution of the CI equations involving all single and
+double substitutions and Moller-Plesset perturbation theory at
+second and third orders.
+partitioned into 5 Links: {\tt CIS1},...,{\tt CIS5}
+{\tt CIS1} sets up the information needed for the matrix multiplication
+{\tt W=V*A} , {\tt CIS2} to {\tt CIS4} then perform this matrix multiplication,
+and {\tt CIS5} finally evaluates all sorts of correlation energies.
+\end{description}
+\subsection{\sf OPTIONS for OVERLAY 9}
+\begin{description}
+\item[IOP(5)]  method  \\
+1  CID. CI with all double substitutions. \\
+2  MP3. third order perturbation theory. \\
+\item[IOP(6)]  criteria for termination of the iteration \\
+0  default convergence criterion and maxcycle \\
+N (N=1,...,6) perform max. N cycles
+use default convergence criterion  \\
+7  read in maxcycles and convergence criterion (i2,d18.13) \\
+\item[IOP(7)]  update the energy in {\tt COMMON/GEN/} \\
+0  YES, with the correlation energy, ECI in CI 
+and EUMP3 in MP3 calculations  \\
+1  YES, with EUMP3. \\
+7  NO \\
+\item[IOP(18)]  iteration scheme:   \\
+Formation of DE in
+\[
+ A(S) = \frac{W(S)}{(DE - \Delta(S))}
+\]
+i.e. in the formation of a new wave function.  \\
+0  use DE depending on the method used. (IOP(5)). \\
+For method = 0 or 1  DE = W(0)/A0  \\
+for method greater than 1  DE = 0  \\
+Note that for perturbation methods (method=2,3,4,5)
+DE is not really needed since the wave function formed is
+never  used.  \\
+1  W(0)/A0 always. \\
+2  0. always. \\
+\item[IOP(19)]  inhibit extrapolation  \\
+0  NO \\
+1  YES \\
+\item[IOP(20)]  {\tt CUTOFF} for AO integrals  \\
+0  standard {\tt CUTOFF} (10**(-6)) \\
+1  {\tt CUTOFF} read in (format(G20.14)) \\
+\item[IOP(25)]  print pair contribution and weight to correlation energy  \\
+0  NO \\
+1  YES, at the end of CI \\
+2  YES, at each cycle \\
+3  YES, at one cycle given by input (i3) \\
+4  YES, at first cycle and at end \\
+\item[IOP(26)]  normalization of the wavefunction  \\
+0  normalized to {\tt A(0)=1}. \\
+1  $\sum_s A(s)^2 = 1$ (all s) \\
+Note: perturbation theoretical results are valid with NORM=0 only
+\item[IOP(28)]  printing of dominant configurations.  \\
+0  do not scan the 'A' vector at the end of CI. \\
+1  scan the 'A' vector at the end of CI and print the 
+dominant configurations.  \\
+\item[IOP(30)]  calculation of the CI density matrix.  \\
+0  do not calculate the density matrix. \\
+1  calculate the density matrix at the end of CI. \\
+\end{description}
+

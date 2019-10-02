@@ -1,0 +1,13 @@
+# HF/3-21G
+
+ H2 test of CHOOSE
+
+ 0 1
+H1
+H2 H1 0.7
+
+$NBO  PLOT  $END
+$CHOOSE
+ BOND S 1 2 END
+$END
+

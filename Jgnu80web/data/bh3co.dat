@@ -1,0 +1,24 @@
+# HF/STO-3G 
+
+BH3CO STO-3G, Geometry Optimised at 6-31G level
+
+0 1
+B 
+X 1 1.0
+X 1 1.0 2 90.0
+H 1 RBH 3 A 2 0.0
+H 1 RBH 3 A 2 D
+H 1 RBH 3 A 2 -D
+C 1 RBC 2 90. 3 0.
+X 7 1. 1 90. 2 0.
+O 7 RCO 8 90. 1 180.
+
+RBC=1.6141
+RCO=1.1226
+RBH=1.2029
+A=104.1335
+D=120.
+
+$NBO $END
+
+

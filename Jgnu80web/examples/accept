@@ -1,0 +1,53 @@
+rm accept.log
+../a.out <example1.dat >>accept.log
+echo " End of example1" >>accept.log
+../a.out <example2.dat >>accept.log
+echo " End of example2" >>accept.log
+../a.out <example3.dat >>accept.log
+echo " End of example3" >>accept.log
+../a.out <example4.dat >>accept.log
+echo " End of example4" >>accept.log
+../a.out <example5.dat >>accept.log
+echo " End of example5" >>accept.log
+../a.out <example6.dat >>accept.log
+echo " End of example6" >>accept.log
+../a.out <example7.dat >>accept.log
+echo " End of example7" >>accept.log
+../a.out <example8.dat >>accept.log
+echo " End of example8" >>accept.log
+../a.out <example9.dat >>accept.log
+echo " End of example9" >>accept.log
+../a.out <exampl10.dat >>accept.log
+echo " End of exampl10" >>accept.log
+../a.out <exampl11.dat >>accept.log
+echo " End of exampl11" >>accept.log
+../a.out <exampl12.dat >>accept.log
+echo " End of exampl12" >>accept.log
+../a.out <exampl13.dat >>accept.log
+echo " End of exampl13" >>accept.log
+../a.out <exampl14.dat >>accept.log
+echo " End of exampl14" >>accept.log
+../a.out <exampl15.dat >>accept.log
+echo " End of exampl15" >>accept.log
+../a.out <exampl16.dat >>accept.log
+echo " End of exampl16" >>accept.log
+../a.out <exampl17.dat >>accept.log
+echo " End of exampl17" >>accept.log
+../a.out <exampl18.dat >>accept.log
+echo " End of exampl18" >>accept.log
+../a.out <exampl19.dat >>accept.log
+echo " End of exampl19" >>accept.log
+../a.out <exampl20.dat >>accept.log
+echo " End of exampl20" >>accept.log
+../a.out <exampl21.dat >>accept.log
+echo " End of exampl21" >>accept.log
+../a.out <exampl22w.dat >>accept.log
+echo " End of exampl22w" >>accept.log
+../a.out <exampl22r.dat >>accept.log
+echo " End of exampl22r" >>accept.log
+../a.out <exampl23.dat >>accept.log
+echo " End of exampl23" >>accept.log
+../a.out <exampl24.dat >>accept.log
+echo " End of exampl24" >>accept.log
+../a.out <exampl25.dat >>accept.log
+echo " End of exampl25" >>accept.log

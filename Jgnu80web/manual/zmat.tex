@@ -1,0 +1,264 @@
+\documentstyle{book}
+\begin{document}
+\subsubsection{Z matrix Concepts}
+Before giving the method used by gnu80 to read the geometrical
+information necessary for a job, it is useful to have an
+overview of the so-called Z matrix method. Some of the
+information in this outline is, of course, duplicated in the
+reference section of the manual below.
+
+There are, at least, three obvious methods to supply the
+data specifying the relative positions of the atoms in a
+molecule to a program:
+\begin{enumerate}
+\item Use a ``laboratory'' Cartesian co-ordinate
+system and give all the atomic positions as absolute
+Cartesian co-ordinates.
+\item Still using a laboratory co-ordinate system, give the
+molecular symmetry (say the point group symbol) and the absolute
+Cartesian co-ordinates of the symmetry-distinct atoms in the molecule;
+allowing the program to apply the molecular symmetry to generate the
+full Cartesian co-ordinates for the entire molecule.
+\item Use an ``internal'' co-ordinate system and specify
+only the {\em relative} positions of the atoms and leave the program
+to provide an origin and orientation of the laboratory system and do the
+conversion to a Cartesian set.
+\end{enumerate}
+Obviously, in cases 1 and 3 the symmetry group of the molecule
+may be {\em inferred} from the supplied co-ordinates.
+
+The advantages and disadvantages of each approach are clear:
+\begin{enumerate}
+\item This choice is only really practical for small molecules or
+for very symmetrical molecules.
+\item This method is most convenient for highly symmetrical systems;
+in most cases of low symmetry, it will degenerate into 1.
+\item This is the most flexible approach, particularly since most
+experimental molecular data are presented as bond distances, bond
+angles etc. referred to a ``natural'' non-redundant
+system of internal co-ordinates.
+\end{enumerate}
+However, when the question of the {\em automatic} generation
+of changes in molecular geometry during a structure optimisation arises,
+it is obvious that the use of the natural molecular parameters
+of choice 3 above is the only viable option. The variation of
+what are essentially arbitrary Cartesian co-ordinates is bound to be
+inefficient and redundant at best. At worst, the use of three independent
+co-ordinates for each atom in a molecule makes such automatic 
+optimisations impossible.
+
+That is, a description of molecular geometry in terms of the
+essential molecular geometrical parameters (bond distances and angles)
+is the only sensible way to both input data to a program and to
+organise such data internally to allow automatic structure variations
+which are likely to be chemically meaningful and numerically
+efficient.
+
+The method used by gnu80 (and by all the GAUSSIAN series and
+many other {\em ab initio} programs) is the so-called
+{\bf Z-matrix} method.
+
+The technique is to ``walk '' through the molecule,
+specifying the position of each atom as it is encountered by
+its distance from and orientation to the other atoms already
+encountered. In this way the natural geometric parameters used by
+chemists and spectroscopists, can be used directly to generate 
+an overall molecular structure which is unique but not (as in
+the case of Cartesian co-ordinates) over-determined. The
+overall orientation of the molecule with respect to the
+laboratory co-ordinate system is not specified. This latter
+freedom is used by gnu80 to position and orient the molecule
+in a way which co-incides with the standard group-theoretical
+choice of Cartesian axes if this is useful.
+
+To completely specify an atom by this method, we need its atomic
+number and enough geometrical information to place it uniquely
+with respect to the other atoms in the system. 
+\begin{enumerate}
+\item As a matter of convience,
+the atomic number is determined by the chemical symbol (H, LI, MN, etc.)
+and so this is the way the atomic number is supplied.
+\item The ``first'' atom in the molecule needs no geometrical
+information, it is specified completely by its chemical symbol and all
+other atoms' positions are referred (either directly or indirectly)
+to it. As a convenience an atom' s label may have other characters
+following the chemical symbol in order to make the data more legible to
+humans; so, for example, an atom may be labelled C1 or LI4 etc.
+Let us assume that we have labelled our first atom C1. gnu80
+internally places this atom at the origin of the laboratory Cartesian
+co-ordinate system. \\
+The form of the input data (the line of the Z-matrix) is simply
+\begin{verbatim}
+      C1
+\end{verbatim}
+\item The next atom, which typically will be an atom formally bonded
+to the first (i.e. a nearest neighbour) although, logically, it need not
+be, has its nature and position completely specified by its chemical
+symbol and its distance from the first atom; no angles are involved.
+Let us assume that it is called C2. \\
+The Z-matrix line of input consists of the label of the second atom,
+the label of the atom to which its distance is to be given and that distance:
+\begin{verbatim}
+      C2 C1 RC2C1
+\end{verbatim}
+where {\tt RC2C1} is the distance between C1 and C2 and may be supplied
+(in Angstroms) as a number like 1.4 or may be left as an alphanumeric
+string whose numerical value is supplied later. Clearly, it is more
+convenient to call it {\tt RC2C1} than {\tt LUCIFER}, for example,
+but both are allowed.
+The {\em direction} from the first to the second atoms is arbitrary and
+is chosen by gnu80 as the Cartesian z axis.
+\item The third atom (C3 say) needs at least one distance and an angle
+to complete its specification. Since any triatomic is planar, gnu80
+places the third atom in the xz plane of the Cartesian system, which
+means that the first three atoms all lie in the xz plane.
+As before, C3 is specified by the three items {\tt C3 C2 RC3C2}
+if the distance between C3 and C2 is the most convenient to supply.
+But this time the {\em angle} between the C3-C2 and C2-C1 bonds must be
+given. This information is supplied by giving the label of the
+third atom in the chain and the value of the angle (in degrees):
+\begin{verbatim}
+      C3 C2 RC3C2 C1 A
+\end{verbatim}
+where {\tt A} is the C3C2C1 angle.
+\item The fourth and (all subsequent atoms) requires more information
+to specify it uniquely since it may well be out of the plane defined
+by the first three atoms. 
+
+The most convenient way to do this (with one important exception, which
+will be treated separately later) is to use a distance and a bond angle
+as in the previous case and to specify the {\em ``out-of-plane
+angle''} formed by the new bond. Traditionally, chemists have used
+the Newman projection to define this {\em dihedral angle}.
+
+If the four atoms in the chain are C1-C2-C3-C4, then, looking along
+the C3-C2 bond (i.e. from C3 towards C2), the C3-C4 bond and the C2-C1
+bond do not eclipse each other (in general). The {\em clockwise}
+angle by which the C3-C4 bond must be rotated to bring it directly over the
+C2-C1 bond is the required dihedral angle (in degrees). 
+The specification of the fourth (and subsequent) atoms is then given
+by:
+\begin{verbatim}
+      C4 C3 RC4C3 C2 A2 C1 D
+\end{verbatim}
+where {\tt RC4C3} is the bond distance from {\tt C4} to {\tt C3},
+{\tt A2} is the angle {\tt C4C3C2} and {\tt D}
+is the dihedral angle.
+
+The simplest case is
+perhaps the hydrogen peroxide molecule, $H_2 O_2$. The dihedral
+angle is the angle between the two O-H bonds when viewed along the O-O
+bond. In this simplest case the dihedral angle may be taken as
+$\alpha$ or $360 - \alpha$ since there are no other atoms involved.
+In general, however, the {\em sense} of the angle must be preserved to
+ensure a correct orientation of subsequent atoms (either on the chain
+or branched)
+\end{enumerate}
+This scheme is sufficient to specify completely the geometry
+of molecules of arbitrary complexity with the following provisos:
+\begin{itemize}
+\item When a molecule is not basically a chain but is more
+``compact'' i.e. a central branched system like $CH_3F$,
+for example, the ``dihedral angles'' can still be defined by
+the above procedure and are acceptable to gnu80 but they are not the
+sort of angle which the chemist normally calls dihedral angles. This
+is a small price to pay for a coherent system.
+\item Linear Molecules have dihedral angles zero. This is not a problem
+for actual linear molecules but it {\em is} a problem for larger
+molecules with {\em linear sections}. In these cases, passing along 
+a linear chain causes the system to ``lose its memory''
+of the original orientation of earlier non-linear pieces.
+\end{itemize}
+The second of these provisos can be cured (as can many other
+{\em practical} difficulties associated with the Z-matrix method)
+by the introduction of the concept of the {\bf Dummy Centre}.
+
+A dummy centre is just that; a centre introduced in order to
+make the Z-matrix specification of a particular molecule either: 
+\begin{itemize}
+\item Possible, because it contains a linear sub-section or 
+\item Easier, because some of the ``dihedral angles'' are awkward
+and artificial. 
+\end{itemize}
+The dummy centre is specified in exactly the same way as ``genuine''
+atomic centres and is recognised by gnu80 by its own ``chemical''
+symbol X. It is ignored in the calculation once the co-ordinate system
+has been set up.
+
+The most characteristic use for a dummy centre is to resolve the
+linear sub-sections problem. Simple by putting a dummy centre off the
+linear axis, the dihedral angle between this dummy and subsequent off-axis
+atoms can be used.  It is often found convenient to use dummy centres
+to generate Z-matrices for particular purposes, for example to define
+an angle in a molecule which is a ``natural'' parameter in
+an optimisation, but which is not defined by particular atoms; angles
+between the natural directions of functional groups or aromatic
+planes.
+\subsubsection{Z matrix Facilities}
+The  the central concepts of the Z matrix
+are made more useful by the addition of a few technical
+aids.
+\begin{itemize}
+\item When giving the specification of an atom, the earlier atoms in
+the Z matrix may be referenced {\em by number} as well as by label.
+This facility is provided for compatibility with the earlier GAUSSIAN
+series and its use is not reccommended; the insertion of an atom in a chain
+will upset the numbering system but not reference by label.
+\item A dummy atom may be labelled by a {\bf -} (minus or dash, not
+underscore) as well as by {\bf X}.
+\item Any of the distances and angles in the Z matrix may be immediately
+preceeded by a minus with the obvious meaning. Clearly if the distance
+or angle is given explicitly as a number (like -1.4) this is not news;
+it is included in the definition of ``number''. But the use
+of the minus is possible {\em even when the distance or angle is
+given symbolically} ( like {\tt RC2C1}).
+
+This is very often useful to preserve the {\em symmetry} of a molecular
+arrangement during optimisations, or simply as an aid to getting
+the geometry expressed in an easily-recognisable form. Examples 2 and 3
+in the compilation of input examples (Appendix \ref{inex}) illustrates
+this point.
+\item It was remarked in the description of the dihedral angle
+that, in some cases, the actual physical interpretation of this angle
+is not that of a dihedral angle even when the geometrical recipe
+still works. It is often more sensible to define the position of
+an atomic centre by means of a distance and {\em two} bond angles.
+This facility is provided in gnu80 and is described in the reference
+section below.
+\end{itemize}
+Obviously, at some point the symbols used to define distances and angles
+in the Z matrix must be given numerical values to enable gnu80
+to carry through an actual calculation. Either fixed numerical values
+must be supplied or (in the case of optimisations) initial values
+for gnu80 to use as a starting point for automatically generated
+values.
+
+This is done {\em after} the Z matrix is complete in the two input
+sections immediately following the blank record which terminates
+the Z matrix input section. The first of these sections is called the
+{\bf Variables} section and is generally used to supply {\em initial
+value} assignments to the symbols during an optimisation. Obviously,
+if the {\bf OPT} command has not been given on the command record, no
+optimisation will be performed and the assignments in the {\bf Variables}
+section simply provide fixed values for the distances and angles.
+
+The form of the {\bf Variables} input section is simply a set of
+records of symbols followed by the initial numerical values of these
+symbols, separated by either a space or, more pictorially, by an equals
+symbol ({\bf =}). In the example given above, the {\bf Variables} section 
+might include the records:
+\begin{verbatim}
+      RC2C1=1.34
+      A 109.5
+\end{verbatim}
+among other records.
+
+If it required to have all the Z matrix data in the same general form ---
+symbolic names for the distances and angles --- and yet it is required
+to keep some of these geometrical parameters {\em fixed} (i.e. not
+take part in the optimisation) the the {\bf Variables} input section
+is followed (after its terminating blank record) by the
+{\bf Constants} input section which is of precisely the same form but
+gnu80 does not attempt to change these numerical values, keeping them
+fixed at the values given throughout the calculation.
+\end{document}

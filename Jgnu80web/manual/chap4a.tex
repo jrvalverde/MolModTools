@@ -1,0 +1,491 @@
+\chapter{\sf {\tt gnu80} COMMON BLOCKS}
+\section{\sf COMMON /MOL/}
+{\small
+\begin{verbatim}
+      INTEGER NATOMS, ICHARG, MULTIP, NAE, NBE, NE, 
+     & NBASIS, IAN
+      DOUBLE PRECISION ATMCHG. C
+      COMMON/mol/ NATOMS,ICHARG,MULTIP,NAE,NBE,NE,NBASIS,
+     & IAN(101),ATMCHG(100),C(300)
+\end{verbatim}
+}
+Here is the basic information concerning the molecule for which
+the energy calculation is being carried out.
+\begin{description}
+\item[NATOMS]  the number of atoms in the molecule.
+\item[ICHARG]  the total electric charge on the molecule,
+for neutral, 1 for cations, etc.
+\item[MULTIP]  the molecule's spin multiplicity (1 for
+singlets, 2 for doublets, etc.)
+\item[NAE]  the number of electrons of $\alpha$ spin.
+\item[NBE]  the number of electrons of $\beta$  spin.
+\item[NE]  the total number of electrons (= NAE + NBE).
+\item[NBASIS]  the number of basis functions.
+\item[IAN(I)]   the atomic number of atom I.  This array is
+dimensioned to 101 so that the number
+of double-words in the COMMON block is even. \\
+Note that this is strictly the Atomic Number, not the nuclear
+charge which may be different due to the use of Effective
+Potentials for the inner shells.
+\item[ATMCHG(I)] the nuclear charge of atom I. In non-effective
+potential runs this is the same as the atomic number IAN(I).
+\item[C(I)]    the x, y, and z, coordinates of the atoms in
+atomic units.  The coordinates are stored in
+the order x1, y1, z1, x2, y2, z2, x3, etc.
+\end{description}
+\newpage
+\section{\sf COMMONs {\tt /ZMAT/ and /ZSUBST/}}
+\subsubsection{\sf {\tt /ZMAT/}}
+\begin{verbatim}
+     INTEGER IANZ, IZ, LBL, LALPHA, LBETA, NZ, NVAR
+     DOUBLE PRECISION BL, ALPHA, BETA 
+     COMMON /ZMAT/   IANZ(50),IZ(50,4),BL(50),ALPHA(50),BETA(50),
+     $                LBL(50),LALPHA(50),LBETA(50),NZ,NVAR
+\end{verbatim}
+{\tt /ZMAT/} consists of eight arrays dimensioned to hold the
+data from up to 50 Z-matrix records and two
+variables containing counters.
+\begin{description}
+\item[{\tt IANZ}]   atomic numbers
+\item[{\tt IZ}]     connectivity data
+\item[{\tt BL}]     bond lengths
+\item[{\tt ALPHA}]  valence angles
+\item[{\tt BETA}]   dihedral or second valence angle
+\item[{\tt LBL}]    an array used to map from the array of
+variable values in {\tt /ZSUBST/} to the array
+{\tt BL} in /ZMAT/.   
+\begin{itemize}
+\item For {\tt LBL(N)}=0, no
+substitution is required to get {\tt BL(N)}:
+it already contains the proper value.
+\item For {\tt LBL(N) = I}; {\tt BL(N)} = {\tt VALUES(I)}.
+\item  For
+{\tt LBL(N) = -I}; {\tt BL(N) = -VALUES(I)}.
+\end{itemize}
+\item[{\tt LALPHA}]  analagous to {\tt LBL} for {\tt ALPHA}.
+\item[{\tt LBETA}]   analagous to {\tt LBL} for {\tt BETA}.
+\item[{\tt NZ}]      the number of records in the Z-matrix.
+\item[{\tt NVAR}]    the number of variables, equal to the
+number of symbols defined in the
+VARIABLES section of the input.
+\end{description}
+\subsubsection{\sf {\tt /ZSUBST/}}
+\begin{verbatim}
+      INTEGER  INTVEC
+      DOUBLE PRECISION VALUES, FPVEC, ANAMES
+      COMMON /ZSUBST/ ANAMES(50),VALUES(50),INTVEC(50),FPVEC(50)
+\end{verbatim}
+{\tt /ZSUBST/} contains the data in the VARIABLES section of
+the input.
+\begin{description}
+\item[{\tt ANAMES}]  alphanumeric names of the variables.
+(limited to 8 characters in the current
+version).
+\item[{\tt VALUES}]  the corresponding numeric values.  These
+will be altered in the course of
+geometry optimizations and potential
+surface scans.
+\item[{\tt INTVEC}]  an array of the integer values following
+the symbol and value on a line in the
+VARIABLES section.
+\item[{\tt FPVEC}]   a corresponding array containing the
+floating point number.  The use of these
+two arrays depends upon the route.
+\end{description}
+\newpage
+\section{\sf COMMON /B/}
+/B/ is a common block which contains the necessary arrays
+to define and describe the basis set.  
+{\small
+\begin{verbatim}
+      INTEGER SHELLA,SHELLN,SHELLT,SHELLC,SHLADF,AOS,AON
+      DIMENSION SHLADF(80), C4(80)
+      COMMON/B/EXX(240),C1(240),C2(240),C3(240),X(80),Y(80),Z(80),
+     $         JAN(80),SHELLA(80),SHELLN(80),SHELLT(80),SHELLC(80),
+     $         AOS(80),AON(80),NSHELL,MAXTYP
+      EQUIVALENCE(SHLADF(1),C3(161)),(C4(1),C3(81))
+\end{verbatim}
+}
+This common block is organized in such a manner so as to
+facilitate the calculation of integrals over Gaussian
+functions.
+
+Before  describing the various arrays,
+it will be useful to define the concepts of primitive shells
+and contracted (or full) shells.
+
+A {\em primitive} shell is defined to be a set of basis functions
+up to and including functions of some maximum angular
+quantum number which share a common exponent.  thus,
+an $\ell = 1 $ shell would consist of the functions (s,px,py,pz)
+all with the same Gaussian exponent.  Similarly, an $\ell = 2$
+shell would contain (s,px,py,pz,xx,yy,zz,xy,xz,yz) where
+xx, etc. denote the normalized second-order Gaussian
+functions.
+
+A {\em full, or contracted} shell results from contracting
+the functions of several primitive shells together.
+in typical calculations, one normally uses contracted
+shells.
+
+As an example, consider the carbon atom in the 6-31G basis.
+in this basis, the carbon will have 10 primitive shells
+(6+3+1).  The first 6 primitive shells are s-shells $(\ell = 1)$,
+and are contracted together to make a single s-type basis
+function.  The next three shells are sp-shells $(\ell = 1)$,
+each consisting of (s,px,py,pz) functions.  These primitive
+shells are contracted together to make four atomic orbital
+basis functions: s, px, py and pz.  The outer-most primitive
+shell is also of sp type, and makes yet another 4 atomic
+orbital basis functions.
+
+If the program were limited to this definition of shells,
+one would have to use a set of sp-functions whenever
+a set of d-functions was desired.  Since it is frequently
+desired to have just a set of d or f type functions,
+some way must be devised to handle this.
+
+Thus,  the idea of a ` shell constraint' is introduced.
+the shell constraint specifies which functions within
+a shell are actually employed.  By appropriately setting
+the shell constraint, one can use only the d portion
+of an $\ell = 2$ shell.
+
+This general information enables the
+arrays which appear in {\tt /B/} to be described.
+\newpage
+\begin{description}
+\item[EXX] contains the Gaussian exponents for all the
+ the primitive shells.  The array {\tt SHELLA}
+ contains pointers into {\tt EXX} for the various
+ primitive shells.
+\item[C1] contains the s coefficients for all the primitive
+ shells;  indexed by {\tt SHELLA}.
+\item[C2] contains the p coefficients for the primitive
+ shells;  indexed by {\tt SHELLA}.
+\item[C3] this array really consists of 3 sub-arrays
+ (each 80  long) which contain the
+ d and f coefficients plus the d and f
+ pointer table for d and f type shells.
+ these arrays are {\tt C3, C4} and {\tt SHLADF}, respectively.
+\item[X] the x-Cartesian coordinate for each of the
+ primitive shells.
+\item[Y] the y-Cartesian coordinate for each of the
+ primitive shells.
+\item[Z] the z-Cartesian coordinate for each of the
+ primitive shells.
+\item[JAN] **reserved for future expansion**
+\item[SHELLA] {\tt SHELLA(I)} contains the starting location
+ within {\tt (EXX,C1,C2)} of the data
+ (exponents, s-coefficients, p-coefficients)
+ for the I'th primitive shell.
+\item[SHELLN] {\tt SHELLN(I)} contains the number of primitive
+ Gaussians in the I'th primitive shell.
+\item[SHELLT] {\tt SHELLT(I)} contains the maximum angular quantum number
+ of the I'th shell.
+\item[SHELLC] {\tt SHELLC(I)} contains the shell constraint for the I'th
+ shell (see table below).
+\item[AOS] {\tt AOS(I)} gives the starting atomic orbital basis
+ function number (ie number within the list
+ of atomic orbital basis functions) of the
+ I'th shell.  note that {\tt AOS} is always filled
+ as though the shell contained all possible
+ lower angular momentum functions. \\  
+See {\tt SUBROUTINE GBASIS} for details on how {\tt AOS} is filled.
+\item[AON] **reserved for future expansion**
+\item[NSHELL] the number of primitive shells.
+\item[MAXTYP] the highest angular quantum number present
+ in the basis.
+\end{description}
+The following table summarizes the relationship between
+SHELLT AND SHELLC.
+\begin{verbatim}
+=========================================
+TYPE   FUNCTIONS          SHELLT   SHELLC
+=========================================
+S    :  S                 :   0   :    0
+SP   :  S PX PY PZ        :   1   :    0
+SPD  :  S PX PY PZ        :   2   :    0
+     :  XX YY ZZ XY XZ YZ :       :
+P    :  PX PY PZ          :   1   :    1
+D    :  XX YY ZZ XY XZ YZ :   2   :    2
+F    :  XXX YYY ZZZ XYY   :   3   :    2
+     :  XXY XXZ XZZ YZZ   :       :
+     :  YYZ XYZ           :       :
+=========================================
+\end{verbatim}
+\newpage
+\section{\sf COMMON /INFO/}
+{\small
+\begin{verbatim}
+      INTEGER INFO
+      COMMON /INFO/ INFO(10)
+\end{verbatim}
+}
+This is an area reserved for the communication of 
+miscellaneous information
+between links. It is little used at the moment.
+\begin{description}
+\item[ INFO(1)..(3)] not used at present
+\item[ INFO(4)] summary word for the calculation (see {\tt SUBROUTINE
+ARCSET} in link 1)
+\item[ INFO(5)..(10)] not used at present
+\end{description}
+\newpage
+\section{\sf COMMON /PHYCON/}
+{\small
+\begin{verbatim}
+      DOUBLE PRECISION PHYCON
+      COMMON /PHYCON/ PHYCON(30)
+\end{verbatim}
+}
+This common block holds the values of the physical constants
+which are used in the program.  It is initialized by {\tt SUBROUTINE
+PHYFIL} in link1 which also documents the sources for the values used.
+\begin{description}
+\item[PHYCON( 1)] {\tt TOANG},  angstroms per bohr
+\item[PHYCON( 2)] {\tt TOKG},   kilograms per amu
+\item[PHYCON( 3)] {\tt TOE},    esu per electron charge
+\item[PHYCON( 4)] {\tt PLANCK},  Planck's constant
+\item[PHYCON( 5)] {\tt AVOG},   Avogadro number
+\item[PHYCON( 6)] {\tt JPCAL},  joules per calorie
+\item[PHYCON( 7)] {\tt TOMET},  metres per bohr
+\item[PHYCON( 8)] {\tt HARTREE}, joules per Hartree
+\item[PHYCON( 9)] {\tt SLIGHT}, speed of light
+\item[PHYCON(10)] {\tt BOLTZ},  Boltzman constant
+\item[PHYCON(11)..PHYCON(30)] not used at present
+\end{description}
+\newpage
+\section{\sf COMMON /MUNIT/}
+{\small
+\begin{verbatim}
+      INTEGER IUNIT
+      COMMON/munit/ iunit(20)
+\end{verbatim}
+}
+Defines the unit numbers for all external data files needed
+by {\tt gnu80}.  {\tt IUNIT} is initialized by {\tt SUBROUTINE DEFUNT} in
+link 1.  The purpose of this COMMON is to centralize the definitions
+of the FORTRAN logical units required in the Gaussian system.  Thus,
+if it is ever necessary to change to different logical units on
+another machine, one should be able to merely change the definitions
+in {\tt DEFUNT}.
+
+Note that in  {\tt gnu80}, unit number 18 (munit 7) is not
+initialized by {\tt DEFUNT}.  This unit is "hard wired" 
+by a specific {\tt OPEN} satatement in the {\tt MAIN} segment.
+\begin{description}
+\item[IUNIT(1)]  not used.
+\item[IUNIT(2)]  primary input (usually channel 5).
+\item[IUNIT(3)]  primary printed output (usually channel 6).
+\item[IUNIT(4)]  primary punched output (usually channel 7 but now obselete).
+\item[IUNIT(5)]  {\tt BINWT} unit (obselete).
+\item[IUNIT(6)]  {\tt BINRD} unit (obselete).
+\item[IUNIT(7)]  Direct Access files and buckets (usually channel 18).
+\item[IUNIT(12)] Repulsion integrals (usually channel 3).
+\end{description}
+\newpage
+\section{\sf COMMON /IOP/}
+{\small
+\begin{verbatim}
+      INTEGER IOP
+      COMMON/IOP/ IOP(50)
+\end{verbatim}
+}
+The system {\bf OPTIONS} are stored in this COMMON. The definitions
+of the 50 options differ from overlay to overlay. This COMMON
+is updated in {\tt FUNCTION NEXTOV}. See \ref{app3b} for a full description
+of the contents of this COMMON block.
+\newpage
+\section{\sf COMMON /ILSW1/}
+{\small
+\begin{verbatim}
+      INTEGER ILSW
+      COMMON/ILSW1/ ILSW1(2)
+\end{verbatim}
+}
+This is the so-called the Inter-Link Status ` Word' .
+The inter-link status word is an area on read/write file 998 which is
+used as a storage place for information required by {\em several} overlays.
+The information is packed into the area bit-wise, and  {\tt SUBROUTINE
+ILSW} is designed to facilitate the reading and updating of this
+information.  The use of each bit (or group of bits) is described below.
+\begin{verbatim}
+      SUBROUTINE ILSW(IOPER,WHERE,WHAT) 
+      INTEGER IOPER, WHERE, WHAT
+\end{verbatim}
+Each of the arguments is described below, first {\tt IOPER}:
+\begin{description}
+\item[IOPER = 1] update the bits indicated by {\tt WHERE} with the
+value of {\tt WHAT}.
+\item[IOPER = 2]. determine the status of the bits indicated by
+{\tt WHERE} and store the result in {\tt WHAT}.
+\end{description}
+
+{\tt WHERE}     is the sequence number (in {\tt COMMON/CWD/}) of the
+information which is to be read or updated.
+
+{\tt WHAT}  this argument is used to update the indicated
+bits if {\tt IOPER}=1, or is returned with the
+status of these bits if {\tt IOPER}=2.
+The current possibilities for {\tt WHERE} are:
+{\small
+\begin{verbatim}
+1     CONST    0-1    SCF constraints.
+                      0 ... real RHF.
+                      1 ... real UHF.
+                      2 ... complex RHF.
+                      3 ... complex UHF.
+
+2     IPURD    2      number of d functions.
+                      0 ... five d.
+                      1 ... six d.
+
+3     BASIS    3-5    type of basis set.
+                      0 ... minimal.
+                      1 ... extended.
+                      2 ... general.
+
+4     POLAR    6-8    polarization functions (p, d).
+                      bit 6=0 ... no p functions on hydrogen.
+                      =1 ... p functions on hydrogen.
+                      bit 7=0 ... no d functions on first row.
+                      =1 ... d on first row.
+                      bit 8=0 ... no d on second row.
+                      =1 ... d on second row.
+
+                      note that these bits can be addressed
+                      individually (see below).
+
+5     CONVER   9      SCF convergence.
+                      0 ... the SCF has not gone max cycles.
+                      1 ... the SCF has gone max cycles.
+                      6     stabil   10     2nd order stability of wave function.
+                      0 ... not tested or not stable.
+                      1 ... tested and found stable.
+
+7     SYM      11     symmetry of univariate search in second.
+                      0 ... search is symmetric for tau pos/neg
+                      1 ... search is not symmetric.
+
+8     PUESS    12     type of guess for {\tt TAU} (see {\tt SCFDM}).
+                      0 ... tau not available.
+                      1 ... tau available.
+
+9     BNREAD   14     whether binrd has tried and failed to
+                      read a file of records.
+                      0 ... no.
+                      1 ... yes.
+
+10    IFPONH   6      polarization on hydrogen (see above).
+
+11    IFDON1   7      polarization on first row (see above).
+
+12    IFDON2   8      polarization on second row (see above).
+
+13    IFFON1   15     f functions on first row.
+                      0 ... no.
+                      1 ... yes.
+
+14    IFFON2   16     f functions on second row.
+                      0 ... no.
+                      1 ... yes.
+
+15    IFFON3   17     f functions on third row.
+                      0 ... no.
+                      1 ... yes.
+
+16    F7F10    18     number of f functions.
+                      0 ... seven f.
+                      1 ... ten f.
+
+17    IFPOL    15-17  used to address these bits collectively.
+                      (see description above.)
+
+18    IFAU     13     if coordinates in blank COMMON are in
+                      atomic units.
+                      0 ... no, angstroms instead.
+                      1 ... yes.
+
+19    IFFP     19     if this is a Fletcher-Powell
+                      optimization run.
+                      0 ... no.
+                      1 ... yes.
+
+20    PRTOFF   20     control print in nextov and chain
+                      0 ... print turned on
+                      1 ... print turned off
+
+21    PSAVE   21     paper save master switch.
+                      0 ... (off) paper used as normal.
+                      1 ... (on) paper usage drastically
+                      reduced.
+
+22    OPCLO   22     closed/open selector.
+                      0 ... closed shell.
+                      1 ... open shell.
+                      note: this bit is used for RHF open
+                      shell.
+
+23    IFGRD   23    if this is a gradient
+                      optimization run
+                      0 ... no.
+                      1 ... yes.
+
+24    IFRC    24    if energy derivatives are to be
+                      calculated
+                      0 ... yes.
+                      1 ... no.
+
+25    IFARCH  25   if a summary of the job is to be placed
+                      into the archive file.
+                      0 ... no.
+                      1 ... yes.
+
+26    NOSYM   26-27 should the point group symmetry of the
+                      molecule be used to eliminate
+                      redundant computation
+                      0 ... yes.
+                      1 ... no, the point group will be
+                      computed and printed only.
+                      2 ... no, a change in the point group
+                      has been detected during an
+                      optimization.
+\end{verbatim}
+}
+\newpage
+\section{\sf COMMON /GEN/}
+{\small
+\begin{verbatim}
+      DOUBLE PRECISION DGEN
+      COMMON/GEN/DGEN(47)
+\end{verbatim}
+}
+This is a COMMON area where many of the ` single number'
+results of the current calculation are stored. The value of
+{\tt DGEN(I)} for the various values of I are given below:
+\begin{description}
+\item[1]  electronic configuration of SCF wave-function.
+\item[2-20]    not used.
+\item[21] root-mean-squared force of optimized parameters.
+\item[22] dipole moment.
+\item[23] rms error in density matrix.
+\item[24-30]   not used.
+\item[31] {\tt TAU} from {\tt SCFDM}
+\item[32] SCF energy.
+\item[33] UMP2 energy.
+\item[34] UMP3 energy.
+\item[35] UMP4(sdtq) energy.   (reserved for future use)
+\item[36] CID energy, or {\tt E(VAR1)}. (reserved for future use)
+\item[37] CISD energy.     (reserved for future use) 
+\item[38]      MP4DQ energy.    (reserved for future use) 
+\item[39] MP4SDQ energy    (reserved for future use)      
+\item[40] CCD energy.   (reserved for future use)         
+\item[41] nuclear repulsion energy.
+\item[42] T (length of correction of reference determinant).
+\item[43] updated energy for Fletcher-Powell optimizations.
+\item[44] $<\hat{S}^2>$ of SCF wave function.
+\item[45] $<\hat{S}^2>$ corrected to first order (after {\tt DOUBAR}).
+\item[46] $<\hat{S}^2>$ corrected for doubles (not implemented).
+\item[47] a0.
+\end{description}

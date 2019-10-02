@@ -1,0 +1,518 @@
+\newpage
+{\small
+\begin{verbatim}
+*******************************************
+ gnu80: PORTABLE GAUSSIAN SYSTEM
+********************************************
+  ---------------
+  # HF/STO-3G OPT 
+  ---------------
+ 1//1,3;
+ 2//2;
+ 3/6=3,11=9,25=11,30=1/1,2,3,11;
+ 4/16=1/1;
+ 5/6=7/1,2;
+ 6//1;
+ 7/27=1/1,2,16;
+ 1//3;
+ 2//2;
+ 3/6=3,11=9,25=11,30=1/1,2,11;
+ 5/6=7/1,2;
+ 7/27=1/1,2,16;
+ 1//3(-4);
+ 3/6=3,11=9,25=11,30=1/1,3;
+ 5/6=7,12=1/1,2;
+ 6//1;
+ 99//99;
+  ------------------------------------
+  WATER STRUCTURE OPTIMISATION STO-3G  
+  ------------------------------------
+ SYMBOLIC Z-MATRIX
+    CHARGE = 0 MULTIPLICITY = 1
+ O
+ H     1     R
+ H     1     R         2     A
+      VARIABLES
+  R                     1.                    
+  A                   105.                    
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+BERNY OPTIMIZATION
+INITIALIZATION PASS
+                       ---------------------------
+                       !   INITIAL PARAMETERS    !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !        R          1.       ESTIMATE D2E/DX2                          !
+ !        A        105.       ESTIMATE D2E/DX2                          !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ ------------------------------------------------------------------------
+                         Z-MATRIX (ANGSTROMS AND DEGREES)
+ CD CENT ATOM  N1      LENGTH      N2     ALPHA      N3      BETA       J
+ ------------------------------------------------------------------------
+  1   1   O 
+  2   2   H     1   1.000000 (  1)
+  3   3   H     1   1.000000 (  2)  2  105.000 (  3)
+ ------------------------------------------------------------------------
+                  Z-MATRIX ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000    0.00000000
+    2             1                0.00000000    0.00000000    1.00000000
+    3             1                0.96592583    0.00000000   -0.25881905
+ ------------------------------------------------------------------------
+                    DISTANCE MATRIX (ANGSTROMS)
+              1          2          3
+  1   O   0.000000
+  2   H   1.000000   0.000000
+  3   H   1.000000   1.586707   0.000000
+ STOICHIOMETRY    H2O
+ FRAMEWORK GROUP  C2V<C2(O),SGV(H2)>
+ DEG. OF FREEDOM    2
+                   STANDARD ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000   -0.12175229
+    2             1                0.00000000    0.79335334    0.48700914
+    3             1                0.00000000   -0.79335334    0.48700914
+ ------------------------------------------------------------------------
+ NUMBER OF SYMMETRY OPERATIONS:  2
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.8003395031 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+      144 INTEGRALS PRODUCED FOR A TOTAL OF       144
+ INITIAL GUESS ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (B2) (A1)
+ RHF CLOSED SHELL SCF.
+ REQUESTED CONVERGENCE ON DENSITY MATRIX=  0.1000d-06 WITHIN  32 CYCLES.
+ ITER  ELECTRONIC-ENERGY       CONVERGENCE    EXTRAPOLATION
+ ----  -----------------       -----------    -------------
+   1  -0.836400480512479d+02                                        
+   2  -0.837468019504395d+02    0.4717d-01
+   3  -0.837614333581677d+02    0.2005d-01
+   4  -0.837641343159253d+02    0.8648d-02       4-POINT.
+   5        (NON-VARIATIONAL)
+   6  -0.837647845061776d+02    0.5484d-04
+   7  -0.837647845272043d+02    0.2365d-04
+   8  -0.837647845313501d+02    0.1060d-04       4-POINT.
+   9        (NON-VARIATIONAL)
+  10  -0.837647845323884d+02
+
+ SCF DONE:  E(RHF) =   -74.9644450293     A.U. AFTER   10 CYCLES
+            CONVG  =    0.2320d-07             -V/T =   2.006285
+ COMPONENT                       A.U.                   KCAL/MOL
+ ---------------------------------------------------------------
+ TOTAL                      -74.964445029260          -47041.689
+ ELECTRONIC                 -83.764784532388          -52564.078
+ NUCLEAR REPULSION            8.800339503129            5522.389
+ KINETIC                     74.496267425257           46747.898
+ POTENTIAL                 -149.460712454517          -93789.586
+ ELECTRONIC POTENTIAL      -158.261051957645          -99311.975
+ ONE-ELECTRON POTENTIAL    -196.174545269398         -123103.451
+ TWO-ELECTRON POTENTIAL      37.913493311753           23791.475
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2)
+  THE ELECTRONIC STATE IS 1-A1.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -20.24657  -1.24722  -0.59661  -0.44669  -0.38857
+   1 1   O  1S          0.99423   0.23458   0.00000   0.10045   0.00000
+   2        2S          0.02571  -0.84944   0.00000  -0.52050   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000   0.60459   0.00000   0.00000
+   5        2PZ         0.00393  -0.11474   0.00000   0.76909   0.00000
+   6 2   H  1S         -0.00552  -0.15538   0.44747   0.29394   0.00000
+   7 3   H  1S         -0.00552  -0.15538  -0.44747   0.29394   0.00000
+                           6         7
+                         (A1)      (B2)
+     EIGENVALUES --     0.56320   0.69443
+   1 1   O  1S         -0.12648   0.00000
+   2        2S          0.81425   0.00000
+   3        2PX         0.00000   0.00000
+   4        2PY         0.00000  -0.96843
+   5        2PZ         0.73747   0.00000
+   6 2   H  1S         -0.76814   0.80141
+   7 3   H  1S         -0.76814  -0.80141
+    FULL MULLIKEN POPULATION ANALYSIS.
+                           1         2         3         4         5
+   1 1   O  1S          2.10722
+   2        2S         -0.10698   1.98624
+   3        2PX         0.00000   0.00000   2.00000
+   4        2PY         0.00000   0.00000   0.00000   0.73107
+   5        2PZ         0.00000   0.00000   0.00000   0.00000   1.20938
+   6 2   H  1S         -0.00121  -0.01892   0.00000   0.16235   0.11230
+   7 3   H  1S         -0.00121  -0.01892   0.00000   0.16235   0.11230
+                           6         7
+   6 2   H  1S          0.62160
+   7 3   H  1S         -0.04061   0.62160
+     GROSS ORBITAL CHARGES.
+                           1
+   1 1   O  1S          1.99782
+   2        2S          1.84143
+   3        2PX         2.00000
+   4        2PY         1.05576
+   5        2PZ         1.43397
+   6 2   H  1S          0.83551
+   7 3   H  1S          0.83551
+          CONDENSED TO ATOMS (ALL ELECTRONS)
+              1          2          3
+  1   O   7.819938   0.254520   0.254520
+  2   H   0.254520   0.621600  -0.040609
+  3   H   0.254520  -0.040609   0.621600
+          TOTAL ATOMIC CHARGES.
+              1
+  1   O   8.328978
+  2   H   0.835511
+  3   H   0.835511
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 1.6661   TOTAL= 1.6661
+ ***** AXES RESTORED TO ORIGINAL SET *****
+           MAX     0.017249     RMS     0.009712
+ ----------------------------------------------------------
+ CENTER     ATOMIC               FORCES (HARTREES/BOHR)
+ NUMBER     NUMBER             X           Y           Z
+ ----------------------------------------------------------
+    1          8          -0.002843    0.000000   -0.002181
+    2          1           0.013820    0.000000   -0.015068
+    3          1          -0.010978    0.000000    0.017249
+ ----------------------------------------------------------
+ ------------------------------------------------------------------------
+                    INTERNAL COORDINATE FORCES (HARTREES/BOHR OR /RADIAN)
+ CENT ATOM N1      LENGTH      N2      ALPHA       N3       BETA        J
+ ------------------------------------------------------------------------
+  1   O 
+  2   H     1  -0.015068 (  1)
+  3   H     1  -0.015068 (  2)  2  -0.026117 (  3)
+ ------------------------------------------------------------------------
+                  MAX     0.026117     RMS     0.019461
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ BERNY OPTIMIZATION
+ SEARCH FOR A LOCAL MINIMUM.
+ STEP NUMBER   1 OUT OF A MAXIMUM OF  12
+ ALL QUANTITIES PRINTED IN INTERNAL UNITS (HARTREES-BOHRS-RADIANS)
+ SECOND DERIVATIVE MATRIX NOT UPDATED -- FIRST STEP
+ THE SECOND DERIVATIVE MATRIX:
+                           R         A
+           R            1.28137
+           A            0.00000   0.30965
+     EIGENVALUES ---    0.30965   1.28137
+ LINEAR SEARCH NOT ATTEMPTED -- FIRST POINT
+ VARIABLE       OLD X    -DE/DX   DELTA X   DELTA X   DELTA X     NEW X
+                                 (LINEAR)    (QUAD)   (TOTAL)
+
+    R         1.88973  -0.03014   0.00000  -0.02352  -0.02352   1.86621
+    A         1.83260  -0.02612   0.00000  -0.08434  -0.08434   1.74825
+         ITEM               VALUE     THRESHOLD  CONVERGED
+ MAXIMUM FORCE            0.030137     0.000450     NO 
+ RMS     FORCE            0.028198     0.000300     NO 
+ MAXIMUM DISPLACEMENT     0.084344     0.001800     NO 
+ RMS     DISPLACEMEMT     0.061915     0.001200     NO 
+ PREDICTED CHANGE IN ENERGY -0.001456
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ ------------------------------------------------------------------------
+                         Z-MATRIX (ANGSTROMS AND DEGREES)
+ CD CENT ATOM  N1      LENGTH      N2     ALPHA      N3      BETA       J
+ ------------------------------------------------------------------------
+  1   1   O 
+  2   2   H     1   0.987554 (  1)
+  3   3   H     1   0.987554 (  2)  2  100.167 (  3)
+ ------------------------------------------------------------------------
+                  Z-MATRIX ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000    0.00000000
+    2             1                0.00000000    0.00000000    0.98755422
+    3             1                0.97204571    0.00000000   -0.17432866
+ ------------------------------------------------------------------------
+                    DISTANCE MATRIX (ANGSTROMS)
+              1          2          3
+  1   O   0.000000
+  2   H   0.987554   0.000000
+  3   H   0.987554   1.514874   0.000000
+ STOICHIOMETRY    H2O
+ FRAMEWORK GROUP  C2V<C2(O),SGV(H2)>
+ DEG. OF FREEDOM    2
+                   STANDARD ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000   -0.12673629
+    2             1                0.00000000    0.75743724    0.50694515
+    3             1                0.00000000   -0.75743724    0.50694515
+ ------------------------------------------------------------------------
+ NUMBER OF SYMMETRY OPERATIONS:  2
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.9228580565 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+      144 INTEGRALS PRODUCED FOR A TOTAL OF       144
+ RHF CLOSED SHELL SCF.
+ REQUESTED CONVERGENCE ON DENSITY MATRIX=  0.1000d-06 WITHIN  32 CYCLES.
+ ITER  ELECTRONIC-ENERGY       CONVERGENCE    EXTRAPOLATION
+ ----  -----------------       -----------    -------------
+   1  -0.838959653161141d+02
+   2  -0.838887179983350d+02    0.1835d-02
+   3  -0.838887450742661d+02    0.8238d-03
+   4  -0.838887500919666d+02    0.3599d-03       4-POINT.
+   5        (NON-VARIATIONAL)
+   6  -0.838887513098814d+02    0.2931d-06
+   7  -0.838887513098826d+02    0.1083d-06
+   8  -0.838887513098828d+02
+ SCF DONE:  E(RHF) =   -74.9658932533     A.U. AFTER    8 CYCLES
+            CONVG  =    0.4705d-07             -V/T =   2.005951
+ COMPONENT                       A.U.                   KCAL/MOL
+ ---------------------------------------------------------------
+ TOTAL                      -74.965893253341          -47042.597
+ ELECTRONIC                 -83.888751309883          -52641.869
+ NUCLEAR REPULSION            8.922858056542            5599.272
+ KINETIC                     74.522446994007           46764.326
+ POTENTIAL                 -149.488340247348          -93806.923
+ ELECTRONIC POTENTIAL      -158.411198303890          -99406.195
+ ONE-ELECTRON POTENTIAL    -196.386504202976         -123236.459
+ TWO-ELECTRON POTENTIAL      37.975305899087           23830.264
+ ***** AXES RESTORED TO ORIGINAL SET *****
+           MAX     0.002369     RMS     0.001436
+ ----------------------------------------------------------
+ CENTER     ATOMIC               FORCES (HARTREES/BOHR)
+ NUMBER     NUMBER             X           Y           Z
+ ----------------------------------------------------------
+    1          8          -0.002369    0.000000   -0.001982
+    2          1           0.000248    0.000000    0.002110
+    3          1           0.002121    0.000000   -0.000129
+ ----------------------------------------------------------
+ ------------------------------------------------------------------------
+                    INTERNAL COORDINATE FORCES (HARTREES/BOHR OR /RADIAN)
+ CENT ATOM N1      LENGTH      N2      ALPHA       N3       BETA        J
+ ------------------------------------------------------------------------
+  1   O 
+  2   H     1   0.002110 (  1)
+  3   H     1   0.002110 (  2)  2  -0.000463 (  3)
+ ------------------------------------------------------------------------
+                  MAX     0.002110     RMS     0.001744
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ BERNY OPTIMIZATION
+ SEARCH FOR A LOCAL MINIMUM.
+ STEP NUMBER   2 OUT OF A MAXIMUM OF  12
+ ALL QUANTITIES PRINTED IN INTERNAL UNITS (HARTREES-BOHRS-RADIANS)
+ UPDATE SECOND DERIVATIVES USING INFORMATION FROM POINTS:  1  2
+ THE SECOND DERIVATIVE MATRIX:
+                           R         A
+           R            1.28193
+           A            0.00203   0.31694
+     EIGENVALUES ---    0.31693   1.28194
+ LINEAR SEARCH NOT ATTEMPTED -- RMS FORCE IS LESS THAN FSWTCH ( 0.01000)
+ VARIABLE       OLD X    -DE/DX   DELTA X   DELTA X   DELTA X     NEW X
+                                 (LINEAR)    (QUAD)   (TOTAL)
+
+    R         1.86621   0.00422   0.00000   0.00329   0.00329   1.86950
+    A         1.74825  -0.00046   0.00000  -0.00148  -0.00148   1.74677
+         ITEM               VALUE     THRESHOLD  CONVERGED
+ MAXIMUM FORCE            0.004221     0.000450     NO 
+ RMS     FORCE            0.003002     0.000300     NO 
+ MAXIMUM DISPLACEMENT     0.003295     0.001800     NO 
+ RMS     DISPLACEMEMT     0.002554     0.001200     NO 
+ PREDICTED CHANGE IN ENERGY -0.000007
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ ------------------------------------------------------------------------
+                         Z-MATRIX (ANGSTROMS AND DEGREES)
+ CD CENT ATOM  N1      LENGTH      N2     ALPHA      N3      BETA       J
+ ------------------------------------------------------------------------
+  1   1   O 
+  2   2   H     1   0.989298 (  1)
+  3   3   H     1   0.989298 (  2)  2  100.083 (  3)
+ ------------------------------------------------------------------------
+                  Z-MATRIX ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000    0.00000000
+    2             1                0.00000000    0.00000000    0.98929774
+    3             1                0.97401935    0.00000000   -0.17319445
+ ------------------------------------------------------------------------
+                    DISTANCE MATRIX (ANGSTROMS)
+              1          2          3
+  1   O   0.000000
+  2   H   0.989298   0.000000
+  3   H   0.989298   1.516609   0.000000
+ STOICHIOMETRY    H2O
+ FRAMEWORK GROUP  C2V<C2(O),SGV(H2)>
+ DEG. OF FREEDOM    2
+                   STANDARD ORIENTATION:
+ ------------------------------------------------------------------------
+ CENTER        ATOMIC                  COORDINATES (ANGSTROMS)
+ NUMBER        NUMBER               X             Y             Z
+ ------------------------------------------------------------------------
+    1             8                0.00000000    0.00000000   -0.12707235
+    2             1                0.00000000    0.75830432    0.50828941
+    3             1                0.00000000   -0.75830432    0.50828941
+ ------------------------------------------------------------------------
+ NUMBER OF SYMMETRY OPERATIONS:  2
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.9073487817 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+      144 INTEGRALS PRODUCED FOR A TOTAL OF       144
+ RHF CLOSED SHELL SCF.
+ REQUESTED CONVERGENCE ON DENSITY MATRIX=  0.1000d-06 WITHIN  32 CYCLES.
+ ITER  ELECTRONIC-ENERGY       CONVERGENCE    EXTRAPOLATION
+ ----  -----------------       -----------    -------------
+   1  -0.838717588320286d+02
+   2  -0.838732496849179d+02    0.1102d-03
+   3  -0.838732497881338d+02    0.5013d-04
+   4  -0.838732498077915d+02    0.2224d-04      4-POINT.
+   5        (NON-VARIATIONAL)
+   6  -0.838732498125776d+02    0.1023d-06
+   7  -0.838732498125777d+02
+ SCF DONE:  E(RHF) =   -74.9659010308     A.U. AFTER    7 CYCLES
+            CONVG  =    0.4113d-07             -V/T =   2.006000
+ COMPONENT                       A.U.                   KCAL/MOL
+ ---------------------------------------------------------------
+ TOTAL                      -74.965901030833          -47042.602
+ ELECTRONIC                 -83.873249812578          -52632.142
+ NUCLEAR REPULSION            8.907348781745            5589.540
+ KINETIC                     74.518807994534           46762.042
+ POTENTIAL                 -149.484709025367          -93804.645
+ ELECTRONIC POTENTIAL      -158.392057807111          -99394.184
+ ONE-ELECTRON POTENTIAL    -196.354814562426         -123216.573
+ TWO-ELECTRON POTENTIAL      37.962756755315           23822.389
+ ***** AXES RESTORED TO ORIGINAL SET *****
+           MAX     0.000271     RMS     0.000145
+ ----------------------------------------------------------
+ CENTER     ATOMIC               FORCES (HARTREES/BOHR)
+ NUMBER     NUMBER             X           Y           Z
+ ----------------------------------------------------------
+    1          8          -0.000271    0.000000   -0.000227
+    2          1           0.000146    0.000000    0.000101
+    3          1           0.000125    0.000000    0.000126
+ ----------------------------------------------------------
+ ------------------------------------------------------------------------
+                    INTERNAL COORDINATE FORCES (HARTREES/BOHR OR /RADIAN)
+ CENT ATOM N1      LENGTH      N2      ALPHA       N3       BETA        J
+ ------------------------------------------------------------------------
+  1   O 
+  2   H     1   0.000101 (  1)
+  3   H     1   0.000101 (  2)  2  -0.000273 (  3)
+ ------------------------------------------------------------------------
+                  MAX     0.000273     RMS     0.000178
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ BERNY OPTIMIZATION
+ SEARCH FOR A LOCAL MINIMUM.
+ STEP NUMBER   3 OUT OF A MAXIMUM OF  12
+ ALL QUANTITIES PRINTED IN INTERNAL UNITS (HARTREES-BOHRS-RADIANS)
+ UPDATE SECOND DERIVATIVES USING INFORMATION FROM POINTS:  1  2  3
+ THE SECOND DERIVATIVE MATRIX:
+                           R         A
+           R            1.25023
+           A            0.06846   0.28070
+     EIGENVALUES ---    0.27589   1.25504
+ LINEAR SEARCH NOT ATTEMPTED -- RMS FORCE IS LESS THAN FSWTCH ( 0.01000)
+ VARIABLE       OLD X    -DE/DX   DELTA X   DELTA X   DELTA X     NEW X
+                                 (LINEAR)    (QUAD)   (TOTAL)
+
+    R         1.86950   0.00020   0.00000   0.00022   0.00022   1.86972
+    A         1.74677  -0.00027   0.00000  -0.00102  -0.00102   1.74575
+         ITEM               VALUE     THRESHOLD  CONVERGED
+ MAXIMUM FORCE            0.000273     0.000450     YES
+ RMS     FORCE            0.000240     0.000300     YES
+ MAXIMUM DISPLACEMENT     0.001024     0.001800     YES
+ RMS     DISPLACEMEMT     0.000740     0.001200     YES
+ PREDICTED CHANGE IN ENERGY  0.000000
+ OPTIMIZATION COMPLETED.
+    -- STATIONARY POINT FOUND.
+    -- LAST STEP NOT IMPLEMENTED.
+                       ---------------------------
+                       !  OPTIMIZED PARAMETERS   !
+                       ! (ANGSTROMS AND DEGREES) !
+ ----------------------                           -----------------------
+ !      NAME          VALUE   DERIVATIVE INFORMATION (ATOMIC UNITS)     !
+ ------------------------------------------------------------------------
+ !        R          0.9893   -DE/DX =    0.000202                      !
+ !        A        100.0826   -DE/DX =   -0.000272                      !
+ ------------------------------------------------------------------------
+ GRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRADGRAD
+ STANDARD BASIS: STO-3G     (S, S=P, 5D, 7F)
+   7 BASIS FUNCTIONS       21 PRIMITIVE GAUSSIANS
+   5 ALPHA ELECTRONS        5 BETA ELECTRONS
+     NUCLEAR REPULSION ENERGY    8.9073487817 HARTREES
+ RAFFENETTI 1 INTEGRAL FORMAT.
+ TWO-ELECTRON INTEGRAL SYMMETRY IS TURNED ON.
+ ORBITAL SYMMETRIES.
+       OCCUPIED: (A1) (A1) (B2) (A1) (B1)
+       VIRTUAL:  (A1) (B2)
+  THE ELECTRONIC STATE IS 1-A1.
+      MOLECULAR ORBITAL COEFFICIENTS
+                           1         2         3         4         5
+                         (A1)      (A1)      (B2)      (A1)      (B1)
+     EIGENVALUES --   -20.25150  -1.25754  -0.59401  -0.45961  -0.39259
+   1 1   O  1S          0.99422  -0.23377   0.00000  -0.10401   0.00000
+   2        2S          0.02585   0.84442   0.00000   0.53806   0.00000
+   3        2PX         0.00000   0.00000   0.00000   0.00000   1.00000
+   4        2PY         0.00000   0.00000   0.61260   0.00000   0.00000
+   5        2PZ         0.00416   0.12283   0.00000  -0.75607   0.00000
+   6 2   H  1S         -0.00559   0.15561   0.44919  -0.29500   0.00000
+   7 3   H  1S         -0.00559   0.15561  -0.44919  -0.29500   0.00000
+                           6         7
+                         (A1)      (B2)
+     EIGENVALUES --     0.58182   0.69295
+   1 1   O  1S          0.12586   0.00000
+   2        2S         -0.82045   0.00000
+   3        2PX         0.00000   0.00000
+   4        2PY         0.00000  -0.96003
+   5        2PZ        -0.76328   0.00000
+   6 2   H  1S          0.76931   0.81468
+   7 3   H  1S          0.76931  -0.81468
+    FULL MULLIKEN POPULATION ANALYSIS.
+                           1         2         3         4         5
+   1 1   O  1S          2.10786
+   2        2S         -0.10778   2.00645
+   3        2PX         0.00000   0.00000   2.00000
+   4        2PY         0.00000   0.00000   0.00000   0.75056
+   5        2PZ         0.00000   0.00000   0.00000   0.00000   1.17350
+   6 2   H  1S         -0.00112  -0.02495   0.00000   0.16118   0.11883
+   7 3   H  1S         -0.00112  -0.02495   0.00000   0.16118   0.11883
+                           6         7
+   6 2   H  1S          0.62609
+   7 3   H  1S         -0.04538   0.62609
+     GROSS ORBITAL CHARGES.
+                           1
+   1 1   O  1S          1.99783
+   2        2S          1.84878
+   3        2PX         2.00000
+   4        2PY         1.07292
+   5        2PZ         1.41116
+   6 2   H  1S          0.83465
+   7 3   H  1S          0.83465
+          CONDENSED TO ATOMS (ALL ELECTRONS)
+              1          2          3
+  1   O   7.822817   0.253942   0.253942
+  2   H   0.253942   0.626090  -0.045383
+  3   H   0.253942  -0.045383   0.626090
+          TOTAL ATOMIC CHARGES.
+              1
+  1   O   8.330702
+  2   H   0.834649
+  3   H   0.834649
+ DIPOLE MOMENT (DEBYE): X= 0.0000   Y= 0.0000   Z= 1.7091   TOTAL= 1.7091
+
+ **** gnu80 STOPS EXECUTING *****
+\end{verbatim}
+}

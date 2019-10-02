@@ -1,0 +1,78 @@
+\documentstyle[12pt]{report}
+%    The problem with the table of contents marking is that there is a fixed
+% width box for each sectional number, and you can easily overflow this width
+% by having too many chapters. The l@part and l@chapter set \@tempdima,
+% and the other l@ commands use the third parameter to \l@dottedtocline to
+% set the width of the boxes. Thus, if your manual has a lot of chapters,
+% and appendices up to M say, I suggest you set these values pretty large.
+% The following should work for up to 99 chapters, and 26 appendices to each!
+%       Mike.
+\newcounter{SavedChapter}
+\makeatletter
+\def\l@chapter#1#2{\pagebreak[3]
+   \vskip 1.0em plus 1pt  % space above chapter line
+   \@tempdima 2.6em       % width of box holding chapter number
+   \begingroup
+     \parindent \z@ \rightskip \@pnumwidth
+     \parfillskip -\@pnumwidth
+     \bf                  % Boldface.
+     \leavevmode          % TeX command to enter horizontal mode.
+     #1\hfil \hbox to\@pnumwidth{\hss #2}\par
+   \endgroup}
+\def\l@section{\@dottedtocline{1}{1.5em}{3.4em}}
+\def\l@subsection{\@dottedtocline{2}{3.8em}{4.3em}}
+\def\l@subsubsection{\@dottedtocline{3}{7.0em}{5.2em}}
+\def\l@paragraph{\@dottedtocline{4}{10em}{6.1em}}
+\def\l@subparagraph{\@dottedtocline{5}{12em}{7.1em}}
+\newenvironment{Appendix}{%
+   \setcounter{SavedChapter}{\arabic{chapter}}
+   \setcounter{chapter}{0}
+% DBC
+   \setcounter{section}{0}
+% DBC
+   \def\thechapter{\arabic{SavedChapter}.\Alph{chapter}}
+   \def\@chapapp{Appendix}
+   \def\chapter{\clearpage \thispagestyle{plain} \global\@topnum\z@
+      \@afterindentfalse \secdef\@chapter\@schapter}
+   \def\@chapter[##1]##2{\ifnum \c@secnumdepth >\m@ne
+       \advance\c@chapter 1 \edef\@currentlabel{\p@chapter \thechapter}
+       \typeout{Appendix\space\thechapter.}
+       \addcontentsline{toc}{chapter}{\protect
+       \numberline{\thechapter}##1}\else
+       \addcontentsline{toc}{chapter}{##1}\fi
+       \chaptermark{##1}
+       \addtocontents{lof}{\protect\addvspace{10pt}}
+       \addtocontents{lot}{\protect\addvspace{10pt}} \if@twocolumn
+       \@topnewpage[\@makechapterhead{##2}]
+       \else \@makechapterhead{##2}
+       \@afterheading \fi}
+   }{\setcounter{chapter}{\arabic{SavedChapter}}}
+\makeatother
+\begin{document}
+\def\theequation{\thesection.\arabic{equation}}
+\pagenumbering{roman}
+%\tableofcontents
+\include{history}
+\pagenumbering{arabic}
+\include{chap1}
+%\begin{Appendix}
+  \include{chap1a}
+%\end{Appendix}
+%\include{chap2}
+%\begin{Appendix}
+%  \include{chap2a}
+%  \include{chap2aa}
+%  \include{chap2b}
+%  \include{chap2c}
+%\end{Appendix}
+% \include{chap3}
+%\begin{Appendix}
+%  \include{chap3a}
+%\end{Appendix}
+%\include{chap4}
+%\begin{Appendix}
+%   \include{chap4a}
+%\end{Appendix}
+%\include{chap5}
+%\include{chap6}
+\end{document}

@@ -1,0 +1,29 @@
+\documentstyle[12pt]{article}
+\begin{document}
+\section*{{\tt DIRECT} SCF in gnu80}
+It is now possible to perform (closed-shell) SCF calculations
+in {\tt gnu80} in which the electron-repulsion integrals are
+computed as they are needed ({\em i.e.} not stored on an external file).
+This is DIRECT SCF in the usual terminology. One simply adds the command 
+``{\tt DIRECT}" to the command record, {\em e.g.}:
+\begin{verbatim}
+    %RWF=test.rwf
+    # HF/6-31G*,DIRECT,OPT
+
+       This is a sample DIRECT SCF Job
+
+    0 1
+    Z-Matrix RECORDS
+    .
+    .
+
+\end{verbatim}
+At the present time open-shell SCF(s) are not available in the DIRECT
+form; they will appear in due course.
+
+Equally, post-SCF jobs will crash because the repulsion integral file
+will not be present.
+The post-SCF (closed-shell) will be implemented before the open-shell
+SCF.
+\end{document}
+

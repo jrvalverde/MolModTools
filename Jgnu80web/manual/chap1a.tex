@@ -1,0 +1,454 @@
+\chapter{\sf Standard Nomenclature}
+\label{app1a}
+\section{\sf The Hamiltonian}
+The molecular Hamiltonian used in the energy calculations
+of standard quantum chemistry is always the non-relativistic, Born-Oppenheimer
+``electrostatic'' Hamiltonian, which is, in
+atomic units:
+\begin{equation}
+\hat{H} ( \vec{r_1}, \vec{r_2}, \ldots , \vec{r_n} ) = 
+\sum_{i=1}^{n} { \hat{h} (\vec{r_i}) } + 
+\sum_{i=1}^{n} { \sum_{j < i} { \frac{1}{ r_{ij} } } }
+\label{H}
+\end{equation}
+Here, there are assumed to be $n$ electrons in the molecule and their
+position vectors are $\vec{r_i}$.
+Each electron has a {\em One-electron Hamiltonian} of identical
+form:
+\begin{equation}
+\hat{h} (\vec{r_i}) = - \frac{1}{2} \nabla^2 (\vec{r_i})
+- \sum_{A=1}^{N} { \frac{Z_A}{ | \vec{r_i} - \vec{r_A} | } }
+\label{h}
+\end{equation}
+where the position vectors of the nuclei are $\vec{r_A}$ and their
+charges are $Z_A$, and it issumed that there are $N$ of them.
+
+The electron repulsion terms are simply the Coulomb repulsions
+between unit like charges:
+\[
+\frac{1}{r_{ij}} = \frac{1}{ | \vec{r_i} - \vec{r_j} | }
+\]
+the summation is over all {\em distinct} pairs and $i \not= j$ of course.
+
+The associated Schr\"{o}dinger equation:
+\begin{equation}
+\hat{H} ( \vec{r_1}, \vec{r_2}, \ldots , \vec{r_n} ) 
+\Psi ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} ) = E 
+\Psi ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} ) 
+\label{se}
+\end{equation}
+in which the many-electron wavefunction 
+$\Psi ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} )$ depends on the
+{\em spatial} and {\em spin} ``co-ordinates'' of the electrons.
+The collection of three spatial co-ordinates ($\vec{r_i}$) and one
+spin variable is written as $\vec{x_i}$. 
+This equation cannot be solved and {\em ab initio} methods are designed 
+to generate {\em approximate
+and model} solutions of \ref{se} by a variety of variational and
+perturbation techniques.
+\section{\sf Many-electron Wavefunctions}
+\label{wf}
+The many-electron wavefunction is approximated by a linear combination
+of {\bf Slater Determinants} 
+$\Phi_K ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} )$, 
+each of which is the anti-symmetrised
+product of $n$ {\bf Spin-Orbitals} $\chi (\vec{x_i})$ depending
+on the space and spin variables of just one electron; for example
+a determinant constructed from the first $n$ spin-orbitals 
+$\chi_1 \ldots \chi_n$ is:
+\begin{center}
+\[
+\Phi (\vec{x_1},\vec{x_2},\ldots , \vec{x_n} ) = 
+\frac{1}{\sqrt{n!}}
+\left |
+\begin{array}{cccc}
+\chi_1 (\vec{x_1}) & \chi_1 (\vec{x_2}) & \dots  & \chi_1 (\vec{x_n})  \\
+\chi_2 (\vec{x_1}) & \chi_2 (\vec{x_2}) & \dots  & \chi_2 (\vec{x_n})  \\
+\chi_3 (\vec{x_1}) & \chi_3 (\vec{x_2}) & \dots  & \chi_3 (\vec{x_n})  \\
+\ldots & \ldots & \ldots & \ldots \\
+\ldots & \ldots & \ldots & \ldots \\
+\ldots & \ldots & \ldots & \ldots \\
+\chi_{n-2} (\vec{x_1}) & \chi_{n-2} (\vec{x_2}) & \dots  & 
+\chi_{n-2} (\vec{x_n})  \\
+\chi_{n-1} (\vec{x_1}) & \chi_{n-1} (\vec{x_2}) & \dots  
+& \chi_{n-1} (\vec{x_n})  \\
+\chi_n (\vec{x_1}) & \chi_n (\vec{x_2}) & \dots  & \chi_n (\vec{x_n})  
+\end{array}
+\right |
+\]
+\end{center}
+The factor $1/\sqrt{n!}$ normalises $\Phi$ if the $\chi_i$ are
+an orthonormal set.
+
+The number and construction of these determinants defines a {\bf model}
+of molecular electronic structure and the accuracy with which
+the spin-orbitals may be computed is defined by practical factors in
+the system, in general
+\begin{equation}
+\Psi ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} ) 
+\approx \sum_{K=0}^{M} 
+{ A_K \Phi_K ( \vec{x_1}, \vec{x_2}, \ldots , \vec{x_n} ) }
+\label{wftilde}
+\end{equation}
+The {\bf Hartree-Fock} model throws all its effort into obtaining the
+best possible {\em one term} expansion; $A_0 = 1$, $A_K = 0$ for
+$ K > 0 $. The {\bf Configuration Interaction} and
+{\bf Moller-Plesset} methods improve on this single-term model by
+extending the expansion using the {\em virtual} orbitals generated
+by the Hartree-Fock variational procedure as a bye-product.
+\section{\sf Spin-Orbitals}
+\label{spinorb}
+There are just two possible spin ``functions'' conventionally
+written $\alpha$ and $\beta$ and usually the
+generation of spin-orbitals which are {\em mixtures} of these two functions
+is not considered.
+Thus the computational problem is the determination of the
+{\bf spatial orbitals} which are the spatially dependent factors
+of the spin-orbitals $\chi_i$:
+\begin{eqnarray*}
+\chi_i (\vec{x}) = \psi_{i'} (\vec{r}) \alpha \\
+{\mbox \rm or  }\\
+\chi_i (\vec{x}) = \psi_{i'} (\vec{r}) \beta
+\label{spaceorb}
+\end{eqnarray*}
+In many applications it is useful to have a more compact notation
+for the relationship between the spin-orbitals and the
+spatial orbitals since the spin function is just  a label; the
+``bar'' and ``no bar'' notation is used:
+\begin{eqnarray*}
+\psi_i = \psi_i \alpha \\
+\overline{\psi}_i = \psi_i \beta
+\end{eqnarray*}
+That is, the notation $\psi_i$ may mean the spatial orbital
+{\em or } the $\alpha$ spin-orbital with spatial factor $\psi_i$
+according to context. Sometimes care must be taken to 
+distinguish the two cases.
+\section{\sf Linear Expansions for the Spatial Orbitals}
+Each  spatial molecular orbital $\psi_i$, a function of ordinary 
+three-dimensional space,
+is expanded as a linear combination of {\bf Basis
+Functions} which are fixed for a particular calculation and
+are chosen on a variety of theoretical and (mostly) practical
+grounds. These basis functions ($\phi_k (\vec{r})$) are key
+elements in the success of any calculation of molecular electronic
+structure:
+\begin{equation}
+\psi_i (\vec{r}) = \sum_{k=1}^{m} { \phi_k (\vec{r}) C_{ki} }
+\label{lcao}
+\end{equation}
+Where there are $m$ basis functions with which to expand
+the $n$ optimum molecular orbitals. In view of the relationship between
+spatial and spin orbitals, not all the $n$ spatial molecular orbitals
+need be different; sometimes there will be {\em pairs} which
+are the same and the associated spin-orbitals only differ in
+spin factor.
+The Hartree-Fock variational method optimises the linear
+coefficients $C_{ki}$ to ensure the best possible (lowest energy)
+description of the molecular system.
+
+For reasons which are entirely practical, the basis functions
+must be {\bf Gaussian Functions}, functions which have a factor
+\[
+exp( -\alpha |\vec{r}|^2)
+\]
+as part of their functional form. Since the ``natural''
+atomic orbitals have a dependence like $exp(-\zeta |\vec{r}| ) $
+there has to be a much longer expansion in terms of Gaussians to
+ensure an accurate molecular orbital is computed, typically two or three
+times the length of a Slater orbital expansion.
+
+The use of Gaussian functions {\em directly} in
+\ref{lcao} would therefore make excessive requirements of
+storage for the electron-repulsion integrals and so a compromise
+is used whereby the length of the explicit expansion in \ref{lcao}
+is restricted by taking the basis functions themselves to
+be {\em fixed} linear combination of so-called {\bf Primitive}
+Gaussians:
+\begin{equation}
+\phi_k (\vec{r}) = \sum_{j=1}^{n_k} { \eta_j (\vec{r}) d_{jk} }
+\label{lcprim}
+\end{equation}
+Here the length of the expansion may depend on the basis
+function in question, so that the {\bf Degree of Contraction}
+$n_k$ depends on $k$.
+\section{\sf Primitive Gaussians}
+\label{prims}
+The general form of a primitive Gaussian function is usually
+chosen to be the product of a Cartesian Factor and an exponential:
+\begin{equation}
+\eta(\vec{r}) = N x^{\ell} y^{m} z^{n} exp(- \alpha r^2 )
+\end{equation}
+where $ r = | \vec{r} |$ and $\ell, m, n$ are integers which characterise
+the {\em type} or {\em order} of the Gaussian function. $N$ is a numerical
+factor chosen to {\em Normalise} the function to unity, clearly depending
+on $\alpha, \; \ell, \; m, \; $ and $n$.
+
+If a Gaussian primitive is expressed in terms of a global co-ordinate
+system, the components of the position vector of the centre on which
+it is based appear in an obvious way.
+\begin{equation}
+\eta_j (\vec{r}) = N( \ell_j , m_j , n_j ; \alpha_j ) 
+(x-x_A )^{\ell_j} ( y - y_A )^m_j ( z - z_A )^n_j 
+exp( \alpha_j | \vec{r} - \vec{r_{A}} |^2 )
+\end{equation}
+where the explicit dependence of the primitive on the position
+of its nucleus is given; $\vec{r_A} =(x_A , y_A , z_A )$ is the position
+vector of centre $A$. The subscript $j$ serves to identify this
+particular $\eta_j$ among the many.
+
+The type of this primitive is given by 
+\[
+t = \ell_j + m_j + n_j
+\]
+and a terminology related to the familiar atomic orbitals is used:
+\begin{description}
+\item[t = 0] an s-type Gaussian or zeroth-order Gaussian
+\item[t = 1] a p-type Gaussian or first-order Gaussian
+\item[t = 2] a d-type Gaussian or second-order Gaussian
+\item[t = 3] an f-type Gaussian or third-order Gaussian
+\end{description}
+In the first two cases (s and p) there is a direct correspondence
+between the Gaussians and the real Atomic Orbitals. For d,f and
+higher Gaussians there are more Cartesian factors of a given type than
+real Atomic Orbitals of the corresponding angular momentum 
+($t$ is equal to the total angular momentum quantum number usually
+written as $\ell$ in atomic theory).
+
+
+This technique of retaining some of the Gaussian primitives in
+{\em fixed} linear combinations is called {\bf Contraction}.
+Of course, the calculations using all the primitives still have to be performed,
+but the advantage gained by using so-called contracted basis functions
+is that {\em storage} is saved. The price to be paid for the
+contraction technique is loss of variational flexibility; only
+the linear combination coefficients of the {\em basis functions}
+are optimised, not the coefficients of each primitive.
+\section{\sf Single Determinant Energy Expression}
+The mean value of the energy of a single determinant of
+orthonormal (orthogonal and normalised) molecular orbitals 
+\[
+\int { \chi_i (\vec{x})\chi_i (\vec{x}) d \tau } = \delta_{ij}
+\]
+is
+\begin{equation}
+E[\Phi ] = \int { \Phi^* (\vec{x_1},\vec{x_2}, \ldots ,\vec{x_n} )
+\hat{H}(\vec{r_1},\vec{r_2}, \ldots ,\vec{r_n} )
+\Phi (\vec{x_1},\vec{x_2}, \ldots ,\vec{x_n} ) d\tau_1 d\tau_2 \ldots d\tau_n }
+\end{equation}
+\begin{center}
+\fbox{
+\parbox{3.5in}{
+Integration over spin {\em and} space variables
+is denoted by
+\[
+\int \ldots d \tau \,\,\, or \,\,\, \int \ldots d\tau_1
+\]
+while integration over space {\em only} is written
+\[
+\int \ldots dV \,\,\, or \,\,\, \int \ldots dV_1
+\]
+That is:
+\[
+\int \ldots d \tau = \int \int \ldots dV ds
+\]
+where $s$ is the spin ``variable'' .
+That is, $dV$ refers to the three spatial variables in $\vec{r}$
+and $d \tau$ to the four variables in $\vec{x}$.
+}
+}
+\end{center}
+
+Completion of the integration, by separation and use of
+the specific form of $\hat{H}$ (Equation \ref{H}), 
+together with the orthonormality
+relationships reduces this integral (over $3n$ spatial variables
+and $n$ spin ``variables'' ) to:
+\begin{equation}
+E = \sum_{i=1}^{n} { h_{ii} }
++ \sum_{i=1}^n { \sum_{j \leq i}^{n} {
+( J_{i,j} - K_{ij} ) } }
+\end{equation}
+Where
+\[
+h_{ii} = \int { \chi_i^* (\vec{x}) \hat{h}(\vec{r}) \chi_i (\vec{x}) d\tau }
+\]
+$\hat{h}$ is the one-electron hamiltonian \ref{h} and 
+\begin{equation}
+J_{ij} = < i j | i j > = 
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_i (\vec{x_1})\chi_j (\vec{x_2}) } }
+\end{equation}
+\begin{equation}
+K_{ij} =  
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_j (\vec{x_1})\chi_i (\vec{x_2}) } }
+\end{equation}
+
+The physical interpretation of the terms is straightforword.
+The integrals $h_{ii}$ are the energy of an electron moving
+in the attractive field of the nuclei {\em alone} (i.e. in
+the absence of the other electrons). The integrals $J_{ij}$
+are the mean repulsions between electrons occupying $\chi_i$
+and $\chi_j$; they are called ``Coulomb'' terms for this reason.
+The integrals $K_{ij}$ arise from the anti-symmetry of the wavefunction
+and have no srict classical analogue but their principle function
+in the energy expression is to cancel out the ``self-repulsion''
+which would be included if they were not present (notice the summation
+{\em includes} the term $i=j$). The $K_{ij}$ are called
+``Exchange Integrals'' because of the way they arise in
+the mathematics of the expansion of the determinant.
+\section{\sf Notation for Repulsion integrals}
+It is usual to write the electron repulsion terms in the 
+single-determinant energy expression as special cases of a
+more general repulsion integral e.g:
+\begin{equation}
+K_{ij} = < i j | j i > = 
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_j (\vec{x_1})\chi_i (\vec{x_2}) } }
+\end{equation}
+
+The notation $< i j | i j >$ and $< i j | j i > $ has been
+introduced in anticipation of a more general electron
+repulsion integral $ < i j | k \ell > $:
+\begin{equation}
+ < i j | k \ell > = 
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_k (\vec{x_1})\chi_{\ell} (\vec{x_2}) } }
+\label{ijkl}
+\end{equation}
+Integrals of this type appear in the energy expression of
+multi-determinant wave functions in the ``cross terms''
+between different determinants and are included here to 
+define the notation.
+
+The complex-conjugate notation has been given explicitly since,
+although the primitives and basis functions are obviously all {\em real},
+the expansion coefficients $C_{ki}$ may well be complex in some
+applications; leading to complex $\chi_i$.
+
+There are a variety of notations for the repulsion integrals
+either singly or in ``standard combinations'' , each
+has its own logic and there is no overwhelming reason to
+choose one or the other. It is sometimes more intuitively
+acceptable to use the physical interpretation of these integrals
+as the net repulsion between a charge distribution 
+$\chi_i (\vec{x_1})\chi_k (\vec{x_1})$ and 
+$\chi_j (\vec{x_2})\chi_{\ell} (\vec{x_2})$
+as a justification for the ``charge-cloud'' notation:
+\begin{equation}
+( i k , j \ell ) = < i j | k \ell >
+\end{equation}
+where {\em round brackets} and {\em no} vertical bar distinguish
+between the two notations. The charge-cloud notation is particularly
+useful when the integrals are over {\em basis functions} not
+molecular orbitals since these are always real and the various possible
+permutations of $i, j, k, \ell $ which do not change the
+value of $(ik, j \ell )$  are easier to see, in fact, if the 
+functions {\em are} real then interchanging $i$ and $k$, or
+$j$ and $\ell$, or the {\em pairs} $(i,k)$ and $(j \ell )$
+do not change the value of $(ik, j \ell )$ as can be seen from the 
+definition
+(equation \ref{ijkl}).
+
+Integrals like \ref{ijkl} usually occur in {\em pairs} in the
+evaluation of energy integrals from determinantal wavefunctions
+and it is often convenient to use a single symbol to
+mean a Coulomb integral and its corresponding Exchange integral
+although the difference between the two terms is no longer valid
+if $ i \not= k$ and $j \not= \ell$:
+\begin{equation}
+<i j || k \ell > = < i j | k \ell > - < i j | \ell j >
+\label{doubar}
+\end{equation}
+The double bar serving to indicate that the ``exchange''
+term has been included.
+\section{\sf Spatial Orbital Repulsion Integrals}
+Throughout the previous two sections the electron-repulsion
+integrals have been expressed in terms of the {\em spin-orbitals}
+$\chi_i (\vec{x})$, but, since the ``integration'' over
+the spin is trivial, it is always possible to reduce integrals like
+\ref{ijkl} to a ``genuine'' integration over space (six
+dimensional since there are two particles involved). The electron-repulsion
+operator $1/r_{12}$ does not involve spin so that the spin integration can
+always be separated into factors which are zero or one depending of the
+spin factors involved:
+\begin{eqnarray}
+\int { \alpha^* \alpha ds } = 1 \\
+\int { \beta^* \beta ds } = 1 \\
+\int { \alpha^* \beta ds } = 0 \\
+\int { \beta^* \alpha ds } = 0 
+\label{spinints}
+\end{eqnarray}
+so that any integral $<i j | k \ell >$ which contains
+spin-orbitals $\chi_i$ and $\chi_k$ which have
+{\em different} spin factors will be {\em zero} as will
+any integral with different spin factors in $\chi_j$ and
+$\chi_{\ell}$.
+
+Thus, if the spin factors in the pairs $\chi_i , \chi_k$
+and $\chi_j , \chi_{\ell} $ are the {\em same} (and only then)
+the integral
+\begin{equation}
+ < i j | k \ell > = 
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_k (\vec{x_1})\chi_{\ell} (\vec{x_2}) } }
+\end{equation}
+becomes
+\begin{equation}
+ < i' j' | k' \ell ' > = 
+\int { dV_1 \int { dV_2 \psi_{i'}^* (\vec{r_1})\psi_{j'}^* (\vec{r_2})
+\left ( \frac{1}{r_{12}} \right )
+\psi_{k'} (\vec{r_1})\psi_{\ell '} (\vec{r_2}) } }
+\end{equation}
+where $\psi_{i'}$ is the spatial factor in the spin-orbital
+$\chi_i$ etc.
+
+This fact reduces the number of repulsion integrals, particularly
+exchange integrals.
+\section{\sf Basis Function Repulsion Integrals}
+In the calculation of molecular electronic structure by the
+basis function expansion method it is necessary to calculate
+the {\em molecular orbital} repulsion integrals by calculating the
+corresponding replusion integrals involving the {\em basis
+functions} and using the linear combination coefficients to
+generate the {\em molecular orbital} integrals. That is the integrals
+\begin{equation}
+ < i j | k \ell > = 
+\int { dV_1 \int { dV_2 \phi_i^* (\vec{x_1})\phi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\phi_k (\vec{x_1})\phi_{\ell} (\vec{x_2}) } }
+\end{equation}
+Where the same symbol $< i j | k \ell > $ has been used to denote
+an electron repulsion integral over the basis functions as was used
+in the last section for these integrals over molecular orbitals. This is
+standard practice and it is usually clear from the context
+which integral is meant. If there is doubt then the more
+explicit notation
+\begin{equation}
+ < \phi_i \phi_j | \phi_k \phi_{\ell} > = 
+\int { dV_1 \int { dV_2 \phi_i^* (\vec{r_1})\phi_j^* (\vec{r_2})
+\left ( \frac{1}{r_{12}} \right )
+\phi_k (\vec{r_1})\phi_{\ell} (\vec{r_2}) } }
+\end{equation}
+may be used for the basis-function integrals and
+\begin{equation}
+ < \chi_i \chi_j | \chi_k \chi_{\ell} > = 
+\int { d\tau_1 \int { d\tau_2 \chi_i^* (\vec{x_1})\chi_j^* (\vec{x_2})
+\left ( \frac{1}{r_{12}} \right )
+\chi_k (\vec{x_1})\chi_{\ell} (\vec{x_2}) } }
+\label{ijklfull}
+\end{equation}
+for the molecular orbital integrals. In practice, it is usually
+the basis-function integrals which are denoted by the simpler
+form $< i j | k \ell > $ and, if necessary, the molecular orbital integrals
+by the more explicit notation.
+
+Notice that, since the basis functions are {\em spatial} functions
+the basis-function electron-repulsion integrals involve no
+spin integration; if one of them is zero it is because of
+symmetry or simply because the two charge-clouds are very remote.

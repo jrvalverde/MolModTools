@@ -1,0 +1,93 @@
+\chapter{\sf Banana Skins}
+\label{bananas}
+\section{\sf Non-existent Functions}
+It is relatively easy to list the limitations of the {\tt gnu80}
+system; maximum number and type of basis functions, maximum
+amount of integral storage, type of quantum mechanical model ate. etc.
+What are not quite so obvious are the limitations of some of the 
+underlying {\em theoretical methods}.
+
+Tecnically, for example, the basic {\bf HF} models are the
+equations resulting from using the {\em parametric} variation method
+on the Hartree-Fock Energy functional; the full (functional) variation
+method in which {\em arbitrary} variations are allowed in the form of the MOs
+has been replaced by the variation of a finite set of linear parameters,
+the MO coefficients. This is done for entirely practical reasons and
+in most cases the errors arising from this limitation of the
+variation method are entirely {\em quantitative}; the minimum energy
+of the Hartree-Fock limit is not reached. 
+
+However, the parametric variation principle makes the all-important
+{\em assumption} of the {\em existence} of the solutions. A closed-shell
+calculation of the electronic structure of the hydride anion proceeds
+smoothly to a minimum which is, unfortunately, an artifact of
+the linear expansion method and the closed-shell model. The energy of
+this anion is higher than that of the hydrogen atom and so the HF
+solution of lowest energy for the hydride anion should be a hydrogen atom
+and a free electron. Using the Different Orbitals for Different Spins
+(DODS or UHF) model will generate a solution which is as close to this
+latter situation as the basis allows but, {\em unless very diffuse
+orbitals have been included in the basis} to simulate a free-electron
+function, the true minimum is not accessible to the linear expansion
+method; this is a {\em qualitative} error.
+\begin{center}
+\fbox{
+\parbox{3.5in}{
+\bf The General rule is: do not attempt to use
+the facilities of {\tt gnu80} to calculate
+``Approximations to functions which do not exist'' .
+}
+}
+\end{center}
+\section{\sf Anions}
+The largest class of system for which the Hartree-Fock solutions
+do not exist (their energies are higher than that of the neutral
+molecule) are anions. Very, very few anions carrying a single negative
+charge have bound-state Hartree-Fock solutions and {\em no}
+multiply-charged anions have bound solutions. This is in the
+Hartree-Fock limit, any approximations due to finite bases will,
+of course, make this result stronger.
+
+As in the case of the hydride anion mentioned above, use of the {\bf HF}
+model with a standard basis will often generate a bogus approximation
+to the non-existent bound state.
+\section{\sf Dissociation Limits}
+It is well-known that the closed-shell MO method, with its
+insistence on sets of {\em doubly-occupied} Molecular Orbitals will
+often give the wrong description of a molecule as the bond lengths
+increase. Typically, the closed-shell {\bf HF} model will predict
+that a bond dissociate to {\em ionic} fragments  rather than
+neutral species. Often the use of the {\bf UHF} model in these cases
+will solve the problem, provided that the program is flexible enough
+to allow the use of the {\bf UHF} model with an even (nominally
+paired) number of electrons.
+\section{\sf Spin Eigenfunction Constraints}
+There is a wealth of practical/computational experience which shows
+that the imposition of a spin eigenfunction constraint on a
+single-determinant wavefunction often constrains the action of the
+variation principle so badly that completely spurious results are
+obtained. 
+The classic case in the literature is that of the 
+optimisation of the structure of the allyl radical which has
+a single unpaired electron in the conventional picture.
+If a single determinant wave function has this constraint {\em imposed}
+throughout the structure optimisation, there is an artificial
+cusped maximum in the energy at the observed structure and a pair of
+equivalent minima having one long and one short C-C bond. 
+
+If the constraint is removed (i.e. a UHF function is used) the
+optimisation generates the correct qualitative structure and the quantitative
+result depends, as usual, on the quality of the basis.
+
+The recommendation is:
+\begin{center}
+\fbox{
+\parbox{3.5in}{
+\bf Always use the UHF model if there is
+any suspicion of qualitative errors in the
+structure.
+}
+}
+\end{center}
+
+

@@ -1,0 +1,315 @@
+\documentstyle{book}
+\begin{document}
+\section{Parsing the Command Record}
+In order to be able to make significant changes to gnu80 (adding new
+links and the possibility of new Routes) it is necessary to
+understand how the Route is generated from the command record.
+The command record must be {\em parsed} for the meaning of the
+symbols it contains, checked for errors and meaningless symbols
+and finally the correct command translated into a valid Route.
+
+These tasks are performed by the {\tt INTEGER FUNCTION QPARSE} and its
+associated data structure a {\em Parse Table}. The information
+in the following sections, together with a study of the use of
+{\tt QPARSE} in gnu80, should enable the user to master the
+parsing of the command record.
+\subsection{{\tt QPARSE} use}
+{\tt QPARSE} is a table-driven line parser. It is called with a 
+{\em string of characters} to
+be parsed, a parse table, and a {\em Result Vector.} 
+The input string is just
+a string of characters which, in line with the design
+of gnu80, is contained in an INTEGER array.  
+The parse table tells the FUNCTION which sub-strings are meaningful
+in the input string (a number, a certain keyword,
+etc.), and what to do if a specified meaningful sub-string 
+is found in the input string.
+
+The {\tt RESULT} Vector contains the output from {\tt QPARSE}. 
+The specification of {\tt QPARSE} is:
+\begin{verbatim}
+      INTEGER FUNCTION QPARSE(RESULT,TABLE,LINE,LENGTH)
+      INTEGER RESULT(1), TABLE(1), LINE(1), LENGTH
+\end{verbatim}
+\begin{description}
+\item[{\tt LINE}] contains the (ASCII) string to be parsed
+stored four characters to a (default) integer.
+\item[{\tt TABLE}] is a DATA structure containing the information necessary to
+parse the string in {\tt LINE}
+This structure is discussed in detail below.
+\item[{\tt RESULT}] is an INTEGER array in which the results of the parse
+are stored. The description of the {\tt TABLE} structure
+gives the meaning of the {\tt RESULT} array.
+\item[{\tt LENGTH}] The number of {\em characters} in the string stored
+in {\tt LINE}.
+\item[{\tt QPARSE}] The {\tt INTEGER} value returned by
+{\tt QPARSE} gives the status of the
+parse. The possibilities are:
+\begin{description}
+\item[{\tt 0}] Success; a transition has occured to {\tt EXI}
+\item[{\tt -1}]  Failure; a transition has occured to {\tt FAI}. This
+indicates some syntax error in the input string.
+\item[{\tt -2}]    Failure: an ambigous keyword was detected in the
+input string.
+\item[{\tt -3}]  Error; an error was detected in the parse table.
+\item[{\tt 1}]      Return; the parse is not yet completed, but
+control has returned to the caller because of a
+parse-table request.
+\end{description}
+\end{description}
+Before any calls to {\tt QPARSE} are made,
+the routine must be initialized by a call to
+{\tt QPINIT} which sets certain options to {\tt QPARSE}.
+\begin{verbatim}
+      SUBROUTINE QPINIT(TABLE,BLNKS,CAPS,ABVRS)
+      INTEGER TABLE(1), BLNKS, CAPS, ABVRS
+\end{verbatim}
+\begin{description}
+\item[{\tt TABLE}] the parse table used as input to {\tt QPARSE}. The
+remaining arguments set options in the parser. 
+\item[{\tt BLNKS}]   By default, 
+any number of (contiguous) blanks and tabs in the input string are treated
+as invisible delimiters.
+A non-zero value for {\tt BLNKS} means that
+blanks will be seen by {\tt QPARSE}.
+\item[{\tt CAPS}]     By default, the difference between upper and lower case
+letters is ignored. A non-zero value of {\tt CAPS} indicates that
+only exact matches are acceptable. 
+\item[{\tt ABRVS}] By default, any unambiguous abbreviation is allowed for
+a keyword. A non-zero value of {\tt ABRVS} makes abbreviations
+non-acceptable.
+\end{description}
+The following material describes how to construct a
+parse table with some examples.
+\section{The {\tt QPARSE} Table}
+The {\tt QPARSE} table, which descibes how the input record is to be
+parsed, can be built with FORTRAN {\tt DATA} statements. 
+
+The table consists
+of one or more {\em states}, and the general structure of the table is
+illustrated below:
+\begin{center}
+% \fbox{
+% \parbox{3in}{
+\begin{verbatim}
+<name-of-state>             (1 default integer)
+<transition definition>     (variable length)
+<transition definition>         "       "
+          "
+          "
+          "
+<end-of-state>              (1 default integer)
+<name-of-state>             (1 word)
+<transition definition>
+          "
+          "
+          "
+<end-of-state>
+<end-of-table>              (1 default integer)
+\end{verbatim}
+% }
+% }
+\end{center}
+Thus, the table consists of one or more states, and each state
+consists of one or more {\em transition definitions}. Generally, the states
+provide the overall control structure for the parse, and the transition
+definitions provide the details of what to look for in the input record,
+and what to do if it's found.
+
+The $<$name-of-state$>$ field is just a string of up to four
+characters which labels the state. The parser has three pre-defined
+state names which should not be used as $<$name-of-state$>$ fields in the
+table. 
+These are {\tt RET}, {\tt EXI} and {\tt FAI}. The use and importance of
+these special state names are descibed below in the detailed
+description of the transition definition. The $<$name-of-state$>$ field may
+be left zero in some cases, but one default integer must always be
+allocated in the table.
+
+The $<$transition definition$>$ field is of variable length and is
+discussed in detail below. Generally, a transition definition tells the
+parser what kind of object to look for in the input record (keyword,
+character, integer, etc.), and what to do if it's found. If the object
+specified by the transition definition matches the next character(s) in
+the input record, then the character(s) from the input record are accepted,
+and a state transition occurs. This transition may be to a new state,
+or just back to the top of the transition definition. Other subfields
+of the transition definition can specify one of a set of simple
+operations which can be performed during the transition:
+\begin{itemize}
+\item Store the object accepted from the input record into a
+specified storage location.
+\item Add a given value into a specified storage location.
+\end{itemize}
+The $<$end-of-state$>$ mark is just aa integer with a particular value
+({\tt EOS}) which terminates the state. If none of the transition
+definitions in the current state succeeds, then this mark will be
+encountered and a transistion will occur to the special state {\tt FAI} and
+the parse fails. In this case, a failure status will be returned by
+{\tt QPARSE}.
+
+The $<$end-of-table$>$ mark is just a $<$name-of-state$>$ field containing
+the value {\t END}.
+\subsection{Transition Definitions}
+A {\em transition definition} consists of a number of subfields, one of
+which is of variable length:
+
+$<$alphabet token$>$, $<$destination$>$,$<$index$>$,$<$value$>$
+
+Each of these subfields is discussed individually below.
+\begin{description}
+\item[$<$token$>$] This  field describes what to look for in the input record. 
+If
+this token matches the next data in the input record, then the data in
+the record is {\em accepted}, and the transition succeeds. 
+For instance, one 
+can ask:
+\begin{quote}
+``if the next characters in the record form a decimal integer,
+then accept them and make the transition.'' 
+\end{quote}
+Characters which are
+accepted are removed from the front of the input record, and subsequent
+transition definitions will try to match whatever characters come after
+these. If the transition succeeds, then the rest of the transition
+definition is used to determine the details of what actions are to be
+taken. If there is no match, then the transition fails, and the next
+transition definition in the current state is checked against the same
+characters. If no transition definitions remain, then a transition to
+the state {\tt FAI} occurs, and the parse fails. The various tokens, some
+of which are longer than one integer, are detailed below in the
+section on the {\tt QPARSE} alphabet.
+\item[$<$destination$>$] This field is a string of characters which names the
+state to which the transition is to be made. If this field is zero,
+then a transition is made to the state immediately following the
+current state. Otherwise, this string should match either one of the
+specified state names, or one of the $<$name-of-state$>$ fields in the
+table. The special states, and the effect of a transition to each is
+detailed below:
+\begin{description}
+\item[{\tt EXI}]        Causes the parser to halt, and to return an 
+zero
+status (return value of {\tt QPARSE}). 
+A transition to {\tt EXI} indicates succesfull
+completion of the parse.
+\item[{\tt FAI}]        causes the parser to halt, and return a failure
+status. A transition to {\tt FAI} indicates a syntax
+error in the input record.
+\item[{\tt RET}]        causes a transition to the state immediately
+following the current one in the table.
+However, control is returned to the calling routine
+before the first transition definition in this new
+state is examined. This is useful when the calling
+routine needs to perform some other action before
+the parse can continue.
+\end{description}
+\item[ $<$index$>$ and $<$value$>$] These fields are used to request some simple
+operations which can be performed during the transition. 
+If both of
+these values are non-zero, then  $<$value$>$  is added into
+{\tt RESULT($<$index$>$)}. 
+{\tt RESULT} is one of the calling arguments to the parser.
+If only the $<$index$>$ field is non-zero, then the object accepted from
+the input record (character, integer, keyword, etc.) is stored into
+{\tt RESULT($<$index$>$)}. If the $<$index$>$ field is zero, then nothing is done
+during the transition.
+\end{description}
+\subsection{{\tt QPARSE} Alphabet}
+\begin{enumerate}
+\item  Tokens which match single characters. \\
+If it is requested that
+this token be stored into {\tt RESULT} (a zero value for $<$value$>$), then this
+character is justified in the indicated word as {\tt A1}.
+\begin{description}
+\item[{\tt NUM}]    matches any numeric character.
+\item[{\tt ALP}]    matches any alphabetic character.
+\item[{\tt ALN}]    matches any alphanumeric character.
+\item[{\tt CHR}]    matches any character.
+\end{description}
+\item Tokens which match numbers. If it is requested that one of these be
+stored in {\tt RESULT}, the corresponding numeric value is stored there.
+Note the difference, then, between the tokens {\tt NUM} and {\tt D10} 
+(below).
+Each of these matches one numeric character in the input record, but
+there is a difference if the object accepted is to be stored into
+{\tt RESULT}. {\tt NUM} causes the {\em character} to be stored there, while 
+{\tt D10}
+causes the corresponding integer value to be stored. The following
+tokens are recognised:
+\begin{description}
+\item[{\tt D10}]    matches a base 10 digit.
+\item[{\tt D16}]    matches a hexadecimal digit.
+\item[{\tt D8}]     matches an octal digit.
+\item[{\tt D2}]     matches a binary digit.
+\item[{\tt I10}]    matches a decimal integer. this must be terminated
+in the input record by a non-alphanumeric character (or
+by the end of the input record).
+\item[{\tt I16}]    matches a hexadecimal integer.
+\item[{\tt D8}]     matches an octal integer.
+\item[{\tt I2}]     matches a binary integer.
+\item[{\tt FP}]     matches a floating point number.
+\item[{\tt DP}]     matches a double precision floating point number.
+the only difference between this and {\tt FP} is that this
+takes two locations in {\tt RESULT}.
+(starting with {\tt RESULT($<$index$>$)}.
+\end{description}
+\item  Tokens which match strings. If one of these is to be stored
+into {\tt RESULT}, then a variable number of words in {\tt RESULT} 
+will be used,
+depending unpon the length of the string. The integer actually indicated
+by $<$index$>$ will contain a count of characters in the string, and
+subsequent words will contain the ASCII string. The following tokens
+are recognised:
+\begin{description}
+\item[{\tt N,$<$keyword$>$}] This token matches a keyword. 
+{\tt N} is a positive
+integer which indicates the number of characters in
+the keyword which follows. For instance, the token
+describing the keyword ``HELLO''  takes three integers;
+\begin{center}
+5, {\tt 'HELL','O'}
+\end{center}
+By default, any abbreviation is accepted for a
+keyword, as long as it is unambiguous. A keyword is
+defined as an alphanumeric string terminated by a
+non-alphanumeric character. Thus, if the characters
+'HELLOAB' were at the front of the input record,  the
+above token ('HELLO') would not match, since the
+string 'HELLO' in the input record is not terminated by
+a {\em non-alphanumeric} character.
+\item[{\tt -N,$<$string$>$}]    This variable-length token matches a specific
+string of characters.  {\tt -N} means that the
+character(s) to be matched follow in the next
+{\em integer(s)}. For instance, the token:
+\begin{center}
+-5,'HELL','O'
+\end{center}
+matches the string 'HELLO'. note the difference
+between the token for the string 'HELLO' and that for
+the keyword 'HELLO'. If the input record contains the
+characters 'HELLOAB', the string 'HELLO'
+(-5,'HELL','O') will match. The keyword 'HELLO'
+(5,'HELL','O') will not match, however, since it is
+not terminated by a non-alphanumeric character in the
+input record.
+\item[{\tt WRD}]  This token matches any alphanumeric string
+(terminated by a non-alphanumeric character).
+\item[{\tt STR,N,$<$delims$>$}] Matches a user-defined string. This is similar
+to {\tt WRD}, except that the characters which delimit
+the desired string are supplied in the token. {\tt N} is
+the number of such delimiters, and the delimiting
+characters are supplied in the subsequent words.
+\end{description}
+\item Tokens which remove no characters from the input string.
+The following are recognised:
+\begin{description}
+\item[{\tt NUL}]     Always matches. This results in no characters being
+removed from the front of the input record, but
+the supplied transition occurs. It is useful as a
+``go to'' -type command.
+\item[{\tt EOL}]         Matches end-of-line. 
+If there are no more characters
+in the input record, then this token matches.
+\end{description}
+\end{enumerate}
+\end{document}

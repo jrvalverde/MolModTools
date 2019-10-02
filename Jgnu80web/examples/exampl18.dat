@@ -1,0 +1,40 @@
+#N  CID=FULL NOPOP GEN
+
+G80x86 EXAMPLE 18
+ O ATOM, TRIPLET P, CID OPEN SHELL UHF/CI TEST
+UNCONTRACTED BASIS, UHF TRANSFORMATION, Multiline Title!
+
+ 0 3
+  O
+
+11111111111119
+01
+        1S   S 1   1.0
+  5469.626707          1.0
+        2S   S 1   1.0
+  821.752352           1.0
+        3S   S 1   1.0
+  187.284146           1.0
+        4S   S 1   1.0
+  52.896390            1.0
+        5S   S 1   1.0
+  17.011654            1.0
+        6S   S 1   1.0
+  5.870769             1.0
+        7S   S 1   1.0
+  1.039829             1.0
+        8S   S 1   1.0
+  0.310478             1.0
+        1P   P 1   1.0
+  17.739374                      1.0
+        2P   P 1   1.0
+  3.863290                       1.0
+        3P   P 1   1.0
+  1.048558                    1.0
+        4P   P 1   1.0
+  0.276060                              1.0
+        1D   D 1   1.0
+  1.292                        1.0
+****
+
+   650

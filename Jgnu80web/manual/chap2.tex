@@ -1,0 +1,1548 @@
+\chapter{\sf Standard Methods}
+\label{chap2}
+\section{\sf Preview}
+The mnemonics available to access the facilities provided
+by Standard Methods provide a kind of terse command-shell to
+drive the whole of {\tt gnu80}.
+The command themselves are placed on a 
+single ``Command Record'' 
+which is identified to {\tt gnu80} by a hash (\#)
+in its first column. Items on the Command Record 
+are separated by comma (,)
+slash (/) minus (-) or space ( ).
+The whole Command Record, typically, specifies the quantum mechanical
+model, the choice of Gaussian basis and the use to which
+this combined approximation is to be put. 
+There are standard 
+defaults for unspecified commands.
+Before giving the definition of all the possible entries on
+the Command Record, some specific examples with a brief
+explanation will provide the flavour of this
+command shell.
+\\
+\vspace{0.5cm}
+\\
+{\bf \# HF/STO-3G}
+\\
+\vspace{0.5cm}
+\\
+This record requests the performance of a Hartree-Fock (single
+determinant) calculation using a standard {\bf STO-3G} Gaussian basis for
+all the atoms of the molecule. 
+By default, {\bf RHF} is chosen if the system is closed-shell or
+{\bf UHF} if the system is open-shell).
+
+\begin{center}
+\fbox{
+\parbox{4.2in}{\bf
+Throughout this manual the terms ``Hartree-Fock'' and
+``Self-Consistent Field (SCF)'' are used interchangeably
+to mean the use of the Linear Expansion technique (LCAO) within
+the single-determinant model. See Appendix \ref{bananas} for 
+possible pitfalls of this assumption.
+}
+}
+\end{center}
+\ \\
+\vspace{0.5cm}
+\\
+{\bf \# MP2/3-21G OPT}
+\\
+\vspace{0.5cm}
+\\
+Here, a second-order Moller-Plesset calculation of the
+total energy is requested (necessarily preceded by a {\bf UHF} or {\bf RHF}
+calculation, as appropriate) using a split-valence standard
+basis for each atom in the molecule. The {\bf OPT} command
+requests that the calculation be repeated for automatically-generated
+changes in the molecular geometry until a minimum is obtained at
+the OPTimum geometry.
+
+This latter example illustrates another choice which must be
+made when using a particular quantum mechanical model; in many
+cases, for a combination of theoretical and practical reasons, one
+must choose a particular numerical algorithm and/or some
+limitations on the way the algorithm or the underlying quantum
+mechanical method is implemented. 
+
+In the particular case cited above,
+the optimisation of molecular geometry, it is sometimes necessary to
+specify the particular technique used to "drive" the quantum mechanical
+energy calculation method; either to be sure of generating scientifically
+meaningful results or to avoid excessive demands on computer resources.
+Thus in the case considered here, it is a matter of computational
+experience that the use of electron configurations in which the
+inner-shell electrons are excited in the perturbation expansion has
+minimal effect on the optimised geometrical parameters; as one
+might reasonably expect. 
+
+In point of fact, {\tt gnu80} has only
+{\em one} optimisation algorithm which can be used with the {\bf MP2}
+method (the Fletcher-Powell method, which does not require 
+explicit derivatives of the energy with respect to the geometrical
+parameters: bond distances, bond angles etc.) but in the case of the
+{\bf HF} model there are three algorithms to choose from.
+
+Choices of this kind {\em within} a given model/numerical decision
+are called {\bf OPTIONS} in {\tt gnu80}. In addition to the ``major''
+options of the type described above, there are many ``minor''
+options available to govern the amount of output generated etc. etc.
+As a general rule the major options for a given choice of
+model/basis/use may be given in mnemonic form on the 
+Command Record while many of the minor options must be specified
+by using a specific command {\bf NONDEF} 
+(for NON-DEFault options) on the Command Record followed by
+a list of such options. 
+
+The vast majority of cases of the use
+of Standard Methods do not require the use of {\bf NONDEF}.
+Indeed, there are {\em default} options (chosen on the basis
+of much experience) for most of the types of calculation which
+have to be done and, in most cases of the use of Standard Methods
+the user need not even be aware of the existence of options.
+
+In the case of {\bf MP2} calculations {\tt gnu80} automatically chooses
+the Fletcher-Powell optimisation algorithm and the ``Frozen
+Core''  option which excludes the use of core excitations in 
+the perturbation expansion. However to illustrate how these options
+might be explicitly specified, the original Command Record
+is completely equivalent to the record
+\\
+\vspace{0.5cm}
+\\
+{\bf \# MP2(FC)/3-21G OPT=FP}
+\\
+\vspace{0.5cm}
+\\
+Where {\bf (FC)} indicates the Frozen-Core option {\em within}
+the {\bf MP2} method and {\bf OPT=FP} explicitly choose the Fletcher-Powell
+optimisation technique. If the {\bf MP2} calculation has to include
+{\em all} possible terms in the perturbation expansion then  {\bf (FC)}
+is replaced by {\bf (FULL)} on the Command Record.
+
+The full range of options accessed by this mnenonic method on the
+Command Record is given in the section \ref{commands}.
+
+Of course, the Command Record has no data describing the
+particular molecular system under investigation, this is 
+provided by a separate section of the whole input data to {\tt gnu80}.
+
+The other pieces of data required to complete the description of
+the molecular electronic structure are the number of electrons
+and the spin multiplicity of the system.
+The number of electrons is determined from the atomic numbers
+of the atoms of the molecule which themselves are determined from
+the atomic chemical symbols which are read in as part of the molecular
+geometry.
+
+If the molecule is charged this information must obviously be
+supplied and the spin multiplicity must also be supplied.
+
+Because the Command Record specifies the sequence
+of calculations to be carried out and the order in
+which they must be performed i.e. the set of modules
+of {\tt gnu80} to be executed, this sequence can be thought of as
+a {\em path} or {\em route} through {\tt gnu80}.
+This ROUTE, once generated from the Command Record, 
+is stored and used as control information during a {\tt gnu80}
+run.
+
+The principle difference between Standard Methods and General Use
+is the way in which this route is generated. Standard Methods
+involve the automatic generation of the route from the
+Command Record while General Use enables the route to be
+specified explicitly by the user.
+The {\bf NONDEF} command provides a ``intermediate''
+method of modifying a given route through {\tt gnu80}.
+
+This section has given a general overview of the command
+record and its use; later sections give detailed
+specifications of the possible entries on the Command Record.
+\section{\sf Input Organisation}
+\label{inorg}
+Input to {\tt gnu80} consists of records of alphanumeric information
+usually free of (FORTRAN) format constraints. In the case of alphabetic
+information upper and lower case letters are completely interchangeable
+and may be used at the user's discretion to enhance the legibility of
+the input. Thus, the cobalt atom may be identified as CO, co, Co or even
+cO. The same applies to the commands on the Command Record; the example in
+the last section could well have been given as:
+\\
+\vspace{0.5cm}
+\\
+{\bf \# hf/STO-3g}
+\\
+\vspace{0.5cm}
+\\
+for example. The first thing that {\tt gnu80} does with an input record
+is to convert any alphabetics to upper case and it works internally entirely
+in upper case.
+
+\begin{center}
+\fbox{
+\parbox{4.2in}{\bf
+The input of a {\tt gnu80} run consists of several separate
+{\em sections} separated by blank records. The Input Sections
+themselves are not identified except by their {\em position}
+in the input file and the blank records separating them from
+their predessors. For example, the ``Title'' Input Section
+is not preceeded by the word TITLE, it is simply those records
+following the blank record after the Command Record.
+Similarly, the ``Variables'' Input Section is just those records
+(assuming them to be in the correct form) which follow the blank
+record after the Z-matrix; the Section is not announced by the word
+VARIABLES, for example. 
+}
+}
+\end{center}
+ 
+Each section consists of one or more records (or lines) and is
+terminated by a blank record (or line). We shall use the 
+word ``record''
+from now on to mean record or line. The list of input sections, in the
+sequence in which they {\em must} appear if they appear at all, is:
+\begin{center}
+\fbox{
+\parbox{4.2in}{
+\bf
+\begin{enumerate}
+\item File Control Records (if any)
+\item Command Record  (and Non-Default options, if any)
+\item  Title
+\item Molecule Specification
+\item Variables Specification              (if any)
+\item Constants Specification              (if any)
+\item  General Basis Specification                 (if any)
+\item Alteration of Configuration $(\alpha)$ (if any)
+\item Alteration of configuration $(\beta)$  (if any)
+\end{enumerate}
+}
+}
+\end{center}
+\ \\
+Each Section is described  separately  below.
+Only the  sections 2 --- 4 are {\bf required} in every Job. If a
+particular section is not supplied, its terminating blank record should
+{\em not} be included in the input file.
+
+The first section of this input structure, consisting of up to
+four
+{\em File Control} commands (identified by a percent sign, \% ,
+in column 1) can be used to preserve the
+details of the job for a re-start. These records are not essential
+for the preparation of successful jobs and a discussion is deferred
+until the {\bf \#RESTART} command is introduced.
+\section{\sf The Command Record}
+\label{commands}
+This single record requires the most description since it
+defines the {\em nature} of the calculation to be performed; the
+quantum mechanical model, the numerical accuracy (Basis set)
+and the particular application. The commands on the Command Record
+are very terse but require non-terse specifications.
+
+The Command Record itself is identified by a hash (\#) in the
+first column. On initiation, {\tt gnu80} reads records 
+with no interpretation until
+it finds a Command Record. Immediately following the \# on the
+Command Record may be one of N P or F which set certain ``global''
+printing options for the whole run:
+\begin{description}
+\item[N] Suppresses as much output as possible consistent with
+providing a useful summary of the job. Use {\bf N} when there are
+no problems are anticipated with the job.
+\item[P] Generates more verbose output from various links (particularly
+{\bf HF}) and prints a summary of the passage through the Links. Useful
+for general information occasionally and if convergence difficulties are
+anticipated.
+\item[F] Generates messages from the File I/O routines; only
+useful for de-bugging.
+\end{description}
+The \# (or \# N, \# P or \#F) {\em must} be followed by a space
+before the substance of the Command Record is given.
+
+Using Standard Methods, the Command Record specifies three general
+pieces of information about the whole calculation:
+\begin{itemize}
+\item The Model of the molecular electronic structure to be used
+\item The accuracy of the expansion of the molecular orbitals (the
+particular basis used)
+\item The physical problem to be attacked by the use of this particular
+combination of model and accuracy
+\end{itemize}
+Obviously, some thought must be given to the first two of these
+items in order that the results are useful and applicable to the third.
+Some of the grosser errors are indicated in Appendix \ref{bananas}.
+
+In addition to these three main commands the Command Record
+may be used to choose some commonly-required modifications of
+the way in which the calculation is to be performed; there are
+some Command Record mnemonics for certain common OPTIONS within the
+model/basis/use choice.
+\newpage
+\subsection{\sf Models of Electronic Structure}
+One of the following commands must always be given (either explicitly
+or by default) for a {\tt gnu80} run; each one specifies the overall approximation
+to be made of the molecular electronic structure of the system under
+investigation. 
+
+There are three classes of model: 
+\begin{enumerate}
+\item Variants of the 
+Molecular Orbital or Hartree-Fock model, 
+\item The (non-variational) Moller-
+Plesset perturbation method which includes some electron correlation,
+\item The (variational) Configuration Interaction method using
+double substitutions which also includes electron correlation.
+\end{enumerate}
+Factors influencing the choice of model are the obvious ones
+of accuracy against consumption of resources. 
+
+If the job involves the optimisation
+of molecular geometry, the Hartree-Fock methods are often the only
+practical choice, since they are inherently less expensive of
+computer resources particularly since it is only possible to
+use analytical gradient methods at the Hartree-Fock level in {\tt gnu80}.
+In any case, geometry optimisations will usually {\em begin} by using the
+Hartree-Fock model and  possibly be refined using the correlated
+methods.
+
+The possible commands to choose a model of electronic structure, together
+with their major (command-record) options are given below: \\
+
+\begin{description}
+\item[HF   (or RHF, UHF)] These commands request Hartree-Fock calculations. 
+If {\bf HF} is given, the default
+based on the (supplied) multiplicity is applied. 
+{\bf RHF} (Closed-Shell Restricted Hartree-Fock) is used for singlets and
+{\bf UHF} (Unrestricted Hartree-Fock, actually Different Orbitals
+for Different Spins: DODS)
+for higher multiplicities. In the latter case, separate
+$\alpha$ and $\beta$ orbitals will be computed.  
+
+Similar
+operations are implied by specification of {\bf U} or {\bf R} with other
+procedures ({\bf MP2} vs {\bf RMP2} vs. {\bf UMP2}, for instance); see below.
+\item[ROHF]   This command requests a Restricted Open-shell 
+Hartree-Fock calculation
+for those non-singlet states which can be represented by a single
+determinant.  
+
+The resulting molecular orbitals will be either
+doubly or singly occupied and be spatially orthogonal to each other unlike
+the UHF spatial orbitals for different spins.
+
+The single determinant function (and the component Molecular Orbitals
+generated by this procedure do not have many of the familiar
+formal properties of Hartree-Fock (Self Consistent) functions. Koopman's
+theorem is not valid and the Brillouin theorem is not obeyed, for example.
+These differences all arise from the fact that the ROHF wave function
+is a {\em constrained} single determinant.
+\item[SCFDM] This command requests the use of a Direct Minimisation
+method to minimise the Hartree-Fock Energy Functional instead of
+the repeated-diagonalisations method used by {\bf HF, UHF} and 
+{\bf ROHF}. It is more time-consuming than the standard procedure
+but its convergence properties are better. It should be used
+when {\bf HF} or {\bf UHF} do not converge (it is not available
+as a replacement for {\bf ROHF}).
+\item[MP2 (or RMP2, UMP2)]  Requests second order 
+Moller-Plesset perturbation calculation (restricted or
+unrestricted, depending upon {\bf R} or {\bf U}). Both {\bf MP2} and
+{\bf MP3} also generate a Hartree-Fock calculation as a necessary
+precursor to the perturbation calculation which uses the Self-Consistent
+Molecular Orbitals.
+\item[MP3 (or RMP3, UMP3)]  Requests second and third order 
+Moller-Plesset perturbation calculation (restricted or
+unrestricted, depending upon {\bf R} or {\bf U}).
+\item[CID]    Requests a Configuration Interaction calculation with
+Double excitations. Again, this command requests a Hartree-Fock
+calculation (of the appropriate type: {\bf RHF} or {\bf UHF})
+to generate the Molecular Orbitals for the CI.
+\end{description}
+\subsubsection{\sf Commands with Options Associated with the Model Commands}
+There are a few options available via mnemonics on the Command
+Record for the Hartree-Fock commands:
+\begin{description}
+\item[VSHIFT] Does nothing unless given an option; ({\bf VSHIFT=nnnn}).
+The occupied/virtual energy gap is increased by $nnnn/1000$. This is just
+an implementation of the ``Level-Shifter" method to improve SCF
+convergence.
+\item[SCFCYC]  This is used to specify the maximum number of SCF cycles
+allowed. it is meaningless by itself, and is used by
+{\bf SCFCYC=number}. The default for ` number' is 
+20 cycles for {\bf SP, HF} jobs,
+and 32 cycles for {\bf OPT} or post-SCF jobs. The use of the
+``Level Shifter" Command {\bf VSHIFT} to improve convergence
+resets the default value of cycles to 50; this can be over-ridden
+as usual by the {\bf SCFCYC} command.
+\item[COMPLEX] This option allows the orbitals of the single
+determinant wave function to be complex. The option is only available
+for {\bf RHF} i.e. not for {\bf UHF}, {\bf ROHF} or any post-SCF
+calculation.
+\end{description}
+The non-Hartree-Fock commands all have a similar set of
+OPTIONS which can be given on the Command Record; typically in
+parenthesis immediately following the command. The options
+describe the {\em extent} to which the perturbation or configuration 
+interaction calculation will be carried out:
+\begin{description}
+\item[FC]  This is the default in the absence of any
+explicit option being given for {\bf MP2, MP3, CID} commands.
+Its action is to limit the number of terms in the perturbation or CI
+expansion by excluding those arising from
+the excitation of the inner shell electrons.
+
+{\bf FC} is a mnemonic for Frozen Core.
+\item[FULL] If the {\bf FULL} option is given
+all possible terms in the perturbation or CI expansion are used even those
+involving the excitation of the atomic inner shells or cores.
+\end{description}
+Note that ONLY ONE of {\bf UMP2, MP2, UMP3, MP3,
+CID} may be used on a given Command Record. Typical Command Records
+using the correlated models of electronic structure are:
+\begin{description}
+\item[\# UMP2(FULL)/3-21G]
+\item[\# CID(FC)/6-31G**]
+\item[\#P MP3(FC)/STO-3G]
+\end{description}
+where the command following the slash (/) requests a type of 
+Gaussian basis detailed in the following section.
+\newpage
+\subsection{\sf Basis Sets Internal to {\tt gnu80}}
+\label{basis}
+When a {\em model} of electronic structure has been chosen, the most
+important {\em numerical} approximation within that model is the nature
+and length of the expansion used to approximate the Molecular Orbitals
+within that model. That is, one must make a {\em choice of (Gaussian)
+basis}.
+
+In the same mnemonic spirit introduced for the quantum
+mechanical models there are a number of stored Gaussian basis sets
+available in {\tt gnu80} which may be used via the following
+standard (descriptive) mnemonics. 
+Thes mnemonics are also commands to {\tt gnu80} and use of {\em one} of these
+on the Command Record
+will generate a basis set for the system described in the
+Molecule Input Section.
+This command chooses an overall molecular basis
+which has the same {\em type} of
+atomic Gaussian basis on every atom in the molecule.
+{\bf 
+\begin{itemize}
+\item STO-NG, STO-NG* (for N = 1,6) e.g STO-3G*, STO-4G
+\item  3-21G, 3-21G*, 3-21G**
+\item  4-21G, 4-21G*, 4-21G**
+\item  6-21G, 6-21G*, 6-21G**
+\item  4-31G, 4-31G*, 4-31G**
+\item  6-31G, 6-31G*, 6-31G**
+\item  6-311G, 6-311G*, 6-311G**
+\item  LP-31G, LP-31G*, LP-31G**
+\item  LP-41G, LP-41G*, LP-41G**
+\item  LANL1MB, LANL1DZ (LP-31G is a synonym for LANL1DZ)
+\end{itemize}
+}
+The meanings of these mnemonics are assumed to be familiar.
+
+By default, {\bf STO-3G} is selected. The only  option available is the
+specification of the type of {\em d} or {\em f} orbitals used
+(see below). 
+
+The ``Local
+Potential'' Basis Sets  (e.g. {\bf LP-31G}) will lead to 
+calculations involving valence
+electrons only; that is, selection of any of these bases
+will {\bf automatically} use an associated Local Potential
+on each atom in the molecule (except hydrogen and helium).
+The particular choice of Local Potential used is explained elsewhere.
+(see the description of the {\bf PSEUDO} command.
+
+Note that the use of the {\bf PSEUDO} command simply uses the
+Local Potentials on the atoms; {\bf it does not involve any
+choice of basis} so that a basis must be specified. Usually, this
+means the use of a user-supplied basis (see the {\bf GEN} command)
+since the other bases are full bases including core orbitals and
+the use of the Local Potential basers also chooses an approriate
+basis so that {\bf PSEUDO} is redundant there.
+%
+\subsection{\sf ECP Basis Set Types in gnu80 and g94}
+The Basis Set commands in {\tt gnu80} have been changed to make
+them compatible with {\tt g94}. They now are:
+\begin{itemize}
+\item
+{\bf LANL1MB}; this is the same basis as g94. \\
+It uses the Minimal Los Alamos Bases for atoms from Na - Bi and
+an STO-3G set for atoms H-Ne. \\
+The Los Alamos Potentials are used for atoms Na-Bi and NO potential
+is used for first-row atoms; all electrons are treated explicitly.
+That is, for example, the Carbon atom has a full (5) basis
+(1s, 2s,2p) and atomic charge 6.
+\item
+{\bf LANL1DZ}; again the same as g94. \\
+The Los Alamos Double Zeta Basis is used for atoms Na-Bi
+and a Dunning D95V ("Double Zeta for valence") for atoms
+H-Ne. \\
+The Los Alamos Potentials are used for atoms Na-Bi and NO potential
+is used for first-row atoms; all electrons are treated explicitly.
+That is, for example, the Carbon atom has a full (9) basis
+(1s, 2s, 2s',2p,2p') and atomic charge 6.
+\item
+{\bf LAL1STV}; this is not available in g94. \\
+It uses the Minimal Los Alamos Bases for atoms from Na - Bi and
+an STO-3G set for atoms H-Ne. \\
+The Los Alamos Potentials are used for atoms Na-Bi and a CHF potential
+is used for first-row atoms.
+That is, for example, the Carbon atom has a valence (4) basis
+( 2s,2p) and atomic charge 4 plus the potential.
+\item
+{\bf LAL1LP3}; this is not available in g94. \\
+The Los Alamos Double Zeta Basis is used for atoms Na-Bi
+and a LP-31G ("Double Zeta for valence") for atoms
+H-Ne. \\
+The Los Alamos Potentials are used for atoms Na-Bi and a CHF potential
+is used for first-row atoms.
+That is, for example, the Carbon atom has a split-valence (8) basis
+LP-31G
+(2s, 2s',2p,2p') and atomic charge 4 plus the potential.
+\end{itemize}
+\begin{quote}
+{\bf Notice that this means that previous {\tt gnu80} input
+files, which used LANL1MB for what is now LA1STV and
+LANL1DZ for what is now LA1LP3, must be changed if the same
+basis is required.}
+\end{quote}
+This is awkward but the non-compatibility with g94 is also
+awkward.
+%
+\subsection{\sf GEN: User-supplied Bases}
+Obviously, the user may wish to supply {\tt gnu80}
+with a basis set of his own choice. This is possible
+by use of the command {\bf GEN} on
+the Command Record in place of a basis set mnemonic.
+The details of the input of a basis which is not internal to {\tt gnu80}
+are given below in Section \ref{genbasis}.
+\subsection{\sf nD, nF; Cartesians or Cubic Harmonics?}
+The only other basis-related command  available once an
+overall  basis set command
+has been given is in the choice of Cartesian or Cubic
+Harmonic functions for {\em d} and {\em f} functions.
+
+The ``Cartesian'' Gaussian bases generate a set
+of 6 {\em ``d'' } functions which are equivalent to the
+usual set of 5 (Cubic Harmonic real) d functions plus
+an additional ``s'' -type Gaussian.
+Likewise, the Cartesian set of {\em ``f'' } 10 functions
+is equivalent to a set of 7 (Cubic Harmonic real) {\em f } functions
+plus a set of 3 {\em p } functions.
+
+For some purposes the presence of these additional {\em s}-type 
+or {\em p}-type functions produces
+an ``unbalanced'' basis and may lead to unforeseen results. It is
+possible to specify which case is required by the use of
+{\bf 5D} or {\bf 6D} and {\bf 7F} or {\bf 10F}
+as appropriate; thus the above Command Record
+could be replaced by:
+\ \\
+\vspace{0.25cm}
+{\bf \# MP2/6-31G* 5D or \# MP2/6-31G* 6D } 
+\ \\
+depending on individual requirements. The defaults are {\bf 5D},
+{\bf 7F}.
+
+The relative merits are obvious; {\bf 6D} introduces an additional
+degree of variational freedom for each {\em d}-set at the risk
+of unbalancing the {\em s}-type functions in the basis.
+\subsection{\sf Model/Basis Summary}
+The quantum mechanical procedure and the basis-set commands may be
+conveniently combined as a specification of the theoretical model/numerical
+approximation scheme.
+Thus the Command Record:
+\ \\
+\vspace{0.25cm}
+{\bf \# MP2/6-31G*}
+\ \\
+\vspace{0.25cm}
+Requests an {\bf MP2} (Frozen Core by default) 
+calculation using the {\bf 6-31G*} basis set.
+The established convention is to use a slash (/) to separate
+the model command (in this case {\bf MP2}) from the basis-set
+command ({\bf 6-31G*} here) to provide a convenient mnemonic for
+the ``quality'' of the calculation which is easily
+recognizable; although any of the Command Record command separators
+would be acceptable.
+\newpage
+\subsection{\sf Uses of the Quantum Model}
+\begin{description}
+\item[SP] Requests a ``single point'' calculation; that is
+an energy calculation at the specified nuclear geometry.
+No optimisation of geometrical parameters is performed. 
+This is the default type of job
+and so is not often explicitly specified.
+\item[OPT]  Requests that a geometry OPTimization is to be performed. 
+The (geometrical)
+variables listed in program input Section 4 (see below) will be
+adjusted until a stationary point on the potential surface is
+found. By default the best available procedure is selected.
+thus, you can keep up with current developments by simply
+supplying {\bf OPT} with no options. However, if conditions demand
+a particular type of optimization, it may be chosen by
+supplying the appropriate option.
+\item[FORCE]  This requests a single analytical calculation of the forces on
+the nuclei and that the energy derivatives with respect to the
+geometry parameters be evaluated. This is currently available
+only for HF energies.
+\item[NONDEF]  This command indicates that additional non-default options will
+be read in from the next recordset (see below).
+\item[TEST]    This command indicates that this is a test job. the route will
+be generated as normal. The job is aborted before the calculation of
+any integrals.
+\item[NONSTD]    This command indicates that this is not a standard job;
+the desired route will be explicitly supplied in the form of
+overlay numbers, options, and segment numbers. This is, in fact,
+the way in which the method of General Use is indicated to {\tt gnu80}.
+\end{description}
+\subsubsection{\sf OPTIONS for the OPT Command; OPT=xxxx}
+The {\bf OPT} command is, of course, the most widely used command
+specifying the use of a quantum mechanical model and there are a number
+of OPTIONS which may be specified by mnemonics on the Command Record:
+\begin{description}
+\item[GRAD]   Requests use of analytical gradients and is only
+available for HF (RHF or UHF) calculations.
+\item[MS] Use Murtaugh-Sargent optimization [00]. It does use
+analytical gradients and is only available for {\bf HF} ({\bf RHF} and
+{\bf UHF}) calculations. {\bf OPT=MS} is generally slower but more
+reliable then {\bf OPT=GRAD}.
+\item[FP] Fletcher-Powell optimization [00]. This option does not
+require analytical derivates and may be used in conjunction
+with any procedure.
+\item[READFC] For the first point in a gradient optimisation, read the force
+constants from the guess file.  These must have been produced
+in a previous run, for example by the {\bf STARONLY} option.
+\item[TS] Optimize to a transition state - a turning point on the
+energy surface for which the Hessian has one and only one negative eigenvalue
+pictorially a saddle point on the surface.
+\item[STARONLY] For {\bf GRAD}  optimisations, 
+this option requests that the force constants associated with
+the movements in the degrees of freedom specified in the
+{\bf Variables} input section will be estimated numerically.
+These force constants may be used as input to the {\bf MS} optimisation
+program as starting points for the second derivative matrix.
+The second
+derivatives of the energy will be computed as directed on the variable
+definition records (see below).
+\item[Defaults:]
+The default options for the command {\bf OPT}  are {\bf GRAD} for
+Hartree-Fock ({\bf RHF} or {\bf UHF}) calculations and {\bf FP} for
+post-Hartree-Fock.
+\end{description}
+\newpage
+\subsection{\sf Miscellaneous Commands}
+These command and associated options provide
+a variety of utilities in {\tt gnu80}
+\begin{description}
+\item[SAVE]    saves selected data on the {\bf GUESS} file. by default, this
+command saves both the Basis Set and the Molecular Orbital
+coefficients. (see also {\bf\#RESTART} and the File Control Commands)
+\item[Options] for the {\bf SAVE} command ({\bf SAVE=xxxx}):
+\begin{description}
+\item[BASIS] saves the basis set.
+\item[MO] saves the Molecular Orbital coefficients.
+\item[FC] saves the Force Constants, if these are
+calculated. Note the unfortunate collision with the Frozen Core
+mnemonic available as an option for another command; there should
+be no danger of confusion.
+\end{description}
+\item[GUESS]   specifies initial guess options.  This does nothing unless one
+of the options is actually given. In the absence of the command, a default
+projected Huckel guess is used. 
+\item[Options] for the {\bf GUESS} command ({\bf GUESS=xxxx}):
+\begin{description}
+\item[READ] Read initial guess. This guess must have been 
+created as output from a
+previous job and will be associated with a File Control
+Command to specify the file to read the guess from. (see also {\bf RESTART}).
+\item[CORE] Diagonalize core Hamiltonian.
+\item[ALTER] Indicates that the orbitals selected for occupation in
+the HF wave function should not be those of lowest energy. If
+this option is used, information about the alteration of
+configuration will be expected in Sections 7 and 8 of \ref{inorg}.
+{\bf ALTER} may
+be used itself as a command, being equivalent to {\bf GUESS=ALTER}.
+\item[PRINT] Causes the initial guess to be printed.
+\item[ONLY] Results in a route which goes only as far as 
+L401 (the module which generates the guessed coefficients), and
+the guess is automatically printed when this option is
+selected. This is useful in preliminary runs to check if
+configuration alternation is necessary.
+\end{description}
+\item[NOEXTRAP] Issuing this command will cause all extrapolation in the
+SCF to be suppressed.
+\item[COORD]  Indicates that the geometry will be supplied in the form of
+Cartesian coordinates (not a Z-matrix). No optimization is possible in this
+case.
+\item[NORAFF]  This command demands that the ``regular'' 
+integral format  be used.
+\item[OPTCYC]  This sets the maximum number of optimization cycles. The
+format is {\bf OPTCYC = number}, for instance.
+The default for ` number' is 10 plus one for each degree of freedom,
+with a maximum of 20 cycles. If this number is too small the chances
+are that there is something seriously wrong withe the model or the
+basis!
+\item[SYMM]  Specifies how symmetry is to be used in the calculation. By
+default, symmetry is used whenever possible, so this command
+means nothing unless an option is provided.
+\item[Options] for the {\bf SYMM} command:
+\begin{description}
+\item[INT] Use symmetry in two-electron integral evaluation.
+\item[NOINT] Do not use symmetry for these integrals.
+\item[GRAD] Use symmetry in gradient evaluation.
+\item[NOGRAD] Do not use symmetry in gradient evaluation.
+\end{description}
+\item[NOSYMM] This command supresses any use of symmetry 
+in the calculation.  By
+default, the symmetry of the molecule may be used to avoid
+calculation of some integrals either because they are zero by symmetry
+or because they are equivalent to other (calculated) integrals.
+\item[NOPOP]   Eliminates wavefunction and full population analysis.
+\item[MINPOP] Causes a ``minimal'' population analysis. The orbital
+symmetries are printed, along with the 
+``condensed to atoms'' summary.
+\item[CNOE] ``Causes a Complete Neglect of Everything'' 
+calculation to be performed. This command does no calculation at all;
+it simply reads the data and generates the ROUTE. It is useful to
+generate ROUTEs for later modification.
+\item[ALTER] Requests that the initial guess MO coefficients be rearranged.
+The program will read pairs of integers indicating orbitals
+which are to be interchanged in the initial guess. This input
+forms one input section, or two input sections if the
+calculation is {\bf UHF} (one for $\alpha,$ one for $\beta$).
+\item[PSEUDO] Requests that a model potential be substituted for the core
+electrons. This is automatically selected if one of the {\bf LP-}
+bases or the {\bf LANL1MB or LANL1DZ} 
+bases have been specified on the Command Record.
+\item[UNITS]  Definition of the units used in the Z-matrix
+i.e. in the Molecule Input Section of the input data. Does nothing
+without an option:
+\item[Options] for the {\bf UNITS} command ({\bf UNITS=xxxx}):
+\begin{description}
+\item[ANG] Bond lengths are in Angstroms.
+\item[AU] Bond lengths are in Bohrs.
+\item[DEG] Angles are in degrees.
+\item[RAD] Angles are in radians.
+\end{description}
+The default values are {\bf (ANG, DEG)}.
+\end{description}
+\newpage
+\subsection{\sf Commands not yet Implemented}
+Since {\tt gnu80} is, in one sense, a ``snapshot'' in the development
+of the GAUSSIAN series of programs, some parts of the code are behind
+others in the implementation. There are a number of commands which are
+recognised by the parser but the code to carry through the requested
+calculation is not present or not complete. In these cases a
+message is printed to that effect and the run is stopped. Clearly, the
+code to implement these commands are prime examples of additions to
+{\tt gnu80} which could be carried through simply at the
+level of the numerical calculation with no changes necessary to
+the parse tables.
+
+The unimplemented commands are:
+\begin{description}
+\item[GRAD] for post-SCF models
+\item[MP4] fourth-order Moller-Plesset perturbation calculation
+of the correlation energy.
+\item[FREQ] calculation of the vibration frequencies and
+normal co-ordinates (requires second derivative integrals)
+\item[CISD] Configuration interaction with {\em single and} double
+excitations.
+\item[STABIL] test the stability of (HF)SCF wavefunctions for
+stability with respect to certain classes of change.
+\item[FORCE] force calculations for post-SCF models
+\end{description}
+\subsection{\sf System Defaults}
+By default the following commands and options are selected:
+\begin{itemize}
+\item {\bf SP}
+\item {\bf HF}  (i.e. {\bf RHF} for closed shells, {\bf UHF} for open shells.)
+\item {\bf STO-3G}
+\item {\bf OPT = GRAD} for SCF optimisations, {\bf OPT=FP} for
+post-SCF optimisations ({\bf MP2, MP3, CID})
+\item {\bf FC} Frozen Core for all multi-determinant calculations
+({\bf MP2, MP3, CID}).
+\end{itemize}
+Note, however, that if an {\bf HF/STO-3G} calculation is required
+(all defaults), a blank
+Command Record is {\em not} permitted.
+\subsection{\sf Examples of Valid Command Records}
+Some examples of correct Command Records which
+generate valid routes may help make all this
+more clear:
+\begin{itemize}
+\item \#  RHF/STO-3G, SAVE=MO
+\item \#  HF/3-21G, VSHIFT=500
+\item \#  MP3(FULL)/6-311G** OPT
+\item \#  UHF-CI=FC/6-31G* OPT=FP
+\item \#  RHF/6-31G*, GUESS=READ
+\item \#  HF/STO-3G, SCFDM, ALTER, SAVE
+\item \#  RHF/STO-3G OPT NONDEF \\
+(blank record) \\
+3/34=1,35=4;3(2)/34=1,35=4;
+\end{itemize}
+This last Command Record is used to select a standard route, 
+but the options 34
+and 35 in the first and the second occurence of overlay 3 are set to 1
+and 4 respectively. The meaning of the last example will be 
+clear after the section on General Use has considered explicit
+routes and options.
+
+Note that the possibility of separating commands and options by
+spaces, slashes or commas may be used to make the Command Record
+more intelligible to according to individual choice.
+
+This completes the description of the commands and options
+which may be used on the Command Record input to {\tt gnu80}. The Other
+sections of data usually constitute more data but require considerably less
+discussion.
+\section{\sf Title Input Section}
+This section is required in the input but is not interpreted in any
+way by the {\tt gnu80} system. It appears in the output for purposes
+of identification and description. Typically, this might contain
+compound name, the symmetry, the electronic state and other relevant
+information.
+The title section cannot exceed five records. However, a single record
+is usually adequate. 
+Remember that the title section must have a terminating blank record.
+\section{\sf Molecule Input Section}
+\label{molinput}
+This section is, of course, always required. It specifies the nuclear positions
+and the number of electrons of $\alpha$ and $\beta$ spin. The input is
+free-field; the several items on each record may be separated by either
+blanks or commas.
+
+The first record of the section specifies the net electric charge
+(signed integer) and the spin multiplicity (positive integer). Thus,
+for a neutral molecule in a singlet state, the entry ` 0 1' is
+appropriate, while for a single charged anion radical, ` -1 2' 
+would be used.
+
+The remaining records are used to specify the relative positions of
+the nuclei. Most of these will be real nuclei, used later in the
+molecular orbital computation. However, it is frequently useful to
+introduce ``dummy nuclei'' which help specify the geometry but are
+ignored subsequently; their use will become clear in examples given
+below.
+
+Since the Molecule Input Section is the most demanding to prepare,
+it is worth a brief overview of the method used to specify the
+molecular geometry in {\tt gnu80}.
+\subsection{\sf The Z-Matrix, an Overview}
+Before giving the method used by {\tt gnu80} to read the geometrical
+information necessary for a job, it is useful to have an
+overview of the so-called Z matrix method. Some of the
+information in this outline is, of course, duplicated in the
+reference section of the manual below.
+
+There are, at least, three obvious methods to supply the
+data specifying the relative positions of the atoms in a
+molecule to a program:
+\begin{enumerate}
+\item Use a ``laboratory'' Cartesian co-ordinate
+system and give all the atomic positions as absolute
+Cartesian co-ordinates.
+\item Still using a laboratory co-ordinate system, give the
+molecular symmetry (say the point group symbol) and the absolute
+Cartesian co-ordinates of the symmetry-distinct atoms in the molecule;
+allowing the program to apply the molecular symmetry to generate the
+full Cartesian co-ordinates for the entire molecule.
+\item Use an ``internal'' co-ordinate system and specify
+only the {\em relative} positions of the atoms and leave the program
+to provide an origin and orientation of the laboratory system and do the
+conversion to a Cartesian set.
+\end{enumerate}
+Obviously, in cases 1 and 3 the symmetry group of the molecule
+may be {\em inferred} from the supplied co-ordinates.
+
+The advantages and disadvantages of each approach are clear:
+\begin{enumerate}
+\item This choice is only really practical for small molecules or
+for very symmetrical molecules.
+\item This method is most convenient for highly symmetrical systems;
+in most cases of low symmetry, it will degenerate into 1.
+\item This is the most flexible approach, particularly since most
+experimental molecular data are presented as bond distances, bond
+angles etc. referred to a ``natural'' non-redundant
+system of internal co-ordinates.
+\end{enumerate}
+However, when the question of the {\em automatic} generation
+of changes in molecular geometry during a structure optimisation arises,
+it is obvious that the use of the natural molecular parameters
+of choice 3 above is the only viable option. The variation of
+what are essentially arbitrary Cartesian co-ordinates is bound to be
+inefficient and redundant at best. At worst, the use of three independent
+co-ordinates for each atom in a molecule makes such automatic 
+optimisations impossible.
+
+That is, a description of molecular geometry in terms of the
+essential molecular geometrical parameters (bond distances and angles)
+is the only sensible way to both input data to a program and to
+organise such data internally to allow automatic structure variations
+which are likely to be chemically meaningful and numerically
+efficient.
+
+The method used by {\tt gnu80} (and by all the GAUSSIAN series and
+many other {\em ab initio} programs) is the so-called
+{\bf Z-matrix} method.
+
+The technique is to ``walk '' through the molecule,
+specifying the position of each atom as it is encountered by
+its distance from and orientation to the other atoms already
+encountered. In this way the natural geometric parameters used by
+chemists and spectroscopists, can be used directly to generate 
+an overall molecular structure which is unique but not (as in
+the case of Cartesian co-ordinates) over-determined. The
+overall orientation of the molecule with respect to the
+laboratory co-ordinate system is not specified. This latter
+freedom is used by {\tt gnu80} to position and orient the molecule
+in a way which co-incides with the standard group-theoretical
+choice of Cartesian axes if this is useful.
+
+To completely specify an atom by this method, we need its atomic
+number and enough geometrical information to place it uniquely
+with respect to the other atoms in the system. 
+\begin{enumerate}
+\item As a matter of convience,
+the atomic number is determined by the chemical symbol (H, LI, MN, etc.)
+and so this is the way the atomic number is supplied.
+\item The ``first'' atom in the molecule needs no geometrical
+information, it is specified completely by its chemical symbol and all
+other atoms' positions are referred (either directly or indirectly)
+to it. As a convenience an atom' s label may have other characters
+following the chemical symbol in order to make the data more legible to
+humans; so, for example, an atom may be labelled C1 or LI4 etc.
+Let us assume that we have labelled our first atom C1. {\tt gnu80}
+internally places this atom at the origin of the laboratory Cartesian
+co-ordinate system. \\
+The form of the input data (the line of the Z-matrix) is simply
+\begin{verbatim}
+      C1
+\end{verbatim}
+\item The next atom, which typically will be an atom formally bonded
+to the first (i.e. a nearest neighbour) although, logically, it need not
+be, has its nature and position completely specified by its chemical
+symbol and its distance from the first atom; no angles are involved.
+Let us assume that it is called C2. \\
+The Z-matrix line of input consists of the label of the second atom,
+the label of the atom to which its distance is to be given and that distance:
+\begin{verbatim}
+      C2 C1 RC2C1
+\end{verbatim}
+where {\tt RC2C1} is the distance between C1 and C2 and may be supplied
+(in Angstroms) as a number like 1.4 or may be left as an alphanumeric
+string whose numerical value is supplied later. Clearly, it is more
+convenient to call it {\tt RC2C1} than {\tt LUCIFER}, for example,
+but both are allowed.
+The {\em direction} from the first to the second atoms is arbitrary and
+is chosen by {\tt gnu80} as the Cartesian z axis.
+\item The third atom (C3 say) needs at least one distance and an angle
+to complete its specification. Since any triatomic is planar, {\tt gnu80}
+places the third atom in the xz plane of the Cartesian system, which
+means that the first three atoms all lie in the xz plane.
+As before, C3 is specified by the three items {\tt C3 C2 RC3C2}
+if the distance between C3 and C2 is the most convenient to supply.
+But this time the {\em angle} between the C3-C2 and C2-C1 bonds must be
+given. This information is supplied by giving the label of the
+third atom in the chain and the value of the angle (in degrees):
+\begin{verbatim}
+      C3 C2 RC3C2 C1 A
+\end{verbatim}
+where {\tt A} is the C3C2C1 angle.
+\item The fourth and (all subsequent atoms) requires more information
+to specify it uniquely since it may well be out of the plane defined
+by the first three atoms. 
+
+The most convenient way to do this (with one important exception, which
+will be treated separately later) is to use a distance and a bond angle
+as in the previous case and to specify the {\em ``out-of-plane
+angle''} formed by the new bond. Traditionally, chemists have used
+the Newman projection to define this {\em dihedral angle}.
+
+If the four atoms in the chain are C1-C2-C3-C4, then, looking along
+the C3-C2 bond (i.e. from C3 towards C2), the C3-C4 bond and the C2-C1
+bond do not eclipse each other (in general). The {\em clockwise}
+angle by which the C3-C4 bond must be rotated to bring it directly over the
+C2-C1 bond is the required dihedral angle (in degrees). 
+The specification of the fourth (and subsequent) atoms is then given
+by:
+\begin{verbatim}
+      C4 C3 RC4C3 C2 A2 C1 D
+\end{verbatim}
+where {\tt RC4C3} is the bond distance from {\tt C4} to {\tt C3},
+{\tt A2} is the angle {\tt C4C3C2} and {\tt D}
+is the dihedral angle.
+
+The simplest case is
+perhaps the hydrogen peroxide molecule, $H_2 O_2$. The dihedral
+angle is the angle between the two O-H bonds when viewed along the O-O
+bond. In this simplest case the dihedral angle may be taken as
+$\alpha$ or $360 - \alpha$ since there are no other atoms involved.
+In general, however, the {\em sense} of the angle must be preserved to
+ensure a correct orientation of subsequent atoms (either on the chain
+or branched)
+\end{enumerate}
+This scheme is sufficient to specify completely the geometry
+of molecules of arbitrary complexity with the following provisos:
+\begin{itemize}
+\item When a molecule is not basically a chain but is more
+``compact'' i.e. a central branched system like $CH_3F$,
+for example, the ``dihedral angles'' can still be defined by
+the above procedure and are acceptable to {\tt gnu80} but they are not the
+sort of angle which the chemist normally calls dihedral angles. This
+is a small price to pay for a coherent system.
+\item Linear Molecules have dihedral angles zero. This is not a problem
+for actual linear molecules but it {\em is} a problem for larger
+molecules with {\em linear sections}. In these cases, passing along 
+a linear chain causes the system to ``lose its memory''
+of the original orientation of earlier non-linear pieces.
+\end{itemize}
+The second of these provisos can be cured (as can many other
+{\em practical} difficulties associated with the Z-matrix method)
+by the introduction of the concept of the {\bf Dummy Centre}.
+
+A dummy centre is just that; a centre introduced in order to
+make the Z-matrix specification of a particular molecule either: 
+\begin{itemize}
+\item Possible, because it contains a linear sub-section or 
+\item Easier, because some of the ``dihedral angles'' are awkward
+and artificial. 
+\end{itemize}
+The dummy centre is specified in exactly the same way as ``genuine''
+atomic centres and is recognised by {\tt gnu80} by its own ``chemical''
+symbol X. It is ignored in the calculation once the co-ordinate system
+has been set up.
+
+The most characteristic use for a dummy centre is to resolve the
+linear sub-sections problem. Simple by putting a dummy centre off the
+linear axis, the dihedral angle between this dummy and subsequent off-axis
+atoms can be used.  It is often found convenient to use dummy centres
+to generate Z-matrices for particular purposes, for example to define
+an angle in a molecule which is a ``natural'' parameter in
+an optimisation, but which is not defined by particular atoms; angles
+between the natural directions of functional groups or aromatic
+planes.
+
+The  the central concepts of the Z matrix
+are made more useful by the addition of a few technical
+aids.
+\begin{itemize}
+\item When giving the specification of an atom, the earlier atoms in
+the Z matrix may be referenced {\em by number} as well as by label.
+This facility is provided for compatibility with the earlier GAUSSIAN
+series and its use is not reccommended; the insertion of an atom in a chain
+will upset the numbering system but not reference by label.
+\item A dummy atom may be labelled by a {\bf -} (minus or dash, not
+underscore) as well as by {\bf X}.
+\item Any of the distances and angles in the Z matrix may be immediately
+preceeded by a minus with the obvious meaning. Clearly if the distance
+or angle is given explicitly as a number (like -1.4) this is not news;
+it is included in the definition of ``number''. But the use
+of the minus is possible {\em even when the distance or angle is
+given symbolically} ( like {\tt RC2C1}).
+
+This is very often useful to preserve the {\em symmetry} of a molecular
+arrangement during optimisations, or simply as an aid to getting
+the geometry expressed in an easily-recognisable form. Examples 2 and 3
+in the compilation of input examples (Appendix \ref{inex}) illustrates
+this point.
+\item It was remarked in the description of the dihedral angle
+that, in some cases, the actual physical interpretation of this angle
+is not that of a dihedral angle even when the geometrical recipe
+still works. It is often more sensible to define the position of
+an atomic centre by means of a distance and {\em two} bond angles.
+This facility is provided in {\tt gnu80} and is described in the reference
+section below.
+\end{itemize}
+Obviously, at some point the symbols used to define distances and angles
+in the Z matrix must be given numerical values to enable {\tt gnu80}
+to carry through an actual calculation. Either fixed numerical values
+must be supplied or (in the case of optimisations) initial values
+for {\tt gnu80} to use as a starting point for automatically generated
+values.
+
+This is done {\em after} the Z matrix is complete in the two input
+sections immediately following the blank record which terminates
+the Z matrix input section. The first of these sections is called the
+{\bf Variables} section and is generally used to supply {\em initial
+value} assignments to the symbols during an optimisation. Obviously,
+if the {\bf OPT} command has not been given on the command record, no
+optimisation will be performed and the assignments in the {\bf Variables}
+section simply provide fixed values for the distances and angles.
+
+The form of the {\bf Variables} input section is simply a set of
+records of symbols followed by the initial numerical values of these
+symbols, separated by either a space or, more pictorially, by an equals
+symbol ({\bf =}). In the example given above, the {\bf Variables} section 
+might include the records:
+\begin{verbatim}
+      RC2C1=1.34
+      A 109.5
+\end{verbatim}
+among other records.
+
+If it required to have all the Z matrix data in the same general form ---
+symbolic names for the distances and angles --- and yet it is required
+to keep some of these geometrical parameters {\em fixed} (i.e. not
+take part in the optimisation) the the {\bf Variables} input section
+is followed (after its terminating blank record) by the
+{\bf Constants} input section which is of precisely the same form but
+{\tt gnu80} does not attempt to change these numerical values, keeping them
+fixed at the values given throughout the calculation.
+\subsection{\sf The Z-matrix, Reference}
+Each nucleus (including dummies) is numbered sequentially and
+specified on a single record. 
+This collection of data, determining the
+molecular geometry is referred to as the Z-matrix.
+Thus, the nature and location of the N'th nucleus is specified on the
+(N+1)'th record in the section in terms of the positions of the previously
+defined nuclei 1,2,\ldots (N-1).
+
+The information about the position of the N'th 
+nucleus is contained in up to eight
+separate items on the record:
+\begin{enumerate}
+\item ELEMENT
+\item N1
+\item LENGTH
+\item N2
+\item ANGLE
+\item N3
+\item TWIST
+\item J
+\end{enumerate}
+each of these items is now discussed.
+
+\begin{enumerate}
+\item {\bf ELEMENT} specifies the chemical nature of the nucleus. It may
+consist of just the chemical symbol such as {\bf H} or {\bf C} 
+for hydrogen or
+carbon.  Alternatively, it may be an alphanumeric string beginning with
+the chemical symbol, followed immediately by a secondary identifying
+integer. Thus, {\bf C5} can be used to specify a carbon nucleus, identified
+as the fifth carbon in the molecule, for example. 
+This is sometimes convenient in
+following conventional chemical numbering. 
+
+Dummy nuclei are denoted by
+the symbols {\bf X} or {\bf -}. The item {\bf ELEMENT} 
+is required for every
+nucleus. For the first nucleus specified (N=1), it is the only item on
+the record.
+\item {\bf N1} specifies the (previously defined) nucleus for which the
+internuclear distance R(N,N1) will be given. This item may be either an
+integer (the value of N1 < N) or an alphanumeric string. In the latter
+case, the string must (of course!) match 
+the {\bf ELEMENT} field of a previous Z-matrix
+record.
+\item {\bf LENGTH} is the internuclear distance R(N,N1). 
+This may be either a
+positive floating point number giving the length in Angstroms (unless
+modified by the {\bf UNIT} command) or an alphanumeric string (maximum 8
+characters). In the latter case, the length is represented by a
+{\bf VARIABLE} for which a value will be specified in Input Section 4. 
+
+Use
+of variables in the Z-matrix is essential if optimization is to be
+carried out. However, they can also be used in single-point runs. The
+items {\bf N1} and {\bf LENGTH} are required for all nuclei after the first.
+For the second nucleus, only {\bf ELEMENT}, {\bf N1}, and {\bf LENGTH} are
+required.
+\item {\bf N2} specifies the nucleus for which the internuclear angle
+$\theta (N,N1,N2)$ will be given. Again this may be an integer (the value
+of N2 < N) or an alphanumeric string which matches a previous {\bf ELEMENT}
+entry. Note that {\bf N1} and {\bf N2} must represent {\em different} nuclei.
+\item {\bf ANGLE} is the internuclear angle $\theta (N,N1,Nn2).$ 
+This may be a
+floating point number giving the angle in degrees (unless modified by
+the {\bf UNIT} command) or an alphanumeric string representing a variable.
+{\bf N2} and {\bf ANGLE} are required for all nuclei after the second. 
+For the
+third nucleus, only {\bf ELEMENT}, {\bf N1}, {\bf LENGTH},
+{\bf N2}, and {\bf ANGLE} are
+required.
+\item {\bf N3} The significance of {\bf N3} and {\bf TWIST} 
+depends on the value of
+the last item {\bf J}. If J=0, or is omitted, {\bf N3} specifies the nucleus
+for which the internuclear {\em dihedral} angle, $\phi (N,N1,N2,N3)$ will be
+given; as with {\bf N1} and {\bf N2}, 
+this may be either an  integer (N3<N)  or
+an alphanumeric string matching a previous {\bf ELEMENT} entry.
+\item {\bf TWIST} (if J=0) is the internuclear dihedral angle
+$\phi (N,N1,N2,N3)$. Again, this may be a floating point number giving the
+angle in degrees (unless modified by {\bf UNIT}) or an alphanumeric string
+representing a variable (or a  variable  preceeded  by a negative
+sign). The dihedral angle is defined as the angle 
+$(-180.0 < \phi <=180.0)$ 
+between the planes (N,N1,N2) and (N1,N2,N3). The sign is
+positive if the movement of  the directed vector $R(N1 \rightarrow N)$
+towards the
+directed  vector $R(N2 \rightarrow N3)$ involves a righthanded screw motion.
+\item {\bf J} The above descriptions of 
+{\bf N3} and {\bf TWIST} apply if the  item
+{\bf J} is zero or absent. 
+
+Although it is usually possible to specify the
+nucleus N by a bond length, a bond angle, and a dihedral angle,  it is
+sometimes simpler to replace the dihedral angle by a second bond angle.
+This possibility is called for by using J = +1 or -1.
+\item Values of parameters for non-zero J:
+\begin{itemize}
+\item {\bf N3} If {\bf J} is +1 or -1, {\bf N3} specifies 
+the nucleus for which the
+{\em second} internuclear angle 
+$\chi (N,N1,N3)$ will be given. As usual, this
+may be either an integer (N3 < N) or an alphanumeric string
+representing a previously defined {\bf ELEMENT}.
+\item {\bf TWIST} If {\bf J } is +1 or -1, 
+then this item gives the value for the
+{\em second} internuclear angle 
+$\chi (N,N1,N3)$. 
+
+As before, this may be either a
+floating point number (value in degrees, unless modified by {\bf UNITS} ) or
+an alphanumeric string representing a variable.
+\item {\bf J} In the event of specification by two internuclear angles
+$\theta , \chi ,$ there will be two possible positions for the nucleus N.
+This is fixed by the sign of {\bf J}. Thus J=+1 if the triple vector
+product:
+\[
+R(N1 \rightarrow N) \cdot (R(N1 \rightarrow N2) \times R(N1 \rightarrow N3))
+\]
+is positive,  and J=-1 if the product is negative.
+Note that J=+1 corresponds to a clockwise rotation angle when
+looking from N1 to N.
+\end{itemize}
+\end{enumerate}
+The Z-matrix is terminated by the blank record which indicates the
+end of the molecule specification section. 
+
+If no variables have been
+introduced and if the command {\bf ALTER} has not been invoked in the
+job-type section, the input is complete and {\tt gnu80} will perform
+the requested computation.
+\section{\sf Variable and Constant Input Sections}
+These sections contain values of parameters introduced into the
+Z-matrix as alphanumeric strings in the preceding molecule
+specification section.  If there were no parameters (all lengths and
+angles having been specified by floating-point numbers), these sections
+are not required.  If parameters are used, they are divided into two
+sets. 
+
+The first set contains the {\bf VARIABLES} which are the parameters
+which are varied and optimized in the optimization run. 
+Input Section 4 contains the
+{\em initial values} of the variables. If optimization is not called for,
+these values will be inserted for a single run as if they had been
+specified numerically in Input Section 3. 
+
+The second set of parameters
+contains {\bf CONSTANTS} which are parameters which are not varied in
+optimization run. The values of these should be given in Input Section
+5. The {\bf CONSTANT} section is provided only for occasional convenience; it
+can be avoided completely if the values of the constants are entered
+numerically in program Input Section 3.
+
+Each parameter in Input Sections 4 and 5 is given a value on a
+separate record, the value following the parameter name in free field.
+Blanks, commas or equal signs may be used as separators with
+perhaps equals signs being the most intuitively appealing. Each section is
+terminated by a blank record. Thus, if the variables (R1,R2,A) are given
+values (1.08, 1.36, 105.4), the full {\bf VARIABLE} section (input section 4)
+consists of the four records:
+\begin{center}
+R1 = 1.08 \\
+R2 = 1.36 \\
+A  = 105.4 \\
+(blank record) \\
+\end{center}
+If the {\bf CONSTANT} section is empty (i.e. if all of the parameters have
+been listed in the variable section), a second blank record is not
+needed.
+
+If the job is a single point run (i.e. if the {\bf OPT} command has not
+been issued in the Command Record), the program will substitute the
+values from Input Sections 4 and 5 into the Z-matrix and proceed. 
+
+If, on
+the other hand, optimization {\bf (OPT)} has been requested, the program will
+adjust the {\bf VARIABLES} (Input Section 4) but not the {\bf CONSTANTS} 
+(Input Section 5) until a stationary point has been located.
+\section{\sf GEN Basis Set Input}
+This section is for specification of a basis set if a standard type
+is not used. If the basis has already been given in 
+the Command Record (or the {\bf GEN} command omitted)
+this section is not needed and no blank record is required. For fuller
+details, see Chapter \ref{chap3}.
+\section{\sf Alteration of Configuration}
+If the command {\bf GUESS=ALTER} or {\bf ALTER} has been issued in the
+Command Record, information is expected in the
+alteration-of-configuration program input sections. 
+
+There will be one
+such section if a singlet state is involved but two for higher
+multiplicities since $\alpha-$ and $\beta-$ orbitals then have to be treated
+separately.  Normally, the occupied orbitals are selected as those with
+lowest eigenvalues for the one-electron Hamiltonian used in the initial
+guess.  These sections consist of a set of substitutions, indicating
+that one of these occupied orbitals is to be replaced by one of the
+other (virtual) orbitals. Each such substitution is on a separate record
+and has two integers N1, N2 (free field) indicating that orbital N1 is
+replaced by obital N2 and that orbital N2 is replaced by N1. The list
+of substitutions is terminated by the blank record at the end of the
+section.
+
+Note that both sections are required for non-singlet states. Thus,
+if only $\alpha-$ substitutions are needed, the $\beta$ section is expected
+even though it is empty and vice versa. The second blank record to
+indicate this omission has to be included.
+\section{\sf Program Limitations}
+\label{limit}
+This section outlines the various limitations
+that exist within {\tt gnu80}.  These limitations occur throughout the
+system in the form of fixed dimension statements, algorithm design
+limitations, etc., and their overall effect is 
+to restrict the ``size'' of
+calculation that can be performed in the sense of number of
+basis functions used or number of atoms in the molecule.
+
+The limitations described here can be divided into two broad categories:
+\begin{itemize}
+\item Limitations associated with the Z-matrix specification 
+\item Basis
+set restrictions.  
+\end{itemize}
+This section is concluded by
+``quick-reference''  Table which summarises the
+pertinent information.
+\subsection{\sf Z-matrix Limitations}
+This class of restrictions involves: the size of the Z-matrix, the number
+of variables in a geometry optimization and the maximum number of atoms.
+Recall that a Z-matrix may have ``dummy'' atoms and 
+therefore the number of
+atoms used in the calculation may be fewer than the number of records in the
+Z-matrix.  
+
+The total number of records in the Z-matrix may not exceed 50.
+This includes both dummies and genuine atoms.  
+
+Furthermore, the maximum
+number of variables which can be specified in an optimization must not exceed
+50 (30 for a Fletcher-Powell ({\bf FP}) optimization).  
+These two restrictions are imposed
+by explicit DIMENSIONing which appears in the Links that process the Z-matrix
+and its variables (links 101, 102, 103, 105, 202 and 716).
+
+The internal restrictions on the total number of atoms are not so strict.
+Within the interior of the program, the arrays which hold
+Cartesian co-ordinantes and atomic number information are DIMENSIONed to
+accommodate 100 atoms.  This DIMENSIONing far exceeds the maximum size
+of the Z-matrix and certain integral evaluation limitations (described below).
+These expanded arrays were installed in the program the last time it was
+necessary to alter the COMMON-blocks containing them, and are intended for
+future expansion.
+\subsection{\sf Basis Set Limitations}
+\label{basis_lims}
+Throughout the Gaussian system, basis set limitations manifest themselves
+in two ways.  Firstly, restrictions are imposed within the integral evaluation
+programs; limiting the number of primitive gaussian functions and how they
+are combined into atomic orbital basis functions.  Secondly, DIMENSIONing
+requirements limit the total number of basis functions that can be used
+in each of the energy evaluation procedures (SCF, MP2, etc.)
+
+\subsubsection{\sf General input data limitations}
+See \ref{genbasis} for a fuller discussion of non-default bases and
+\ref{limit} for a compendium of the various limitations
+on {\tt gnu80} and the way that basis set limitations fit into the
+general scheme of limitations. Meanwhile, here is a summary
+of the limitations on basis sets which is most useful for
+the default bases; currently {\tt MAXSHL} is set to 100.
+
+{\tt MAXSHL} shells;  see definition of a shell below.\\
+Types: s, p, d, f, sp, spd  \\
+Maximum of 6 Gaussian functions per shell  
+but
+maximum of {\tt 3*MAXSHL} Gaussians totally. 
+
+Definitions of the concepts of {\em primitive} shells and {\em contracted} 
+(or {\em full}) shells:
+\begin{itemize}
+\item A {\em primitive shell} is defined to be a set of basis functions up to
+and including functions of some specified effective 
+maximum angular quantum number ($\ell$) which
+share a common orbital exponent.  Thus, an $\ell =1$ shell 
+would consist of the
+functions (s,px,py,pz) all with the same Gaussian exponent.  Similarly,
+an $\ell =2$ shell would contain (s,px,py,pz,xx,yy,zz,xy,xz,yz) where xx,
+etc.  denote the normalized second-order Gaussian functions.
+\item A {\em full, or contracted} shell results from contracting the functions
+of several primitive shells together.  In typical calculations, one
+normally uses contracted shells.
+\end{itemize}
+As an example, consider the carbon atom in the 6-31G basis.  In
+this basis, the carbon will have 10 primitive shells (6+3+1). The first
+6 primitive shells are s-shells ($\ell =0$), and are contracted together to 
+make a single s-type basis function. The next three shells are
+sp-shells ($\ell =1$), each consisting of (s,px,py,pz) functions. These
+primitive shells are contracted together to make four atomic orbital
+basis functions: s, px, py and pz. The outermost primitive shell is
+also of sp type, and makes yet another 4 atomic orbital basis
+functions.
+
+If the program were limited to this definition of shells, one would
+have to use a set of sp-functions whenever a set of d-functions was
+desired. Since it is frequently desired to have just a set of d or f
+type functions, some way must be devised to handle this.
+thus, we introduce the idea of a ` shell constraint' .  The shell
+constraint specifies which functions within a shell are actually
+employed. By appropriately setting the shell constraint, one can get
+just the d portion of an $\ell =2$ shell.
+\subsection{\sf Integral Evaluation Limitations}
+In order to fully understand the limitations in the 
+integral programs, one
+must have some understanding of the concepts presented in \ref{genbasis}
+(input of non-standard bases).  In the terminology introduced in
+\ref{genbasis}, the limitations are as follows: 
+\begin{itemize}
+\item The maximum number of
+primitive s- and p-type shells is {\tt 3*MAXSHL},
+\item The maximum number of primitive
+d-shells is {\tt MAXSHL}, 
+\item The maximum number of contracted shells is {\tt MAXSHL}, and the
+maximum degree of contraction is 8.  
+\end{itemize}
+Note:
+\begin{itemize}
+\item That the {\tt MAXSHL} contracted shell
+limit implicitly declares an {\tt MAXSHL} atom limit if each atom has only a single
+shell of basis functions.  
+\item The maximum degree of contraction limit of
+8 is actually an input limitation imposed by routine GBASIS in L301;
+the integral evaluation programs are DIMENSIONed to handle expansions of
+up to 10 gaussians.
+\end{itemize}
+An important limitation in the integral programs concerns the types of shells
+which can be used.  The present version of  {\tt gnu80} can handle s,
+sp, p and d shells.  Re-DIMENSIONing of the array TQ in L314 to 40000
+will enable the program to handle spd-shells at the SCF level.  Implementation
+of this feature in the gradient program is not straightforward.  Even though
+much  of the code is present, f shells are not implementated in this version.
+
+The last major restriction which appears in the integral programs is in the
+manner in which integral labels are packed.  When the {\em standard} integral
+storage procedure is selected (in contrast to the {\em Raffenetti} 
+storage modes),
+the suffixes I, J, K  and L of the two-electron integral (IJ,KL) are
+packed into a 32 bit computer word as 
+limited length quantities.  This in effect
+limits the number of basis functions to 100.  When the Rafenetti modes
+are selected, the two linearized suffixes IJ and KL (where e.g. 
+IJ = (I*(I-1))/2 + J are packed into a standard integer.  
+This imposes a theoretical
+limit of 361 basis functions which is well outside any real possibility.
+\newpage
+\begin{center}
+Basis function limitations in SCF
+and post-SCF Links \\
+Currently {\tt MAXBAS} is set to 150
+\  \\
+\begin{tabular}{|l|r|} \hline
+Link & Max. Basis \\ \hline
+L401 & {\tt MAXBAS} \\
+\hline
+L501 & {\tt MAXBAS} \\
+L502 & 80 \\
+L503 & 70 \\
+L505 & 70  \\ 
+\hline
+L601 & {\tt MAXBAS} \\
+\hline
+L701 & {\tt MAXBAS} \\
+L702 & {\tt MAXBAS} \\
+L703 & {\tt MAXBAS} \\
+L716 & {\tt MAXBAS} \\
+\hline 
+L801 & 70 \\
+L802 & 70 \\
+L803 & 70 \\
+\hline
+L901 & 70 \\
+L909 & 60 \\
+L910 & 60 \\
+L911 & 60 \\
+L912 & 60 \\
+L913 & 60 \\ \hline
+\end{tabular}
+\end{center}
+\newpage
+\subsection{\sf SCF and POST-SCF Limitations}
+The limitations present in the energy evaluation procedures are mainly
+dependent on DIMENSIONing requirements.  These are summarized in the
+Table.  These programs have only rarely been used at or near their
+respective dimension limits, and the user should exercise some caution
+when large calculations are attempted.
+\subsection{\sf Basis Set Ranges}
+The atoms for which the standard basis sets apply are: \\
+{\bf 
+\begin{center}
+Basis Function Ranges \\
+\  \\
+\begin{tabular}{|l|r|} \hline
+STO-3G &    H - Xe \\
+3-21G  &    H - Ar \\
+6-21G  &    H - Ar \\
+4-31G  &   H - Ne \\
+6-31G  &   H - Ne \\
+6-311G &  H - Ne \\
+LP-31G &    H - Cl \\
+LANL1MB & Na - U \\
+LANL1DZ & Na - U \\
+\hline
+\end{tabular}
+\end{center}
+} % end of bold
+Note:
+\begin{itemize}
+\item
+All these basis ranges {\bf exclude} the Lanthanides for which
+there are no bases or potentials (yet).
+\item
+{\bf LANL1DZ} and {\bf LP-31G} are synonyms; use of either command
+uses the {\bf LP-31G} basis for the first-row atoms (and related potentials)
+and the {\bf LANL1DZ} basis and potentials for all other atoms.
+\item
+Use of {\bf LANL1MB} results in the use of the {\bf STO-3G} valence set
+(and related potentials) for atoms of the first row and the actual
+{\bf LANL1MB} basis for all other atoms.
+\end{itemize}
+These ranges are not affected by the addition of either p or d polarization
+functions.
+\begin{center}
+\fbox{
+\parbox{3.5in}{
+But note that the addition of polarisation functions to an STO-3G
+basis for atoms of the first row of the periodic table (H ---Ne)
+is forbidden because it is an ``unbalanced'' basis which
+may give poor or meaningless results. Thus specifying
+STO-3G* for a calculation on the water molecule will result in
+a warning message and an STO-3G calculation being performed.
+}
+}
+\end{center}
+\subsection{\sf Concluding Remarks}
+The  sections above briefly describe the most limitations built
+into the {\tt gnu80} system. The restrictions which are, by far, the
+most likely to be encountered
+are those associated with the size of the Z-matrix, number of geometrical
+variables or the total number of basis functions.  In practice, the integral
+program limitations almost never cause problems.
+
+It is important to point out that underlying all of the above restrictions
+is the question of practicality.  The amount of computation in the SCF step
+increases very rapidly with the number of basis functions.  In the correlation
+procedures, MP2, MP3 and CID, the computation is also strongly dependent
+on the number of electrons.
