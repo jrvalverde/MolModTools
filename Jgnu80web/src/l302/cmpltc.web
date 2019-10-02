@@ -1,0 +1,77 @@
+@* cmpltc.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] MAXDIM                                                    
+\item[INPUT:] NBASIS                                                    
+\item[INPUT:] NSTART                                                    
+\item[INPUT:] U                                                         
+\item[OUTPUT:] V                                                         
+\item[PASSED:] S                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GSQRT   SMULTS                                         
+\item[Called by]   RYSPOL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine cmpltc(MAXDIM,NBASIS,NSTART,U,V,S)
+      implicit none
+      double precision delta , gsqrt , one , S , U , V
+      integer i , iend , jadd , jorth , MAXDIM , NBASIS , NSTART
+      dimension S(1,1)
+      dimension U(MAXDIM,MAXDIM) , V(MAXDIM,MAXDIM)
+      data one/1.0D0/
+C
+C     this routine performs a schmidt orthogonalization on a matrix
+C     of molecular orbital coefficients starting at column nstart.
+C     if nstart is equal to 2, a full orthogonalization is performed.
+C     the matrix of orthogonalized molecular orbitals is in v, and
+C     the non-orthogonalized orbitals in u.  note that u and v
+C     are equivalenced.  the procedure (for a detailed reference, see
+C     pilar, frank l.,'elementary quantum chemistry', mcgraw-hill,
+C     1968, pp. 63)  is to combine the col1mns 1,2,...,(nstart-1) with
+C     column nstart according to the following relation:
+C
+C       v(nstart) = u(nstart) - dl(i,nstart)*v(i),  i=1,2,...,(nstart-1)
+C
+C     the column being orthogonalized is incremented after a com-
+C     plete cycle.  in the above equation, dl(i,nstart) is equal to
+C     <v(i),s,u(nstart)> where s is the overlap matrix.  routine
+C     sprods evaluates the vector product.
+C
+C=    dimension statement toegevoegd
+C      equivalence( v(1,1),u(1,1) )
+C      equivalence v,u in calling routines
+C
+C
+      iend = NSTART - 2
+C
+      do 100 jorth = NSTART , NBASIS
+         iend = iend + 1
+         do 50 jadd = 1 , iend
+            call smults(MAXDIM,NBASIS,jadd,jorth,delta,U,S)
+C
+            do 20 i = 1 , NBASIS
+               V(i,jorth) = U(i,jorth) - delta*V(i,jadd)
+ 20         continue
+C
+            call smults(MAXDIM,NBASIS,jorth,jorth,delta,U,S)
+C
+            delta = one/gsqrt(delta)
+C
+            do 40 i = 1 , NBASIS
+               V(i,jorth) = V(i,jorth)*delta
+ 40         continue
+C
+ 50      continue
+ 100  continue
+      return
+C
+      end
+@* INDEX.

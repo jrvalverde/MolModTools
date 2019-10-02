@@ -1,0 +1,54 @@
+@* formfn.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] KOP                                                       
+\item[INPUT:] MAXDIM                                                    
+\item[OUTPUT:] F                                                         
+\item[INPUT:] N                                                         
+\item[PASSED:] X                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FMTGEN                                                 
+\item[Called by]   RYSPOL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine formfn(KOP,MAXDIM,F,N,X)
+      implicit none
+      double precision F , fmt , X
+      integer i , ick , In , ind , Iout , Ipunch , j , KOP , MAXDIM , 
+     &        N , nfill
+      dimension F(MAXDIM,MAXDIM) , fmt(20)
+      common /io    / In , Iout , Ipunch
+C
+C     kop is the initialization varible for the fmt routines.
+C     f is the f matrix to be filled by this routine.
+C     n is the desired order of the rys polynomial.
+C     x is the argument for f(m,x).
+C
+C
+C
+C     n refers to the order of the problem being solved.  f is filled
+C     to order n+1.  we must obtain f(m,t) m=0,1,2,...,2*n.
+      nfill = N + 1
+      call fmtgen(fmt,X,2*N+1,ick)
+C
+C     fill the f-matrix.
+      do 100 j = 1 , nfill
+         do 50 i = 1 , nfill
+            ind = i + j - 1
+            F(i,j) = fmt(ind)
+ 50      continue
+ 100  continue
+C
+C
+      return
+C
+      end
+@* INDEX.

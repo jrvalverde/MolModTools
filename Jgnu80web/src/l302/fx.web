@@ -1,0 +1,51 @@
+@* fx.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] X                                                         
+\item[INPUT:] A                                                         
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]        NOTHING                                           
+\item[Called by]   RYSPOL                                                 
+                                                                    
+\end{description}
+@a
+      double precision function fx(N,X,A)
+      implicit none
+      double precision A , sum , X
+      integer i , N
+      dimension A(*)
+C
+C     this function evaluates the polynomial of degree n with
+C     coefficients a at the point x.
+C
+C     the polynomial is written as
+C
+C     a(1)*x**n+a(2)*x**(n-1)+...+a(n)*x+a(n+1)
+C
+C     note that a is used to n+1 locations.
+C
+C re-written by vk:
+C the polynomial is avaluated according to the horner sceme:
+C     x*(x*....x*(a(1)*x + a(2)) + a(3)) + .... )+a(n) ) + a(n+1)
+C     allow for zero order polynomial.
+      sum = A(1)
+      if ( N.gt.0 ) then
+C
+         do 50 i = 1 , N
+            sum = sum*X + A(i+1)
+ 50      continue
+      endif
+C
+      fx = sum
+      return
+C
+      end
+@* INDEX.

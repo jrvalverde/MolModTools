@@ -1,0 +1,272 @@
+@* ryspol.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] N                                                         
+\item[INPUT:] X                                                         
+\item[OUTPUT:] T                                                         
+\item[OUTPUT:] W                                                         
+\item[INPUT:] IPRINT                                                    
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Transmits as argument]  KOP1                                                   
+\item[Uses]  IOUT    KOP1    KOP2                                   
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       CMPLTC  FORMFN  FPX     FX      GABS    GSQRT   MATOUT 
+             RPOL1   ZPOLYR                                         
+\item[Called by]   STVINT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine ryspol(N,X,T,W,IPRINT)
+      implicit none
+      double precision a , ap , c , c00 , c01 , c11 , dr , extrap , f , 
+     &                 f0 , f1 , f2 , ff , ffp , flamb1 , fx , gabs , 
+     &                 gsqrt , one , ratio
+      double precision root , sum , T , thr2 , thr3 , W , X , zero
+      integer i , ier , In , Iout , ipm1 , IPRINT , Ipunch , itmax , j , 
+     &        jsave , k , km1 , Kop1 , Kop2 , maxdim , N , ndeg , 
+     &        ndegp1 , nfd , nfdp1
+      integer np1
+      real ra , rr , thr1 , rtest , rzero
+      dimension T(*) , W(*)
+      dimension f(10,10) , c(10,10) , a(20) , ra(20) , rr(2,18) , dr(18)
+     &          , ap(20)
+      common /io    / In , Iout , Ipunch
+      common /rys   / Kop1 , Kop2
+      equivalence (c00,c(1,1)) , (c01,c(1,2)) , (c11,c(2,2))
+      equivalence (f0,f(1,1)) , (f1,f(2,1)) , (f2,f(2,2))
+      equivalence (dr(1),rr(1,1))
+      data zero/0.0D0/ , one/1.0D0/ , thr3/1.0D-6/ , thr2/1.0D-17/
+      data thr1/1.0E-4/ , rzero/0.0E0/
+      data itmax/50/ , maxdim/10/
+C
+C     this routine receives n (the desired order of the rys
+C     polynomial) and x (the argument of fm) and returns the n
+C     positive roots in t and the n corresponding weights in w.
+C     the roots are ordered in ascending values.
+C
+C
+C
+C
+C
+99001 format (25H1FROM RYSPOL, ILLEGAL N: ,i6/)
+99002 format (//15H0IN RYSPOL, N =,i2//5H0X = ,d32.25//15x,8HF-MATRIX/)
+99003 format (//9H0FLAMB1 =,d32.25///15x,16HINITIAL C-MATRIX/)
+99004 format (///15x,14HFINAL C-MATRIX/)
+99005 format (///22H0MODIFIED COEFFICIENTS/(1x,i2,1x,d32.25))
+99006 format (27H1COMPLEX ROOTS ENCOUNTERED./)
+99007 format (///27H0RAW DOUBLE-PRECISION ROOTS/(1x,i2,2x,d32.25))
+99008 format (///20H0DERIVATIVE ORDER = ,
+     &        i2//13H0COEFFICIENTS/(1x,i2,2x,d32.25))
+99009 format (/24H0ITMAX EXCEEDED FOR I = ,i2/)
+99010 format (/24H0ZERO DERIVATIVE AT I = ,i2,2x,d32.25/)
+99011 format (///24H0FINAL ROOTS AND WEIGHTS/(1x,i2,2D32.25))
+C
+C
+C
+C     set print variable.
+      ipm1 = IPRINT - 1
+      np1 = N + 1
+C
+C     test for illegal n.
+      if ( N.le.0 ) then
+         write (Iout,99001) N
+         return
+C
+C     test for type of algorithm.
+      elseif ( Kop2.ne.0 ) then
+C
+C
+C***********************************************************************
+C
+C     compute roots and weights by brute for+e method.
+C
+C     first, compute f-matrix.
+         call formfn(Kop1,maxdim,f,N,X)
+         if ( ipm1.gt.0 ) then
+            write (Iout,99002) N , X
+            call matout(f,maxdim,maxdim,np1,np1)
+         endif
+C
+C     initialize the c-matrix and then compute the first 3 terms
+C     of the c-matrix.
+         do 50 i = 1 , np1
+            do 20 j = 1 , np1
+               c(i,j) = zero
+ 20         continue
+            c(i,i) = one
+ 50      continue
+C
+         c00 = one/gsqrt(f0)
+         flamb1 = one/(gsqrt(f0*(f0*f2-f1*f1)))
+         c01 = -f1*flamb1
+         c11 = f0*flamb1
+C
+         if ( ipm1.gt.0 ) then
+            write (Iout,99003) flamb1
+            call matout(c,maxdim,maxdim,np1,np1)
+         endif
+C
+C     bypass orthogonalization if n=1.
+         if ( N.gt.1 ) call cmpltc(maxdim,np1,3,c,c,f)
+C
+         if ( ipm1.gt.0 ) then
+            write (Iout,99004)
+            call matout(c,maxdim,maxdim,np1,np1)
+         endif
+C
+C     at this point, the columns of the c-matrix contain the
+C     coefficients of the rys polynomials (for a given x).
+C     the coefficients are arranged in order of increasing power of t.
+C
+C     test for n=1, form this point on n=1 is treated separately.
+         if ( N.le.1 ) then
+C
+C
+C     explicit code for n=1.
+C     at this point, both the f and c-matrices exist.
+C
+C     we must solve the equation:
+C
+C     y=c01+c11*t**2
+C
+C     for y=0.
+C
+            T(1) = gsqrt(-c01/c11)
+            W(1) = f0
+         else
+C
+C     copy the coefficients of the n(th) polynomial (residing in the
+C     n+1(th) column of c)  to the holding array a, reversing the order
+C     and expanding to the 2*n representation.  at this time, prepare
+C     the single precision copy of a.
+            k = np1 + N
+            do 60 i = 1 , np1
+               a(k) = c(i,np1)
+               ra(k) = sngl(a(k))
+               k = k - 2
+ 60         continue
+            ndeg = N + N
+            ndegp1 = ndeg + 1
+C
+            if ( ipm1.gt.0 ) write (Iout,99005) (i,a(i),i=1,ndegp1)
+C
+C     compute crude zeroes.
+            call zpolyr(ra,ndeg,rr,rr,ier)
+C
+C     recover positive roots to ra and test for
+C     possible complex roots.
+            k = 0
+            do 80 i = 1 , ndeg
+               if ( gabs(rr(2,i)).ge.thr1 ) goto 180
+               if ( rr(1,i).gt.thr1 ) then
+                  k = k + 1
+                  ra(k) = rr(1,i)
+               endif
+ 80         continue
+C
+C     form double precision trial roots in dr, sorting to
+C     ascending order.  at this point, there are n positive roots
+C     in the first n locations of ra.
+            k = N
+            do 100 i = 1 , N
+C     find index and value of largest root.
+               rtest = rzero
+               do 90 j = 1 , N
+                  if ( ra(j).gt.rtest ) then
+                     jsave = j
+                     rtest = ra(j)
+                  endif
+ 90            continue
+C     plant current value and clear old location.
+               dr(k) = dble(ra(jsave))
+               ra(jsave) = rzero
+               k = k - 1
+ 100        continue
+C
+            if ( ipm1.gt.0 ) write (Iout,99007) (i,dr(i),i=1,N)
+C
+C     the raw double precision roots (n of them) are in dr.
+C     these are now improved via a newton-raphson scheme.  the iteration
+C     is carried out until itmax is exceeded or until the ratio of the
+C     improvement to the total is .le. thr2.
+C
+C     obtain the coefficients of the first derivative.
+            call fpx(ndeg,nfd,a,ap)
+            nfdp1 = nfd + 1
+C
+            if ( ipm1.gt.0 ) write (Iout,99008) nfd , 
+     &                              (i,ap(i),i=1,nfdp1)
+C
+C     commence loop over zeroes.
+            do 140 i = 1 , N
+               root = dr(i)
+               do 110 j = 1 , itmax
+C     obtain f(x) and fp(x).
+                  ff = fx(ndeg,root,a)
+                  ffp = fx(nfd,root,ap)
+C     test for zero derivative.
+                  if ( gabs(ffp).lt.thr3 ) goto 120
+C     obtain extrapolation quantity.
+                  extrap = ff/ffp
+C     compute ration of change to total.
+                  ratio = extrap/root
+C     test for convergence.
+                  if ( gabs(ratio).le.thr2 ) goto 130
+C     continue iterating.
+                  root = root - extrap
+ 110           continue
+               write (Iout,99009) i
+               goto 130
+C
+ 120           write (Iout,99010) i , ffp
+C     update root.
+ 130           T(i) = root
+ 140        continue
+C
+C     roots now exist in full double precision in t.
+C     compute weights.
+            do 160 i = 1 , N
+               W(i) = zero
+               root = T(i)
+               do 150 j = 1 , N
+                  sum = zero
+                  do 145 k = 1 , j
+                     km1 = k - 1
+                     sum = sum + (c(k,j)*(root**(2*km1)))
+ 145              continue
+                  W(i) = W(i) + sum*sum
+ 150           continue
+               W(i) = one/W(i)
+ 160        continue
+            goto 200
+C
+ 180        write (Iout,99006) rr(2,i)
+            return
+         endif
+C
+C
+C     if requested, print final results and return.
+ 200     if ( ipm1.gt.0 ) write (Iout,99011) (i,T(i),W(i),i=1,N)
+C
+C     last, but not least, square the resultant roots.
+         do 250 i = 1 , N
+            T(i) = T(i)*T(i)
+ 250     continue
+C
+C     return to calling routine.
+         return
+      endif
+C
+C***********************************************************************
+C
+C     alternate algorithm.
+      call rpol1(N,X,T,W)
+      return
+C
+      end
+@* INDEX.

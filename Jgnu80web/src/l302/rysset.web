@@ -1,0 +1,35 @@
+@* rysset.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] KOP1                                                      
+\item[INPUT:] KOP2                                                      
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]    IOP1    IOP2                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       FMTSET  SETR1                                          
+\item[Called by]   STVINT                                                 
+                                                                    
+\end{description}
+@a
+      subroutine rysset(KOP1,KOP2)
+      implicit none
+      integer Iop1 , Iop2 , KOP1 , KOP2
+      common /rys   / Iop1 , Iop2
+C
+      Iop1 = KOP1
+      Iop2 = KOP2
+C     kop1=thresh for fmtset.
+C     kop2=0, use interpolation.
+C     kop2=1, use brute force algorithm (bfa).
+      if ( KOP2.ne.0 ) call fmtset(0,0,0)
+      call setr1
+C
+      return
+C
+      end
+@* INDEX.

@@ -1,0 +1,38 @@
+@* zquadr.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[UNUSED:] AA                                                        
+\item[UNUSED:] BB                                                        
+\item[UNUSED:] CC                                                        
+\item[UNUSED:] R1                                                        
+\item[UNUSED:] R2                                                        
+\item[UNUSED:] IRC                                                       
+\item[UNUSED:] IER                                                       
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       KILLER  LNK1E                                          
+\item[Called by]    NOTHING                                           
+                                                                    
+\end{description}
+@a
+      subroutine zquadr(AA,BB,CC,R1,R2,IRC,IER)
+      implicit none
+      real AA , BB , CC , R1 , R2
+      integer IER , IRC
+C
+      write (6,99001)
+C
+99001 format (' SORRY, ZQUADR IS NOT IMPLEMENTED YET.')
+C
+      call lnk1e
+      call killer
+      stop
+C
+      end
+@* INDEX.

@@ -1,0 +1,39 @@
+@* fpx.
+\section*{\sf Dummy Arguments}  \begin{description}
+                                                                    
+\item[INPUT:] NDEG                                                      
+\item[OUTPUT:] NFD                                                       
+\item[INPUT:] A                                                         
+\item[OUTPUT:] AP                                                        
+                                                                    
+\end{description} \section*{\sf Common Variables}  \begin{description}
+                                                                    
+\item[Modifies]     NOTHING                                           
+\item[Uses]   NOTHING                                           
+                                                                    
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+                                                                    
+\item[Calls]       GFLOAT                                                 
+\item[Called by]   RYSPOL                                                 
+                                                                    
+\end{description}
+@a
+      subroutine fpx(NDEG,NFD,A,AP)
+      implicit none
+      double precision A , AP , gfloat
+      integer i , k , NDEG , NFD
+      dimension A(*) , AP(*)
+C
+C     routine to compute the coefficients of the first derivative
+C     of a polynomial stored in a.
+C     the first derivative coefficients are delivered to ap.
+      NFD = NDEG - 1
+      k = NDEG
+      do 100 i = 1 , NDEG
+         AP(i) = A(i)*gfloat(k)
+         k = k - 1
+ 100  continue
+      return
+C
+      end
+@* INDEX.
