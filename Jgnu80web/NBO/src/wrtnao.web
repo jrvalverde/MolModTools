@@ -1,0 +1,66 @@
+@*wrtnao.
+\section*{\sf Dummy Arguments}  \begin{description}
+
+\item[PASSED:] T
+\item[INPUT:] IFLG
+
+\end{description} \section*{\sf Common Variables}  \begin{description}
+
+\item[Modifies]     NOTHING 
+\item[Transmits as argument]  NBAS    NDIM
+\item[Uses]  LSTOCC  NAOCTR  NAOL    NBAS    NDIM
+
+\end{description}  \section*{\sf External Subprograms}  \begin{description}
+
+\item[Calls]       AOUT    FESNAO  FETNAO
+\item[Called by]   NAODRV
+
+\end{description}
+@a
+C*****************************************************************************
+      subroutine wrtnao(T,IFLG)
+C*****************************************************************************
+      implicit none
+      integer IFLG , Ispin , j , Label , Larc , Lbl , lfn , Lorb ,
+     &        Lorbc , Lstemt , Lstocc , MAXATM , MAXBAS , Munit , Mxao ,
+     &        Mxaolm , Mxbo , Naoctr , Naol , Natoms
+      integer Nbas , Ndim
+      double precision T
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Lstemt(MAXBAS) , Larc(MAXBAS) ,
+     &                Lbl(MAXBAS) , Lorbc(MAXBAS) , Lorb(MAXBAS)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+C
+      dimension T(Ndim,Ndim)
+      character*80 title
+C
+C  note: t is the pnao overlap matrix on return to the calling routine
+C
+C  fetch the AO to NAO transformation from the NBO daf, and write
+C  it to the external file abs(iflg):
+C
+      call fetnao(T)
+      title = 'NAOs in the AO basis:'
+      call aout(T,Ndim,Nbas,Nbas,title,1,IFLG)
+C
+C  write the NAO orbital labels to the external file:
+C
+      lfn = abs(IFLG)
+      write (lfn,99001) (Naoctr(j),j=1,Nbas)
+      write (lfn,99001) (Naol(j),j=1,Nbas)
+      write (lfn,99001) (Lstocc(j),j=1,Nbas)
+C
+C  fetch the pnao overlap matrix from the NBO daf, and store only the
+C  upper triangular portion on the external file:
+C
+      call fesnao(T)
+      title = 'PNAO overlap matrix:'
+      call aout(T,Ndim,-Nbas,Nbas,title,2,IFLG)
+      return
+C
+99001 format (1x,20I4)
+      end
+@* INDEX.

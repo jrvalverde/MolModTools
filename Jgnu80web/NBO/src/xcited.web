@@ -1,0 +1,311 @@
+@*xcited.
+\section*{\sf Dummy Arguments}  
+\begin{description}
+
+\item[INPUT:] DM
+\item[INPUT:] T
+\item[OUTPUT:] HYB
+\item[OUTPUT:] THYB
+\item[INPUT:] S
+\item[OUTPUT:] OCC
+\item[PASSED:] SCR
+\item[INPUT:] ISCR
+
+\end{description} 
+\section*{\sf Common Variables}  
+\begin{description}
+
+\item[Modifies]    LABEL   LTYP
+\item[Transmits as argument]  MXAO    NBAS    NDIM
+\item[Uses]  IBXM    ISPIN   LABEL   LFNPR   LL      LTYP    LU
+             MXAO    NAOA    NBAS    NDIM
+
+\end{description}  
+\section*{\sf External Subprograms}  
+\begin{description}
+
+\item[Calls]       FESNAO  HTYPE   MATMLT  RANK    SIMTRS  TRNSPO
+\item[Called by]   NBODRV
+
+\end{description}
+@a
+      subroutine xcited(DM,T,HYB,THYB,S,OCC,SCR,ISCR)
+      implicit none
+      double precision coef , DM , HYB , OCC , one , pct , S , SCR , T ,
+     &                 temp , tenth , thresh , THYB , tot , zero
+      integer i , iat , Iatcr , Iathy , Iatno , ib , Ibxm , Ichoos ,
+     &        icnt , ictr , idiff , ih , ihyb , Ino , ip , ipar3c ,
+     &        Iprin , Iprint , Ipseud , ISCR
+      integer isgn , Ispin , Iw3c , Iwapol , Iwcubf , Iwdetl , Iwdm ,
+     &        Iwfock , Iwhybs , Iwmulp , Iwpnao , Iwtnab , Iwtnao ,
+     &        Iwtnbo , Iznuc , j , Jcore , jctr , jhyb , jp
+      integer Jprint , k , kctr , kh , khyb , kl , Kopt , ku , l3c ,
+     &        Label , lbd , lbl , lbl1 , lbl2 , lblnk , lcr , Lfnao ,
+     &        Lfnarc , Lfndaf , Lfndef
+      integer Lfndm , Lfnin , Lfnmo , Lfnnab , Lfnnao , Lfnnbo ,
+     &        Lfnnho , Lfnnlm , Lfnpna , Lfnpnb , Lfnpnh , Lfnpnl ,
+     &        Lfnppa , Lfnpr , Ll , llp , lry , lstar , Lstocc , Ltyp
+      integer Ltyp1 , Lu , MAXATM , MAXBAS , Munit , Mxao , Mxaolm ,
+     &        Mxbo , Naoa , Naoc , Naoctr , Naol , Natoms , Nbas ,
+     &        nbond , nctr , Ndim , nhyb , nl , nocc
+      integer Norbs
+      logical first
+C
+      parameter (MAXATM=99,MAXBAS=500)
+      common /nbinfo/ Ispin , Natoms , Ndim , Nbas , Mxbo , Mxao ,
+     &                Mxaolm , Munit
+      common /nbatom/ Iatno(MAXATM) , Ino(MAXATM) , Norbs(MAXATM) ,
+     &                Ll(MAXATM) , Lu(MAXATM) , Iznuc(MAXATM) ,
+     &                Iatcr(MAXATM)
+      common /nbnao / Naoc(MAXBAS) , Naoa(MAXBAS) , Ltyp1(MAXBAS) ,
+     &                Iprin(MAXBAS)
+      common /nbbas / Label(MAXBAS,6) , Naoctr(MAXBAS) , Naol(MAXBAS) ,
+     &                Lstocc(MAXBAS) , Ibxm(MAXBAS) , Ltyp(MAXBAS) ,
+     &                Iathy(MAXBAS,3)
+      common /nbopt / Iwdm , Iw3c , Iwapol , Iwhybs , Iwpnao , Iwtnao ,
+     &                Iwtnab , Iwtnbo , Iwfock , Iwcubf , Ipseud ,
+     &                Kopt , Iprint , Iwdetl , Iwmulp , Ichoos , Jcore ,
+     &                Jprint(60)
+      common /nbio  / Lfnin , Lfnpr , Lfnao , Lfnpna , Lfnnao , Lfnpnh ,
+     &                Lfnnho , Lfnpnb , Lfnnbo , Lfnpnl , Lfnnlm ,
+     &                Lfnmo , Lfndm , Lfnnab , Lfnppa , Lfnarc ,
+     &                Lfndaf , Lfndef
+      dimension DM(Ndim,Ndim) , T(Ndim,Ndim) , HYB(Mxao) ,
+     &          THYB(Ndim,Ndim) , S(Ndim,Ndim) , OCC(Ndim) , SCR(Ndim) ,
+     &          ISCR(Ndim)
+      dimension pct(5) , iat(3)
+      data llp , lbd , l3c , lcr , lry/'LP' , 'BD' , '3C' , 'CR' , 'RY'/
+      data zero , tenth , one , thresh/0.0D0 , 0.1D0 , 1.0D0 , 1.0D-4/
+      data lstar , lblnk/'*' , ' '/
+C
+C  form a temporary NAO to NHO transformation matrix.  check hybrid
+C  overlap to make sure the nbo's were properly labelled as lewis
+C  and non-lewis orbitals:
+C
+C  count number of hybrids as they are written out:
+C
+      nhyb = 0
+C
+C  main loop over bond orbitals:
+C
+      do 200 nbond = 1 , Nbas
+         ib = Ibxm(nbond)
+         lbl = Label(ib,1)
+         if ( lbl.eq.llp .or. lbl.eq.lcr .or. lbl.eq.lry ) nctr = 1
+         if ( lbl.eq.lbd ) nctr = 2
+         if ( lbl.eq.l3c ) nctr = 3
+C
+C  loop over atomic centers of bond orbital nbond:
+C
+         do 100 ictr = 1 , nctr
+            i = Label(ib,ictr+3)
+            kl = Ll(i)
+            ku = Lu(i)
+            do 20 k = 1 , Mxao
+               Ltyp(k) = 0
+               HYB(k) = zero
+ 20         continue
+C
+C  choose sign for polarization coefficients:
+C
+            isgn = 1
+            if ( Label(ib,2).eq.lstar ) then
+               if ( ictr.ge.2 ) then
+                  if ( ictr.eq.3 ) ipar3c = -ipar3c
+                  if ( ictr.ne.3 .or. ipar3c.le.0 ) isgn = -isgn
+               endif
+            endif
+C
+C  extract hybrid (hyb) from transformation matrix t; ltyp(i) is the
+C  orbital angular momentum quantum no. of a.o.  \# i:
+C
+            kh = 0
+            do 40 k = kl , ku
+               kh = kh + 1
+               HYB(kh) = T(k,nbond)
+               Ltyp(kh) = Naoa(k)/100
+ 40         continue
+            call htype(HYB,Ltyp,Mxao,kh,coef,pct,nl,isgn)
+            if ( dabs(coef).ge.thresh ) then
+C
+C  check to see if this orbital has been found before:
+C
+               do 50 ihyb = 1 , nhyb
+                  temp = zero
+                  ih = 0
+                  do 45 k = kl , ku
+                     ih = ih + 1
+                     temp = temp + HYB(ih)*THYB(k,ihyb)
+ 45               continue
+                  if ( dabs(dabs(temp)-one).lt.thresh ) goto 100
+                  if ( dabs(temp).gt.thresh ) then
+                     write (Lfnpr,99001) nhyb + 1 , nbond , ictr ,
+     &                      temp , ihyb
+                     stop
+                  endif
+ 50            continue
+C
+C  add this hybrid to the temporary thyb:
+C
+               nhyb = nhyb + 1
+               if ( nhyb.gt.Nbas ) stop 'Too many hybrids'
+               do 60 k = 1 , Nbas
+                  THYB(k,nhyb) = zero
+ 60            continue
+               ih = 0
+               do 70 k = kl , ku
+                  ih = ih + 1
+                  THYB(k,nhyb) = HYB(ih)
+ 70            continue
+            endif
+ 100     continue
+ 200  continue
+      if ( nhyb.lt.Nbas ) stop 'Missing hybrids'
+C
+C  thyb now contains the temporary NAO to NHO transformation matrix.
+C  form the non-orthogonal pnho overlap and NHO to NBO transformation matrices:
+C
+      call fesnao(S)
+      call simtrs(S,THYB,SCR,Ndim,Nbas)
+C
+      call trnspo(THYB,Ndim,Nbas)
+      call matmlt(THYB,T,SCR,Ndim,Nbas)
+C
+C  check to see that the bonds and antibonds have the correct hybrid
+C  overlap.  fix the labels if there is a problem:
+C
+      first = .true.
+      do 300 nbond = 1 , Nbas
+         ib = Ibxm(nbond)
+         lbl1 = Label(ib,1)
+         if ( lbl1.eq.llp .or. lbl1.eq.lcr .or. lbl1.eq.lry ) ictr = 1
+         if ( lbl1.eq.lbd ) ictr = 2
+         if ( lbl1.eq.l3c ) ictr = 3
+         nctr = 0
+         do 250 ihyb = 1 , nhyb
+            if ( dabs(THYB(ihyb,nbond)).gt.thresh ) then
+               nctr = nctr + 1
+               if ( nctr.gt.3 ) then
+                  write (Lfnpr,99002) nbond
+                  stop
+               endif
+               iat(nctr) = ihyb
+            endif
+ 250     continue
+         if ( nctr.gt.ictr ) then
+            write (Lfnpr,99003) ictr , nbond , nctr
+            stop
+         endif
+         if ( nctr.gt.1 ) then
+            isgn = 1
+            do 280 jctr = 1 , nctr - 1
+               do 260 kctr = jctr + 1 , nctr
+                  jhyb = iat(jctr)
+                  khyb = iat(kctr)
+                  temp = S(jhyb,khyb)*THYB(jhyb,nbond)*THYB(khyb,nbond)
+                  if ( temp.lt.-thresh ) isgn = -1
+ 260           continue
+ 280        continue
+            lbl2 = Label(ib,2)
+            if ( lbl2.eq.lblnk .and. isgn.eq.-1 ) then
+               if ( first ) write (Lfnpr,99004)
+               first = .false.
+               Label(ib,2) = lstar
+               write (Lfnpr,99005) nbond , lbl1 , lstar
+            elseif ( lbl2.eq.lstar .and. isgn.eq.1 ) then
+               if ( first ) write (Lfnpr,99004)
+               first = .false.
+               Label(ib,2) = lblnk
+               write (Lfnpr,99005) nbond , lbl1 , lblnk
+            endif
+         endif
+ 300  continue
+C
+C  determine the number of occupied orbitals:
+C
+      tot = zero
+      do 400 i = 1 , Nbas
+         tot = tot + DM(i,i)
+ 400  continue
+      nocc = tot + tenth
+      if ( Ispin.eq.0 ) nocc = nocc/2 + mod(nocc,2)
+C
+C  count the number of unstarred orbitals:
+C
+      icnt = 0
+      do 500 i = 1 , Nbas
+         if ( Label(Ibxm(i),2).ne.lstar ) icnt = icnt + 1
+ 500  continue
+C
+C  if the number of unstarred orbitals is not equal to the number of
+C  occupied orbitals, fix the orbital labels:
+C
+      if ( icnt.ne.nocc ) then
+         do 550 i = 1 , Nbas
+            OCC(i) = DM(i,i)
+ 550     continue
+         call rank(OCC,Nbas,Ndim,ISCR)
+C
+C  if there are more unstarred orbitals than occupied, add stars to the
+C  least occupied lone pairs:
+C
+         if ( icnt.gt.nocc ) then
+            idiff = icnt - nocc
+            do 580 i = 1 , idiff
+               ip = 0
+               do 560 j = 1 , Nbas
+                  jp = Ibxm(ISCR(j))
+                  if ( Label(jp,1).eq.llp .and. Label(jp,2).ne.lstar )
+     &                 ip = j
+ 560           continue
+               if ( ip.eq.0 ) then
+                  write (Lfnpr,99006) icnt , nocc
+                  stop
+               endif
+               Label(Ibxm(ISCR(ip)),2) = lstar
+               write (Lfnpr,99005) ISCR(ip) , Label(Ibxm(ISCR(ip)),1) ,
+     &                             lstar
+ 580        continue
+C
+C  remove stars from the highest occupied lone pairs/rydbergs if there are
+C  too few starred orbitals:
+C
+         else
+            idiff = nocc - icnt
+            do 600 i = 1 , idiff
+               ip = 0
+               do 590 j = Nbas , 1 , -1
+                  jp = Ibxm(ISCR(j))
+                  if ( (Label(jp,1).eq.llp .or. Label(jp,1).eq.lry)
+     &                 .and. Label(jp,2).eq.lstar ) ip = j
+ 590           continue
+               if ( ip.eq.0 ) then
+                  write (Lfnpr,99006) icnt , nocc
+                  stop
+               endif
+               Label(Ibxm(ISCR(ip)),2) = lblnk
+               write (Lfnpr,99005) ISCR(ip) , Label(Ibxm(ISCR(ip)),1) ,
+     &                             lblnk
+ 600        continue
+         endif
+      endif
+      return
+C
+99001 format (/1x,'Hybrid ',i3,' (NBO ',i3,', Center ',i2,') has a ',
+     &        'non-negligible overlap of ',f8.5,/,1x,'with hybrid ',i3,
+     &        '.')
+99002 format (/1x,'NBO ',i3,' has hybrid contributions from more than ',
+     &        '3 atomic centers.')
+99003 format (/1x,'Error: the ',i1,'-center NBO ',i3,' has ',
+     &        'contributions from ',i2,' atomic centers.')
+99004 format (/1x,'          --- Apparent excited state configuration ',
+     &        '---',/1x,
+     &        'The following "inverted" NBO labels reflect the ',
+     &        'actual hybrid overlap:')
+99005 format (1x,'                NBO ',i3,' has been relabelled ',a2,
+     &        a1)
+99006 format (/1x,'Unable to label the NBOs properly: ',i3,' starred ',
+     &        'orbitals',/1x,'                                   ',i3,
+     &        ' occupied orbitals')
+      end
+@* INDEX.
