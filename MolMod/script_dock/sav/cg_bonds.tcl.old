@@ -1,0 +1,596 @@
+
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+  #                                                                           #
+  #                                                                           #
+  #   --- DISCLAIMER (by Clement Arnarez, C.Arnarez@rug.nl):                  #
+  #                                                                           #
+  #   This script is largely inspired by the one written by Nicolas Sapay     #
+  #   (hum... less and less true), available on the GROMACS website.          #
+  #                                                                           #
+  #   Initially written to read Martini and ElNeDyn topologies, it seems it   #
+  #   can work for any couple of conformation/topology file (even for all     #
+  #   atom systems apparently) generated with the GROMACS package.            #
+  #                                                                           #
+  #   As always, you can modify, redistribute and make everything you want    #
+  #   with these few lines of code; if you write major improvement, please    #
+  #   let me know/test it!                                                    #
+  #                                                                           #
+  #                                                                           #
+  #                                                                           #
+  #                                                                           #
+  #   --- ORIGINAL DISCLAIMER (by Nicolas Sapay):                             #
+  #                                                                           #
+  #   Somewhere in there...:                                                  #
+  #   http://lists.gromacs.org/pipermail/gmx-users/2009-October/045935.html   #
+  #                                                                           #
+  #   TCL Script to visualize CG structures in VMD                  # # # # # #
+  #   Version 3.0                                                   #       #
+  #   Adapted from vmds                                             #     #
+  #                                                                 #   #
+  #                                                                 # #
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+
+# shows usage
+proc cg_usage { } {
+  puts ""
+  puts "This script extensively uses the 'gmxdump' executable compiled with gromacs. By default, it looks for it in the '/usr/bin' directory; you can precise another path with specific option (see below)."
+  puts ""
+  puts " USAGE"
+  puts "-------"
+  puts ""
+  puts "These few lines are given by the 'cg_usage' command."
+  puts ""
+  puts "Show some informations about molecules in the system:"
+  puts "   cg_infos \[OPTIONS\]"
+  puts ""
+  puts "Options:"
+  puts "   -gmx      /usr/bin/gmxdump   path to 'gmxdump' executable"
+  puts "   -tpr      topol.tpr          path to the topology file"
+  puts ""
+  puts "Draw bonds for specific molecules."
+  puts "   cg_bonds \[OPTIONS\]"
+  puts ""
+  puts "Options and default values:"
+  puts "   -gmx      /usr/bin/gmxdump   path to 'gmxdump' executable"
+  puts "   -tpr      topol.tpr          path to the topology file"
+  puts "   -molid    top                VMD-defined ID of the molecule to process"
+  puts "   -btype    martini            bond type: 'martini', 'elnedyn' or 'both'"
+  puts "   -ttype    guessed            topology type: 'martini' or 'elnedyn'"
+  puts "   -cutoff   7.0                cutoff for bonds (angstroms)"
+  puts "   -res      6                  resolution of elnedyn bonds"
+  puts "   -color    3                  color (VMD-defined ID) of elnedyn bonds"
+  puts "   -rad      0.2                radius of elnedyn bonds"
+  puts "   -mat      Opaque             material for elnedyn bonds"
+  puts ""
+  puts "In most of the cases, if a 'classical' cut-off is used for the elastic network (0.9nm), more than 12 ElNeDyn 'bonds' per atom are defined and VMD refuses to draw them. BUT this script replaces bonds by cylinders, and is able to draw the entire elastic network. Note that you have to modify the default cutoff value to see all the 'bonds' defined by ElNeDyn."
+  puts ""
+  puts "Delete the Martini bonds:"
+  puts "   cg_delete_martini_bonds \[OPTIONS\]"
+  puts ""
+  puts "Delete the ElNeDyn bonds:"
+  puts "   cg_delete_elnedyn_bonds \[OPTIONS\]"
+  puts ""
+  puts "Shortcut (delete everything, including bond lists):"
+  puts "   cg_delete_all \[OPTIONS\]"
+  puts ""
+  puts "The only option for the previous three commands is the VMD-defined ID of the molecule to process (via -molid, default is 'top'). Someone (...) said the names of my routines were too long; you can find some shortcuts here:"
+  puts "   cg_delete_martini_bonds   cg_dmb"
+  puts "   cg_delete_elnedyn_bonds   cg_deb"
+  puts "   cg_delete_all             cg_dab"
+  puts ""
+  puts " EXAMPLES"
+  puts "----------"
+  puts ""
+  puts "   cg_infos -tpr mini.tpr"
+  puts "   cg_bonds -gmx /usr/local/gromacs-4.0.2/bin/gmxdump -btype martini -tpr dynamic.tpr -chains 0,1,2,5,9,12,25 -cutoff 5.5"
+  puts "   cg_bonds -btype elnedyn -res 10 -cutoff 6 -mat Transparent -color 12"
+  puts "   cg_dmb -molid 1"
+  puts ""
+}
+
+
+
+# shows all molecules of the system
+proc cg_infos { args } {
+
+  # default values
+  set gmxdump "/usr/bin/gmxdump"
+  set tpr "topol.tpr"
+
+  # parses arguments
+  foreach {n m} $args {
+    if { $n == "-gmx" } { set gmxdump $m }
+    if { $n == "-tpr" } { set tpr $m }
+  }
+
+  # arrays containing properties of molecules
+  array unset attributes_block
+  array unset attributes_type
+  array unset attributes_name
+  array unset attributes_occurence
+  array unset attributes_atom_number
+
+  # display
+  puts ""
+  puts " #  Molecule    ID  Atoms  Occurence"
+  puts "--  ----------  --  -----  ---------"
+
+  # opens the file (dumps the tpr) and reads it
+  if { [file exists $tpr] } { set tpr [open "|$gmxdump -s $tpr 2> /dev/null" r] }
+  while { [gets $tpr line] > 0 } {
+
+    # properties of molecules
+    if { [regexp {^\s+molblock\s+\((\d+)\)\:} $line 0 molecule_block] } { set attributes_block($molecule_block) $molecule_block }
+    if { [regexp {^\s+moltype\s+=\s+(\d+)\s+\"(.*)\"} $line 0 molecule_type molecule] } {
+      set attributes_type($molecule_block) $molecule_type
+      set attributes_name($molecule_block) $molecule
+    }
+    if { [regexp {^\s+\#molecules\s+=\s+(\d+)} $line 0 molecule_number] } { set attributes_occurence($molecule_block) $molecule_number }
+    if { [regexp {^\s+\#atoms_mol\s+=\s+(\d+)} $line 0 atom_number_per_molecule] } { set attributes_atom_number($molecule_block) $atom_number_per_molecule }
+
+  }
+
+  # closes file
+  close $tpr
+
+  # display
+  for { set index 0 } { $index < [array size attributes_block] } { incr index } {
+    puts [format "%2i  %-10s  %2i  %5i  %9i" $attributes_block($index) [string range $attributes_name($index) 0 9] $attributes_type($index) $attributes_atom_number($index) $attributes_occurence($index)]
+  }
+  puts "--  ----------  --  -----  ---------"
+  puts ""
+
+}
+
+
+
+# (gmx)dumps a coarse-grained tpr file and reads bonds
+proc cg_generate_bond_lists { gmxdump tpr molid cutoff topology_type } {
+
+  # global variables
+  global martini_list
+  global elnedyn_list
+
+  # arrays containing properties of molecules
+  array unset attributes_block
+  array unset attributes_type
+  array unset attributes_name
+  array unset attributes_occurence
+  array unset attributes_atom_number
+
+  # arrays containing the martini/elnedyn bonds
+  array unset martini_bonds
+  array unset elnedyn_bonds
+  array unset real_martini_bonds
+  array unset real_elnedyn_bonds
+  # martini/elnedyn bonds lists
+  set martini_list {}
+  set elnedyn_list {}
+
+  # atom number
+  set atom_number 0
+  # "real" indexes of first atoms
+  array unset start_at
+  # current/previous molecule block/type
+  set molecule_block -1
+  set previous_molecule_block -1
+  set molecule_type -1
+  set previous_molecule_type -1
+  # current type of bonds
+  set which_type_of_bonds -1
+  # number of martini/elnedyn bonds
+  array unset martini_bonds_counter
+  array unset elnedyn_bonds_counter
+  array unset martini_bb_bb_counter
+  array unset martini_bb_sc_counter
+  array unset martini_sc_sc_counter
+  # discretises bond types
+  set previous_first_atom 1000
+  set previous_second_atom 1000
+
+  # opens the file (dumps the tpr) and read it
+  if { [file exists $tpr] } { set tpr [open "|$gmxdump -s $tpr 2> /dev/null" r] }
+  while { [gets $tpr line] > 0 } {
+
+    # total number of atoms
+    regexp {natoms = (\d+)} $line 0 atom_number
+    if { $atom_number != 0 && $atom_number != [molinfo $molid get numatoms] } { return "\nError: the TPR file and VMD doesn't define the same number of atoms! Please provide the good TPR file (and/or clean your file system).\n" }
+
+    # properties of molecules
+    if { [regexp {^\s+molblock\s+\((\d+)\)\:} $line 0 molecule_block] } { set attributes_block($molecule_block) $molecule_block }
+    if { [regexp {^\s+moltype\s+=\s+(\d+)\s+\"(.*)\"} $line 0 molecule_type molecule] } {
+      set attributes_type($molecule_block) $molecule_type
+      set attributes_name($molecule_block) $molecule
+    }
+    if { [regexp {^\s+\#molecules\s+=\s+(\d+)} $line 0 molecule_number] } { set attributes_occurence($molecule_block) $molecule_number }
+    if { [regexp {^\s+\#atoms_mol\s+=\s+(\d+)} $line 0 atom_number_per_molecule] } { set attributes_atom_number($molecule_block) $atom_number_per_molecule }
+
+    # tries to define which type of topology file it is
+    if { $topology_type == "guessed" && [regexp {^\s+atom+\[0\]\=\{+name+\=\"(.*)\"\}} $line 0 atom_name] } {
+      if { $atom_name == "BAS" } { set topology_type "elnedyn" } else { set topology_type "martini" }
+      if { $topology_type == "elnedyn" } { set topology_name "Martini + ElNeDyn" } elseif { $topology_type == "martini" } { set topology_name "Martini" }
+      puts [format "Type of topology detected: %s (if this is wrong, you can precise the good one with the '-ttype' option)." $topology_name]
+    }
+
+    # reads the molecule type
+    regexp {moltype\s+\((\d+)\)} $line 0 molecule_type
+
+    # name of current molecule
+    regexp {^\s+name=\"(.*)\"} $line 0 molecule
+
+    # resets counters
+    if { $molecule_type != $previous_molecule_type } {
+      set ca_number($molecule_type) 0
+      set which_type_of_bonds -1
+      set martini_bonds_counter($molecule_type) 0
+      set elnedyn_bonds_counter($molecule_type) 0
+      set martini_bb_bb_counter($molecule_type) 0
+      set martini_bb_sc_counter($molecule_type) 0
+      set martini_sc_sc_counter($molecule_type) 0
+      set previous_first_atom 1000
+      set previous_second_atom 1000
+    }
+
+    # new previous molecule type
+    set previous_molecule_type $molecule_type
+
+    # reads the bond list
+    if { [regexp {\(BONDS\)\s+(\d+)\s+(\d+)} $line 0 first_atom second_atom] || [regexp {\(CONSTR\)\s+(\d+)\s+(\d+)} $line 0 first_atom second_atom] } {
+
+      # martini + elnedyn:
+      #  - 1) backbone-backbone bonds
+      #  - 2) elnedyn bonds
+      #  - 3) backbone-sidechain bonds
+      #  - 4) backbone-backbone constraints
+      #  - 5) sidechain-sidechain constraints
+
+      # martini alone:
+      #  - 1) backbone-backbone bonds
+      #  - 2) backbone-sidechain bonds
+      #  - 3) sidechain-sidechain bonds
+      #  - 4) short elastic bonds
+      #  - 5) long elastic bonds
+      #  - 6) sidechain-sidechain constraints
+      #  - 7) backbone-sidechain constraints
+
+      # boolean to know which bonds are read
+      if { ($first_atom < $previous_first_atom && $second_atom < $previous_second_atom) } { incr which_type_of_bonds }
+
+      # martini + elnedyn:
+      if { $topology_type == "elnedyn" } {
+
+        # 1) backbone-backbone bonds
+        if { $which_type_of_bonds == 0 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_bb_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+        # 2) elnedyn bonds
+        } elseif { $which_type_of_bonds == 1 } {
+          # count the number of bonds
+          incr elnedyn_bonds_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists elnedyn_bonds($molecule_type,$first_atom)] } { lappend elnedyn_bonds($molecule_type,$first_atom) $second_atom } else { set elnedyn_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists elnedyn_bonds($molecule_type,$second_atom)] } { lappend elnedyn_bonds($molecule_type,$second_atom) $first_atom } else { set elnedyn_bonds($molecule_type,$second_atom) $first_atom }
+
+      #  3) backbone-sidechain bonds
+        } elseif { $which_type_of_bonds == 2 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+      #  4) backbone-backbone constraints
+        } elseif { $which_type_of_bonds == 3 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_bb_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+        # 5) sidechain-sidechain constraints
+        } elseif { $which_type_of_bonds == 4 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_sc_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+        }
+
+      } elseif { $topology_type == "martini" } {
+
+        # 1) backbone-backbone bonds
+        if { $which_type_of_bonds == 0 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_bb_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+        # 2) backbone-sidechain bonds
+        } elseif { $which_type_of_bonds == 1 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+      #  3) sidechain-sidechain bonds
+        } elseif { $which_type_of_bonds == 2 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_sc_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+      #  4) short elastic bonds
+        } elseif { $which_type_of_bonds == 3 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_bb_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+        # 5) long elastic bonds
+        } elseif { $which_type_of_bonds == 4 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_bb_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+      #  6) sidechain-sidechain constraints
+        } elseif { $which_type_of_bonds == 5 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_sc_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+
+        # 7) backbone-sidechain constraints
+        } elseif { $which_type_of_bonds == 6 } {
+          # count the number of bonds
+          incr martini_bonds_counter($molecule_type)
+          incr martini_bb_sc_counter($molecule_type)
+          # if the bead already exists, add anoter bond to its description; else, add the new bond
+          if { [info exists martini_bonds($molecule_type,$first_atom)] } { lappend martini_bonds($molecule_type,$first_atom) $second_atom } else { set martini_bonds($molecule_type,$first_atom) $second_atom }
+          if { [info exists martini_bonds($molecule_type,$second_atom)] } { lappend martini_bonds($molecule_type,$second_atom) $first_atom } else { set martini_bonds($molecule_type,$second_atom) $first_atom }
+        }
+
+      }
+
+      # sets previous atom indexes (for later comparison)
+      set previous_first_atom $first_atom
+      set previous_second_atom $second_atom
+
+    }
+
+  }
+
+  # closes file
+  close $tpr
+
+  # generates "real" first atom indexes
+  set current_index 0
+  for { set index 0 } { $index < [array size attributes_block] } { incr index } {
+    set start_at($index) $current_index
+    set current_index [expr $current_index+$attributes_atom_number($index)*$attributes_occurence($index)]
+  }
+
+  # generates bond lists on "real" indexes
+  for { set block_index 0 } { $block_index < [array size attributes_block] } { incr block_index } {
+    set molecule_type $attributes_type($block_index)
+    set start_index $start_at($block_index)
+    for { set occurence_index 0 } { $occurence_index < $attributes_occurence($block_index) } { incr occurence_index } {
+
+      # bonds/constraints of martini
+      if { $martini_bonds_counter($molecule_type) != 0 } {
+        for { set atom_index 0 } { $atom_index < $attributes_atom_number($block_index) } { incr atom_index } {
+          set real_first_atom [expr $atom_index+$start_index+$occurence_index*$attributes_atom_number($block_index)]
+          if { [info exists martini_bonds($molecule_type,$atom_index)] } {
+            foreach bond $martini_bonds($molecule_type,$atom_index) {
+              set real_second_atom [expr $bond+$start_index+$occurence_index*$attributes_atom_number($block_index)]
+              if { [measure bond "$real_first_atom $real_second_atom"] < $cutoff } {
+                if { [info exists real_martini_bonds($real_first_atom)] } { lappend real_martini_bonds($real_first_atom) $real_second_atom } else { set real_martini_bonds($real_first_atom) $real_second_atom }
+              }
+            }
+          }
+        }
+      }
+
+      # each string of elnedyn
+      if { $elnedyn_bonds_counter($molecule_type) != 0 } {
+        for { set atom_index 0 } { $atom_index < $attributes_atom_number($block_index) } { incr atom_index } {
+          set real_first_atom [expr $atom_index+$start_index+$occurence_index*$attributes_atom_number($block_index)]
+          if { [info exists elnedyn_bonds($molecule_type,$atom_index)] } {
+            foreach bond $elnedyn_bonds($molecule_type,$atom_index) {
+              set real_second_atom [expr $bond+$start_index+$occurence_index*$attributes_atom_number($block_index)]
+              if { [measure bond "$real_first_atom $real_second_atom"] < $cutoff } {
+                if { [info exists real_elnedyn_bonds($real_first_atom)] } { lappend real_elnedyn_bonds($real_first_atom) $real_second_atom } else { set real_elnedyn_bonds($real_first_atom) $real_second_atom }
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  # creates the FINAL bond lists
+  for { set index 0 } { $index < $atom_number } { incr index } {
+    if { [info exists real_martini_bonds($index)] } { lappend martini_list $real_martini_bonds($index) } else { lappend martini_list {} }
+    if { [info exists real_elnedyn_bonds($index)] } { lappend elnedyn_list $real_elnedyn_bonds($index) } else { lappend elnedyn_list {} }
+  }
+
+  # display
+  puts ""
+  puts " #  Molecule    ID    Number of  Occurence    Martini bonds &    ElNeDyn    Index of"
+  puts "    name                  atoms                   constraints      bonds  first atom"
+  puts "--  ----------  --  -----------  ---------  -----------------  ---------  ----------"
+  for { set index 0 } { $index < [array size attributes_block] } { incr index } {
+    puts [format "%2i  %-10s  %2i        %5i  %9i  %5i %5i %5i  %9i  %10i" $attributes_block($index) [string range $attributes_name($index) 0 9] $attributes_type($index) $attributes_atom_number($index) $attributes_occurence($index) $martini_bb_bb_counter($attributes_type($index)) $martini_bb_sc_counter($attributes_type($index)) $martini_sc_sc_counter($attributes_type($index)) $elnedyn_bonds_counter($attributes_type($index)) $start_at($index)]
+  }
+  puts "--  ----------  --  -----------  ---------  -----------------  ---------  ----------"
+  puts "                                            bb-bb bb-sc sc-sc      bb-bb"
+  puts ""
+
+}
+
+
+
+# draws bonds
+proc cg_bonds { args } {
+
+  # global variables
+  global martini_list
+  global elnedyn_list
+
+  # default values
+  set gmxdump "/usr/bin/gmxdump"
+  set tpr "topol.tpr"
+  set molid "top"
+  set bond_type "martini"
+  set topology_type "guessed"
+  set cutoff 7.0
+  set resolution 6
+  set color 3
+  set radius 0.2
+  set material "Opaque"
+
+  # parses arguments
+  foreach { n m } $args {
+    if { $n == "-gmx" } { set gmxdump $m }
+    if { $n == "-tpr" } { set tpr $m }
+    if { $n == "-molid" } { set molid $m }
+    if { $n == "-btype" } { set bond_type $m }
+    if { $n == "-ttype" } { set topology_type $m }
+    if { $n == "-cutoff" } { set cutoff $m }
+    if { $n == "-res" } { set resolution $m }
+    if { $n == "-color" } { set color $m }
+    if { $n == "-rad" } { set radius $m }
+    if { $n == "-mat" } { set material $m }
+  }
+
+  # generates bond lists for given molecule and cutoff
+  cg_generate_bond_lists $gmxdump $tpr $molid $cutoff $topology_type
+
+  # cleans previous drawings
+  if { $bond_type == "elnedyn" } { graphics $molid delete all }
+
+  # draws martini bonds...
+  if { $bond_type == "martini" || $bond_type == "both" } {
+    set all [atomselect $molid all frame 0]
+    $all setbonds $martini_list
+  }
+
+  # ... and/or elnedyn bonds (takes much more time than drawing martini bonds)
+  if { $bond_type == "elnedyn" || $bond_type == "both" } {
+    for { set n 0 } { $n < [llength $elnedyn_list] } { incr n } {
+      for { set m 0 } { $m < [llength [lindex $elnedyn_list $n]] } { incr m } {
+        lassign [[atomselect $molid "index $n"] get { x y z }] start
+        lassign [[atomselect $molid "index [lindex [lindex $elnedyn_list $n] $m]"] get { x y z }] end
+        set middle [vecadd $start [vecscale 0.5 [vecsub $end $start]]]
+        graphics $molid color $color
+        graphics $molid material $material
+        graphics $molid cylinder $start $middle radius $radius resolution $resolution
+        graphics $molid sphere $start radius $radius resolution $resolution
+      }
+    }
+  }
+
+}
+
+
+
+# deletes all martini bonds
+proc cg_dmb { args } { cg_delete_martini_bonds $args }
+proc cg_delete_martini_bonds { args } {
+
+  # parses argument
+  set molid "top"
+  foreach { n m } $args { if { $n == "-molid" } { set molid $m } }
+
+  # total number of atoms
+  set atom_number [molinfo $molid get numatoms]
+
+  # creates the bond list
+  set bond_list {}
+  for { set index 0 } { $index < $atom_number } { incr index } { lappend bond_list {} }
+
+  # draws an empty list of bonds
+  set all [atomselect $molid all frame 0]
+  $all setbonds $bond_list
+
+}
+
+
+
+# deletes all elnedyn bonds (cylinders)
+proc cg_deb { args } { cg_delete_elnedyn_bonds $args }
+proc cg_delete_elnedyn_bonds { args } {
+
+  # parses argument
+  set molid "top"
+  foreach { n m } $args { if { $n == "-molid" } { set molid $m } }
+
+  # deletes cylinders
+  graphics $molid delete all
+
+}
+
+
+
+# deletes global variables
+proc cg_delete_global_variables {} {
+
+  # global variables
+  global martini_list
+  global elnedyn_list
+
+  # empties variables
+  set martini_list {}
+  set elnedyn_list {}
+
+}
+
+
+
+# deletes all generated stuffs
+proc cg_dab { args } { cg_delete_all $args }
+proc cg_delete_all { args } {
+
+  # parses argument
+  set molid "top"
+  foreach { n m } $args { if { $n == "-molid" } { set molid $m } }
+
+  # empties global variables
+  cg_delete_global_variables
+
+  # deletes martini bonds
+  cg_delete_martini_bonds $molid
+
+  # deletes elnedyn bonds (cylinders)
+  cg_delete_elnedyn_bonds $molid
+
+}
+
+
+
+# first load
+cg_usage
+
