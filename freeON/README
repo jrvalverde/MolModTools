@@ -1,0 +1,5 @@
+These are scripts to facilitate use of the FreeON linearly scaling quantum chemistry code.
+
+The basic idea is to have
+- a driver script that can provide detailed help
+- pre-defined configuration files for specific calculations
