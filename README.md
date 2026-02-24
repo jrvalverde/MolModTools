@@ -4,7 +4,8 @@ A series of tools for Molecular Modelling that I have been developing/using over
 These tools are a work in progress that is developed as we face novel needs or identify changes to
 the base-tools.
 
-Directory *MolMod* is devoted to Macromolecular Structure modeling, in it you will find 
+Directory *MolMod* is devoted to Macromolecular Structure modeling. This is the most actively
+maintained and developed directory in this repository; in it you will find 
 - a series of
 driver scripts for many GROMACS tools, which we routinely use to drive Molecular Dynamics simulations,
 analyze trajectories, make plots, etc..
