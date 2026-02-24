@@ -1,0 +1,142 @@
+gromacs_funcs.bash
+
+Functions and dependencies
+--------------------------
+
+Function: Function: banner{}
+Dependencies: None
+Modified: yes
+
+Function: Function: strindex{}
+Dependencies: None
+Modified: yes
+
+Function: pdb_atom_renumber{}
+Dependencies: strindex
+Modified: yes 
+
+Function: add_H{}
+Dependencies: pdb_atom_renumber 
+Modified: yes
+
+Function: split_complex{}
+Dependencies: None
+Modified: yes
+
+Function: extract_ligands{}
+Dependencies: banner make_ligand_topologies 
+Modified: yes
+
+Function: pdb2mol2{}
+Dependencies: None
+Modified: yes
+Note: Check for model argument(s)
+
+Function: make_topolbuild_topology{}
+Dependencies: None
+Modified: yes
+
+Function: make_topolgen_topology{}
+Dependencies: None
+Modified: yes
+
+Function: sync_mktop_atom_names{}
+Dependencies: None
+Modified: yes
+Note: Check for second argument
+
+Function: make_mktop_topology{}
+Dependencies: sync_mktop_atom_names 
+Modified: yes
+
+Function: make_acpype_topology{}
+Dependencies: None
+Modified: yes
+Note: Check for second argument
+
+Function: make_ligand_topologoies{}
+Dependencies: pdb2mol2 make_topolbuild_topology make_topolgen_topology make_acpype_topology make_mktop_topology 
+Modified: yes
+
+Function: add_ligand_oplsaa_topolbuild{}
+Dependencies: None
+Modified: yes
+Note: Check for arguments
+
+Function: add_ligand_oplsaa_mktop{}
+Dependencies: None
+Modified: yes
+
+Function: add_ligand_oplsaa_topolgen{}
+Dependencies: banner 
+Modified: yes
+Note: Check for first and second arguments
+
+Function: add_ligand_oplsaa_acpype{}
+Dependencies: banner 
+Modified: yes
+Note: Check for first and second arguments
+
+Function: add_ligand_oplsaa{}
+Dependencies: add_ligand_oplsaa_topolbuild add_ligand_oplsaa_topolgen add_ligand_oplsaa_mktop add_ligand_oplsaa_acpype 
+Modified: yes
+Note: Check for first and second arguments
+
+Function: make_ion_config{}
+Dependencies: make_em_config
+Modified: yes
+
+Function: solvate{}
+Dependencies: make_ion_config
+Modified: yes
+Note: Check for first and second arguments
+
+Function: make_em_config{}
+Dependencies: None
+Modified: yes
+
+Function: make_ext_index{} 
+Dependencies: None 
+Modified: yes
+Note: Check for argument
+
+Function: make_eq_nvt_200ps_config{}
+Dependencies: None
+Modified: yes
+
+Function: make_eq_npt_200ps_config{}
+Dependencies: None
+Modified: yes
+
+Function: make_md_01_config{}
+Dependencies: None
+Modified: yes
+
+Function: make_md_10_config{}
+Dependencies: None
+Modified: yes
+
+Function: run_md{}
+Dependencies: make_ext_index 
+Modified: yes
+
+Function: analyze_md_run{}
+Dependencies: mskr_ext_index 
+Modified: yes
+
+Function: index_chains{}
+Dependencies: None
+Modified: yes
+
+Function: grondx2pdb{}
+Dependencies: None
+Modified: yes
+
+Function: groref2pdb{}
+Dependencies: None
+Modified: yes
+
+
+
+
+
