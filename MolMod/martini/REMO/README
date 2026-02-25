@@ -1,0 +1,103 @@
+REMO mannual  
+*******************************
+REconstruct atomic MOdel(REMO) package
+version 1.0
+
+
+1. Introduction.
+
+   REMO is a multifunctional program for constructing full-atom protein models from 
+   C-alpha traces by optimizing the backbone hydrogen-bonding networks. It gives
+   options to choose models which are close to a given template or have more hydrogen-
+   bonds. It has also options to build hydrogen atoms and side chain heavy atoms. The 
+   bond length and bond angle parameters are taken from CHARMM22.
+
+   The package includes following files:
+
+	1) REMO.pl : A perl script to setup and run REMO;
+	2) FAMR    : The core excutable program to execute all REMO functions;
+ 	3) FAMRcomm: REMO parameters and potentials;
+	4) BBdat   : The backbone isomer library;
+	5) mkseq.pl: A perl script to for secondary structure distribution using PSIPRED.
+	6) SRC     : A directory including source codes and executable files of FAMR and 
+		     examples of input and output files. The source codes are in Fortran90
+		     and the executable files include both 32bit and 64bit versions.
+
+2. Installation.
+
+   You need to first download the "remo.tar.bz2" file and then unpack the files by
+   running "tar -xjf remo.tar.bz2".
+
+   REMO consists of a perl program REMO.pl, a Fortran90 compiled program FAMR (include 
+   32/64bit versions), and two parameter files of FAMRcomm and BBdat. Have all the four 
+   files in the same folder. REMO is then ready to use.
+
+   We provide a Makefile under SRC folder for compiling REMO. By default, a static
+   executable is built. On Mac OS, static executable is not supported, and you
+   need to remove the "-static" flag before you make.
+
+3. USAGE and options.
+
+   There are following options in REMO:
+
+	1) ./REMO.p1 0 xx.pdb seq.dat [template] <PRHB>
+    	   Construct backbone structure from "xx.pdb" (only C-alpha atoms are used),
+	   maximizing the hydrogen-bonding networks based on the secondary structure 
+           distribution as given in "seq.dat" and PRHB (if provided), also draging the 
+           xx.pdb closer to a template.
+	output: xx.pdb.fix (model closest to "xx.pdb")
+	        xx.pdb.h   (model closest to "template")
+
+	2) ./REMO.p1 1 xx.pdb seq.dat seq.txt 
+	    Build full length model according to sequence file "seq.txt"(Fasta format).
+	output: xx.pdb.h (model closest to "xx.pdb")	
+	
+   NOTES:
+	
+	1) The example of input files can be found in @REMO/SRC/example folder. 
+	2) Full-length structure from the template is require when including template. 
+           And the "template" structure can be different to or same as "xx.pdb".
+	3) REMO.pl has two modes:
+	   normal mode: (set $mode="normal" in "REMO.pl") no other operations are needed.
+  	   fast mode  : (set $mode="fast" in "REMO.pl") you need to first delete the "Hdd" 
+			and "PRHB" files before you run a new protein at the same 
+			directory, this provides double speed if you treat different 
+			models of the same sequence.
+	4) The residue number will be reordered from 1 in the output structure.
+
+4. Advanced usage:
+
+   REMO is a standalone program. But following options will improve the quality of 
+   final models when running REMO.
+
+	1) Accurate secondary structure distribution (file named as seq.dat in 
+	   above options). You can generated secondary structure predictions
+	   by "mkseq.pl"; but you need to install PSIPRED first and configure 
+	   "mkseq.pl" accordingly. PSIPRED programs can be download from 
+	   http://bioinf.cs.ucl.ac.uk/psipred
+
+	2) Accurate Hydrogen Bonding network (PRHB, backbone only). PRHB contains 
+	   five columns: series number (not used), "N", H-bond donor residue number, 
+	   "O", H-bond acceptor residue number. The REMO itself can make this file 
+	   based on the consensus between the input structure and the secondary
+	   structure predictions (if existing) by default. But an additional H-Bond 
+	   list file will help improve HB-scores.
+
+	3) The REMO models initially contains side-chain atoms without optimization. 
+	   But for further side-chain optimizations, you are recommended to install
+	   Scwrl program from: http://dunbrack.fccc.edu/SCWRL3.php.
+
+5. Contact.
+
+   For question and comments, please contact: 
+   Yunqi Li (yunqi@ciac.ac.cn) or 
+   Yang Zhang (zhng@umich.edu).
+
+6. Reference.
+
+   Please cite following paper when you use the REMO program:
+
+   Yunqi Li and Yang Zhang. REMO: a new protocol to generate full atomic protein 
+   models from C-alpha traces by optimizing backbone hydrogen-bonding network, 
+   2009, 76(3):665-676.
+
