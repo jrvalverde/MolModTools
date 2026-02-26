@@ -14,7 +14,7 @@ analyze trajectories, make plots, etc..
   measuring a number of parameters and running MD simulations to perform VERY LIMITED alchemical
   estimates
 - a series of scripts to run various protein docking tools (we routinely use several docking
-  programs to cover a broader spectrum of poses
+  programs to cover a broader spectrum of poses)
 - a series of scripts to make _ab-initio_ molecular structure predictions that we developped
   before AlphaFold was publicly available
 
